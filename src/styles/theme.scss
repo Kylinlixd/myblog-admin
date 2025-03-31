@@ -1,0 +1,62 @@
+// 主题色配置
+:root {
+  // 主色调 - 温暖的米色
+  --primary-color: #E8D3C7;
+  --primary-light: #F5E6E0;
+  --primary-dark: #D4B5A7;
+  
+  // 强调色 - 柔和的珊瑚色
+  --accent-color: #FFB5A7;
+  --accent-light: #FFD1C7;
+  --accent-dark: #E89B8C;
+  
+  // 背景色 - 温暖的白色
+  --bg-color: #FFF9F5;
+  --bg-light: #FFFFFF;
+  --bg-dark: #F5E6E0;
+  
+  // 文字颜色
+  --text-primary: #4A4A4A;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  
+  // 边框颜色
+  --border-color: #E8D3C7;
+  --border-light: #F5E6E0;
+  
+  // 阴影
+  --box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  --box-shadow-hover: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+  
+  // 圆角
+  --border-radius: 8px;
+  --border-radius-small: 4px;
+  
+  // 过渡
+  --transition-duration: 0.3s;
+}
+
+// Element Plus 主题覆盖
+.el-button--primary {
+  --el-button-bg-color: var(--primary-color);
+  --el-button-border-color: var(--primary-color);
+  --el-button-hover-bg-color: var(--primary-dark);
+  --el-button-hover-border-color: var(--primary-dark);
+}
+
+.el-input__wrapper {
+  --el-input-border-color: var(--border-color);
+  --el-input-hover-border-color: var(--primary-color);
+  --el-input-focus-border-color: var(--primary-color);
+}
+
+.el-menu {
+  --el-menu-bg-color: var(--bg-color);
+  --el-menu-hover-bg-color: var(--bg-dark);
+  --el-menu-active-color: var(--primary-color);
+}
+
+.el-card {
+  --el-card-border-color: var(--border-color);
+  --el-card-border-radius: var(--border-radius);
+} 
