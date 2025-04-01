@@ -2,88 +2,164 @@
   <div class="category-list">
     <div class="page-header">
       <h2>分类管理</h2>
-      <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>新建分类
-      </el-button>
+      <button class="inspira-button" @click="handleCreate">
+        <i class="icon-plus"></i>新建分类
+      </button>
     </div>
     
-    <el-card class="table-card">
-      <el-table
-        v-loading="loading"
-        :data="categories"
-        row-key="id"
-        border
-        default-expand-all
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        style="width: 100%"
-      >
-        <el-table-column prop="name" label="分类名称" min-width="200" />
-        <el-table-column prop="description" label="描述" min-width="300" show-overflow-tooltip />
-        <el-table-column prop="postCount" label="文章数量" width="100" align="center" />
-        <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="{ row }">
-            <el-button-group>
-              <el-button type="primary" link @click="handleEdit(row)">
-                <el-icon><Edit /></el-icon>编辑
-              </el-button>
-              <el-button type="primary" link @click="handleAddChild(row)">
-                <el-icon><Plus /></el-icon>添加子分类
-              </el-button>
-              <el-button type="danger" link @click="handleDelete(row)">
-                <el-icon><Delete /></el-icon>删除
-              </el-button>
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <div class="table-card">
+      <div class="table-wrapper" :class="{ 'is-loading': loading }">
+        <table class="inspira-table">
+          <thead>
+            <tr>
+              <th>分类名称</th>
+              <th>描述</th>
+              <th>文章数量</th>
+              <th>创建时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="category in categories" :key="category.id">
+              <tr>
+                <td class="name-cell">
+                  <span class="category-name">{{ category.name }}</span>
+                </td>
+                <td class="description-cell">{{ category.description }}</td>
+                <td class="count-cell">{{ category.postCount }}</td>
+                <td>{{ category.createTime }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-button" @click="handleEdit(category)">
+                      <i class="icon-edit"></i>编辑
+                    </button>
+                    <button class="action-button" @click="handleAddChild(category)">
+                      <i class="icon-plus"></i>添加子分类
+                    </button>
+                    <button class="action-button danger" @click="handleDelete(category)">
+                      <i class="icon-delete"></i>删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <template v-if="category.children && category.children.length">
+                <tr v-for="child in category.children" :key="child.id" class="child-row">
+                  <td class="name-cell">
+                    <span class="category-name child">{{ child.name }}</span>
+                  </td>
+                  <td class="description-cell">{{ child.description }}</td>
+                  <td class="count-cell">{{ child.postCount }}</td>
+                  <td>{{ child.createTime }}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="action-button" @click="handleEdit(child)">
+                        <i class="icon-edit"></i>编辑
+                      </button>
+                      <button class="action-button" @click="handleAddChild(child)">
+                        <i class="icon-plus"></i>添加子分类
+                      </button>
+                      <button class="action-button danger" @click="handleDelete(child)">
+                        <i class="icon-delete"></i>删除
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
     
     <!-- 分类编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新建分类' : '编辑分类'"
-      width="500px"
-      destroy-on-close
-    >
-      <el-form
-        ref="categoryForm"
-        :model="categoryForm"
-        :rules="rules"
-        label-width="100px"
-      >
-        <el-form-item label="上级分类">
-          <el-tree-select
-            v-model="categoryForm.parentId"
-            :data="categoryOptions"
-            :props="{ label: 'name', value: 'id' }"
-            placeholder="请选择上级分类"
-            clearable
-            check-strictly
-          />
-        </el-form-item>
-        <el-form-item label="分类名称" prop="name">
-          <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
-        </el-form-item>
-        <el-form-item label="描述" prop="description">
-          <el-input
-            v-model="categoryForm.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入分类描述"
-          />
-        </el-form-item>
-        <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="categoryForm.sort" :min="0" :max="999" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit">确定</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <div class="dialog" :class="{ 'is-active': dialogVisible }">
+      <div class="dialog-overlay" @click="dialogVisible = false"></div>
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <h3>{{ dialogType === 'create' ? '新建分类' : '编辑分类' }}</h3>
+          <button class="close-button" @click="dialogVisible = false">
+            <i class="icon-close"></i>
+          </button>
+        </div>
+        
+        <form class="dialog-form" @submit.prevent="handleSubmit">
+          <div class="form-group">
+            <label>上级分类</label>
+            <div class="select-wrapper">
+              <select v-model="categoryForm.parentId" class="inspira-select">
+                <option value="">无</option>
+                <option
+                  v-for="item in categoryOptions"
+                  :key="item.id"
+                  :value="item.id"
+                >{{ item.name }}</option>
+              </select>
+              <i class="icon-arrow-down"></i>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>分类名称</label>
+            <input
+              v-model="categoryForm.name"
+              type="text"
+              class="inspira-input"
+              placeholder="请输入分类名称"
+              :class="{ 'is-error': errors.name }"
+            />
+            <span class="error-message" v-if="errors.name">{{ errors.name }}</span>
+          </div>
+          
+          <div class="form-group">
+            <label>描述</label>
+            <textarea
+              v-model="categoryForm.description"
+              class="inspira-textarea"
+              :rows="3"
+              placeholder="请输入分类描述"
+              :class="{ 'is-error': errors.description }"
+            ></textarea>
+            <span class="error-message" v-if="errors.description">{{ errors.description }}</span>
+          </div>
+          
+          <div class="form-group">
+            <label>排序</label>
+            <div class="number-input">
+              <button
+                type="button"
+                class="number-button"
+                @click="categoryForm.sort = Math.max(0, categoryForm.sort - 1)"
+              >
+                <i class="icon-minus"></i>
+              </button>
+              <input
+                v-model.number="categoryForm.sort"
+                type="number"
+                class="inspira-input"
+                min="0"
+                max="999"
+              />
+              <button
+                type="button"
+                class="number-button"
+                @click="categoryForm.sort = Math.min(999, categoryForm.sort + 1)"
+              >
+                <i class="icon-plus"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="dialog-footer">
+            <button type="button" class="inspira-button secondary" @click="dialogVisible = false">
+              取消
+            </button>
+            <button type="submit" class="inspira-button">
+              确定
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -108,18 +184,35 @@ const categoryForm = reactive({
   sort: 0
 })
 
-// 分类选项（用于树形选择器）
+// 表单错误
+const errors = reactive({
+  name: '',
+  description: ''
+})
+
+// 分类选项（用于选择器）
 const categoryOptions = ref([])
 
-// 表单验证规则
-const rules = {
-  name: [
-    { required: true, message: '请输入分类名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
-  ],
-  description: [
-    { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
-  ]
+// 表单验证
+const validateForm = () => {
+  let isValid = true
+  errors.name = ''
+  errors.description = ''
+  
+  if (!categoryForm.name) {
+    errors.name = '请输入分类名称'
+    isValid = false
+  } else if (categoryForm.name.length < 2 || categoryForm.name.length > 50) {
+    errors.name = '长度在 2 到 50 个字符'
+    isValid = false
+  }
+  
+  if (categoryForm.description && categoryForm.description.length > 200) {
+    errors.description = '长度不能超过 200 个字符'
+    isValid = false
+  }
+  
+  return isValid
 }
 
 // 获取分类列表
@@ -192,6 +285,8 @@ const handleDelete = (row) => {
 
 // 提交表单
 const handleSubmit = async () => {
+  if (!validateForm()) return
+  
   try {
     if (dialogType.value === 'create') {
       await request.post('/categories', categoryForm)
@@ -214,17 +309,424 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .category-list {
+  padding: 24px;
+  
   .page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     
     h2 {
       margin: 0;
-      font-size: 20px;
+      font-size: 24px;
       color: var(--text-primary);
     }
+  }
+  
+  .table-card {
+    background: rgba(var(--background-primary-rgb), 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .table-wrapper {
+      position: relative;
+      overflow-x: auto;
+      
+      &.is-loading {
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(var(--background-primary-rgb), 0.5);
+          backdrop-filter: blur(4px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1;
+        }
+        
+        &::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: 40px;
+          height: 40px;
+          border: 3px solid var(--border-color);
+          border-top-color: var(--primary-color);
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          z-index: 2;
+        }
+      }
+    }
+    
+    .inspira-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      
+      th {
+        background: rgba(var(--background-light-rgb), 0.5);
+        padding: 16px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-align: left;
+        white-space: nowrap;
+        
+        &:first-child {
+          border-top-left-radius: 8px;
+        }
+        
+        &:last-child {
+          border-top-right-radius: 8px;
+        }
+      }
+      
+      td {
+        padding: 16px;
+        border-top: 1px solid var(--border-color);
+        
+        &.name-cell {
+          .category-name {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            
+            &.child {
+              padding-left: 24px;
+              position: relative;
+              
+              &::before {
+                content: '';
+                position: absolute;
+                left: 8px;
+                top: 50%;
+                width: 12px;
+                height: 1px;
+                background-color: var(--border-color);
+              }
+              
+              &::after {
+                content: '';
+                position: absolute;
+                left: 8px;
+                top: 0;
+                width: 1px;
+                height: 100%;
+                background-color: var(--border-color);
+              }
+            }
+          }
+        }
+        
+        &.description-cell {
+          max-width: 300px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        &.count-cell {
+          text-align: center;
+        }
+      }
+      
+      tr {
+        transition: background-color 0.3s ease;
+        
+        &:hover {
+          background: rgba(var(--background-light-rgb), 0.3);
+        }
+        
+        &.child-row {
+          background: rgba(var(--background-light-rgb), 0.1);
+          
+          &:hover {
+            background: rgba(var(--background-light-rgb), 0.3);
+          }
+        }
+      }
+      
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+        
+        .action-button {
+          display: inline-flex;
+          align-items: center;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-size: 12px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: rgba(var(--background-light-rgb), 0.5);
+          color: var(--text-secondary);
+          
+          i {
+            margin-right: 4px;
+            font-size: 14px;
+          }
+          
+          &:hover {
+            background: rgba(var(--background-light-rgb), 0.8);
+            color: var(--text-primary);
+          }
+          
+          &.danger {
+            background: rgba(var(--danger-color-rgb), 0.1);
+            color: var(--danger-color);
+            
+            &:hover {
+              background: rgba(var(--danger-color-rgb), 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  .dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    
+    &.is-active {
+      opacity: 1;
+      visibility: visible;
+      
+      .dialog-content {
+        transform: translateY(0);
+      }
+    }
+    
+    .dialog-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+    
+    .dialog-content {
+      position: relative;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      background: rgba(var(--background-primary-rgb), 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      
+      .dialog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid var(--border-color);
+        
+        h3 {
+          margin: 0;
+          font-size: 20px;
+          color: var(--text-primary);
+        }
+        
+        .close-button {
+          background: none;
+          border: none;
+          color: var(--text-secondary);
+          cursor: pointer;
+          padding: 4px;
+          transition: color 0.3s ease;
+          
+          &:hover {
+            color: var(--text-primary);
+          }
+        }
+      }
+      
+      .dialog-form {
+        padding: 20px;
+        overflow-y: auto;
+        
+        .form-group {
+          margin-bottom: 20px;
+          
+          label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+          }
+          
+          .error-message {
+            display: block;
+            margin-top: 4px;
+            color: var(--danger-color);
+            font-size: 12px;
+          }
+          
+          .number-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            
+            .number-button {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              width: 32px;
+              height: 32px;
+              border-radius: 4px;
+              border: 1px solid var(--border-color);
+              background: transparent;
+              color: var(--text-secondary);
+              cursor: pointer;
+              transition: all 0.3s ease;
+              
+              &:hover {
+                background: rgba(var(--background-light-rgb), 0.5);
+                color: var(--text-primary);
+                border-color: var(--primary-color);
+              }
+            }
+            
+            .inspira-input {
+              width: 80px;
+              text-align: center;
+            }
+          }
+        }
+        
+        .dialog-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid var(--border-color);
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.inspira-input,
+.inspira-select,
+.inspira-textarea {
+  width: 100%;
+  height: 40px;
+  background: rgba(51, 102, 153, 0.2);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  transition: all 0.3s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.1);
+  }
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+  
+  &.is-error {
+    border-color: #ff6b6b;
+    
+    &:focus {
+      box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
+    }
+  }
+}
+
+.inspira-textarea {
+  height: auto;
+  min-height: 80px;
+  padding: 12px;
+  resize: vertical;
+}
+
+.inspira-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.763L10.825 4z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.inspira-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 20px;
+  background: linear-gradient(45deg, #336699, #0066cc);
+  border: none;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &.secondary {
+    background: rgba(51, 102, 153, 0.2);
+    border: 1px solid rgba(0, 255, 255, 0.3);
+    
+    &:hover {
+      background: rgba(51, 102, 153, 0.3);
+      border-color: rgba(0, 255, 255, 0.6);
+    }
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 }
 </style> 

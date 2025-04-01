@@ -1,5 +1,12 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { onMounted } from 'vue'
+import { useThemeStore } from './stores/theme'
+
+// 初始化主题
+const themeStore = useThemeStore()
+onMounted(() => {
+  themeStore.initTheme()
+})
 </script>
 
 <template>
@@ -10,25 +17,10 @@ import HelloWorld from './components/HelloWorld.vue'
   </router-view>
 </template>
 
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-}
-
-#app {
-  height: 100%;
-}
-
+<style lang="scss">
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity var(--transition-duration) ease;
+  transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,

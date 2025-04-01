@@ -1,489 +1,385 @@
 # 博客管理系统
 
-一个基于 Vue 3 + Element Plus + Vite 的现代化博客后台管理系统。
-
-## 特点
-
-- 🎨 温暖细腻的设计风格
-- 🚀 基于 Vue 3 + Vite 构建
-- 💪 使用 Element Plus 组件库
-- 📱 响应式设计
-- 🔒 安全的用户认证
-- 📊 数据可视化展示
+## 项目介绍
+这是一个基于 Vue 3 + Vite + Element Plus 开发的博客管理系统。
 
 ## 技术栈
-
 - Vue 3
 - Vite
-- Element Plus
 - Vue Router
 - Pinia
+- Element Plus
 - SCSS
-- Axios
+- TypeScript
 
-## 开始使用
+## 功能特性
+- 用户认证
+- 文章管理
+- 分类管理
+- 标签管理
+- 评论管理
+- 主题切换
 
-### 安装依赖
+## 开发环境
+- Node.js >= 16
+- npm >= 7
 
+## 安装和运行
 ```bash
+# 安装依赖
 npm install
-```
 
-### 开发环境运行
-
-```bash
+# 启动开发服务器
 npm run dev
-```
 
-### 生产环境构建
-
-```bash
+# 构建生产版本
 npm run build
 ```
 
-## 项目结构
+## API 文档
 
+### 基础信息
+- 基础路径: `/api`
+- 请求方式: REST
+- 数据格式: JSON
+- 认证方式: Bearer Token
+
+### 认证相关
+
+#### 1. 用户登录
+- **接口**: `/api/auth/login`
+- **方法**: POST
+- **描述**: 用户登录接口
+- **请求参数**:
+```json
+{
+  "username": "string", // 用户名
+  "password": "string"  // 密码
+}
 ```
-src/
-├── api/           # API 接口
-├── assets/        # 静态资源
-├── components/    # 公共组件
-├── layouts/       # 布局组件
-├── router/        # 路由配置
-├── stores/        # 状态管理
-├── styles/        # 样式文件
-├── utils/         # 工具函数
-└── views/         # 页面组件
-```
-
-## 功能模块
-
-- [x] 用户认证
-- [x] 仪表盘
-- [x] 文章管理
-- [x] 分类管理
-- [x] 标签管理
-- [x] 评论管理
-- [ ] 系统设置
-
-## API 接口文档
-
-### 评论管理
-
-#### 获取评论列表
-- 请求方式：GET
-- 接口路径：`/api/comments`
-- 请求参数：
-  ```typescript
-  {
-    page: number;      // 页码，从1开始
-    pageSize: number;  // 每页数量
-    postTitle?: string; // 文章标题（可选）
-    author?: string;    // 评论作者（可选）
-    status?: string;    // 评论状态（可选）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      list: Array<{
-        id: number;           // 评论ID
-        content: string;      // 评论内容
-        status: string;       // 评论状态：pending/approved/rejected
-        postTitle: string;    // 文章标题
-        author: string;       // 评论作者
-        email: string;        // 评论者邮箱
-        createTime: string;   // 创建时间
-      }>;
-      total: number;         // 总记录数
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "token": "string",      // JWT token
+    "userInfo": {
+      "id": "number",       // 用户ID
+      "username": "string", // 用户名
+      "nickname": "string", // 昵称
+      "avatar": "string"    // 头像URL
     }
-  }
-  ```
+  },
+  "message": "string"
+}
+```
 
-#### 审核评论
-- 请求方式：POST
-- 接口路径：`/api/comments/:id/approve`
-- 请求参数：
-  ```typescript
-  {
-    id: number;  // 评论ID（路径参数）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+#### 2. 获取用户信息
+- **接口**: `/api/auth/info`
+- **方法**: GET
+- **描述**: 获取当前登录用户信息
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "number",
+    "username": "string",
+    "nickname": "string",
+    "avatar": "string"
+  },
+  "message": "string"
+}
+```
 
-#### 拒绝评论
-- 请求方式：POST
-- 接口路径：`/api/comments/:id/reject`
-- 请求参数：
-  ```typescript
-  {
-    id: number;  // 评论ID（路径参数）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
-
-#### 删除评论
-- 请求方式：DELETE
-- 接口路径：`/api/comments/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;  // 评论ID（路径参数）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+#### 3. 修改密码
+- **接口**: `/api/auth/password`
+- **方法**: PUT
+- **描述**: 修改用户密码
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "oldPassword": "string", // 旧密码
+  "newPassword": "string"  // 新密码
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
 
 ### 文章管理
 
-#### 获取文章列表
-- 请求方式：GET
-- 接口路径：`/api/posts`
-- 请求参数：
-  ```typescript
-  {
-    page: number;      // 页码，从1开始
-    pageSize: number;  // 每页数量
-    title?: string;    // 文章标题（可选）
-    category?: string; // 分类（可选）
-    status?: string;   // 状态（可选）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      list: Array<{
-        id: number;           // 文章ID
-        title: string;        // 文章标题
-        content: string;      // 文章内容
-        summary: string;      // 文章摘要
-        category: string;     // 分类
-        tags: string[];       // 标签
-        status: string;       // 状态：draft/published
-        createTime: string;   // 创建时间
-        updateTime: string;   // 更新时间
-      }>;
-      total: number;         // 总记录数
-    }
-  }
-  ```
+#### 1. 获取文章列表
+- **接口**: `/api/posts`
+- **方法**: GET
+- **描述**: 获取文章列表，支持分页和筛选
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+  - page: number (页码，默认1)
+  - pageSize: number (每页数量，默认10)
+  - keyword: string (搜索关键词)
+  - categoryId: number (分类ID)
+  - tagId: number (标签ID)
+  - status: string (状态：draft/published)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "total": "number",
+    "items": [{
+      "id": "number",
+      "title": "string",
+      "content": "string",
+      "summary": "string",
+      "categoryId": "number",
+      "categoryName": "string",
+      "tags": [{
+        "id": "number",
+        "name": "string"
+      }],
+      "status": "string",
+      "createTime": "string",
+      "updateTime": "string"
+    }]
+  },
+  "message": "string"
+}
+```
 
-#### 创建文章
-- 请求方式：POST
-- 接口路径：`/api/posts`
-- 请求参数：
-  ```typescript
-  {
-    title: string;     // 文章标题
-    content: string;   // 文章内容
-    summary: string;   // 文章摘要
-    category: string;  // 分类
-    tags: string[];    // 标签
-    status: string;    // 状态：draft/published
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      id: number;      // 文章ID
-    }
-  }
-  ```
+#### 2. 创建文章
+- **接口**: `/api/posts`
+- **方法**: POST
+- **描述**: 创建新文章
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "title": "string",      // 文章标题
+  "content": "string",    // 文章内容
+  "summary": "string",    // 文章摘要
+  "categoryId": "number", // 分类ID
+  "tagIds": ["number"],   // 标签ID列表
+  "status": "string"      // 状态：draft/published
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "number"
+  },
+  "message": "string"
+}
+```
 
-#### 更新文章
-- 请求方式：PUT
-- 接口路径：`/api/posts/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;        // 文章ID（路径参数）
-    title?: string;    // 文章标题
-    content?: string;  // 文章内容
-    summary?: string;  // 文章摘要
-    category?: string; // 分类
-    tags?: string[];   // 标签
-    status?: string;   // 状态：draft/published
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+#### 3. 更新文章
+- **接口**: `/api/posts/{id}`
+- **方法**: PUT
+- **描述**: 更新文章信息
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "title": "string",
+  "content": "string",
+  "summary": "string",
+  "categoryId": "number",
+  "tagIds": ["number"],
+  "status": "string"
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
 
-#### 删除文章
-- 请求方式：DELETE
-- 接口路径：`/api/posts/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;  // 文章ID（路径参数）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+#### 4. 删除文章
+- **接口**: `/api/posts/{id}`
+- **方法**: DELETE
+- **描述**: 删除文章
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
 
 ### 分类管理
 
-#### 获取分类列表
-- 请求方式：GET
-- 接口路径：`/api/categories`
-- 请求参数：无
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: Array<{
-      id: number;      // 分类ID
-      name: string;    // 分类名称
-      description: string; // 分类描述
-      createTime: string;  // 创建时间
-    }>
-  }
-  ```
+#### 1. 获取分类列表
+- **接口**: `/api/categories`
+- **方法**: GET
+- **描述**: 获取分类列表
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": [{
+    "id": "number",
+    "name": "string",
+    "description": "string",
+    "createTime": "string",
+    "updateTime": "string"
+  }],
+  "message": "string"
+}
+```
 
-#### 创建分类
-- 请求方式：POST
-- 接口路径：`/api/categories`
-- 请求参数：
-  ```typescript
-  {
-    name: string;        // 分类名称
-    description: string; // 分类描述
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      id: number;      // 分类ID
-    }
-  }
-  ```
-
-#### 更新分类
-- 请求方式：PUT
-- 接口路径：`/api/categories/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;         // 分类ID（路径参数）
-    name?: string;      // 分类名称
-    description?: string; // 分类描述
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
-
-#### 删除分类
-- 请求方式：DELETE
-- 接口路径：`/api/categories/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;  // 分类ID（路径参数）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+#### 2. 创建分类
+- **接口**: `/api/categories`
+- **方法**: POST
+- **描述**: 创建新分类
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "name": "string",        // 分类名称
+  "description": "string"  // 分类描述
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "number"
+  },
+  "message": "string"
+}
+```
 
 ### 标签管理
 
-#### 获取标签列表
-- 请求方式：GET
-- 接口路径：`/api/tags`
-- 请求参数：无
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: Array<{
-      id: number;      // 标签ID
-      name: string;    // 标签名称
-      createTime: string; // 创建时间
-    }>
-  }
-  ```
+#### 1. 获取标签列表
+- **接口**: `/api/tags`
+- **方法**: GET
+- **描述**: 获取标签列表
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": [{
+    "id": "number",
+    "name": "string",
+    "createTime": "string",
+    "updateTime": "string"
+  }],
+  "message": "string"
+}
+```
 
-#### 创建标签
-- 请求方式：POST
-- 接口路径：`/api/tags`
-- 请求参数：
-  ```typescript
-  {
-    name: string;  // 标签名称
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      id: number;      // 标签ID
-    }
-  }
-  ```
+#### 2. 创建标签
+- **接口**: `/api/tags`
+- **方法**: POST
+- **描述**: 创建新标签
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "name": "string"  // 标签名称
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "number"
+  },
+  "message": "string"
+}
+```
 
-#### 更新标签
-- 请求方式：PUT
-- 接口路径：`/api/tags/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;    // 标签ID（路径参数）
-    name: string;  // 标签名称
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+### 评论管理
 
-#### 删除标签
-- 请求方式：DELETE
-- 接口路径：`/api/tags/:id`
-- 请求参数：
-  ```typescript
-  {
-    id: number;  // 标签ID（路径参数）
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
+#### 1. 获取评论列表
+- **接口**: `/api/comments`
+- **方法**: GET
+- **描述**: 获取评论列表，支持分页和筛选
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+  - page: number (页码，默认1)
+  - pageSize: number (每页数量，默认10)
+  - postId: number (文章ID)
+  - status: string (状态：pending/approved/rejected)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "total": "number",
+    "items": [{
+      "id": "number",
+      "content": "string",
+      "postId": "number",
+      "postTitle": "string",
+      "author": "string",
+      "email": "string",
+      "status": "string",
+      "createTime": "string",
+      "updateTime": "string"
+    }]
+  },
+  "message": "string"
+}
+```
 
-### 用户认证
+#### 2. 更新评论状态
+- **接口**: `/api/comments/{id}/status`
+- **方法**: PUT
+- **描述**: 更新评论状态
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "status": "string"  // 状态：approved/rejected
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
 
-#### 登录
-- 请求方式：POST
-- 接口路径：`/api/auth/login`
-- 请求参数：
-  ```typescript
-  {
-    username: string;  // 用户名
-    password: string;  // 密码
-  }
-  ```
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      token: string;   // JWT令牌
-      user: {
-        id: number;    // 用户ID
-        username: string; // 用户名
-        role: string;  // 用户角色
-      }
-    }
-  }
-  ```
+### 错误码说明
+- 200: 成功
+- 400: 请求参数错误
+- 401: 未授权或token过期
+- 403: 权限不足
+- 404: 资源不存在
+- 500: 服务器内部错误
 
-#### 登出
-- 请求方式：POST
-- 接口路径：`/api/auth/logout`
-- 请求参数：无
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: null
-  }
-  ```
-
-#### 获取当前用户信息
-- 请求方式：GET
-- 接口路径：`/api/auth/me`
-- 请求参数：无
-- 响应数据：
-  ```typescript
-  {
-    code: number;      // 状态码
-    message: string;   // 提示信息
-    data: {
-      id: number;      // 用户ID
-      username: string; // 用户名
-      role: string;    // 用户角色
-      email: string;   // 邮箱
-      createTime: string; // 创建时间
-    }
-  }
-  ```
-
-## 贡献指南
-
-1. Fork 本仓库
-2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交你的改动 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开一个 Pull Request
-
-## 许可证
-
-MIT License
+### 注意事项
+1. 所有需要认证的接口都需要在请求头中携带 token
+2. 分页接口的响应数据中 total 表示总记录数
+3. 时间格式统一使用 ISO 8601 格式
+4. 文件上传接口需要设置 Content-Type: multipart/form-data

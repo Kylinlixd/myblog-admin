@@ -1,0 +1,96 @@
+@use 'sass:map';
+@use 'theme';
+@use 'global';
+@use 'components';
+@use 'layout';
+@use 'animations';
+@use 'responsive';
+@import './theme.scss';
+
+// 应用主题
+:root {
+  @include theme.apply-theme('light');
+}
+
+[data-theme='dark'] {
+  @include theme.apply-theme('dark');
+}
+
+// 全局过渡
+.theme-transition {
+  transition: background-color var(--transition-duration) var(--transition-timing),
+              color var(--transition-duration) var(--transition-timing),
+              border-color var(--transition-duration) var(--transition-timing),
+              box-shadow var(--transition-duration) var(--transition-timing);
+}
+
+// 全局样式
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+}
+
+#app {
+  height: 100%;
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+  
+  &:hover {
+    background: var(--text-light);
+  }
+}
+
+// 过渡动画
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// Element Plus 主题覆盖
+.el-button--primary {
+  --el-button-bg-color: var(--primary-color);
+  --el-button-border-color: var(--primary-color);
+  --el-button-hover-bg-color: var(--primary-color-dark);
+  --el-button-hover-border-color: var(--primary-color-dark);
+}
+
+.el-input__wrapper {
+  --el-input-border-color: var(--border-color);
+  --el-input-hover-border-color: var(--primary-color);
+  --el-input-focus-border-color: var(--primary-color);
+}
+
+.el-menu {
+  --el-menu-bg-color: var(--background-color);
+  --el-menu-hover-bg-color: var(--background-light);
+  --el-menu-active-color: var(--primary-color);
+}
+
+.el-card {
+  --el-card-border-color: var(--border-color);
+  --el-card-border-radius: var(--border-radius);
+} 

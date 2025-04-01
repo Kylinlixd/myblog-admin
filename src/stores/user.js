@@ -1,6 +1,14 @@
 import { defineStore } from 'pinia'
 import request from '../utils/request'
 
+// 模拟用户数据
+const mockUser = {
+  id: 1,
+  username: 'admin',
+  nickname: '管理员',
+  avatar: 'https://placeholder.com/32'
+}
+
 export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: null,
@@ -15,27 +23,34 @@ export const useUserStore = defineStore('user', {
   actions: {
     async login(username, password) {
       try {
-        const { token, userInfo } = await request.post('/auth/login', {
-          username,
-          password
-        })
-        
-        this.token = token
-        this.userInfo = userInfo
-        localStorage.setItem('token', token)
-        
-        return true
+        // 模拟登录验证
+        if (username === 'admin' && password === '123456') {
+          // 模拟token
+          const token = 'mock_token_' + Date.now()
+          
+          // 直接设置用户信息和token
+          this.token = token
+          this.userInfo = mockUser
+          localStorage.setItem('token', token)
+          
+          return true
+        }
+        return false
       } catch (error) {
+        console.error('登录失败:', error)
+        this.logout()
         return false
       }
     },
     
     async getUserInfo() {
       try {
-        const userInfo = await request.get('/auth/info')
-        this.userInfo = userInfo
-        return userInfo
+        // 模拟获取用户信息
+        this.userInfo = mockUser
+        return mockUser
       } catch (error) {
+        console.error('获取用户信息失败:', error)
+        this.logout()
         return null
       }
     },
@@ -48,11 +63,11 @@ export const useUserStore = defineStore('user', {
     
     async updatePassword(oldPassword, newPassword) {
       try {
-        await request.put('/auth/password', {
-          oldPassword,
-          newPassword
-        })
-        return true
+        // 模拟修改密码
+        if (oldPassword === '123456') {
+          return true
+        }
+        return false
       } catch (error) {
         return false
       }

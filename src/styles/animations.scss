@@ -1,0 +1,690 @@
+@use 'sass:map';
+@use 'theme' as *;
+
+// 淡入淡出
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// 滑动
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// 缩放
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+}
+
+// 旋转
+@keyframes rotateIn {
+  from {
+    transform: rotate(-180deg);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes rotateOut {
+  from {
+    transform: rotate(0);
+    opacity: 1;
+  }
+  to {
+    transform: rotate(180deg);
+    opacity: 0;
+  }
+}
+
+// 弹跳
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  70% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounceOut {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+// 抖动
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+// 脉冲
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// 动画类
+.animate {
+  animation-duration: var(--transition-duration);
+  animation-timing-function: ease;
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+
+.animate-infinite {
+  animation-iteration-count: infinite;
+}
+
+.animate-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.animate-delay-4 {
+  animation-delay: 0.4s;
+}
+
+.animate-delay-5 {
+  animation-delay: 0.5s;
+}
+
+// 淡入淡出动画
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.fade-out {
+  animation-name: fadeOut;
+}
+
+// 滑动动画
+.slide-in-up {
+  animation-name: slideInUp;
+}
+
+.slide-in-down {
+  animation-name: slideInDown;
+}
+
+.slide-in-left {
+  animation-name: slideInLeft;
+}
+
+.slide-in-right {
+  animation-name: slideInRight;
+}
+
+// 缩放动画
+.scale-in {
+  animation-name: scaleIn;
+}
+
+.scale-out {
+  animation-name: scaleOut;
+}
+
+// 旋转动画
+.rotate-in {
+  animation-name: rotateIn;
+}
+
+.rotate-out {
+  animation-name: rotateOut;
+}
+
+// 弹跳动画
+.bounce-in {
+  animation-name: bounceIn;
+}
+
+.bounce-out {
+  animation-name: bounceOut;
+}
+
+// 过渡类
+.transition {
+  transition: all var(--transition-duration) ease;
+}
+
+.transition-colors {
+  transition: color var(--transition-duration) ease,
+              background-color var(--transition-duration) ease;
+}
+
+.transition-opacity {
+  transition: opacity var(--transition-duration) ease;
+}
+
+.transition-transform {
+  transition: transform var(--transition-duration) ease;
+}
+
+// 过渡状态
+.hover\:scale-110:hover {
+  transform: scale(1.1);
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:scale-95:hover {
+  transform: scale(0.95);
+}
+
+.hover\:scale-90:hover {
+  transform: scale(0.9);
+}
+
+.hover\:rotate-180:hover {
+  transform: rotate(180deg);
+}
+
+.hover\:rotate-90:hover {
+  transform: rotate(90deg);
+}
+
+.hover\:rotate-45:hover {
+  transform: rotate(45deg);
+}
+
+.hover\:-rotate-45:hover {
+  transform: rotate(-45deg);
+}
+
+.hover\:-rotate-90:hover {
+  transform: rotate(-90deg);
+}
+
+.hover\:-rotate-180:hover {
+  transform: rotate(-180deg);
+}
+
+.hover\:translate-x-1:hover {
+  transform: translateX(4px);
+}
+
+.hover\:translate-x-2:hover {
+  transform: translateX(8px);
+}
+
+.hover\:translate-x-4:hover {
+  transform: translateX(16px);
+}
+
+.hover\:translate-x-8:hover {
+  transform: translateX(32px);
+}
+
+.hover\:-translate-x-1:hover {
+  transform: translateX(-4px);
+}
+
+.hover\:-translate-x-2:hover {
+  transform: translateX(-8px);
+}
+
+.hover\:-translate-x-4:hover {
+  transform: translateX(-16px);
+}
+
+.hover\:-translate-x-8:hover {
+  transform: translateX(-32px);
+}
+
+.hover\:translate-y-1:hover {
+  transform: translateY(4px);
+}
+
+.hover\:translate-y-2:hover {
+  transform: translateY(8px);
+}
+
+.hover\:translate-y-4:hover {
+  transform: translateY(16px);
+}
+
+.hover\:translate-y-8:hover {
+  transform: translateY(32px);
+}
+
+.hover\:-translate-y-1:hover {
+  transform: translateY(-4px);
+}
+
+.hover\:-translate-y-2:hover {
+  transform: translateY(-8px);
+}
+
+.hover\:-translate-y-4:hover {
+  transform: translateY(-16px);
+}
+
+.hover\:-translate-y-8:hover {
+  transform: translateY(-32px);
+}
+
+// 动画持续时间
+.duration-75 {
+  animation-duration: 75ms;
+}
+
+.duration-100 {
+  animation-duration: 100ms;
+}
+
+.duration-150 {
+  animation-duration: 150ms;
+}
+
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+.duration-300 {
+  animation-duration: 300ms;
+}
+
+.duration-500 {
+  animation-duration: 500ms;
+}
+
+.duration-700 {
+  animation-duration: 700ms;
+}
+
+.duration-1000 {
+  animation-duration: 1000ms;
+}
+
+// 动画时间函数
+.ease-linear {
+  animation-timing-function: linear;
+}
+
+.ease-in {
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.ease-out {
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.ease-in-out {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// 动画填充模式
+.fill-none {
+  animation-fill-mode: none;
+}
+
+.fill-forwards {
+  animation-fill-mode: forwards;
+}
+
+.fill-backwards {
+  animation-fill-mode: backwards;
+}
+
+.fill-both {
+  animation-fill-mode: both;
+}
+
+// 动画迭代次数
+.animate-iterate-2 {
+  animation-iteration-count: 2;
+}
+
+.animate-iterate-3 {
+  animation-iteration-count: 3;
+}
+
+.animate-iterate-infinite {
+  animation-iteration-count: infinite;
+}
+
+// 动画时间函数
+.animate-ease-linear {
+  animation-timing-function: linear;
+}
+
+.animate-ease-in {
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.animate-ease-out {
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.animate-ease-in-out {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// 闪烁
+.flash {
+  animation: flash 1s ease-in-out;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+// 波浪
+.wave {
+  animation: wave 2s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+// 渐变
+.gradient {
+  background: linear-gradient(
+    45deg,
+    var(--primary-color),
+    var(--primary-color-light)
+  );
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+// 加载动画
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+// 进度条动画
+.progress-bar {
+  height: 4px;
+  background-color: var(--background-light);
+  overflow: hidden;
+  
+  .progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    animation: progress 2s ease-in-out infinite;
+  }
+}
+
+@keyframes progress {
+  0% {
+    width: 0;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+// 打字机效果
+.typing {
+  overflow: hidden;
+  border-right: 2px solid var(--primary-color);
+  white-space: nowrap;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--primary-color);
+  }
+}
+
+// 悬浮效果
+.hover-lift {
+  transition: transform var(--transition-duration) var(--transition-timing);
+  
+  &:hover {
+    transform: translateY(-5px);
+  }
+}
+
+.hover-scale {
+  transition: transform var(--transition-duration) var(--transition-timing);
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.hover-rotate {
+  transition: transform var(--transition-duration) var(--transition-timing);
+  
+  &:hover {
+    transform: rotate(5deg);
+  }
+}
+
+// 过渡效果
+.transition-all {
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.transition-transform {
+  transition: transform var(--transition-duration) var(--transition-timing);
+}
+
+.transition-opacity {
+  transition: opacity var(--transition-duration) var(--transition-timing);
+}
+
+.transition-colors {
+  transition: background-color var(--transition-duration) var(--transition-timing),
+              border-color var(--transition-duration) var(--transition-timing),
+              color var(--transition-duration) var(--transition-timing);
+}
+
+// 动画持续时间
+.duration-100 {
+  --transition-duration: 100ms;
+}
+
+.duration-200 {
+  --transition-duration: 200ms;
+}
+
+.duration-300 {
+  --transition-duration: 300ms;
+}
+
+.duration-500 {
+  --transition-duration: 500ms;
+}
+
+.duration-700 {
+  --transition-duration: 700ms;
+}
+
+.duration-1000 {
+  --transition-duration: 1000ms;
+}
+
+// 动画时间函数
+.ease-linear {
+  --transition-timing: linear;
+}
+
+.ease-in {
+  --transition-timing: cubic-bezier(0.4, 0, 1, 1);
+}
+
+.ease-out {
+  --transition-timing: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.ease-in-out {
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ease-bounce {
+  --transition-timing: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+} 

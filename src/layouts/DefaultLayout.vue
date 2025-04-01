@@ -9,7 +9,7 @@
         :default-active="activeMenu"
         class="el-menu-vertical"
         :router="true"
-        background-color="var(--bg-color)"
+        background-color="var(--background-color)"
         text-color="var(--text-primary)"
         active-text-color="var(--primary-color)"
       >
@@ -39,6 +39,7 @@
           <breadcrumb />
         </div>
         <div class="header-right">
+          <theme-toggle />
           <el-dropdown>
             <span class="user-info">
               <el-avatar :size="32" src="https://placeholder.com/32" />
@@ -48,7 +49,7 @@
               <el-dropdown-menu>
                 <el-dropdown-item>个人信息</el-dropdown-item>
                 <el-dropdown-item>修改密码</el-dropdown-item>
-                <el-dropdown-item divided>退出登录</el-dropdown-item>
+                <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -67,21 +68,49 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Monitor, Document, Folder, Collection, Fold } from '@element-plus/icons-vue'
+import { useUserStore } from '../stores/user'
+import { useThemeStore } from '../stores/theme'
+import { ElMessageBox } from 'element-plus'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+const themeStore = useThemeStore()
 const activeMenu = computed(() => route.path)
+
+// 初始化主题
+onMounted(() => {
+  themeStore.initTheme()
+})
+
+const handleLogout = async () => {
+  try {
+    await ElMessageBox.confirm('确定要退出登录吗？', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    userStore.logout()
+    router.push('/login')
+  } catch (error) {
+    // 用户取消操作
+  }
+}
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .layout-container {
   height: 100vh;
+  display: flex;
   
   .aside {
-    background-color: var(--bg-color);
+    background-color: var(--background-color);
     border-right: 1px solid var(--border-color);
+    transition: width 0.3s;
     
     .logo {
       height: 60px;
@@ -109,7 +138,8 @@ const activeMenu = computed(() => route.path)
   }
   
   .header {
-    background-color: var(--bg-light);
+    height: 60px;
+    background-color: var(--background-color);
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
@@ -119,12 +149,12 @@ const activeMenu = computed(() => route.path)
     .header-left {
       display: flex;
       align-items: center;
+      gap: 20px;
       
       .toggle-sidebar {
         font-size: 20px;
         cursor: pointer;
-        margin-right: 20px;
-        color: var(--text-secondary);
+        color: var(--text-primary);
         
         &:hover {
           color: var(--primary-color);
@@ -133,13 +163,17 @@ const activeMenu = computed(() => route.path)
     }
     
     .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      
       .user-info {
         display: flex;
         align-items: center;
+        gap: 8px;
         cursor: pointer;
         
         span {
-          margin-left: 8px;
           color: var(--text-primary);
         }
       }
@@ -147,8 +181,9 @@ const activeMenu = computed(() => route.path)
   }
   
   .main {
-    background-color: var(--bg-color);
+    background-color: var(--background-light);
     padding: 20px;
+    overflow-y: auto;
   }
 }
 
