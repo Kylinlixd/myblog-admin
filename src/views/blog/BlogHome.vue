@@ -1,139 +1,141 @@
 <template>
-  <div class="blog-home">
-    <div class="blog-banner">
-      <div class="banner-content">
-        <h1>欢迎访问我的博客</h1>
-        <p>分享前端开发技术、经验和思考</p>
+  <AuroraBackground>
+    <div class="blog-home">
+      <div class="blog-banner">
+        <div class="banner-content">
+          <h1>欢迎访问我的博客</h1>
+          <p>分享前端开发技术、经验和思考</p>
+        </div>
       </div>
-    </div>
-
-    <div class="blog-content">
-      <div class="main-content">
-        <div class="recent-posts">
-          <h2 class="section-title">最新文章</h2>
-          
-          <div v-if="loading" class="loading-container">
-            <el-skeleton :rows="3" animated />
-            <el-skeleton :rows="3" animated style="margin-top: 1rem" />
-          </div>
-          
-          <div v-else-if="errorMessage" class="error-message">
-            <el-empty 
-              description="加载文章失败" 
-              :image-size="100"
-            >
-              <p>{{ errorMessage }}</p>
-              <el-button type="primary" @click="fetchPosts">重试</el-button>
-            </el-empty>
-          </div>
-          
-          <div v-else-if="posts.length === 0" class="empty-posts">
-            <el-empty description="暂无文章" :image-size="100" />
-          </div>
-          
-          <div v-else class="post-list">
-            <div v-for="post in posts" :key="post.id" class="post-card">
-              <router-link :to="`/blog/post/${post.id}`" class="post-link">
-                <h3 class="post-title">{{ post.title }}</h3>
-              </router-link>
-              <p class="post-summary">{{ post.summary }}</p>
-              <div class="post-meta">
-                <span class="post-category">
-                  <el-tag size="small">{{ post.categoryName }}</el-tag>
-                </span>
-                <span v-if="post.tags && post.tags.length > 0" class="post-tags">
-                  <el-tag
-                    v-for="tag in post.tags"
-                    :key="tag.id"
-                    size="small"
-                    effect="plain"
-                    class="tag-item"
-                  >
-                    {{ tag.name }}
-                  </el-tag>
-                </span>
-                <span class="post-date">{{ formatDate(post.createdAt) }}</span>
-              </div>
-              <div class="post-footer">
-                <router-link :to="`/blog/post/${post.id}`" class="read-more">
-                  阅读全文
-                  <el-icon><Right /></el-icon>
-                </router-link>
-              </div>
+    
+      <div class="blog-content">
+        <div class="main-content">
+          <div class="recent-posts">
+            <h2 class="section-title">最新文章</h2>
+            
+            <div v-if="loading" class="loading-container">
+              <el-skeleton :rows="3" animated />
+              <el-skeleton :rows="3" animated style="margin-top: 1rem" />
             </div>
             
-            <div class="pagination-container">
-              <el-pagination
-                v-model:current-page="currentPage"
-                :page-size="pageSize"
-                :total="total"
-                :page-sizes="[5, 10, 20]"
-                layout="total, sizes, prev, pager, next"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-              />
+            <div v-else-if="errorMessage" class="error-message">
+              <el-empty 
+                description="加载文章失败" 
+                :image-size="100"
+              >
+                <p>{{ errorMessage }}</p>
+                <el-button type="primary" @click="fetchPosts">重试</el-button>
+              </el-empty>
+            </div>
+            
+            <div v-else-if="posts.length === 0" class="empty-posts">
+              <el-empty description="暂无文章" :image-size="100" />
+            </div>
+            
+            <div v-else class="post-list">
+              <div v-for="post in posts" :key="post.id" class="post-card">
+                <router-link :to="`/blog/post/${post.id}`" class="post-link">
+                  <h3 class="post-title">{{ post.title }}</h3>
+                </router-link>
+                <p class="post-summary">{{ post.summary }}</p>
+                <div class="post-meta">
+                  <span class="post-category">
+                    <el-tag size="small">{{ post.categoryName }}</el-tag>
+                  </span>
+                  <span v-if="post.tags && post.tags.length > 0" class="post-tags">
+                    <el-tag
+                      v-for="tag in post.tags"
+                      :key="tag.id"
+                      size="small"
+                      effect="plain"
+                      class="tag-item"
+                    >
+                      {{ tag.name }}
+                    </el-tag>
+                  </span>
+                  <span class="post-date">{{ formatDate(post.createdAt) }}</span>
+                </div>
+                <div class="post-footer">
+                  <router-link :to="`/blog/post/${post.id}`" class="read-more">
+                    阅读全文
+                    <el-icon><Right /></el-icon>
+                  </router-link>
+                </div>
+              </div>
+              
+              <div class="pagination-container">
+                <el-pagination
+                  v-model:current-page="currentPage"
+                  :page-size="pageSize"
+                  :total="total"
+                  :page-sizes="[5, 10, 20]"
+                  layout="total, sizes, prev, pager, next"
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="sidebar">
+          <div class="sidebar-section categories-section">
+            <h3 class="sidebar-title">文章分类</h3>
+            <div v-if="loadingCategories" class="loading-container">
+              <el-skeleton :rows="3" animated />
+            </div>
+            <div v-else-if="categories.length === 0" class="empty-categories">
+              <p>暂无分类</p>
+            </div>
+            <div v-else class="category-list">
+              <router-link
+                v-for="category in categories"
+                :key="category.id"
+                :to="`/blog/categories/${category.id}`"
+                class="category-item"
+              >
+                <span class="category-name">{{ category.name }}</span>
+                <el-badge :value="category.count || 0" class="category-count" />
+              </router-link>
+            </div>
+          </div>
+          
+          <div class="sidebar-section tags-section">
+            <h3 class="sidebar-title">热门标签</h3>
+            <div v-if="loadingTags" class="loading-container">
+              <el-skeleton :rows="2" animated />
+            </div>
+            <div v-else-if="tags.length === 0" class="empty-tags">
+              <p>暂无标签</p>
+            </div>
+            <div v-else class="tag-cloud">
+              <router-link
+                v-for="tag in tags"
+                :key="tag.id"
+                :to="`/blog/tags/${tag.id}`"
+                class="tag-item"
+              >
+                <el-tag effect="plain">{{ tag.name }}</el-tag>
+              </router-link>
+            </div>
+          </div>
+          
+          <div class="sidebar-section about-section">
+            <h3 class="sidebar-title">关于我</h3>
+            <div class="about-preview">
+              <img src="../../assets/default-avatar.png" alt="头像" class="about-avatar" />
+              <p class="about-name">博主小李</p>
+              <p class="about-bio">热爱前端开发，喜欢分享技术经验</p>
+              <router-link to="/blog/about" class="about-link">
+                了解更多
+                <el-icon><Right /></el-icon>
+              </router-link>
             </div>
           </div>
         </div>
       </div>
-      
-      <div class="sidebar">
-        <div class="sidebar-section categories-section">
-          <h3 class="sidebar-title">文章分类</h3>
-          <div v-if="loadingCategories" class="loading-container">
-            <el-skeleton :rows="3" animated />
-          </div>
-          <div v-else-if="categories.length === 0" class="empty-categories">
-            <p>暂无分类</p>
-          </div>
-          <div v-else class="category-list">
-            <router-link
-              v-for="category in categories"
-              :key="category.id"
-              :to="`/blog/categories/${category.id}`"
-              class="category-item"
-            >
-              <span class="category-name">{{ category.name }}</span>
-              <el-badge :value="category.count || 0" class="category-count" />
-            </router-link>
-          </div>
-        </div>
-        
-        <div class="sidebar-section tags-section">
-          <h3 class="sidebar-title">热门标签</h3>
-          <div v-if="loadingTags" class="loading-container">
-            <el-skeleton :rows="2" animated />
-          </div>
-          <div v-else-if="tags.length === 0" class="empty-tags">
-            <p>暂无标签</p>
-          </div>
-          <div v-else class="tag-cloud">
-            <router-link
-              v-for="tag in tags"
-              :key="tag.id"
-              :to="`/blog/tags/${tag.id}`"
-              class="tag-item"
-            >
-              <el-tag effect="plain">{{ tag.name }}</el-tag>
-            </router-link>
-          </div>
-        </div>
-        
-        <div class="sidebar-section about-section">
-          <h3 class="sidebar-title">关于我</h3>
-          <div class="about-preview">
-            <img src="../../assets/default-avatar.png" alt="头像" class="about-avatar" />
-            <p class="about-name">博主小李</p>
-            <p class="about-bio">热爱前端开发，喜欢分享技术经验</p>
-            <router-link to="/blog/about" class="about-link">
-              了解更多
-              <el-icon><Right /></el-icon>
-            </router-link>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
+  </AuroraBackground>
 </template>
 
 <script setup>
@@ -143,6 +145,7 @@ import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
 import { ElMessage } from 'element-plus'
 import { Right } from '@element-plus/icons-vue'
+import AuroraBackground from '../../components/AuroraBackground.vue'
 
 // 文章列表状态
 const posts = ref([])
