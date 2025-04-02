@@ -67,6 +67,25 @@ export function changePassword(data) {
 }
 
 /**
+ * 更新用户资料
+ * @param {Object} data - 用户资料
+ * @param {string} [data.nickname] - 昵称
+ * @param {string} [data.email] - 邮箱
+ * @param {string} [data.bio] - 个人简介
+ * @param {string} [data.avatar] - 头像URL
+ * @returns {Promise<Object>} - 更新后的用户信息
+ */
+export function updateUserProfile(data) {
+  return request.put('/auth/profile', data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '更新个人资料失败'))
+    })
+}
+
+/**
  * 刷新token
  * @returns {Promise<{token: string}>}
  */
