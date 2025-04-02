@@ -115,9 +115,13 @@ npm run build
   "code": 200,
   "data": {
     "id": "number",
-    "username": "string",
+    "username": "string", 
     "nickname": "string",
-    "avatar": "string"
+    "email": "string",
+    "bio": "string",
+    "avatar": "string",
+    "createdAt": "string",
+    "updatedAt": "string"
   },
   "message": "string"
 }
@@ -140,6 +144,38 @@ npm run build
 ```json
 {
   "code": 200,
+  "message": "string"
+}
+```
+
+#### 5. 更新个人资料
+- **接口**: `/api/auth/profile`
+- **方法**: PUT
+- **描述**: 更新用户个人资料
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "nickname": "string", // 昵称
+  "email": "string",    // 邮箱
+  "bio": "string",      // 个人简介
+  "avatar": "string"    // 头像URL
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "number",
+    "username": "string",
+    "nickname": "string",
+    "email": "string",
+    "bio": "string",
+    "avatar": "string",
+    "updatedAt": "string"
+  },
   "message": "string"
 }
 ```
@@ -177,8 +213,8 @@ npm run build
         "name": "string"
       }],
       "status": "string",
-      "createTime": "string",
-      "updateTime": "string"
+      "createdAt": "string",
+      "updatedAt": "string"
     }]
   },
   "message": "string"
@@ -268,8 +304,8 @@ npm run build
     "id": "number",
     "name": "string",
     "description": "string",
-    "createTime": "string",
-    "updateTime": "string"
+    "createdAt": "string",
+    "updatedAt": "string"
   }],
   "message": "string"
 }
@@ -299,6 +335,41 @@ npm run build
 }
 ```
 
+#### 3. 更新分类
+- **接口**: `/api/categories/{id}`
+- **方法**: PUT
+- **描述**: 更新分类信息
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "name": "string",        // 分类名称
+  "description": "string"  // 分类描述
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
+
+#### 4. 删除分类
+- **接口**: `/api/categories/{id}`
+- **方法**: DELETE
+- **描述**: 删除分类
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
+
 ### 标签管理
 
 #### 1. 获取标签列表
@@ -314,8 +385,8 @@ npm run build
   "data": [{
     "id": "number",
     "name": "string",
-    "createTime": "string",
-    "updateTime": "string"
+    "createdAt": "string",
+    "updatedAt": "string"
   }],
   "message": "string"
 }
@@ -344,6 +415,40 @@ npm run build
 }
 ```
 
+#### 3. 更新标签
+- **接口**: `/api/tags/{id}`
+- **方法**: PUT
+- **描述**: 更新标签信息
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+```json
+{
+  "name": "string"  // 标签名称
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
+
+#### 4. 删除标签
+- **接口**: `/api/tags/{id}`
+- **方法**: DELETE
+- **描述**: 删除标签
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
+
 ### 评论管理
 
 #### 1. 获取评论列表
@@ -355,7 +460,8 @@ npm run build
 - **请求参数**:
   - page: number (页码，默认1)
   - pageSize: number (每页数量，默认10)
-  - postId: number (文章ID)
+  - postTitle: string (文章标题)
+  - author: string (评论者)
   - status: string (状态：pending/approved/rejected)
 - **响应数据**:
 ```json
@@ -371,30 +477,74 @@ npm run build
       "author": "string",
       "email": "string",
       "status": "string",
-      "createTime": "string",
-      "updateTime": "string"
+      "createdAt": "string",
+      "updatedAt": "string"
     }]
   },
   "message": "string"
 }
 ```
 
-#### 2. 更新评论状态
-- **接口**: `/api/comments/{id}/status`
+#### 2. 通过评论
+- **接口**: `/api/comments/{id}/approve`
 - **方法**: PUT
-- **描述**: 更新评论状态
+- **描述**: 批准评论
 - **请求头**:
   - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "status": "string"  // 状态：approved/rejected
-}
-```
 - **响应数据**:
 ```json
 {
   "code": 200,
+  "message": "string"
+}
+```
+
+#### 3. 拒绝评论
+- **接口**: `/api/comments/{id}/reject`
+- **方法**: PUT
+- **描述**: 拒绝评论
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
+
+#### 4. 删除评论
+- **接口**: `/api/comments/{id}`
+- **方法**: DELETE
+- **描述**: 删除评论
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "string"
+}
+```
+
+### 文件上传
+
+#### 1. 上传头像
+- **接口**: `/api/upload/avatar`
+- **方法**: POST
+- **描述**: 上传用户头像
+- **请求头**:
+  - Authorization: Bearer {token}
+  - Content-Type: multipart/form-data
+- **请求参数**:
+  - file: File (图片文件，JPG或PNG格式，大小不超过2MB)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "url": "string"  // 头像URL
+  },
   "message": "string"
 }
 ```
@@ -438,31 +588,31 @@ npm run build
     {
       "id": 1,
       "title": "如何提高博客访问量：10个实用技巧",
-      "createTime": "2023-09-15 14:30:00",
+      "createdAt": "2023-09-15 14:30:00",
       "views": 158
     },
     {
       "id": 2,
       "title": "前端开发中常见的10个性能优化方法",
-      "createTime": "2023-09-10 09:15:00",
+      "createdAt": "2023-09-10 09:15:00",
       "views": 245
     },
     {
       "id": 3,
       "title": "Vue3和React18：前端框架的未来发展趋势",
-      "createTime": "2023-09-05 16:45:00",
+      "createdAt": "2023-09-05 16:45:00",
       "views": 362
     },
     {
       "id": 4,
       "title": "如何构建一个安全可靠的博客系统",
-      "createTime": "2023-08-28 11:20:00",
+      "createdAt": "2023-08-28 11:20:00",
       "views": 183
     },
     {
       "id": 5,
       "title": "Markdown写作技巧：让你的博客更加专业",
-      "createTime": "2023-08-20 08:45:00",
+      "createdAt": "2023-08-20 08:45:00",
       "views": 217
     }
   ]
