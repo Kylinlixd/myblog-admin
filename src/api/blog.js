@@ -132,7 +132,7 @@ export function getBlogStats() {
  * @returns {Promise<Object>}
  */
 export function getAboutInfo() {
-  return request.get('/api/about')
+  return request.get('/about')
     .then(response => {
       if (response.code === 200) {
         return response.data

@@ -12,7 +12,7 @@ import request from '../utils/request'
  * @returns {Promise<{total: number, items: Array}>}
  */
 export function getPostList(params) {
-  return request.get('/api/posts', params)
+  return request.get('/posts', params)
     .then(response => {
       if (response.code === 200) {
         return response.data
