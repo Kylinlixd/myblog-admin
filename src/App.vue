@@ -4,6 +4,7 @@ import { useThemeStore } from './stores/theme'
 import { useAppStore } from './stores/app'
 import { useRouter } from 'vue-router'
 import PageLoading from './components/PageLoading.vue'
+import { ElMessage } from 'element-plus'
 
 // 初始化主题和应用状态
 const themeStore = useThemeStore()
@@ -22,6 +23,28 @@ onBeforeMount(() => {
     appStore.hasError = false
     appStore.startLoading(to.meta.loadingText || '页面加载中...')
     next()
+  })
+  
+  // 添加ESC键强制重置加载状态
+  window.addEventListener('keydown', (event) => {
+    // 按下ESC键重置加载状态
+    if (event.key === 'Escape' && appStore.isLoading) {
+      console.log('[App] 用户按下ESC键，强制重置加载状态')
+      appStore.resetLoadingState()
+      ElMessage.info('已强制重置加载状态')
+    }
+    
+    // 按下Ctrl+Alt+R强制刷新当前页面
+    if (event.ctrlKey && event.altKey && event.key === 'r') {
+      console.log('[App] 用户按下Ctrl+Alt+R，强制刷新页面')
+      appStore.resetLoadingState()
+      const currentPath = router.currentRoute.value.fullPath
+      router.push('/loading-redirect')
+      setTimeout(() => {
+        router.push(currentPath)
+      }, 100)
+      ElMessage.info('正在强制刷新页面...')
+    }
   })
 })
 

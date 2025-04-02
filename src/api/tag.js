@@ -5,15 +5,13 @@ import request from '../utils/request'
  * @returns {Promise<Array>}
  */
 export function getTagList() {
-  return request({
-    url: '/tags',
-    method: 'get'
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '获取标签列表失败'))
-  })
+  return request.get('/tags')
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取标签列表失败'))
+    })
 }
 
 /**
@@ -23,16 +21,13 @@ export function getTagList() {
  * @returns {Promise<{id: number}>}
  */
 export function createTag(data) {
-  return request({
-    url: '/tags',
-    method: 'post',
-    data
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '创建标签失败'))
-  })
+  return request.post('/tags', data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '创建标签失败'))
+    })
 }
 
 /**
@@ -43,16 +38,13 @@ export function createTag(data) {
  * @returns {Promise<void>}
  */
 export function updateTag(id, data) {
-  return request({
-    url: `/tags/${id}`,
-    method: 'put',
-    data
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '更新标签失败'))
-  })
+  return request.put(`/tags/${id}`, data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '更新标签失败'))
+    })
 }
 
 /**
@@ -61,13 +53,11 @@ export function updateTag(id, data) {
  * @returns {Promise<void>}
  */
 export function deleteTag(id) {
-  return request({
-    url: `/tags/${id}`,
-    method: 'delete'
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '删除标签失败'))
-  })
+  return request.delete(`/tags/${id}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '删除标签失败'))
+    })
 } 

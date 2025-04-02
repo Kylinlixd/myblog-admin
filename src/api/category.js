@@ -5,15 +5,13 @@ import request from '../utils/request'
  * @returns {Promise<Array>}
  */
 export function getCategoryList() {
-  return request({
-    url: '/categories',
-    method: 'get'
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '获取分类列表失败'))
-  })
+  return request.get('/categories')
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取分类列表失败'))
+    })
 }
 
 /**
@@ -24,16 +22,13 @@ export function getCategoryList() {
  * @returns {Promise<{id: number}>}
  */
 export function createCategory(data) {
-  return request({
-    url: '/categories',
-    method: 'post',
-    data
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '创建分类失败'))
-  })
+  return request.post('/categories', data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '创建分类失败'))
+    })
 }
 
 /**
@@ -45,16 +40,13 @@ export function createCategory(data) {
  * @returns {Promise<void>}
  */
 export function updateCategory(id, data) {
-  return request({
-    url: `/categories/${id}`,
-    method: 'put',
-    data
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '更新分类失败'))
-  })
+  return request.put(`/categories/${id}`, data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '更新分类失败'))
+    })
 }
 
 /**
@@ -63,13 +55,11 @@ export function updateCategory(id, data) {
  * @returns {Promise<void>}
  */
 export function deleteCategory(id) {
-  return request({
-    url: `/categories/${id}`,
-    method: 'delete'
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '删除分类失败'))
-  })
+  return request.delete(`/categories/${id}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '删除分类失败'))
+    })
 } 

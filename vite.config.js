@@ -10,6 +10,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src')
     }
   },
+  optimizeDeps: {
+    include: ['md-editor-v3'],
+    force: true // 强制重新优化依赖
+  },
   css: {
     preprocessorOptions: {
       scss: {

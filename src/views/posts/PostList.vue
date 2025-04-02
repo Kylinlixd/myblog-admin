@@ -213,18 +213,27 @@ const fetchPostList = async () => {
   try {
     const params = {
       page: currentPage.value,
-      limit: pageSize.value,
-      status: filterForm.status || undefined,
-      category: filterForm.categoryId || undefined,
-      keyword: filterForm.keyword || undefined
+      pageSize: pageSize.value,
+      keyword: filterForm.keyword || undefined,
+      categoryId: filterForm.categoryId || undefined,
+      tagId: filterForm.tagId || undefined,
+      status: filterForm.status || undefined
     }
     
     const res = await getPostList(params)
-    postList.value = res.data.items
-    total.value = res.data.total
+    if (res && res.items) {
+      postList.value = res.items
+      total.value = res.total
+    } else {
+      console.error('文章列表数据格式不正确:', res)
+      postList.value = []
+      total.value = 0
+    }
   } catch (error) {
     console.error('获取文章列表失败:', error)
     ElMessage.error('获取文章列表失败')
+    postList.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -264,20 +273,27 @@ const handleReset = () => {
 
 // 创建文章
 const handleCreate = () => {
-  appStore.startLoading('正在准备编辑器...')
-  router.push('/posts/create')
+  try {
+    appStore.startLoading('正在准备编辑器...')
+    router.push('/dashboard/posts/create')
+    console.log('导航到创建文章页面: /dashboard/posts/create')
+  } catch (error) {
+    console.error('跳转到创建文章页面失败:', error)
+    appStore.endLoading() // 确保发生错误时结束加载状态
+    ElMessage.error('跳转到创建文章页面失败')
+  }
 }
 
 // 编辑文章
 const handleEdit = (row) => {
   appStore.startLoading('正在加载文章内容...')
-  router.push(`/posts/edit/${row.id}`)
+  router.push(`/dashboard/posts/edit/${row.id}`)
 }
 
 // 预览文章
 const handlePreview = (row) => {
   appStore.startLoading('正在加载预览...')
-  router.push(`/posts/preview/${row.id}`)
+  router.push(`/dashboard/posts/preview/${row.id}`)
 }
 
 // 删除文章

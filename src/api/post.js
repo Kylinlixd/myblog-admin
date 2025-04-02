@@ -12,16 +12,13 @@ import request from '../utils/request'
  * @returns {Promise<{total: number, items: Array}>}
  */
 export function getPostList(params) {
-  return request({
-    url: '/posts',
-    method: 'get',
-    params
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '获取文章列表失败'))
-  })
+  return request.get('/posts', params)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取文章列表失败'))
+    })
 }
 
 /**
@@ -30,15 +27,13 @@ export function getPostList(params) {
  * @returns {Promise<Object>}
  */
 export function getPostDetail(id) {
-  return request({
-    url: `/posts/${id}`,
-    method: 'get'
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '获取文章详情失败'))
-  })
+  return request.get(`/posts/${id}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取文章详情失败'))
+    })
 }
 
 /**
@@ -53,16 +48,13 @@ export function getPostDetail(id) {
  * @returns {Promise<{id: number}>}
  */
 export function createPost(data) {
-  return request({
-    url: '/posts',
-    method: 'post',
-    data
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '创建文章失败'))
-  })
+  return request.post('/posts', data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '创建文章失败'))
+    })
 }
 
 /**
@@ -78,16 +70,13 @@ export function createPost(data) {
  * @returns {Promise<void>}
  */
 export function updatePost(id, data) {
-  return request({
-    url: `/posts/${id}`,
-    method: 'put',
-    data
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '更新文章失败'))
-  })
+  return request.put(`/posts/${id}`, data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '更新文章失败'))
+    })
 }
 
 /**
@@ -96,13 +85,11 @@ export function updatePost(id, data) {
  * @returns {Promise<void>}
  */
 export function deletePost(id) {
-  return request({
-    url: `/posts/${id}`,
-    method: 'delete'
-  }).then(response => {
-    if (response.code === 200) {
-      return response.data
-    }
-    return Promise.reject(new Error(response.message || '删除文章失败'))
-  })
+  return request.delete(`/posts/${id}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '删除文章失败'))
+    })
 } 

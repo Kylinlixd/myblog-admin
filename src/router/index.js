@@ -15,7 +15,7 @@ NProgress.configure({
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/dashboard'
   },
   {
     path: '/dashboard',
@@ -36,30 +36,28 @@ const routes = [
         }
       },
       {
-        path: '/posts',
+        path: 'posts',
         name: 'Posts',
         component: () => import('../views/posts/PostList.vue'),
         meta: { 
           title: '文章管理',
           icon: 'Document',
-          keepAlive: true,
-          permissions: ['post:view']
+          keepAlive: true
         }
       },
       {
-        path: '/posts/create',
+        path: 'posts/create',
         name: 'CreatePost',
         component: () => import('../views/posts/PostEdit.vue'),
         meta: { 
           title: '创建文章',
           icon: 'EditPen',
           keepAlive: false,
-          permissions: ['post:create'],
           hideInMenu: true
         }
       },
       {
-        path: '/posts/edit/:id',
+        path: 'posts/edit/:id',
         name: 'EditPost',
         component: () => import('../views/posts/PostEdit.vue'),
         props: true,
@@ -67,12 +65,11 @@ const routes = [
           title: '编辑文章',
           icon: 'EditPen',
           keepAlive: false,
-          permissions: ['post:edit'],
           hideInMenu: true
         }
       },
       {
-        path: '/posts/preview/:id',
+        path: 'posts/preview/:id',
         name: 'PreviewPost',
         component: () => import('../views/posts/PostPreview.vue'),
         props: true,
@@ -80,7 +77,6 @@ const routes = [
           title: '预览文章',
           icon: 'View',
           keepAlive: false,
-          permissions: ['post:view'],
           hideInMenu: true
         }
       },

@@ -96,15 +96,11 @@
         
         <el-form-item label="正文内容" required>
           <div class="editor-container">
-            <MdEditor
+            <SimpleMarkdownEditor
               v-model="postForm.content"
-              language="zh-CN"
-              :theme="theme"
-              :toolbars="toolbars"
-              :preview-theme="previewTheme"
-              :code-theme="codeTheme"
+              :height="'600px'"
+              placeholder="请输入Markdown内容..."
               @onSave="handleQuickSave"
-              height="600px"
             />
           </div>
         </el-form-item>
@@ -127,8 +123,7 @@ import { ArrowLeft } from '@element-plus/icons-vue'
 import { getPostDetail, createPost, updatePost } from '../../api/post'
 import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
-import MdEditor from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
+import SimpleMarkdownEditor from '../../components/SimpleMarkdownEditor.vue'
 import { useThemeStore } from '../../stores/theme'
 import { useAppStore } from '@/stores/app'
 
@@ -145,13 +140,6 @@ const tags = ref([])
 const theme = computed(() => themeStore.isDark ? 'dark' : 'light')
 const previewTheme = computed(() => themeStore.isDark ? 'vuepress' : 'default')
 const codeTheme = computed(() => themeStore.isDark ? 'atom-dark' : 'atom-one-light')
-
-// 编辑器工具栏配置
-const toolbars = [
-  'bold', 'italic', 'strikethrough', 'heading', 'line', 'quote', 'code',
-  'link', 'image', 'table', 'list', 'ordered-list', 'check', 'preview',
-  'fullscreen', 'save', 'katex', 'undo', 'redo', 'codeBlock'
-]
 
 // 是否为编辑模式
 const isEdit = computed(() => !!route.params.id)
@@ -186,18 +174,19 @@ const fetchPostDetail = async (id) => {
   loading.value = true
   try {
     const res = await getPostDetail(id)
-    postForm.title = res.data.title
-    postForm.content = res.data.content
-    postForm.summary = res.data.summary
-    postForm.categoryId = res.data.category?.id || ''
-    postForm.status = res.data.status
-    postForm.tagIds = res.data.tags?.map(tag => tag.id) || []
+    postForm.title = res.title
+    postForm.content = res.content
+    postForm.summary = res.summary
+    postForm.categoryId = res.categoryId || ''
+    postForm.status = res.status
+    postForm.tagIds = res.tags?.map(tag => tag.id) || []
     
     // 通知应用状态文章已加载完成
     appStore.endLoading()
   } catch (error) {
     console.error('获取文章详情失败:', error)
-    ElMessage.error('获取文章详情失败')
+    ElMessage.error('获取文章详情失败: ' + (error.message || '未知错误'))
+    appStore.setLoadingError('获取文章详情失败')
   } finally {
     loading.value = false
   }
@@ -214,11 +203,23 @@ const handleQuickSave = () => {
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!formRef.value) return
+  // 手动表单验证
+  if (!postForm.title) {
+    ElMessage.warning('请填写文章标题')
+    return
+  }
+  
+  if (!postForm.content) {
+    ElMessage.warning('请填写文章内容')
+    return
+  }
+  
+  if (!postForm.categoryId) {
+    ElMessage.warning('请选择文章分类')
+    return
+  }
   
   try {
-    await formRef.value.validate()
-    
     loading.value = true
     appStore.setLoading(true, '正在保存文章...')
     
@@ -231,10 +232,10 @@ const handleSubmit = async () => {
     }
     
     ElMessage.success(isEdit.value ? '文章更新成功' : '文章创建成功')
-    router.push('/posts')
+    router.push('/dashboard/posts')
   } catch (error) {
     console.error('保存文章失败:', error)
-    ElMessage.error('保存文章失败')
+    ElMessage.error('保存文章失败: ' + (error.message || '未知错误'))
   } finally {
     loading.value = false
     appStore.endLoading()
@@ -254,6 +255,9 @@ onMounted(async () => {
   // 如果是编辑模式，获取文章详情
   if (isEdit.value) {
     await fetchPostDetail(route.params.id)
+  } else {
+    // 创建模式不需要获取文章详情，直接结束加载
+    appStore.endLoading()
   }
 })
 </script>

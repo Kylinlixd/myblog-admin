@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, register, getUserInfo, logout, changePassword } from '../api/auth'
+import { login, register, getUserInfo, logout, changePassword, updateUserProfile } from '../api/auth'
 
 // 模拟用户数据
 const mockUser = {
@@ -94,6 +94,24 @@ export const useUserStore = defineStore('user', {
         return true
       } catch (error) {
         console.error('修改密码失败:', error)
+        throw error
+      }
+    },
+    
+    async updateProfile(profileData) {
+      try {
+        // 调用更新用户资料API
+        const response = await updateUserProfile(profileData)
+        
+        // 更新本地存储的用户信息
+        this.userInfo = {
+          ...this.userInfo,
+          ...profileData
+        }
+        
+        return true
+      } catch (error) {
+        console.error('更新用户资料失败:', error)
         throw error
       }
     }
