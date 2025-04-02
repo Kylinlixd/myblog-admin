@@ -21,7 +21,13 @@ onBeforeMount(() => {
     
     // 重置错误状态
     appStore.hasError = false
-    appStore.startLoading(to.meta.loadingText || '页面加载中...')
+    
+    // 只对非博客前台页面应用全局加载状态
+    // 或者是博客前台页面的首次加载
+    if (!to.path.startsWith('/blog') || from.name === null) {
+      appStore.startLoading(to.meta.loadingText || '页面加载中...')
+    }
+    
     next()
   })
   

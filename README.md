@@ -656,3 +656,320 @@ npm run build
 2. 分页接口的响应数据中 total 表示总记录数
 3. 时间格式统一使用 ISO 8601 格式
 4. 文件上传接口需要设置 Content-Type: multipart/form-data
+
+## 博客前台API
+
+博客前台API主要供博客访问者使用，无需登录即可访问。这些接口用于展示博客文章、分类、标签等内容。
+
+### 1. 获取博客文章列表
+
+- **接口**: `/blog/posts`
+- **方法**: GET
+- **描述**: 获取博客首页文章列表，支持分页
+- **请求参数**:
+  - page: number (页码，默认1)
+  - pageSize: number (每页数量，默认10)
+  - keyword: string (可选，搜索关键词)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 10,
+    "items": [
+      {
+        "id": 1,
+        "title": "博客文章标题 1",
+        "summary": "这是博客文章 1 的摘要内容，简要介绍了文章的主要内容和观点...",
+        "createTime": "2023-09-20T10:00:00.000Z",
+        "updateTime": "2023-09-20T15:30:00.000Z",
+        "categoryId": 1,
+        "categoryName": "分类1",
+        "viewCount": 356,
+        "tags": [
+          {
+            "id": 1,
+            "name": "标签1"
+          },
+          {
+            "id": 2,
+            "name": "标签2"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 2. 获取博客文章详情
+
+- **接口**: `/blog/posts/{id}`
+- **方法**: GET
+- **描述**: 获取指定ID的博客文章详情
+- **请求参数**:
+  - id: number (文章ID，路径参数)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": 1,
+    "title": "博客文章标题 1",
+    "content": "# 文章标题\n\n## 第一部分\n这是文章的第一部分内容，主要介绍了...\n\n## 第二部分\n这是文章的第二部分内容，进一步阐述了...\n\n## 总结\n通过本文，我们了解了...",
+    "summary": "这是博客文章 1 的摘要内容，简要介绍了文章的主要内容和观点...",
+    "createTime": "2023-09-20T10:00:00.000Z",
+    "updateTime": "2023-09-20T15:30:00.000Z",
+    "categoryId": 1,
+    "categoryName": "分类1",
+    "viewCount": 356,
+    "tags": [
+      {
+        "id": 1,
+        "name": "标签1"
+      },
+      {
+        "id": 2,
+        "name": "标签2"
+      },
+      {
+        "id": 3,
+        "name": "标签3"
+      }
+    ]
+  }
+}
+```
+
+### 3. 获取相邻文章
+
+- **接口**: `/blog/posts/{id}/adjacent`
+- **方法**: GET
+- **描述**: 获取指定文章的上一篇和下一篇文章
+- **请求参数**:
+  - id: number (文章ID，路径参数)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "prev": {
+      "id": 2,
+      "title": "博客文章标题 2"
+    },
+    "next": null
+  }
+}
+```
+
+### 4. 获取热门文章
+
+- **接口**: `/blog/posts/hot`
+- **方法**: GET
+- **描述**: 获取热门文章列表
+- **请求参数**:
+  - limit: number (可选，默认5，返回的文章数量)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": 1,
+      "title": "热门文章 1",
+      "viewCount": 1000,
+      "createTime": "2023-09-20T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "热门文章 2",
+      "viewCount": 900,
+      "createTime": "2023-09-19T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+### 5. 获取最新文章
+
+- **接口**: `/blog/posts/recent`
+- **方法**: GET
+- **描述**: 获取最新文章列表
+- **请求参数**:
+  - limit: number (可选，默认5，返回的文章数量)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": [
+    {
+      "id": 1,
+      "title": "最新文章 1",
+      "createTime": "2023-09-20T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "title": "最新文章 2",
+      "createTime": "2023-09-19T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+### 6. 获取分类下的文章
+
+- **接口**: `/blog/categories/{categoryId}/posts`
+- **方法**: GET
+- **描述**: 获取指定分类下的文章列表
+- **请求参数**:
+  - categoryId: number (分类ID，路径参数)
+  - page: number (可选，页码，默认1)
+  - pageSize: number (可选，每页数量，默认10)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 5,
+    "items": [
+      {
+        "id": 1,
+        "title": "分类1的文章 1",
+        "summary": "这是分类1下的文章 1 的摘要内容...",
+        "createTime": "2023-09-20T10:00:00.000Z",
+        "updateTime": "2023-09-20T15:30:00.000Z",
+        "categoryId": 1,
+        "categoryName": "分类1",
+        "viewCount": 356
+      }
+    ]
+  }
+}
+```
+
+### 7. 获取标签下的文章
+
+- **接口**: `/blog/tags/{tagId}/posts`
+- **方法**: GET
+- **描述**: 获取指定标签下的文章列表
+- **请求参数**:
+  - tagId: number (标签ID，路径参数)
+  - page: number (可选，页码，默认1)
+  - pageSize: number (可选，每页数量，默认10)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 5,
+    "items": [
+      {
+        "id": 1,
+        "title": "标签1的文章 1",
+        "summary": "这是标签1下的文章 1 的摘要内容...",
+        "createTime": "2023-09-20T10:00:00.000Z",
+        "updateTime": "2023-09-20T15:30:00.000Z",
+        "categoryId": 1,
+        "categoryName": "分类1",
+        "viewCount": 356
+      }
+    ]
+  }
+}
+```
+
+### 8. 获取博客统计信息
+
+- **接口**: `/blog/stats`
+- **方法**: GET
+- **描述**: 获取博客统计信息，包括文章、分类、标签数量和总浏览量
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "postCount": 35,
+    "categoryCount": 5,
+    "tagCount": 18,
+    "totalViews": 12500
+  }
+}
+```
+
+### 9. 获取关于我的信息
+
+- **接口**: `/blog/about`
+- **方法**: GET
+- **描述**: 获取博主的个人信息和技能等
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "name": "博主名称",
+    "avatar": "https://placeholder.pics/svg/200",
+    "introduction": "# 关于我\n\n这里是关于我的详细介绍，包括我的专业背景、兴趣爱好和技术栈等。\n\n## 专业背景\n- 全栈开发工程师\n- 5年Web开发经验\n\n## 技术栈\n- 前端: Vue.js, React, JavaScript, TypeScript\n- 后端: Node.js, Java, Spring Boot\n- 数据库: MySQL, MongoDB",
+    "email": "example@example.com",
+    "github": "https://github.com/example",
+    "skills": [
+      {
+        "name": "JavaScript",
+        "level": 95
+      },
+      {
+        "name": "Vue.js",
+        "level": 90
+      },
+      {
+        "name": "Node.js",
+        "level": 85
+      },
+      {
+        "name": "Java",
+        "level": 80
+      },
+      {
+        "name": "Database",
+        "level": 75
+      }
+    ]
+  }
+}
+```
+
+### 10. 增加文章浏览量
+
+- **接口**: `/blog/posts/{id}/view`
+- **方法**: POST
+- **描述**: 增加文章浏览量
+- **请求参数**:
+  - id: number (文章ID，路径参数)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": null
+}
+```
+
+## 模拟数据
+
+在开发环境中，博客前台API使用模拟数据响应请求，无需真实后端服务即可运行。
+生产环境需要配置实际的后端API地址。要启用/禁用模拟数据，可以设置环境变量：
+
+```
+VITE_USE_MOCK=true  # 启用模拟数据
+VITE_USE_MOCK=false # 禁用模拟数据，使用真实API
+```
+
+默认情况下，开发环境（development）自动启用模拟数据。

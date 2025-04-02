@@ -15,14 +15,90 @@ NProgress.configure({
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/blog'
+  },
+  {
+    path: '/blog',
+    component: () => import('../layouts/BlogLayout.vue'),
+    meta: { 
+      requiresAuth: false,
+      title: '博客首页'
+    },
+    children: [
+      {
+        path: '',
+        name: 'BlogHome',
+        component: () => import('../views/blog/BlogHome.vue'),
+        meta: { 
+          title: '博客首页',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'categories',
+        name: 'BlogCategories',
+        component: () => import('../views/blog/BlogCategories.vue'),
+        meta: { 
+          title: '文章分类',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'categories/:id',
+        name: 'BlogCategoryDetail',
+        component: () => import('../views/blog/BlogCategories.vue'),
+        props: true,
+        meta: { 
+          title: '分类文章',
+          keepAlive: false
+        }
+      },
+      {
+        path: 'tags',
+        name: 'BlogTags',
+        component: () => import('../views/blog/BlogTags.vue'),
+        meta: { 
+          title: '文章标签',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'tags/:id',
+        name: 'BlogTagDetail',
+        component: () => import('../views/blog/BlogTags.vue'),
+        props: true,
+        meta: { 
+          title: '标签文章',
+          keepAlive: false
+        }
+      },
+      {
+        path: 'post/:id',
+        name: 'BlogPost',
+        component: () => import('../views/blog/BlogPost.vue'),
+        props: true,
+        meta: { 
+          title: '文章详情',
+          keepAlive: false
+        }
+      },
+      {
+        path: 'about',
+        name: 'BlogAbout',
+        component: () => import('../views/blog/BlogAbout.vue'),
+        meta: { 
+          title: '关于我',
+          keepAlive: true
+        }
+      }
+    ]
   },
   {
     path: '/dashboard',
     component: () => import('../layouts/DefaultLayout.vue'),
     meta: { 
       requiresAuth: true,
-      title: '首页'
+      title: '后台首页'
     },
     children: [
       {
@@ -197,57 +273,58 @@ router.beforeEach(async (to, from, next) => {
 
   // 页面标题
   if (to.meta.title) {
-    document.title = `${to.meta.title} - 博客管理系统`
+    document.title = `${to.meta.title} - 博客系统`
   }
 
-  const userStore = useUserStore()
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  
-  if (requiresAuth) {
+  // 检查是否需要登录
+  if (to.meta.requiresAuth) {
+    const userStore = useUserStore()
     if (!userStore.isLoggedIn) {
+      clearTimeout(routeTimeout)
+      appStore.endLoading()
+      
+      // 如果未登录，重定向到登录页
       next({
         path: '/login',
         query: { redirect: to.fullPath }
       })
       return
     }
-    
-    // 如果已登录但没有用户信息，获取用户信息
+
+    // 已登录，检查是否有用户信息，没有则获取
     if (!userStore.userInfo) {
       try {
         await userStore.getUserInfo()
       } catch (error) {
         console.error('获取用户信息失败:', error)
-        userStore.logout()
-        next({
-          path: '/login',
-          query: { redirect: to.fullPath }
-        })
-        return
       }
     }
-  } else if ((to.path === '/login' || to.path === '/register') && userStore.isLoggedIn) {
-    // 已登录用户访问登录页或注册页，重定向到仪表盘
-    next('/dashboard')
-    return
+
+    // 权限检查
+    const requiredPermissions = to.meta.permissions
+    if (requiredPermissions && requiredPermissions.length > 0) {
+      // 这里实现权限检查的逻辑，根据项目需要自行完善
+      // 如果不包含所需权限，可以重定向到401页面或首页
+      // const hasPermission = userStore.hasPermission(requiredPermissions)
+      // if (!hasPermission) {
+      //   clearTimeout(routeTimeout)
+      //   appStore.endLoading()
+      //   next('/401')
+      //   return
+      // }
+    }
+  } else {
+    // 不需要认证的页面直接放行
+    clearTimeout(routeTimeout)
   }
-  
+
+  // 放行
   next()
-  
-  // 清除超时
-  clearTimeout(routeTimeout)
 })
 
-// 路由后置钩子
 router.afterEach(() => {
   // 结束进度条
   NProgress.done()
-  
-  // 页面加载完成后，延迟300ms关闭全局加载状态，给内容渲染留出时间
-  setTimeout(() => {
-    const appStore = useAppStore()
-    appStore.endLoading()
-  }, 300)
 })
 
 export default router 
