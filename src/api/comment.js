@@ -16,7 +16,7 @@ export function getCommentList(params) {
     method: 'get',
     params
   }).then(response => {
-    if (response.code === 0) {
+    if (response.code === 200) {
       return response.data
     }
     return Promise.reject(new Error(response.message || '获取评论列表失败'))
@@ -33,7 +33,7 @@ export function approveComment(id) {
     url: `/comments/${id}/approve`,
     method: 'put'
   }).then(response => {
-    if (response.code === 0) {
+    if (response.code === 200) {
       return response.data
     }
     return Promise.reject(new Error(response.message || '操作失败'))
@@ -50,7 +50,7 @@ export function rejectComment(id) {
     url: `/comments/${id}/reject`,
     method: 'put'
   }).then(response => {
-    if (response.code === 0) {
+    if (response.code === 200) {
       return response.data
     }
     return Promise.reject(new Error(response.message || '操作失败'))
@@ -67,7 +67,7 @@ export function deleteComment(id) {
     url: `/comments/${id}`,
     method: 'delete'
   }).then(response => {
-    if (response.code === 0) {
+    if (response.code === 200) {
       return response.data
     }
     return Promise.reject(new Error(response.message || '删除失败'))

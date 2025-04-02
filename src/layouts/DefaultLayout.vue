@@ -13,21 +13,25 @@
         text-color="var(--text-primary)"
         active-text-color="var(--primary-color)"
       >
-        <el-menu-item index="/">
+        <el-menu-item index="/dashboard">
           <el-icon><Monitor /></el-icon>
           <span>仪表盘</span>
         </el-menu-item>
-        <el-menu-item index="/posts">
+        <el-menu-item index="/dashboard/posts">
           <el-icon><Document /></el-icon>
           <span>文章管理</span>
         </el-menu-item>
-        <el-menu-item index="/categories">
+        <el-menu-item index="/dashboard/categories">
           <el-icon><Folder /></el-icon>
           <span>分类管理</span>
         </el-menu-item>
-        <el-menu-item index="/tags">
+        <el-menu-item index="/dashboard/tags">
           <el-icon><Collection /></el-icon>
           <span>标签管理</span>
+        </el-menu-item>
+        <el-menu-item index="/dashboard/comments">
+          <el-icon><ChatDotRound /></el-icon>
+          <span>评论管理</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -42,13 +46,12 @@
           <theme-toggle />
           <el-dropdown>
             <span class="user-info">
-              <el-avatar :size="32" src="https://placeholder.com/32" />
-              <span>管理员</span>
+              <el-avatar :size="32" :src="userStore.avatar || 'https://placeholder.com/32'" />
+              <span>{{ userStore.nickname || '管理员' }}</span>
             </span>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>个人信息</el-dropdown-item>
-                <el-dropdown-item>修改密码</el-dropdown-item>
+                <el-dropdown-item @click="router.push('/dashboard/profile')">个人信息</el-dropdown-item>
                 <el-dropdown-item divided @click="handleLogout">退出登录</el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -70,11 +73,12 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Monitor, Document, Folder, Collection, Fold } from '@element-plus/icons-vue'
+import { Monitor, Document, Folder, Collection, Fold, ChatDotRound } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { ElMessageBox } from 'element-plus'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import Breadcrumb from '../components/Breadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()

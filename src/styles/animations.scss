@@ -1,5 +1,5 @@
 @use 'sass:map';
-@use 'theme' as *;
+// 删除theme导入，完全避免冲突
 
 // 淡入淡出
 @keyframes fadeIn {
@@ -687,4 +687,153 @@
 
 .ease-bounce {
   --transition-timing: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-} 
+}
+
+// 页面过渡动画
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// 页面加载动画 - 增强可见性
+.page-loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+  
+  &.fade-out {
+    opacity: 0;
+  }
+  
+  .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #409EFF;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  .loading-text {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #ffffff;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+}
+
+// 按钮和表单加载状态动画
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+  color: transparent !important;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin-top: -8px;
+    margin-left: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-left-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+}
+
+// 加载提示动画
+.loading-dots {
+  display: inline-block;
+  
+  &::after {
+    content: '.';
+    animation: dots 1.5s steps(5, end) infinite;
+  }
+}
+
+// 卡片组件加载动画
+.card-skeleton {
+  background: linear-gradient(
+    90deg, 
+    var(--background-light) 25%, 
+    var(--background-dark) 50%, 
+    var(--background-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--border-radius);
+}
+
+// 关键帧动画定义
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes dots {
+  0%, 20% {
+    content: '.';
+  }
+  40% {
+    content: '..';
+  }
+  60% {
+    content: '...';
+  }
+  80%, 100% {
+    content: '';
+  }
+}
+
+// NProgress 自定义样式
+#nprogress {
+  pointer-events: none;
+  
+  .bar {
+    background: var(--primary-color);
+    position: fixed;
+    z-index: 10000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+  }
+  
+  .peg {
+    display: block;
+    position: absolute;
+    right: 0;
+    width: 100px;
+    height: 100%;
+    box-shadow: 0 0 10px var(--primary-color), 0 0 5px var(--primary-color);
+    opacity: 1;
+    transform: rotate(3deg) translate(0, -4px);
+  }
+}

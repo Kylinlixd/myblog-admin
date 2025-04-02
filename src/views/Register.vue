@@ -1,25 +1,25 @@
 <template>
-  <div class="login-container">
-    <div class="login-box">
-      <div class="login-header">
+  <div class="register-container">
+    <div class="register-box">
+      <div class="register-header">
         <div class="logo-container">
           <img src="../assets/logo.png" alt="Logo" class="logo" />
           <div class="logo-glow"></div>
         </div>
         <h2>博客管理系统</h2>
-        <p class="subtitle">欢迎回来，请登录您的账号</p>
+        <p class="subtitle">创建您的账号</p>
       </div>
       
       <form
-        ref="loginForm"
-        class="login-form"
-        @submit.prevent="handleLogin"
+        ref="registerForm"
+        class="register-form"
+        @submit.prevent="handleRegister"
       >
         <div class="form-item">
           <div class="input-wrapper">
             <i class="icon-user"></i>
             <input
-              v-model="loginData.username"
+              v-model="registerData.username"
               type="text"
               placeholder="用户名"
               class="inspira-input"
@@ -31,9 +31,23 @@
         
         <div class="form-item">
           <div class="input-wrapper">
+            <i class="icon-user"></i>
+            <input
+              v-model="registerData.nickname"
+              type="text"
+              placeholder="昵称"
+              class="inspira-input"
+              :class="{ 'is-error': errors.nickname }"
+            />
+          </div>
+          <span class="error-message" v-if="errors.nickname">{{ errors.nickname }}</span>
+        </div>
+        
+        <div class="form-item">
+          <div class="input-wrapper">
             <i class="icon-lock"></i>
             <input
-              v-model="loginData.password"
+              v-model="registerData.password"
               type="password"
               placeholder="密码"
               class="inspira-input"
@@ -49,6 +63,20 @@
         </div>
         
         <div class="form-item">
+          <div class="input-wrapper">
+            <i class="icon-lock"></i>
+            <input
+              v-model="registerData.confirmPassword"
+              type="password"
+              placeholder="确认密码"
+              class="inspira-input"
+              :class="{ 'is-error': errors.confirmPassword }"
+            />
+          </div>
+          <span class="error-message" v-if="errors.confirmPassword">{{ errors.confirmPassword }}</span>
+        </div>
+        
+        <div class="form-item">
           <button
             type="submit"
             class="inspira-button"
@@ -56,14 +84,14 @@
           >
             <span class="button-content">
               <i class="icon-arrow-right" v-if="!loading"></i>
-              <span>{{ loading ? '登录中...' : '登录' }}</span>
+              <span>{{ loading ? '注册中...' : '注册' }}</span>
             </span>
           </button>
         </div>
         
         <div class="form-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="link">立即注册</router-link>
+          <span>已有账号？</span>
+          <router-link to="/login" class="link">立即登录</router-link>
         </div>
       </form>
     </div>
@@ -71,48 +99,71 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { useAppStore } from '../stores/app'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
-const route = useRoute()
 const userStore = useUserStore()
-const appStore = useAppStore()
-const loginForm = ref(null)
+const registerForm = ref(null)
 const loading = ref(false)
 const showPassword = ref(false)
 
-const loginData = reactive({
+const registerData = reactive({
   username: '',
-  password: ''
+  nickname: '',
+  password: '',
+  confirmPassword: ''
 })
 
 const errors = reactive({
   username: '',
-  password: ''
+  nickname: '',
+  password: '',
+  confirmPassword: ''
 })
 
 const validateForm = () => {
   let isValid = true
   errors.username = ''
+  errors.nickname = ''
   errors.password = ''
+  errors.confirmPassword = ''
   
-  if (!loginData.username) {
+  // 验证用户名
+  if (!registerData.username) {
     errors.username = '请输入用户名'
     isValid = false
-  } else if (loginData.username.length < 3 || loginData.username.length > 20) {
+  } else if (registerData.username.length < 3 || registerData.username.length > 20) {
     errors.username = '长度在 3 到 20 个字符'
     isValid = false
   }
   
-  if (!loginData.password) {
+  // 验证昵称
+  if (!registerData.nickname) {
+    errors.nickname = '请输入昵称'
+    isValid = false
+  } else if (registerData.nickname.length < 2 || registerData.nickname.length > 20) {
+    errors.nickname = '长度在 2 到 20 个字符'
+    isValid = false
+  }
+  
+  // 验证密码
+  if (!registerData.password) {
     errors.password = '请输入密码'
     isValid = false
-  } else if (loginData.password.length < 6 || loginData.password.length > 20) {
+  } else if (registerData.password.length < 6 || registerData.password.length > 20) {
     errors.password = '长度在 6 到 20 个字符'
+    isValid = false
+  }
+  
+  // 验证确认密码
+  if (!registerData.confirmPassword) {
+    errors.confirmPassword = '请确认密码'
+    isValid = false
+  } else if (registerData.confirmPassword !== registerData.password) {
+    errors.confirmPassword = '两次输入的密码不一致'
     isValid = false
   }
   
@@ -121,37 +172,37 @@ const validateForm = () => {
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
-  const passwordInput = document.querySelector('input[type="password"]')
-  if (passwordInput) {
-    passwordInput.type = showPassword.value ? 'text' : 'password'
-  }
+  const passwordInputs = document.querySelectorAll('input[type="password"]')
+  passwordInputs.forEach(input => {
+    input.type = showPassword.value ? 'text' : 'password'
+  })
 }
 
-const handleLogin = async () => {
+const handleRegister = async () => {
   if (!validateForm()) return
   
   loading.value = true
   try {
-    const success = await userStore.login(loginData.username, loginData.password)
+    const success = await userStore.register({
+      username: registerData.username,
+      nickname: registerData.nickname,
+      password: registerData.password
+    })
     
     if (success) {
-      ElMessage.success('登录成功')
-      // 获取重定向地址，如果没有则跳转到仪表盘
-      const redirect = route.query.redirect || '/dashboard'
-      
-      // 设置全局加载状态
-      appStore.startLoading('正在准备您的工作台...')
-      
-      // 显示加载状态足够长的时间，确保用户能看到
-      setTimeout(() => {
-        router.push(redirect)
-      }, 1000)
+      ElMessage.success('注册成功')
+      // 注册成功后跳转到仪表盘
+      router.push('/dashboard')
     } else {
-      errors.password = '用户名或密码错误'
+      ElMessage.error('注册失败，请稍后重试')
     }
   } catch (error) {
-    console.error('登录失败:', error)
-    errors.password = '登录失败，请稍后重试'
+    console.error('注册失败:', error)
+    if (error.message) {
+      ElMessage.error(error.message)
+    } else {
+      ElMessage.error('注册失败，请稍后重试')
+    }
   } finally {
     loading.value = false
   }
@@ -159,7 +210,7 @@ const handleLogin = async () => {
 </script>
 
 <style scoped lang="scss">
-.login-container {
+.register-container {
   height: 100vh;
   display: flex;
   align-items: center;
@@ -180,7 +231,7 @@ const handleLogin = async () => {
     will-change: transform;
   }
   
-  .login-box {
+  .register-box {
     width: 400px;
     padding: 40px;
     background: rgba(51, 102, 153, 0.2);
@@ -199,7 +250,7 @@ const handleLogin = async () => {
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
     }
     
-    .login-header {
+    .register-header {
       text-align: center;
       margin-bottom: 40px;
       
@@ -232,7 +283,7 @@ const handleLogin = async () => {
       }
     }
     
-    .login-form {
+    .register-form {
       .form-item {
         margin-bottom: 20px;
         

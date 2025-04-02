@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 export const useThemeStore = defineStore('theme', () => {
   const currentTheme = ref(localStorage.getItem('theme') || 'light')
+  
+  // 是否为暗色主题
+  const isDark = computed(() => currentTheme.value === 'dark')
   
   // 切换主题
   const toggleTheme = () => {
@@ -28,6 +31,7 @@ export const useThemeStore = defineStore('theme', () => {
   
   return {
     currentTheme,
+    isDark,
     toggleTheme,
     initTheme
   }

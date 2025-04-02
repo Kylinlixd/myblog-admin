@@ -166,8 +166,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
-import request from '../../utils/request'
+import { getCategoryList, createCategory, updateCategory, deleteCategory } from '../../api/category'
 
 // 数据列表
 const categories = ref([])
@@ -219,7 +218,7 @@ const validateForm = () => {
 const getCategories = async () => {
   loading.value = true
   try {
-    const list = await request.get('/categories')
+    const list = await getCategoryList()
     categories.value = list
     // 更新分类选项（排除当前编辑的分类及其子分类）
     categoryOptions.value = list.filter(item => {
@@ -263,24 +262,26 @@ const handleAddChild = (row) => {
 }
 
 // 删除分类
-const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    '确定要删除这个分类吗？删除后无法恢复，且该分类下的文章将变为未分类状态。',
-    '警告',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
+const handleDelete = async (row) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除"${row.name}"分类吗？删除后无法恢复，且相关文章将失去此分类。`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await deleteCategory(row.id)
+    ElMessage.success('删除成功')
+    getCategories()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除失败:', error)
     }
-  ).then(async () => {
-    try {
-      await request.delete(`/categories/${row.id}`)
-      ElMessage.success('删除成功')
-      getCategories()
-    } catch (error) {
-      console.error('删除分类失败:', error)
-    }
-  })
+  }
 }
 
 // 提交表单
@@ -289,16 +290,19 @@ const handleSubmit = async () => {
   
   try {
     if (dialogType.value === 'create') {
-      await request.post('/categories', categoryForm)
+      await createCategory(categoryForm)
       ElMessage.success('创建成功')
     } else {
-      await request.put(`/categories/${categoryForm.id}`, categoryForm)
+      const { id, ...updateData } = categoryForm
+      await updateCategory(id, updateData)
       ElMessage.success('更新成功')
     }
+    
     dialogVisible.value = false
     getCategories()
   } catch (error) {
-    console.error('保存分类失败:', error)
+    console.error('操作失败:', error)
+    ElMessage.error(error.message || '操作失败，请稍后重试')
   }
 }
 

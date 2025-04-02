@@ -163,7 +163,8 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import request from '../../utils/request'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getTagList, createTag, updateTag, deleteTag } from '../../api/tag'
 
 // 数据列表
 const tags = ref([])
@@ -233,16 +234,15 @@ const validateForm = () => {
 const getTags = async () => {
   loading.value = true
   try {
-    const { list, total: totalCount } = await request.get('/tags', {
-      params: {
-        page: currentPage.value,
-        pageSize: pageSize.value
-      }
+    const response = await getTagList({
+      page: currentPage.value,
+      pageSize: pageSize.value
     })
-    tags.value = list
-    total.value = totalCount
+    tags.value = response.list || []
+    total.value = response.total || 0
   } catch (error) {
     console.error('获取标签列表失败:', error)
+    ElMessage.error('获取标签列表失败')
   } finally {
     loading.value = false
   }
@@ -268,13 +268,25 @@ const handleEdit = (row) => {
 
 // 删除标签
 const handleDelete = async (row) => {
-  if (!confirm('确定要删除这个标签吗？删除后无法恢复，且该标签下的文章将失去此标签。')) return
-  
   try {
-    await request.delete(`/tags/${row.id}`)
+    await ElMessageBox.confirm(
+      `确定要删除"${row.name}"标签吗？删除后无法恢复，且相关文章将失去此标签。`,
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    await deleteTag(row.id)
+    ElMessage.success('删除成功')
     getTags()
   } catch (error) {
-    console.error('删除标签失败:', error)
+    if (error !== 'cancel') {
+      console.error('删除标签失败:', error)
+      ElMessage.error('删除标签失败')
+    }
   }
 }
 
@@ -284,14 +296,19 @@ const handleSubmit = async () => {
   
   try {
     if (dialogType.value === 'create') {
-      await request.post('/tags', tagForm)
+      await createTag(tagForm)
+      ElMessage.success('创建成功')
     } else {
-      await request.put(`/tags/${tagForm.id}`, tagForm)
+      const { id, ...updateData } = tagForm
+      await updateTag(id, updateData)
+      ElMessage.success('更新成功')
     }
+    
     dialogVisible.value = false
     getTags()
   } catch (error) {
-    console.error('保存标签失败:', error)
+    console.error('操作失败:', error)
+    ElMessage.error(error.message || '操作失败，请稍后重试')
   }
 }
 

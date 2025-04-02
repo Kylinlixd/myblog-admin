@@ -119,6 +119,12 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import Chart from 'chart.js/auto'
 import request from '../utils/request'
+import { useAppStore } from '../stores/app'
+import { ElMessage } from 'element-plus'
+
+// 应用状态
+const appStore = useAppStore()
+const loading = ref(true)
 
 // 统计数据
 const stats = ref({
@@ -154,20 +160,88 @@ let memoryChartInstance = null
 // 获取统计数据
 const getStats = async () => {
   try {
-    const data = await request.get('/stats')
-    stats.value = data
+    const res = await request.get('/stats')
+    if (res.code === 200 && res.data) {
+      stats.value = res.data
+    } else {
+      throw new Error(res.message || '获取统计数据失败')
+    }
   } catch (error) {
     console.error('获取统计数据失败:', error)
+    ElMessage.error('获取统计数据失败: ' + (error.message || '未知错误'))
   }
 }
 
 // 获取最近文章
 const getRecentPosts = async () => {
   try {
-    const data = await request.get('/posts/recent')
-    recentPosts.value = data
+    // 使用/posts接口并添加limit参数
+    const res = await request.get('/posts', { 
+      page: 1, 
+      pageSize: 5,
+      orderBy: 'createTime',
+      orderDir: 'desc'
+    })
+    if (res.code === 200 && res.data && res.data.items) {
+      recentPosts.value = res.data.items.map(post => ({
+        id: post.id,
+        title: post.title,
+        createTime: post.createTime,
+        views: post.views || 0
+      }))
+    } else {
+      throw new Error(res.message || '获取最近文章失败')
+    }
   } catch (error) {
     console.error('获取最近文章失败:', error)
+    ElMessage.error('获取最近文章失败: ' + (error.message || '未知错误'))
+  }
+}
+
+// 加载所有数据
+const loadAllData = async () => {
+  // 设置加载状态
+  loading.value = true
+  
+  // 显示仪表盘加载状态
+  appStore.startLoading('加载仪表盘数据...')
+  
+  // 设置单个请求超时
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('加载仪表盘数据超时'));
+    }, 15000); // 15秒超时
+  });
+  
+  try {
+    // 并行加载数据并设置超时
+    await Promise.race([
+      Promise.all([
+        getStats(),
+        getRecentPosts()
+      ]),
+      timeoutPromise
+    ]);
+    
+    // 数据加载成功后，结束加载状态
+    setTimeout(() => {
+      loading.value = false
+      appStore.endLoading()
+    }, 500)
+  } catch (error) {
+    console.error('加载仪表盘数据失败:', error)
+    
+    // 设置错误状态
+    appStore.setLoadingError(error.message || '加载仪表盘数据失败')
+    loading.value = false
+    
+    // 显示重试按钮
+    ElMessage({
+      type: 'error',
+      message: '加载仪表盘数据失败，请重试',
+      showClose: true,
+      duration: 5000
+    })
   }
 }
 
@@ -256,9 +330,14 @@ const initCharts = () => {
   })
 }
 
-onMounted(() => {
-  getStats()
-  getRecentPosts()
+onMounted(async () => {
+  // 标记组件已加载
+  console.log('Dashboard component mounted')
+  
+  // 加载所有数据
+  await loadAllData()
+  
+  // 初始化性能监控和图表
   initPerformanceMonitoring()
   initCharts()
 })

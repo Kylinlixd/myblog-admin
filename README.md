@@ -46,7 +46,36 @@ npm run build
 
 ### 认证相关
 
-#### 1. 用户登录
+#### 1. 用户注册
+- **接口**: `/api/auth/register`
+- **方法**: POST
+- **描述**: 用户注册接口
+- **请求参数**:
+```json
+{
+  "username": "string", // 用户名
+  "password": "string", // 密码
+  "nickname": "string"  // 昵称
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "token": "string",      // JWT token
+    "userInfo": {
+      "id": "number",       // 用户ID
+      "username": "string", // 用户名
+      "nickname": "string", // 昵称
+      "avatar": "string"    // 头像URL
+    }
+  },
+  "message": "string"
+}
+```
+
+#### 2. 用户登录
 - **接口**: `/api/auth/login`
 - **方法**: POST
 - **描述**: 用户登录接口
@@ -74,7 +103,7 @@ npm run build
 }
 ```
 
-#### 2. 获取用户信息
+#### 3. 获取用户信息
 - **接口**: `/api/auth/info`
 - **方法**: GET
 - **描述**: 获取当前登录用户信息
@@ -94,7 +123,7 @@ npm run build
 }
 ```
 
-#### 3. 修改密码
+#### 4. 修改密码
 - **接口**: `/api/auth/password`
 - **方法**: PUT
 - **描述**: 修改用户密码
@@ -367,6 +396,100 @@ npm run build
 {
   "code": 200,
   "message": "string"
+}
+```
+
+### 仪表盘API
+
+#### 1. 获取统计数据
+- **接口**: `/api/stats`
+- **方法**: GET
+- **描述**: 获取博客统计数据，包括文章、分类、标签数量和总浏览量
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "获取统计数据成功",
+  "data": {
+    "postCount": 24,       // 文章总数
+    "categoryCount": 6,    // 分类总数
+    "tagCount": 18,        // 标签总数
+    "totalViews": 4328     // 总浏览量
+  }
+}
+```
+
+#### 2. 获取最近文章
+- **接口**: `/api/posts/recent`
+- **方法**: GET
+- **描述**: 获取最近发布的文章列表
+- **请求头**:
+  - Authorization: Bearer {token}
+- **请求参数**:
+  - limit: number (可选，默认为5，返回的文章数量)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "获取最近文章成功",
+  "data": [
+    {
+      "id": 1,
+      "title": "如何提高博客访问量：10个实用技巧",
+      "createTime": "2023-09-15 14:30:00",
+      "views": 158
+    },
+    {
+      "id": 2,
+      "title": "前端开发中常见的10个性能优化方法",
+      "createTime": "2023-09-10 09:15:00",
+      "views": 245
+    },
+    {
+      "id": 3,
+      "title": "Vue3和React18：前端框架的未来发展趋势",
+      "createTime": "2023-09-05 16:45:00",
+      "views": 362
+    },
+    {
+      "id": 4,
+      "title": "如何构建一个安全可靠的博客系统",
+      "createTime": "2023-08-28 11:20:00",
+      "views": 183
+    },
+    {
+      "id": 5,
+      "title": "Markdown写作技巧：让你的博客更加专业",
+      "createTime": "2023-08-20 08:45:00",
+      "views": 217
+    }
+  ]
+}
+```
+
+#### 3. 请求超时处理
+- 所有API请求默认有15秒的超时时间
+- 当请求超时时，前端会显示友好的错误提示
+- 响应格式：
+```json
+{
+  "code": 408,
+  "message": "请求超时，请检查网络连接"
+}
+```
+
+#### 4. 错误处理
+- 当API请求失败时，将返回统一格式的错误响应：
+```json
+{
+  "code": 400,           // HTTP状态码
+  "message": "错误信息",  // 用户友好的错误消息
+  "error": {             // 可选，详细错误信息
+    "type": "ValidationError",
+    "details": ["字段错误详情"]
+  }
 }
 ```
 
