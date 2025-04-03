@@ -5,7 +5,7 @@
       <div class="container">
         <div class="blog-logo">
           <router-link to="/blog">
-            <h1>我的博客</h1>
+            <h1>X</h1>
           </router-link>
         </div>
         <nav class="blog-nav">
@@ -275,6 +275,7 @@ onMounted(() => {
       font-size: 1.8rem;
       margin: 0;
       color: var(--el-color-primary);
+      margin-left: 20px;;
     }
     
     a {
@@ -338,6 +339,7 @@ onMounted(() => {
       display: flex;
       align-items: center;
       gap: 5px;
+      margin-right: 60px;
     }
   }
 }
