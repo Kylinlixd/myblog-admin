@@ -2,10 +2,10 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <div class="logo-container">
-          <img src="../assets/logo.png" alt="Logo" class="logo" />
+        <!-- <div class="logo-container">
+          <img src="../assets/logo.jpeg" alt="Logo" class="logo" />
           <div class="logo-glow"></div>
-        </div>
+        </div> -->
         <h2>博客管理系统</h2>
         <p class="subtitle">欢迎回来，请登录您的账号</p>
       </div>
