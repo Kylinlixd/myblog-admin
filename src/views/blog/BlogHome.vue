@@ -4,7 +4,7 @@
       <div class="blog-banner">
         <div class="banner-content">
           <h1>欢迎访问我的博客</h1>
-          <p>分享前端开发技术、经验和思考</p>
+          <p>探索技术的无限可能</p>
         </div>
       </div>
     
@@ -206,15 +206,18 @@ onMounted(() => {
   border-radius: 8px;
   
   .banner-content {
-    h1 {
-      font-size: 2.5rem;
-      margin: 0 0 1rem;
-    }
     
+    h1 {
+    color: #2c3e50;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    line-height: 1.2;
+    }
     p {
-      font-size: 1.2rem;
-      margin: 0;
-      opacity: 0.9;
+    color: #555;
+    font-size: 1.1rem;
+    font-weight: 300;
+    margin: 0;
     }
   }
   

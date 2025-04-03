@@ -16,7 +16,7 @@
               class="nav-item" 
               :class="{ 'active': $route.path === '/blog' }"
             >
-              <el-icon><i-ep-house /></el-icon>
+              <!-- <el-icon><i-ep-house /></el-icon> -->
               <span>首页</span>
             </router-link>
             <router-link 
@@ -24,7 +24,6 @@
               class="nav-item" 
               :class="{ 'active': $route.path === '/blog/categories' }"
             >
-              <el-icon><i-ep-folder-opened /></el-icon>
               <span>分类</span>
             </router-link>
             <router-link 
@@ -32,7 +31,6 @@
               class="nav-item" 
               :class="{ 'active': $route.path === '/blog/tags' }"
             >
-              <el-icon><i-ep-collection-tag /></el-icon>
               <span>标签</span>
             </router-link>
             <router-link 
@@ -40,7 +38,6 @@
               class="nav-item" 
               :class="{ 'active': $route.path === '/blog/about' }"
             >
-              <el-icon><i-ep-user /></el-icon>
               <span>关于</span>
             </router-link>
           </div>
@@ -110,6 +107,9 @@
   display: flex;
   justify-content: center; // 使导航标签整体居中
   .nav-menu {
+    display: flex;
+    justify-content: center; // 确保菜单项整体居中
+    gap: 20px;
     .nav-item {
       display: flex;
       align-items: center;
@@ -166,20 +166,6 @@ const handleSearch = () => {
   searchQuery.value = ''
 }
 
-// 博主信息
-const authorInfo = ref({
-  name: '博主名称',
-  avatar: 'https://placeholder.pics/svg/150',
-  description: '全栈开发工程师，热爱技术和分享。'
-})
-
-// 博客统计信息
-const stats = ref({
-  postCount: 0,
-  categoryCount: 0,
-  tagCount: 0,
-  totalViews: 0
-})
 
 // 最新文章
 const recentPosts = ref([])
