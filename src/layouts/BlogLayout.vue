@@ -250,9 +250,9 @@ onMounted(() => {
 
 .container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%; // 修改为 100% 以确保容器能铺满屏幕
   margin: 0 auto;
-  padding: 0 0px;
+  padding: 0; // 移除不必要的内边距
 }
 
 // 头部样式

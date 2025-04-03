@@ -194,7 +194,9 @@ onMounted(() => {
 <style scoped lang="scss">
 .blog-home {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  width: 100%; // 确保组件宽度为 100%
 }
 
 .blog-banner {
@@ -206,7 +208,7 @@ onMounted(() => {
   border-radius: 8px;
   
   .banner-content {
-    
+
     h1 {
     color: #2c3e50;
     font-size: 2.5rem;
@@ -499,4 +501,4 @@ onMounted(() => {
 .empty-tags {
   padding: 1rem;
 }
-</style> 
+</style>
