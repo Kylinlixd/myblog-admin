@@ -2,7 +2,7 @@
   <el-container class="layout-container">
     <el-aside width="240px" class="aside">
       <div class="logo">
-        <img src="../assets/logo.png" alt="Logo" />
+        <!-- <img src="../assets/logo.png" alt="Logo" /> -->
         <span>博客管理系统</span>
       </div>
       <el-menu

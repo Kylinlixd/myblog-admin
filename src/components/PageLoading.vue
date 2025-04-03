@@ -69,10 +69,12 @@ const startCountdown = () => {
   if ((props.hasError || props.autoHide) && props.show) {
     // 设置倒计时初始值（秒）
     autoHideCountdown.value = Math.floor(props.timeout / 1000) 
+    console.log('Countdown started:', autoHideCountdown.value) // 添加调试信息
     
     // 每秒更新倒计时
     countdownTimer.value = setInterval(() => {
       autoHideCountdown.value--
+      console.log('Countdown:', autoHideCountdown.value) // 添加调试信息
       
       // 倒计时结束，隐藏加载器
       if (autoHideCountdown.value <= 0) {
@@ -233,4 +235,4 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-</style> 
+</style>

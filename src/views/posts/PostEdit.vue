@@ -151,7 +151,8 @@ const postForm = reactive({
   summary: '',
   categoryId: '',
   tagIds: [],
-  status: 'draft'
+  status: 'draft',
+  authorId: 1, // 假设作者ID为1
 })
 
 // 获取分类和标签数据
