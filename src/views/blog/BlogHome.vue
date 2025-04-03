@@ -256,9 +256,11 @@ onMounted(() => {
     font-size: 1.8rem;
     margin-top: 0;
     margin-bottom: 1.5rem;
+    // 修改 margin-left 让标题在宽度三分之一处 
     color: var(--text-primary);
-    border-bottom: 2px solid var(--border-color);
-    padding-bottom: 0.5rem;
+    // border-bottom: 2px solid var(--border-color);
+    // padding-bottom: 0.5rem;
+    text-align: center;
   }
 }
 
