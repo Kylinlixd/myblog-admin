@@ -10,19 +10,36 @@
         </div>
         <nav class="blog-nav">
           <div class="nav-menu">
-            <router-link to="/blog" class="nav-item" active-class="active">
+            <!-- 添加v-bind:class来动态设置激活状态 -->
+            <router-link 
+              to="/blog" 
+              class="nav-item" 
+              :class="{ 'active': $route.path === '/blog' }"
+            >
               <el-icon><i-ep-house /></el-icon>
               <span>首页</span>
             </router-link>
-            <router-link to="/blog/categories" class="nav-item" active-class="active">
+            <router-link 
+              to="/blog/categories" 
+              class="nav-item" 
+              :class="{ 'active': $route.path === '/blog/categories' }"
+            >
               <el-icon><i-ep-folder-opened /></el-icon>
               <span>分类</span>
             </router-link>
-            <router-link to="/blog/tags" class="nav-item" active-class="active">
+            <router-link 
+              to="/blog/tags" 
+              class="nav-item" 
+              :class="{ 'active': $route.path === '/blog/tags' }"
+            >
               <el-icon><i-ep-collection-tag /></el-icon>
               <span>标签</span>
             </router-link>
-            <router-link to="/blog/about" class="nav-item" active-class="active">
+            <router-link 
+              to="/blog/about" 
+              class="nav-item" 
+              :class="{ 'active': $route.path === '/blog/about' }"
+            >
               <el-icon><i-ep-user /></el-icon>
               <span>关于</span>
             </router-link>
@@ -87,6 +104,45 @@
     <el-backtop :right="30" :bottom="30" />
   </div>
 </template>
+
+<style lang="scss" scoped>
+.blog-nav {
+  display: flex;
+  justify-content: center; // 使导航标签整体居中
+  .nav-menu {
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: center; // 新增：让内部元素水平居中
+      gap: 5px;
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      padding: 5px 10px;
+      position: relative;
+      transition: all 0.3s ease;
+      border-radius: 5px; 
+      background-color: transparent; 
+      box-shadow: none; 
+
+      .el-icon {
+        font-size: 1.1rem;
+      }
+
+      &:hover {
+        transform: scale(1.1);
+        background-color: #fff; 
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); 
+      }
+
+      &.active {
+        background-color: #fff; 
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2); 
+      }
+    }
+  }
+}
+</style>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
@@ -210,7 +266,7 @@ onMounted(() => {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 15px;
+  padding: 0 0px;
 }
 
 // 头部样式
@@ -303,7 +359,7 @@ onMounted(() => {
 // 主内容区样式
 .blog-main {
   flex: 1;
-  padding: 30px 0;
+  padding: 0px 0;
   
   .content-wrapper {
     display: flex;
@@ -321,190 +377,14 @@ onMounted(() => {
   }
 }
 
-// 侧边栏样式
-.sidebar-widget {
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  overflow: hidden;
-  
-  .widget-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin: 0;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
-    color: #333;
-  }
-  
-  .widget-content {
-    padding: 15px;
-  }
-  
-  &.author-info {
-    text-align: center;
-    
-    .author-avatar {
-      margin-bottom: 10px;
-      
-      img {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-    }
-    
-    .author-name {
-      font-size: 1.1rem;
-      margin: 5px 0;
-    }
-    
-    .author-description {
-      color: #666;
-      font-size: 0.9rem;
-      margin-bottom: 10px;
-    }
-    
-    .social-links {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      
-      a {
-        color: #666;
-        text-decoration: none;
-        transition: color 0.3s;
-        
-        &:hover {
-          color: var(--el-color-primary);
-        }
-      }
-    }
-  }
-  
-  &.blog-stats {
-    ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      
-      li {
-        display: flex;
-        align-items: center;
-        margin-bottom: 8px;
-        color: #666;
-        
-        .el-icon {
-          margin-right: 8px;
-          color: var(--el-color-primary);
-        }
-      }
-    }
-  }
-  
-  &.recent-posts {
-    ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      
-      li {
-        margin-bottom: 12px;
-        padding-bottom: 12px;
-        border-bottom: 1px dashed #eee;
-        
-        &:last-child {
-          margin-bottom: 0;
-          padding-bottom: 0;
-          border-bottom: none;
-        }
-        
-        a {
-          display: block;
-          color: #333;
-          text-decoration: none;
-          font-weight: 500;
-          margin-bottom: 4px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          
-          &:hover {
-            color: var(--el-color-primary);
-          }
-        }
-        
-        .post-date {
-          display: block;
-          font-size: 0.8rem;
-          color: #999;
-        }
-      }
-    }
-  }
-  
-  &.categories {
-    ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      
-      li {
-        margin-bottom: 8px;
-        
-        a {
-          display: flex;
-          justify-content: space-between;
-          color: #333;
-          text-decoration: none;
-          padding: 5px 0;
-          transition: color 0.3s;
-          
-          &:hover {
-            color: var(--el-color-primary);
-          }
-          
-          .category-count {
-            color: #999;
-            font-size: 0.9rem;
-          }
-        }
-      }
-    }
-  }
-  
-  &.tag-cloud {
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      
-      .tag {
-        display: inline-block;
-        color: #666;
-        text-decoration: none;
-        background-color: #f0f2f5;
-        padding: 4px 10px;
-        border-radius: 3px;
-        transition: all 0.3s;
-        
-        &:hover {
-          color: #fff;
-          background-color: var(--el-color-primary);
-        }
-      }
-    }
-  }
-}
+
 
 // 底部样式
 .blog-footer {
   background-color: #fff;
   border-top: 1px solid #eee;
   padding: 20px 0;
-  margin-top: 30px;
+  margin-top: 0px;
   
   .footer-content {
     display: flex;
@@ -637,4 +517,4 @@ onMounted(() => {
     padding: 0 10px;
   }
 }
-</style> 
+</style>
