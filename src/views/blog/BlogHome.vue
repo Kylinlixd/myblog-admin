@@ -77,62 +77,6 @@
             </div>
           </div>
         </div>
-        
-        <div class="sidebar">
-          <div class="sidebar-section categories-section">
-            <h3 class="sidebar-title">文章分类</h3>
-            <div v-if="loadingCategories" class="loading-container">
-              <el-skeleton :rows="3" animated />
-            </div>
-            <div v-else-if="categories.length === 0" class="empty-categories">
-              <p>暂无分类</p>
-            </div>
-            <div v-else class="category-list">
-              <router-link
-                v-for="category in categories"
-                :key="category.id"
-                :to="`/blog/categories/${category.id}`"
-                class="category-item"
-              >
-                <span class="category-name">{{ category.name }}</span>
-                <el-badge :value="category.count || 0" class="category-count" />
-              </router-link>
-            </div>
-          </div>
-          
-          <div class="sidebar-section tags-section">
-            <h3 class="sidebar-title">热门标签</h3>
-            <div v-if="loadingTags" class="loading-container">
-              <el-skeleton :rows="2" animated />
-            </div>
-            <div v-else-if="tags.length === 0" class="empty-tags">
-              <p>暂无标签</p>
-            </div>
-            <div v-else class="tag-cloud">
-              <router-link
-                v-for="tag in tags"
-                :key="tag.id"
-                :to="`/blog/tags/${tag.id}`"
-                class="tag-item"
-              >
-                <el-tag effect="plain">{{ tag.name }}</el-tag>
-              </router-link>
-            </div>
-          </div>
-          
-          <div class="sidebar-section about-section">
-            <h3 class="sidebar-title">关于我</h3>
-            <div class="about-preview">
-              <img src="../../assets/default-avatar.png" alt="头像" class="about-avatar" />
-              <p class="about-name">博主小李</p>
-              <p class="about-bio">热爱前端开发，喜欢分享技术经验</p>
-              <router-link to="/blog/about" class="about-link">
-                了解更多
-                <el-icon><Right /></el-icon>
-              </router-link>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </AuroraBackground>
