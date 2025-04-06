@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import NProgress from 'nprogress'
 import { useAppStore } from '../stores/app'
+import NProgress from 'nprogress'
 
 // 配置 NProgress
 NProgress.configure({ 
@@ -253,75 +254,73 @@ const router = createRouter({
   }
 })
 
-// 路由守卫
 router.beforeEach(async (to, from, next) => {
-  // 开始进度条
+  const appStore = useAppStore()
+  let loadingTimer
+  const showLoading = to.meta.showLoading !== false
+  
+  // 立即触发进度条
   NProgress.start()
 
-  // 启用全局加载状态 - 仅在页面初次加载或切换主页面时显示
-  const appStore = useAppStore()
-  if (to.meta.showLoading !== false && (from.name === null || to.path.split('/').length <= 2)) {
-    appStore.startLoading(to.meta.loadingText || '页面加载中...')
-  }
-  
-  // 设置页面加载超时（30秒后自动取消）
-  const routeTimeout = setTimeout(() => {
-    console.log('路由切换超时，自动取消加载状态')
-    appStore.setLoadingError('页面加载超时，请检查网络连接')
-    NProgress.done()
-  }, 30000)
-
-  // 页面标题
-  if (to.meta.title) {
-    document.title = `${to.meta.title} - 博客系统`
-  }
-
-  // 检查是否需要登录
-  if (to.meta.requiresAuth) {
-    const userStore = useUserStore()
-    if (!userStore.isLoggedIn) {
-      clearTimeout(routeTimeout)
-      appStore.endLoading()
-      
-      // 如果未登录，重定向到登录页
-      next({
-        path: '/login',
-        query: { redirect: to.fullPath }
-      })
-      return
+  try {
+    // 显示加载状态（仅主内容区域）
+    if (showLoading && isMainRouteTransition(to, from)) {
+      loadingTimer = setTimeout(() => {
+        appStore.setLoadingError('加载时间过长，请检查网络')
+      }, 10000)
+      appStore.startLoading()
     }
 
-    // 已登录，检查是否有用户信息，没有则获取
-    if (!userStore.userInfo) {
-      try {
-        await userStore.getUserInfo()
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
+    // 页面标题
+    document.title = to.meta.title ? `${to.meta.title} - 博客系统` : '博客系统'
+
+    // 认证检查
+    if (to.meta.requiresAuth) {
+      const userStore = useUserStore()
+      
+      if (!userStore.isLoggedIn) {
+        return redirectToLogin(to, next)
+      }
+
+      // 按需加载用户信息
+      if (!userStore.userInfo) {
+        await loadUserInfo(userStore)
       }
     }
 
-    // 权限检查
-    const requiredPermissions = to.meta.permissions
-    if (requiredPermissions && requiredPermissions.length > 0) {
-      // 这里实现权限检查的逻辑，根据项目需要自行完善
-      // 如果不包含所需权限，可以重定向到401页面或首页
-      // const hasPermission = userStore.hasPermission(requiredPermissions)
-      // if (!hasPermission) {
-      //   clearTimeout(routeTimeout)
-      //   appStore.endLoading()
-      //   next('/401')
-      //   return
-      // }
+    next()
+  } catch (error) {
+    console.error('路由守卫错误:', error)
+    next(false)
+  } finally {
+    clearTimeout(loadingTimer)
+    if (showLoading) {
+      appStore.endLoading()
     }
-  } else {
-    // 不需要认证的页面直接放行
-    clearTimeout(routeTimeout)
+    NProgress.done()
   }
-
-  // 放行
-  next()
 })
 
+// 辅助函数
+function isMainRouteTransition(to, from) {
+  return !from.name || to.matched.some(record => record.path !== from.path)
+}
+
+async function loadUserInfo(userStore) {
+  try {
+    await userStore.getUserInfo()
+  } catch (error) {
+    userStore.logout()
+    throw error
+  }
+}
+
+function redirectToLogin(to, next) {
+  next({
+    path: '/login',
+    query: { redirect: to.fullPath }
+  })
+}
 router.afterEach(() => {
   // 结束进度条
   NProgress.done()

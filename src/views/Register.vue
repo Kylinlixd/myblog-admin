@@ -3,7 +3,6 @@
     <div class="register-box">
       <div class="register-header">
         <div class="logo-container">
-          <img src="../assets/logo.png" alt="Logo" class="logo" />
           <div class="logo-glow"></div>
         </div>
         <h2>博客管理系统</h2>

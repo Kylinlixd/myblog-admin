@@ -46,7 +46,7 @@
           <theme-toggle />
           <el-dropdown>
             <span class="user-info">
-              <el-avatar :size="32" :src="userStore.avatar || 'https://placeholder.com/32'" />
+              <el-avatar :size="32" :src="userStore.avatar" />
               <span>{{ userStore.nickname || '管理员' }}</span>
             </span>
             <template #dropdown>

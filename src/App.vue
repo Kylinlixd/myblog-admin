@@ -1,9 +1,16 @@
+<template>
+  <router-view v-slot="{ Component }">
+    <transition name="fade" mode="out-in">
+      <component :is="Component" />
+    </transition>
+  </router-view>
+</template>
+
 <script setup>
 import { onMounted, onBeforeMount, nextTick } from 'vue'
 import { useThemeStore } from './stores/theme'
 import { useAppStore } from './stores/app'
 import { useRouter } from 'vue-router'
-import PageLoading from './components/PageLoading.vue'
 import { ElMessage } from 'element-plus'
 
 // 初始化主题和应用状态
@@ -78,33 +85,18 @@ const handleRetry = () => {
 }
 </script>
 
-<template>
-  <!-- 全局页面加载组件 -->
-  <PageLoading 
-    :show="appStore.isLoading" 
-    :text="appStore.loadingText"
-    :has-error="appStore.hasError"
-    :can-retry="true"
-    @hide="appStore.endLoading()" 
-    @retry="handleRetry"
-  />
 
-  <router-view v-slot="{ Component }">
-    <transition name="fade" mode="out-in">
-      <component :is="Component" />
-    </transition>
-  </router-view>
-</template>
 
 <style lang="scss">
-/* 全局过渡动画样式 */
+
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
 }
+
 </style>
