@@ -249,8 +249,6 @@ router.beforeEach(async (to, from, next) => {
   let loadingTimer
   const showLoading = to.meta.showLoading !== false
   
-  // 立即触发进度条
-  NProgress.start()
 
   try {
     // 显示加载状态（仅主内容区域）
