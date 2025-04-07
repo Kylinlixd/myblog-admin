@@ -1,42 +1,46 @@
 <template>
   <router-view v-slot="{ Component }">
-    <transition name="fade" mode="out-in">
-      <component :is="Component" />
+    <transition name="fade" mode="out-in" :duration="200">
+      <keep-alive :include="cachedViews">
+        <component :is="Component" />
+      </keep-alive>
     </transition>
   </router-view>
+  
+  <!-- 加载状态显示，不阻断主组件渲染 -->
+  <div v-if="appStore.isLoading" class="loading-overlay">
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">{{ appStore.loadingText }}</div>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { onMounted, onBeforeMount, nextTick } from 'vue'
+import { onMounted, onBeforeMount, nextTick, computed, ref } from 'vue'
 import { useThemeStore } from './stores/theme'
 import { useAppStore } from './stores/app'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 // 初始化主题和应用状态
 const themeStore = useThemeStore()
 const appStore = useAppStore()
 const router = useRouter()
+const route = useRoute()
+
+// 跟踪需要缓存的视图
+const cachedViews = computed(() => {
+  return router.getRoutes()
+    .filter(route => route.meta && route.meta.keepAlive)
+    .map(route => route.name)
+})
 
 onBeforeMount(() => {
   // 初始页面加载时显示加载状态
   appStore.startLoading('正在初始化应用...')
   
-  // 监听路由变化，强制每次路由切换都显示加载状态
-  router.beforeEach((to, from, next) => {
-    console.log('App路由切换:', from.path, '->', to.path)
-    
-    // 重置错误状态
-    appStore.hasError = false
-    
-    // 只对非博客前台页面应用全局加载状态
-    // 或者是博客前台页面的首次加载
-    if (!to.path.startsWith('/blog') || from.name === null) {
-      appStore.startLoading(to.meta.loadingText || '页面加载中...')
-    }
-    
-    next()
-  })
+  // 不在这里注册路由守卫，避免和router/index.js中的守卫重复
   
   // 添加ESC键强制重置加载状态
   window.addEventListener('keydown', (event) => {
@@ -61,14 +65,30 @@ onBeforeMount(() => {
   })
 })
 
-onMounted(() => {
-  // 初始化主题
-  themeStore.initTheme()
-  
-  // 应用加载完成后，延迟关闭加载状态
-  setTimeout(() => {
-    appStore.endLoading()
-  }, 800) // 延长初始加载时间，确保用户能看到加载状态
+onMounted(async () => {
+  // 并行初始化主题和结束加载状态
+  await Promise.all([
+    themeStore.initTheme(),
+    new Promise(resolve => {
+      // 确保至少显示加载状态500ms以避免闪烁
+      setTimeout(() => {
+        appStore.endLoading()
+        // 监控LCP性能指标
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.entryType === 'largest-contentful-paint') {
+              console.log('LCP:', entry.startTime)
+              if (entry.startTime > 2500) {
+                console.warn('LCP时间过长，请优化页面加载性能')
+              }
+            }
+          }
+        })
+        observer.observe({type: 'largest-contentful-paint', buffered: true})
+        resolve()
+      }, 500)
+    })
+  ])
 })
 
 // 处理重试操作
@@ -95,4 +115,64 @@ const handleRetry = () => {
 .fade-leave-to {
   opacity: 0;
 }
-</style>    
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.dark .loading-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.loading-container {
+  background-color: var(--el-bg-color);
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.loading-spinner {
+  margin-bottom: 10px;
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--el-border-color-light);
+  border-radius: 50%;
+  border-top-color: var(--el-color-primary);
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  margin-top: 10px;
+}
+
+// 确保内容区域有最小高度，防止闪烁
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+// 预加载关键字体
+@font-face {
+  font-family: 'Your-Primary-Font';
+  font-display: swap; // 使用swap策略改善渲染
+  src: local('系统字体'); // 使用系统字体作为后备
+}
+</style>

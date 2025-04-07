@@ -1,13 +1,6 @@
 import { defineStore } from 'pinia'
 import { login, register, getUserInfo, logout, changePassword, updateUserProfile } from '../api/auth'
 
-// 模拟用户数据
-const mockUser = {
-  id: 1,
-  username: 'admin',
-  nickname: '管理员',
-  avatar: 'https://placeholder.com/32'
-}
 
 export const useUserStore = defineStore('user', {
   state: () => ({

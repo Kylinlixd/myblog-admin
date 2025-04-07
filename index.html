@@ -1,13 +1,58 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Vue</title>
+    <title>博客管理系统</title>
+    <style>
+      /* 初始加载样式 */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: sans-serif;
+      }
+      #app-loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f5f7fa;
+        z-index: 9999;
+        transition: opacity 0.3s;
+      }
+      .dark #app-loading {
+        background-color: #1a1a1a;
+        color: #f5f7fa;
+      }
+    </style>
+    <!-- 预加载关键资源 -->
+    <link rel="preload" href="/src/main.js" as="script">
+    <link rel="modulepreload" href="/src/router/index.js">
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- 初始加载指示器 -->
+      <div id="app-loading">
+        <div>加载中...</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+      // 在脚本加载完成后隐藏加载指示器
+      window.addEventListener('load', () => {
+        const loading = document.getElementById('app-loading');
+        if (loading) {
+          loading.style.opacity = '0';
+          setTimeout(() => {
+            loading.style.display = 'none';
+          }, 300);
+        }
+      });
+    </script>
   </body>
 </html>

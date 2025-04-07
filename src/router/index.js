@@ -5,6 +5,24 @@ import { useAppStore } from '../stores/app'
 
 const routes = [
   {
+    path: '/login',
+    name: 'Login',
+    component: () => import(/* webpackPrefetch: true */ '../views/Login.vue'),
+    meta: { 
+      title: '登录',
+      requiresAuth: false
+    }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import(/* webpackPrefetch: true */ '../views/Register.vue'),
+    meta: { 
+      title: '注册',
+      requiresAuth: false
+    }
+  },
+  {
     path: '/',
     redirect: '/blog'
   },
@@ -194,34 +212,6 @@ const routes = [
     ]
   },
   {
-    path: '/login',
-    name: 'Login',
-    component: () => import('../views/Login.vue'),
-    meta: { 
-      title: '登录',
-      requiresAuth: false
-    }
-  },
-  {
-    path: '/register',
-    name: 'Register',
-    component: () => import('../views/Register.vue'),
-    meta: { 
-      title: '注册',
-      requiresAuth: false
-    }
-  },
-  {
-    path: '/loading-redirect',
-    name: 'LoadingRedirect',
-    component: () => import('../views/LoadingRedirect.vue'),
-    meta: { 
-      title: '正在重新加载',
-      hideInMenu: true,
-      showLoading: false // 不显示全局加载状态
-    }
-  },
-  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue'),
@@ -245,50 +235,63 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const appStore = useAppStore()
-  let loadingTimer
-  const showLoading = to.meta.showLoading !== false
-  
-
-  try {
-    // 显示加载状态（仅主内容区域）
-    if (showLoading && isMainRouteTransition(to, from)) {
-      loadingTimer = setTimeout(() => {
-        appStore.setLoadingError('加载时间过长，请检查网络')
-      }, 10000)
-      appStore.startLoading()
+    // 仅在开发环境记录路由切换
+    if (process.env.NODE_ENV === 'development') {
+      console.log('App路由切换:', from.path, '->', to.path)
     }
-
-    // 页面标题
-    document.title = to.meta.title ? `${to.meta.title} - 博客系统` : '博客系统'
-
-    // 认证检查
-    if (to.meta.requiresAuth) {
-      const userStore = useUserStore()
-      
-      if (!userStore.isLoggedIn) {
-        return redirectToLogin(to, next)
-      }
-
-      // 按需加载用户信息
-      if (!userStore.userInfo) {
-        loadUserInfo(userStore).catch((error) => {
-          console.error('加载用户信息失败:', error)
-        })
-      }
-      next() 
+    
+    // 重置错误状态
+    const appStore = useAppStore()
+    appStore.hasError = false
+    
+    // 检查权限
+    const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
+    const userStore = useUserStore()
+    
+    if (requiresAuth && !userStore.isLoggedIn) {
+      console.log('需要登录权限，重定向到登录页面')
+      // 保存目标地址，登录后可以直接跳转
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      })
+      return
     }
-
+    
+    // 首先确保导航继续
     next()
-  } catch (error) {
-    console.error('路由守卫错误:', error)
-    next(false)
-  } finally {
-    clearTimeout(loadingTimer)
-    if (showLoading) {
-      appStore.endLoading()
+    
+    // 然后后台预加载组件，不阻塞导航
+    if (to.matched && to.matched.length > 0) {
+      // 预加载当前路由组件及其子组件
+      const componentsToLoad = []
+      to.matched.forEach(record => {
+        if (record.components) {
+          Object.values(record.components).forEach(component => {
+            if (typeof component === 'function') {
+              componentsToLoad.push(component())
+            }
+          })
+        }
+      })
+      
+      // 并行预加载所有组件，但不阻塞导航
+      if (componentsToLoad.length > 0) {
+        try {
+          Promise.all(componentsToLoad).catch(error => {
+            console.error('组件预加载失败:', error)
+          })
+        } catch (error) {
+          console.error('组件预加载执行错误:', error)
+        }
+      }
     }
-  }
+    
+    // 处理首次加载或从空路由跳转的情况
+    if (from.name === null || from.path === '/loading-redirect') {
+      // 立即显示加载状态
+      appStore.startLoading(to.meta.loadingText || '页面加载中...')
+    }
 })
 
 // 辅助函数
@@ -311,8 +314,22 @@ function redirectToLogin(to, next) {
     query: { redirect: to.fullPath }
   })
 }
-router.afterEach(() => {
-  // 结束进度条
+
+// 路由加载完成后处理
+router.afterEach((to) => {
+  const appStore = useAppStore()
+  
+  // 设置文档标题
+  if (to.meta && to.meta.title) {
+    document.title = to.meta.title
+  }
+  
+  // 延迟很短的时间来确保组件已渲染
+  if (appStore.isLoading) {
+    setTimeout(() => {
+      appStore.endLoading()
+    }, 100)
+  }
 })
 
-export default router 
+export default router

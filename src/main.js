@@ -10,7 +10,27 @@ import './styles/main.scss'
 import { ElMessage } from 'element-plus'
 import { useThemeStore } from './stores/theme'
 
-
+// 预加载常用组件
+const preloadComponents = () => {
+  // 获取主要路由组件并预加载
+  const routes = router.getRoutes()
+  const importantRoutes = routes.filter(route => 
+    route.meta && (route.meta.preload || route.name === 'Dashboard' || route.name === 'BlogHome')
+  )
+  
+  // 延迟预加载重要组件，让主应用先渲染完成
+  setTimeout(() => {
+    console.log('开始预加载重要组件')
+    importantRoutes.forEach(route => {
+      if (route.components && route.components.default && typeof route.components.default === 'function') {
+        // 异步预加载
+        route.components.default().catch(err => {
+          console.warn('预加载组件失败:', route.name, err)
+        })
+      }
+    })
+  }, 2000) // 延迟2秒，确保主应用已完成初始渲染
+}
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -65,4 +85,8 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(router)
 app.use(ElementPlus)
+
+// 预加载组件，在app挂载前进行
+preloadComponents()
+
 app.mount('#app')

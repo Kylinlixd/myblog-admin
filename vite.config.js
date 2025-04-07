@@ -11,8 +11,22 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['md-editor-v3'],
-    force: true // 强制重新优化依赖
+    include: [
+      'md-editor-v3',
+      'vue',
+      'vue-router',
+      'pinia',
+      'element-plus',
+      'axios',
+      'lodash-es',
+      '@vueuse/core',
+      'dayjs',
+      'chart.js'
+    ],
+    force: true, // 强制重新优化依赖
+    esbuildOptions: {
+      target: 'es2020', // 设置目标环境
+    }
   },
   css: {
     preprocessorOptions: {
@@ -40,6 +54,15 @@ export default defineConfig({
       compress: {
         drop_console: process.env.NODE_ENV === 'production',
         drop_debugger: process.env.NODE_ENV === 'production'
+      }
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['vue', 'vue-router', 'pinia'],
+          'element-plus': ['element-plus'],
+          'editor': ['md-editor-v3']
+        }
       }
     }
   }

@@ -47,7 +47,14 @@
         <el-divider />
         
         <div class="markdown-body">
-          <MdPreview :modelValue="post.content" :theme="theme" />
+          <Suspense timeout="0">
+  <template #default>
+    <MdPreview :modelValue="post.content" :theme="theme" v-if="!loading" />
+  </template>
+  <template #fallback>
+    <el-skeleton :rows="5" animated />
+  </template>
+</Suspense>
         </div>
       </div>
     </el-card>
@@ -60,8 +67,13 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Edit } from '@element-plus/icons-vue'
 import { getPostDetail } from '../../api/post'
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/preview.css'
+const MdPreview = defineAsyncComponent({
+  loader: () => import('md-editor-v3').then(mod => mod.MdPreview),
+  delay: 200,
+  timeout: 3000,
+  suspensible: true
+})
+
 import { useThemeStore } from '../../stores/theme'
 import { useAppStore } from '../../stores/app'
 
@@ -187,4 +199,4 @@ onMounted(() => {
 :deep(.md-preview) {
   background-color: transparent !important;
 }
-</style> 
+</style>
