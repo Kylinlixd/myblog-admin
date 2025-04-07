@@ -205,11 +205,7 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/Register.vue')
-      .catch(() => {
-        // 强制刷新作为 fallback
-        window.location.href = to.fullPath
-      }),
+    component: () => import('../views/Register.vue'),
     meta: { 
       title: '注册',
       requiresAuth: false
