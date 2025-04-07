@@ -285,7 +285,6 @@ router.beforeEach(async (to, from, next) => {
     if (showLoading) {
       appStore.endLoading()
     }
-    NProgress.done()
   }
 })
 
