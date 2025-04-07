@@ -1,17 +1,7 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import NProgress from 'nprogress'
 import { useAppStore } from '../stores/app'
-import NProgress from 'nprogress'
 
-// 配置 NProgress
-NProgress.configure({ 
-  showSpinner: false,
-  easing: 'ease',
-  speed: 500,
-  trickleSpeed: 200,
-  minimum: 0.3
-})
 
 const routes = [
   {
