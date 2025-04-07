@@ -205,7 +205,11 @@ const routes = [
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/Register.vue'),
+    component: () => import('../views/Register.vue')
+      .catch(() => {
+        // 强制刷新作为 fallback
+        window.location.href = to.fullPath
+      }),
     meta: { 
       title: '注册',
       requiresAuth: false
@@ -272,8 +276,11 @@ router.beforeEach(async (to, from, next) => {
 
       // 按需加载用户信息
       if (!userStore.userInfo) {
-        await loadUserInfo(userStore)
+        loadUserInfo(userStore).catch((error) => {
+          console.error('加载用户信息失败:', error)
+        })
       }
+      next() 
     }
 
     next()
@@ -310,7 +317,6 @@ function redirectToLogin(to, next) {
 }
 router.afterEach(() => {
   // 结束进度条
-  NProgress.done()
 })
 
 export default router 
