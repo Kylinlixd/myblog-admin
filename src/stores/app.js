@@ -8,6 +8,7 @@ export const useAppStore = defineStore('app', () => {
   const errorMessage = ref('')
   const errorTimeout = ref(null)
   const loadingTimeout = ref(null) // 加载超时计时器
+  const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
   
   // 设置加载状态
   function setLoading(status, text = '加载中...') {
@@ -118,16 +119,24 @@ export const useAppStore = defineStore('app', () => {
     errorMessage.value = ''
   }
   
+  // 切换侧边栏状态
+  function toggleSidebar() {
+    sidebarCollapsed.value = !sidebarCollapsed.value
+    localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value)
+  }
+  
   return {
     isLoading,
     loadingText,
     hasError,
     errorMessage,
+    sidebarCollapsed,
     setLoading,
     startLoading,
     endLoading,
     setLoadingError,
     retryLoading,
-    resetLoadingState
+    resetLoadingState,
+    toggleSidebar
   }
 })

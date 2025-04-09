@@ -1,37 +1,38 @@
 <template>
   <el-container class="layout-container">
-    <el-aside width="240px" class="aside">
+    <el-aside :width="isCollapse ? '64px' : '240px'" class="aside">
       <div class="logo">
         <!-- <img src="../assets/logo.png" alt="Logo" /> -->
-        <span>博客管理系统</span>
+        <span v-if="!isCollapse">博客管理系统</span>
       </div>
       <el-menu
         :default-active="activeMenu"
         class="el-menu-vertical"
         :router="true"
+        :collapse="isCollapse"
         background-color="var(--background-color)"
         text-color="var(--text-primary)"
         active-text-color="var(--primary-color)"
       >
         <el-menu-item index="/dashboard">
           <el-icon><Monitor /></el-icon>
-          <span>仪表盘</span>
+          <template #title>仪表盘</template>
         </el-menu-item>
         <el-menu-item index="/dashboard/posts">
           <el-icon><Document /></el-icon>
-          <span>文章管理</span>
+          <template #title>文章管理</template>
         </el-menu-item>
         <el-menu-item index="/dashboard/categories">
           <el-icon><Folder /></el-icon>
-          <span>分类管理</span>
+          <template #title>分类管理</template>
         </el-menu-item>
         <el-menu-item index="/dashboard/tags">
           <el-icon><Collection /></el-icon>
-          <span>标签管理</span>
+          <template #title>标签管理</template>
         </el-menu-item>
         <el-menu-item index="/dashboard/comments">
           <el-icon><ChatDotRound /></el-icon>
-          <span>评论管理</span>
+          <template #title>评论管理</template>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -39,7 +40,9 @@
     <el-container>
       <el-header class="header">
         <div class="header-left">
-          <el-icon class="toggle-sidebar"><Fold /></el-icon>
+          <el-icon class="toggle-sidebar" @click="toggleSidebar">
+            <component :is="isCollapse ? 'Expand' : 'Fold'" />
+          </el-icon>
           <breadcrumb />
         </div>
         <div class="header-right">
@@ -73,9 +76,10 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Monitor, Document, Folder, Collection, Fold, ChatDotRound } from '@element-plus/icons-vue'
+import { Monitor, Document, Folder, Collection, Fold, Expand, ChatDotRound } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
+import { useAppStore } from '../stores/app'
 import { ElMessageBox } from 'element-plus'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import Breadcrumb from '../components/Breadcrumb.vue'
@@ -84,7 +88,14 @@ const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
+const appStore = useAppStore()
 const activeMenu = computed(() => route.path)
+const isCollapse = computed(() => appStore.sidebarCollapsed)
+
+// 切换侧边栏
+const toggleSidebar = () => {
+  appStore.toggleSidebar()
+}
 
 // 初始化主题
 onMounted(() => {
@@ -115,6 +126,7 @@ const handleLogout = async () => {
     background-color: var(--background-color);
     border-right: 1px solid var(--border-color);
     transition: width 0.3s;
+    overflow: hidden;
     
     .logo {
       height: 60px;
@@ -122,6 +134,8 @@ const handleLogout = async () => {
       align-items: center;
       padding: 0 20px;
       border-bottom: 1px solid var(--border-color);
+      overflow: hidden;
+      white-space: nowrap;
       
       img {
         width: 32px;
@@ -138,6 +152,10 @@ const handleLogout = async () => {
     
     .el-menu {
       border-right: none;
+    }
+    
+    .el-menu--collapse {
+      width: 64px;
     }
   }
   
