@@ -315,6 +315,7 @@ onMounted(() => {
     padding: 20px;
     margin-bottom: 20px;
     border: 1px solid rgba(0, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     
     .filter-form {
       display: flex;
@@ -347,6 +348,7 @@ onMounted(() => {
     border-radius: 16px;
     padding: 20px;
     border: 1px solid rgba(0, 255, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     
     .table-wrapper {
       position: relative;

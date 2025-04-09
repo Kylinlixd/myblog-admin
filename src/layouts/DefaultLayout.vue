@@ -12,7 +12,7 @@
         :collapse="isCollapse"
         background-color="var(--background-color)"
         text-color="var(--text-primary)"
-        active-text-color="var(--primary-color)"
+        active-text-color="#ffffff"
       >
         <el-menu-item index="/dashboard">
           <el-icon><Monitor /></el-icon>
@@ -127,6 +127,7 @@ const handleLogout = async () => {
     border-right: 1px solid var(--border-color);
     transition: width 0.3s;
     overflow: hidden;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
     
     .logo {
       height: 60px;
@@ -136,6 +137,7 @@ const handleLogout = async () => {
       border-bottom: 1px solid var(--border-color);
       overflow: hidden;
       white-space: nowrap;
+      background: linear-gradient(135deg, #409EFF 0%, #36cfc9 100%);
       
       img {
         width: 32px;
@@ -146,12 +148,48 @@ const handleLogout = async () => {
       span {
         font-size: 18px;
         font-weight: 600;
-        color: var(--text-primary);
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
     }
     
     .el-menu {
       border-right: none;
+      
+      :deep(.el-menu-item) {
+        height: 50px;
+        line-height: 50px;
+        margin: 4px 0;
+        border-radius: 4px;
+        margin-left: 8px;
+        margin-right: 8px;
+        width: calc(100% - 16px);
+        
+        &.is-active {
+          background: linear-gradient(90deg, #409EFF 0%, #36cfc9 100%);
+          color: #ffffff;
+          box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.3);
+          
+          &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #ffffff;
+            border-radius: 0 4px 4px 0;
+          }
+        }
+        
+        &:hover {
+          background-color: rgba(64, 158, 255, 0.1);
+        }
+        
+        .el-icon {
+          font-size: 18px;
+        }
+      }
     }
     
     .el-menu--collapse {
@@ -167,6 +205,7 @@ const handleLogout = async () => {
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
     
     .header-left {
       display: flex;
@@ -177,9 +216,11 @@ const handleLogout = async () => {
         font-size: 20px;
         cursor: pointer;
         color: var(--text-primary);
+        transition: all 0.3s;
         
         &:hover {
-          color: var(--primary-color);
+          color: #409EFF;
+          transform: scale(1.1);
         }
       }
     }
@@ -194,6 +235,13 @@ const handleLogout = async () => {
         align-items: center;
         gap: 8px;
         cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.3s;
+        
+        &:hover {
+          background-color: rgba(64, 158, 255, 0.1);
+        }
         
         span {
           color: var(--text-primary);
@@ -206,6 +254,18 @@ const handleLogout = async () => {
     background-color: var(--background-light);
     padding: 20px;
     overflow-y: auto;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #409EFF 0%, #36cfc9 100%);
+      opacity: 0.1;
+    }
   }
 }
 
