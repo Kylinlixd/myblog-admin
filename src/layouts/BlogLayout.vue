@@ -148,7 +148,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Key } from '@element-plus/icons-vue'
-import { getRecentPosts, getBlogStats } from '../api/blog'
+import { getRecentPosts} from '../api/blog'
 import { getCategoryList } from '../api/category'
 import { useAppStore } from '../stores/app'
 
@@ -212,9 +212,6 @@ const fetchData = async () => {
   try {
     appStore.startLoading('加载博客数据...')
     
-    // 获取博客统计信息
-    const statsData = await getBlogStats()
-    stats.value = statsData
     
     // 获取最新文章
     const recentPostsData = await getRecentPosts(5)

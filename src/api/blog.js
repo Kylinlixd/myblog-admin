@@ -113,19 +113,6 @@ export function getTagPosts(tagId, params) {
     })
 }
 
-/**
- * 获取博客统计信息
- * @returns {Promise<Object>}
- */
-export function getBlogStats() {
-  return request.get('/blog/stats')
-    .then(response => {
-      if (response.code === 200) {
-        return response.data
-      }
-      return Promise.reject(new Error(response.message || '获取博客统计信息失败'))
-    })
-}
 
 /**
  * 获取关于我的信息
