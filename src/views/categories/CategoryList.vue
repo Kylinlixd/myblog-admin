@@ -27,7 +27,7 @@
                 </td>
                 <td class="description-cell">{{ category.description }}</td>
                 <td class="count-cell">{{ category.postCount }}</td>
-                <td>{{ category.createTime }}</td>
+                <td>{{ category.createdAt }}</td>
                 <td>
                   <div class="action-buttons">
                     <button class="action-button" @click="handleEdit(category)">
