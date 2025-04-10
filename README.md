@@ -47,7 +47,7 @@ npm run build
 ### 认证相关
 
 #### 1. 用户注册
-- **接口**: `/api/auth/register`
+- **接口**: `/auth/register`
 - **方法**: POST
 - **描述**: 用户注册接口
 - **请求参数**:
@@ -76,7 +76,7 @@ npm run build
 ```
 
 #### 2. 用户登录
-- **接口**: `/api/auth/login`
+- **接口**: `/auth/login`
 - **方法**: POST
 - **描述**: 用户登录接口
 - **请求参数**:
@@ -104,7 +104,7 @@ npm run build
 ```
 
 #### 3. 获取用户信息
-- **接口**: `/api/auth/info`
+- **接口**: `/auth/info`
 - **方法**: GET
 - **描述**: 获取当前登录用户信息
 - **请求头**:
@@ -128,7 +128,7 @@ npm run build
 ```
 
 #### 4. 修改密码
-- **接口**: `/api/auth/password`
+- **接口**: `/auth/password`
 - **方法**: PUT
 - **描述**: 修改用户密码
 - **请求头**:
@@ -149,7 +149,7 @@ npm run build
 ```
 
 #### 5. 更新个人资料
-- **接口**: `/api/auth/profile`
+- **接口**: `/auth/profile`
 - **方法**: PUT
 - **描述**: 更新用户个人资料
 - **请求头**:
@@ -179,6 +179,27 @@ npm run build
   "message": "string"
 }
 ```
+
+#### 6. 刷新token
+- **接口**: `/token/refresh`
+- **方法**: POST
+- **描述**: 刷新token
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "token": "string"
+  },
+  "message": "string"
+}
+```
+
+#### 7. 退出登录
+- **接口**: 无
+- **方法**: 无
+- **描述**: 退出登录
+- **操作**: 移除本地存储中的token
 
 ### 文章管理
 

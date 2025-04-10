@@ -173,20 +173,6 @@ const recentPosts = ref([])
 // 分类列表
 const categories = ref([])
 
-// 标签列表（模拟数据）
-const tags = ref([
-  { id: 1, name: 'JavaScript', count: 15 },
-  { id: 2, name: 'Vue.js', count: 10 },
-  { id: 3, name: 'CSS', count: 8 },
-  { id: 4, name: 'HTML', count: 12 },
-  { id: 5, name: 'Node.js', count: 5 },
-  { id: 6, name: 'React', count: 3 },
-  { id: 7, name: 'TypeScript', count: 7 },
-  { id: 8, name: '后端', count: 4 },
-  { id: 9, name: '前端', count: 20 },
-  { id: 10, name: '数据库', count: 2 }
-])
-
 // 根据文章数量计算标签大小
 const getTagSize = (count) => {
   const baseSize = 12
