@@ -342,14 +342,21 @@ const handleSubmit = async (isPublish = false) => {
       status: isPublish ? 'published' : postForm.status // 如果是发布操作，强制设置为已发布
     }
     
-    console.log('提交数据:', submitData) // 添加日志，方便调试
+    console.log('提交数据:', {
+      ...submitData,
+      categoryId: submitData.categoryId,
+      tagIds: submitData.tagIds,
+      status: submitData.status
+    }) // 添加更详细的日志
     
     if (isEdit.value) {
       // 更新文章
-      await updatePost(route.params.id, submitData)
+      const response = await updatePost(route.params.id, submitData)
+      console.log('更新文章响应:', response) // 添加响应日志
     } else {
       // 创建新文章
-      await createPost(submitData)
+      const response = await createPost(submitData)
+      console.log('创建文章响应:', response) // 添加响应日志
     }
     
     ElMessage.success(isEdit.value ? '文章更新成功' : '文章创建成功')
