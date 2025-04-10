@@ -6,44 +6,26 @@
     
     <div class="filter-card">
       <form class="filter-form" @submit.prevent="handleSearch">
-        <div class="form-group">
-          <label>文章</label>
-          <input
-            v-model="filterForm.postTitle"
-            type="text"
-            class="inspira-input"
-            placeholder="请输入文章标题"
-          />
-        </div>
+        <el-form-item label="文章" prop="postId">
+          <el-input v-model="filterForm.postTitle" placeholder="请输入文章标题" />
+        </el-form-item>
         
-        <div class="form-group">
-          <label>评论者</label>
-          <input
-            v-model="filterForm.author"
-            type="text"
-            class="inspira-input"
-            placeholder="请输入评论者"
-          />
-        </div>
+        <el-form-item label="评论者" prop="author">
+          <el-input v-model="filterForm.author" placeholder="请输入评论者" />
+        </el-form-item>
         
-        <div class="form-group">
-          <label>状态</label>
-          <select v-model="filterForm.status" class="inspira-select">
-            <option value="">全部</option>
-            <option value="pending">待审核</option>
-            <option value="approved">已通过</option>
-            <option value="rejected">已拒绝</option>
-          </select>
-        </div>
+        <el-form-item label="状态" prop="status">
+          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable>
+            <el-option label="待审核" value="pending" />
+            <el-option label="已通过" value="approved" />
+            <el-option label="已拒绝" value="rejected" />
+          </el-select>
+        </el-form-item>
         
-        <div class="form-actions">
-          <button type="submit" class="inspira-button">
-            <i class="icon-search"></i>搜索
-          </button>
-          <button type="button" class="inspira-button secondary" @click="handleReset">
-            <i class="icon-refresh"></i>重置
-          </button>
-        </div>
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button @click="resetFilter">重置</el-button>
+        </el-form-item>
       </form>
     </div>
     
@@ -211,7 +193,7 @@ const handleSearch = () => {
 }
 
 // 重置
-const handleReset = () => {
+const resetFilter = () => {
   Object.keys(filterForm).forEach(key => {
     filterForm[key] = ''
   })

@@ -9,6 +9,7 @@ import '@/styles/tailwind.css'
 import './styles/main.scss'
 import { ElMessage } from 'element-plus'
 import { useThemeStore } from './stores/theme'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 // 预加载常用组件
 const preloadComponents = () => {
@@ -84,7 +85,13 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 app.use(router)
-app.use(ElementPlus)
+app.use(ElementPlus, {
+  locale: zhCn,
+  pagination: {
+    total: '总计 {total} 条',
+    size: '{size} / 页'
+  }
+})
 
 // 预加载组件，在app挂载前进行
 preloadComponents()

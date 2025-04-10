@@ -82,72 +82,38 @@
           </button>
         </div>
         
-        <form class="dialog-form" @submit.prevent="handleSubmit">
-          <div class="form-group">
-            <label>上级分类</label>
-            <div class="select-wrapper">
-              <select v-model="categoryForm.parentId" class="inspira-select">
-                <option value="">无</option>
-                <option
-                  v-for="item in categoryOptions"
-                  :key="item.id"
-                  :value="item.id"
-                >{{ item.name }}</option>
-              </select>
-              <i class="icon-arrow-down"></i>
-            </div>
-          </div>
+        <el-form class="dialog-form" @submit.prevent="handleSubmit">
+          <el-form-item label="上级分类" prop="parentId">
+            <el-select
+              v-model="categoryForm.parentId"
+              placeholder="请选择上级分类"
+              clearable
+            >
+              <el-option
+                v-for="item in categoryOptions"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
           
-          <div class="form-group">
-            <label>分类名称</label>
-            <input
-              v-model="categoryForm.name"
-              type="text"
-              class="inspira-input"
-              placeholder="请输入分类名称"
-              :class="{ 'is-error': errors.name }"
-            />
-            <span class="error-message" v-if="errors.name">{{ errors.name }}</span>
-          </div>
+          <el-form-item label="分类名称" prop="name">
+            <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
+          </el-form-item>
           
-          <div class="form-group">
-            <label>描述</label>
-            <textarea
+          <el-form-item label="描述" prop="description">
+            <el-input
               v-model="categoryForm.description"
-              class="inspira-textarea"
+              type="textarea"
               :rows="3"
               placeholder="请输入分类描述"
-              :class="{ 'is-error': errors.description }"
-            ></textarea>
-            <span class="error-message" v-if="errors.description">{{ errors.description }}</span>
-          </div>
+            />
+          </el-form-item>
           
-          <div class="form-group">
-            <label>排序</label>
-            <div class="number-input">
-              <button
-                type="button"
-                class="number-button"
-                @click="categoryForm.sort = Math.max(0, categoryForm.sort - 1)"
-              >
-                <i class="icon-minus"></i>
-              </button>
-              <input
-                v-model.number="categoryForm.sort"
-                type="number"
-                class="inspira-input"
-                min="0"
-                max="999"
-              />
-              <button
-                type="button"
-                class="number-button"
-                @click="categoryForm.sort = Math.min(999, categoryForm.sort + 1)"
-              >
-                <i class="icon-plus"></i>
-              </button>
-            </div>
-          </div>
+          <el-form-item label="排序" prop="sort">
+            <el-input-number v-model="categoryForm.sort" :min="0" :max="999" />
+          </el-form-item>
           
           <div class="dialog-footer">
             <button type="button" class="inspira-button secondary" @click="dialogVisible = false">
@@ -157,7 +123,7 @@
               确定
             </button>
           </div>
-        </form>
+        </el-form>
       </div>
     </div>
   </div>

@@ -96,56 +96,22 @@
         </div>
         
         <form class="dialog-form" @submit.prevent="handleSubmit">
-          <div class="form-group">
-            <label>标签名称</label>
-            <input
-              v-model="tagForm.name"
-              type="text"
-              class="inspira-input"
-              placeholder="请输入标签名称"
-              :class="{ 'is-error': errors.name }"
-            />
-            <span class="error-message" v-if="errors.name">{{ errors.name }}</span>
-          </div>
+          <el-form-item label="标签名称" prop="name">
+            <el-input v-model="tagForm.name" placeholder="请输入标签名称" />
+          </el-form-item>
           
-          <div class="form-group">
-            <label>描述</label>
-            <textarea
+          <el-form-item label="描述" prop="description">
+            <el-input
               v-model="tagForm.description"
-              class="inspira-textarea"
+              type="textarea"
               :rows="3"
               placeholder="请输入标签描述"
-              :class="{ 'is-error': errors.description }"
-            ></textarea>
-            <span class="error-message" v-if="errors.description">{{ errors.description }}</span>
-          </div>
+            />
+          </el-form-item>
           
-          <div class="form-group">
-            <label>排序</label>
-            <div class="number-input">
-              <button
-                type="button"
-                class="number-button"
-                @click="tagForm.sort = Math.max(0, tagForm.sort - 1)"
-              >
-                <i class="icon-minus"></i>
-              </button>
-              <input
-                v-model.number="tagForm.sort"
-                type="number"
-                class="inspira-input"
-                min="0"
-                max="999"
-              />
-              <button
-                type="button"
-                class="number-button"
-                @click="tagForm.sort = Math.min(999, tagForm.sort + 1)"
-              >
-                <i class="icon-plus"></i>
-              </button>
-            </div>
-          </div>
+          <el-form-item label="排序" prop="sort">
+            <el-input-number v-model="tagForm.sort" :min="0" :max="999" />
+          </el-form-item>
           
           <div class="dialog-footer">
             <button type="button" class="inspira-button secondary" @click="dialogVisible = false">

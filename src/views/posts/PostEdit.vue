@@ -315,7 +315,7 @@ const handleQuickSave = () => {
 }
 
 // 提交表单
-const handleSubmit = async () => {
+const handleSubmit = async (isPublish = false) => {
   // 手动表单验证
   if (!postForm.title) {
     ElMessage.warning('请填写文章标题')
@@ -336,12 +336,20 @@ const handleSubmit = async () => {
     loading.value = true
     appStore.setLoading(true, '正在保存文章...')
     
+    // 确保状态值正确传递
+    const submitData = {
+      ...postForm,
+      status: isPublish ? 'published' : postForm.status // 如果是发布操作，强制设置为已发布
+    }
+    
+    console.log('提交数据:', submitData) // 添加日志，方便调试
+    
     if (isEdit.value) {
       // 更新文章
-      await updatePost(route.params.id, postForm)
+      await updatePost(route.params.id, submitData)
     } else {
       // 创建新文章
-      await createPost(postForm)
+      await createPost(submitData)
     }
     
     ElMessage.success(isEdit.value ? '文章更新成功' : '文章创建成功')
@@ -357,8 +365,9 @@ const handleSubmit = async () => {
 
 // 保存并发布
 const handleSubmitAndPublish = async () => {
+  // 先设置状态为已发布
   postForm.status = 'published'
-  await handleSubmit()
+  await handleSubmit(true) // 传入 true 表示是发布操作
 }
 
 onMounted(async () => {

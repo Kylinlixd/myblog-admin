@@ -90,34 +90,40 @@
             </template>
           </el-table-column>
           
-          <el-table-column prop="createTime" label="创建时间" width="180" />
+          <el-table-column prop="createTime" label="创建时间" width="180">
+            <template #default="scope">
+              {{ formatTime(scope.row.createTime) }}
+            </template>
+          </el-table-column>
           
           <el-table-column label="操作" width="220" fixed="right">
-            <template #default="scope">
-              <el-button 
-                size="small" 
-                @click="handleEdit(scope.row)"
-                type="primary" 
-                plain
-              >
-                <el-icon><Edit /></el-icon>编辑
-              </el-button>
-              <el-button 
-                size="small" 
-                @click="handlePreview(scope.row)"
-                type="info" 
-                plain
-              >
-                <el-icon><View /></el-icon>预览
-              </el-button>
-              <el-button 
-                size="small" 
-                @click="handleDelete(scope.row)"
-                type="danger" 
-                plain
-              >
-                <el-icon><Delete /></el-icon>删除
-              </el-button>
+            <template #default="{ row }">
+              <el-button-group>
+                <el-button
+                  type="primary"
+                  size="small"
+                  @click="handleEdit(row)"
+                >
+                  <el-icon><Edit /></el-icon>
+                  编辑
+                </el-button>
+                <el-button
+                  type="danger"
+                  size="small"
+                  @click="handleDelete(row)"
+                >
+                  <el-icon><Delete /></el-icon>
+                  删除
+                </el-button>
+                <el-button
+                  type="info"
+                  size="small"
+                  @click="handlePreview(row)"
+                >
+                  <el-icon><View /></el-icon>
+                  预览
+                </el-button>
+              </el-button-group>
             </template>
           </el-table-column>
         </el-table>
@@ -132,6 +138,10 @@
           layout="total, sizes, prev, pager, next"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
+          prev-text="上一页"
+          next-text="下一页"
+          size="small"
+          background
         />
       </div>
     </el-card>
@@ -142,6 +152,8 @@
       title="文章预览"
       width="70%"
       destroy-on-close
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
     >
       <div class="preview-wrapper">
         <h2 class="preview-title">{{ previewPost.title }}</h2>
@@ -159,10 +171,15 @@
               {{ tag.name }}
             </el-tag>
           </span>
-          <span class="preview-time">{{ previewPost.createTime }}</span>
+          <span class="preview-time">{{ formatTime(previewPost.createTime) }}</span>
         </div>
-        <div class="preview-content">{{ previewPost.content }}</div>
+        <div class="preview-content markdown-body" v-html="previewPost.htmlContent"></div>
       </div>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="previewVisible = false">关闭</el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
@@ -178,6 +195,9 @@ import { getPostList, deletePost } from '../../api/post'
 import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
 import { useAppStore } from '@/stores/app'
+import { marked } from 'marked'
+import dayjs from 'dayjs'
+import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -206,6 +226,17 @@ const filterForm = reactive({
 // 预览相关
 const previewVisible = ref(false)
 const previewPost = ref({})
+
+// 分页配置
+const paginationConfig = {
+  total: '总计 {total} 条',
+  size: '{size} / 页'
+}
+
+// 格式化时间
+const formatTime = (time) => {
+  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
+}
 
 // 获取文章列表
 const fetchPostList = async () => {
@@ -291,9 +322,22 @@ const handleEdit = (row) => {
 }
 
 // 预览文章
-const handlePreview = (row) => {
-  appStore.startLoading('正在加载预览...')
-  router.push(`/dashboard/posts/preview/${row.id}`)
+const handlePreview = async (row) => {
+  try {
+    appStore.startLoading('正在加载预览...')
+    // 将 Markdown 内容转换为 HTML
+    const htmlContent = marked(row.content)
+    previewPost.value = {
+      ...row,
+      htmlContent
+    }
+    previewVisible.value = true
+  } catch (error) {
+    console.error('加载预览失败:', error)
+    ElMessage.error('加载预览失败')
+  } finally {
+    appStore.endLoading()
+  }
 }
 
 // 删除文章
@@ -380,6 +424,7 @@ onMounted(async () => {
       font-size: 24px;
       font-weight: 600;
       margin-bottom: 16px;
+      color: var(--text-primary);
     }
     
     .preview-meta {
@@ -400,7 +445,7 @@ onMounted(async () => {
       }
       
       .preview-time {
-        color: #909399;
+        color: var(--text-secondary);
         font-size: 14px;
       }
     }
@@ -408,9 +453,157 @@ onMounted(async () => {
     .preview-content {
       font-size: 16px;
       line-height: 1.8;
-      color: #303133;
+      color: var(--text-primary);
       white-space: pre-wrap;
     }
   }
+  
+  .button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    .button-container {
+      flex-direction: column;
+    }
+  }
 }
-</style> 
+
+:deep(.el-button-group) {
+  display: flex;
+  gap: 4px;
+  
+  .el-button {
+    margin: 0;
+    padding: 8px 12px;
+    
+    .el-icon {
+      margin-right: 4px;
+    }
+  }
+}
+
+:deep(.markdown-body) {
+  padding: 20px;
+  background-color: var(--background-color);
+  border-radius: 4px;
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    margin-top: 24px;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.25em; }
+  h4 { font-size: 1.1em; }
+  h5 { font-size: 1em; }
+  h6 { font-size: 0.9em; }
+  
+  p {
+    margin-bottom: 16px;
+    line-height: 1.8;
+  }
+  
+  code {
+    background-color: var(--background-light);
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  
+  pre {
+    background-color: var(--background-light);
+    padding: 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    
+    code {
+      background-color: transparent;
+      padding: 0;
+      font-size: 0.9em;
+    }
+  }
+  
+  blockquote {
+    border-left: 4px solid var(--border-color);
+    padding-left: 16px;
+    margin-left: 0;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+    
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 8px;
+    }
+    
+    th {
+      background-color: var(--background-light);
+    }
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 16px;
+  }
+  
+  ul, ol {
+    margin-bottom: 16px;
+    padding-left: 2em;
+    
+    li {
+      margin-bottom: 8px;
+      line-height: 1.8;
+    }
+  }
+  
+  hr {
+    border: none;
+    border-top: 1px solid var(--border-color);
+    margin: 24px 0;
+  }
+  
+  a {
+    color: var(--primary-color);
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  
+  :deep(.el-pagination) {
+    .el-pagination__total {
+      color: var(--text-regular);
+      font-size: 14px;
+      margin-right: 16px;
+    }
+    
+    .el-pagination__sizes {
+      .el-input__inner {
+        color: var(--text-regular);
+        font-size: 14px;
+      }
+    }
+  }
+}
+</style>
