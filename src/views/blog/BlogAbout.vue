@@ -1,35 +1,19 @@
 <template>
   <div class="blog-about">
-    <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <el-skeleton :rows="15" animated />
-    </div>
-    
-    <!-- 错误状态 -->
-    <div v-else-if="error" class="error-container">
-      <el-empty 
-        description="加载关于我信息失败" 
-        :image-size="200"
-      >
-        <template #description>
-          <p>{{ errorMessage }}</p>
-        </template>
-        <el-button type="primary" @click="fetchAboutInfo">重试</el-button>
-      </el-empty>
-    </div>
-    
     <!-- 内容 -->
-    <div v-else class="about-content">
+    <div class="about-content">
       <div class="about-header">
-        <div class="about-avatar">
-          <img :src="aboutInfo.avatar || 'https://placeholder.pics/svg/150'" alt="博主头像">
+        <div class="header-content">
+          <div class="about-avatar">
+            <img src="https://placeholder.pics/svg/150" alt="博主头像">
+          </div>
+          <h1 class="about-name">博主名称</h1>
         </div>
-        <h1 class="about-name">{{ aboutInfo.name || '博主名称' }}</h1>
         <div class="about-social">
-          <a v-if="aboutInfo.github" :href="aboutInfo.github" target="_blank" title="GitHub">
+          <a href="https://github.com" target="_blank" title="GitHub">
             <el-icon><i-ep-link /></el-icon>
           </a>
-          <a v-if="aboutInfo.email" :href="`mailto:${aboutInfo.email}`" title="Email">
+          <a href="mailto:example@example.com" title="Email">
             <el-icon><i-ep-message /></el-icon>
           </a>
         </div>
@@ -42,10 +26,10 @@
         </div>
         
         <!-- 技能 -->
-        <div v-if="aboutInfo.skills && aboutInfo.skills.length" class="about-section">
+        <div class="about-section">
           <h2 class="section-title">我的技能</h2>
           <div class="skills-wrapper">
-            <div v-for="(skill, index) in aboutInfo.skills" :key="index" class="skill-item">
+            <div v-for="(skill, index) in skills" :key="index" class="skill-item">
               <div class="skill-info">
                 <span class="skill-name">{{ skill.name }}</span>
                 <span class="skill-level">{{ skill.level }}%</span>
@@ -59,51 +43,13 @@
             </div>
           </div>
         </div>
-        
-        <!-- 联系表单 -->
-        <div class="about-section">
-          <h2 class="section-title">联系我</h2>
-          <div class="contact-form">
-            <el-form 
-              ref="contactFormRef"
-              :model="contactForm"
-              :rules="contactRules"
-              label-position="top"
-            >
-              <el-form-item label="您的姓名" prop="name">
-                <el-input v-model="contactForm.name" placeholder="请输入您的姓名" />
-              </el-form-item>
-              
-              <el-form-item label="您的邮箱" prop="email">
-                <el-input v-model="contactForm.email" placeholder="请输入您的邮箱" />
-              </el-form-item>
-              
-              <el-form-item label="留言内容" prop="message">
-                <el-input 
-                  v-model="contactForm.message" 
-                  type="textarea" 
-                  rows="5"
-                  placeholder="请输入您想对我说的话..."
-                />
-              </el-form-item>
-              
-              <el-form-item>
-                <el-button type="primary" @click="submitContact" :loading="submitting">
-                  发送留言
-                </el-button>
-              </el-form-item>
-            </el-form>
-          </div>
-        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getAboutInfo } from '../../api/blog'
+import { computed } from 'vue'
 import MarkdownIt from 'markdown-it'
 
 // 创建Markdown渲染器
@@ -113,22 +59,38 @@ const md = new MarkdownIt({
   typographer: true
 })
 
-// 状态
-const loading = ref(true)
-const error = ref(false)
-const errorMessage = ref('')
-const aboutInfo = ref({
-  name: '',
-  avatar: '',
-  introduction: '',
-  email: '',
-  github: '',
-  skills: []
-})
+// 静态数据
+const introduction = `
+# 关于我
+
+你好，欢迎来到我的博客！我是一名热爱技术的开发者。
+
+## 我的经历
+
+- 从事前端开发多年
+- 热爱开源技术
+- 喜欢分享技术经验
+
+## 联系方式
+
+如果你有任何问题或建议，欢迎通过以下方式联系我：
+
+- Email: example@example.com
+- GitHub: https://github.com
+`
+
+// 技能数据
+const skills = [
+  { name: 'Vue.js', level: 90 },
+  { name: 'React', level: 85 },
+  { name: 'JavaScript', level: 95 },
+  { name: 'TypeScript', level: 80 },
+  { name: 'Node.js', level: 75 }
+]
 
 // 渲染Markdown内容
 const renderedContent = computed(() => {
-  return md.render(aboutInfo.value.introduction || '')
+  return md.render(introduction)
 })
 
 // 获取技能条颜色
@@ -143,88 +105,14 @@ const getSkillColor = (level) => {
     return '#f56c6c' // 初级 - 红色
   }
 }
-
-// 联系表单
-const contactForm = ref({
-  name: '',
-  email: '',
-  message: ''
-})
-
-const contactRules = {
-  name: [
-    { required: true, message: '请输入您的姓名', trigger: 'blur' },
-    { min: 2, max: 20, message: '姓名长度应在2-20个字符之间', trigger: 'blur' }
-  ],
-  email: [
-    { required: true, message: '请输入您的邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-  ],
-  message: [
-    { required: true, message: '请输入留言内容', trigger: 'blur' },
-    { min: 5, max: 500, message: '留言内容应在5-500个字符之间', trigger: 'blur' }
-  ]
-}
-
-const contactFormRef = ref(null)
-const submitting = ref(false)
-
-// 提交联系表单
-const submitContact = async () => {
-  if (!contactFormRef.value) return
-  
-  await contactFormRef.value.validate(async (valid, fields) => {
-    if (!valid) {
-      console.log('表单验证失败:', fields)
-      return
-    }
-    
-    submitting.value = true
-    try {
-      // 在实际环境中会调用API发送留言数据
-      // await sendContactMessage(contactForm.value)
-      
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      ElMessage.success('您的留言已发送成功！')
-      contactFormRef.value.resetFields()
-    } catch (error) {
-      console.error('发送留言失败:', error)
-      ElMessage.error('发送留言失败，请稍后重试')
-    } finally {
-      submitting.value = false
-    }
-  })
-}
-
-// 获取关于我信息
-const fetchAboutInfo = async () => {
-  loading.value = true
-  error.value = false
-  errorMessage.value = ''
-  
-  try {
-    const data = await getAboutInfo()
-    aboutInfo.value = data
-  } catch (err) {
-    console.error('获取关于我信息失败:', err)
-    error.value = true
-    errorMessage.value = err.message || '获取信息失败，请重试'
-  } finally {
-    loading.value = false
-  }
-}
-
-// 组件挂载时初始化
-onMounted(() => {
-  fetchAboutInfo()
-})
 </script>
 
 <style lang="scss" scoped>
 .blog-about {
   overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 .loading-container,
@@ -236,6 +124,8 @@ onMounted(() => {
 .about-content {
   display: flex;
   flex-direction: column;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 // 头部信息
@@ -247,12 +137,18 @@ onMounted(() => {
   text-align: center;
   margin-bottom: 30px;
   
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 15px;
+  }
+  
   .about-avatar {
-    margin: 0 auto 20px;
-    
     img {
-      width: 120px;
-      height: 120px;
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       object-fit: cover;
     }
@@ -260,7 +156,7 @@ onMounted(() => {
   
   .about-name {
     font-size: 1.8rem;
-    margin: 0 0 15px;
+    margin: 0;
     color: #333;
   }
   
@@ -300,6 +196,7 @@ onMounted(() => {
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
     color: #333;
+    text-align: center;
   }
   
   .section-content {
@@ -313,6 +210,7 @@ onMounted(() => {
   :deep(h1) {
     font-size: 1.8rem;
     margin: 1.5rem 0 1rem;
+    text-align: center;
   }
   
   :deep(h2) {
@@ -320,21 +218,25 @@ onMounted(() => {
     margin: 1.2rem 0 0.8rem;
     padding-bottom: 0.3rem;
     border-bottom: 1px solid #eee;
+    text-align: center;
   }
   
   :deep(h3) {
     font-size: 1.3rem;
     margin: 1rem 0 0.6rem;
+    text-align: center;
   }
   
   :deep(p) {
     margin: 0.8rem 0;
     line-height: 1.6;
+    text-align: center;
   }
   
   :deep(ul, ol) {
     padding-left: 2rem;
-    margin: 0.8rem 0;
+    margin: 0.8rem auto;
+    max-width: 600px;
     
     li {
       margin-bottom: 0.5rem;
@@ -351,11 +253,12 @@ onMounted(() => {
   }
   
   :deep(blockquote) {
-    margin: 1rem 0;
+    margin: 1rem auto;
     padding: 0.5rem 1rem;
     border-left: 4px solid var(--el-color-primary-light-5);
     background-color: var(--el-color-primary-light-9);
     color: #666;
+    max-width: 600px;
   }
   
   :deep(code) {
@@ -371,7 +274,8 @@ onMounted(() => {
     padding: 1rem;
     border-radius: 5px;
     overflow-x: auto;
-    margin: 1rem 0;
+    margin: 1rem auto;
+    max-width: 600px;
     
     code {
       background-color: transparent;
@@ -385,6 +289,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 .skill-item {
@@ -412,6 +318,10 @@ onMounted(() => {
 
 // 响应式调整
 @media (max-width: 768px) {
+  .blog-about {
+    padding: 10px;
+  }
+  
   .about-header {
     padding: 30px 15px;
     
