@@ -54,10 +54,10 @@
         <!-- 登录按钮 -->
         <div class="login-btn">
           <router-link to="/login" class="login-link">
-            <el-button type="primary" size="small">
-              <el-icon><i-ep-key /></el-icon>
-              登录
-            </el-button>
+            <!-- <el-button type="primary" size="small">
+              <el-icon><i-ep-key /></el-icon> -->             
+            <InteractiveHoverButton></InteractiveHoverButton>
+            <!-- </el-button> -->
           </router-link>
         </div>
       </div>
@@ -151,6 +151,7 @@ import { Search, Key } from '@element-plus/icons-vue'
 import { getRecentPosts} from '../api/blog'
 import { getCategoryList } from '../api/category'
 import { useAppStore } from '../stores/app'
+import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButton.vue'
 
 const router = useRouter()
 const appStore = useAppStore()

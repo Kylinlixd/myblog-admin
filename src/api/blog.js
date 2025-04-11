@@ -67,14 +67,11 @@ export function getHotPosts(limit = 5) {
  * @param {number} [limit=5] - 获取数量
  * @returns {Promise<Array>}
  */
-export function getRecentPosts(limit = 5) {
-  return request.get('/blog/posts/recent', { limit })
-    .then(response => {
-      if (response.code === 200) {
-        return response.data
-      }
-      return Promise.reject(new Error(response.message || '获取最新文章失败'))
-    })
+export function getRecentPosts() {
+  return request({
+    url: '/posts/recent',
+    method: 'get'
+  })
 }
 
 /**
@@ -113,7 +110,6 @@ export function getTagPosts(tagId, params) {
     })
 }
 
-
 /**
  * 获取关于我的信息
  * @returns {Promise<Object>}
@@ -141,4 +137,11 @@ export function increasePostView(id) {
       }
       return Promise.reject(new Error(response.message || '增加浏览量失败'))
     })
+}
+
+export function getCategoryList() {
+  return request({
+    url: '/categories',
+    method: 'get'
+  })
 } 

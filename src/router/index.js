@@ -27,6 +27,15 @@ const routes = [
     redirect: '/blog'
   },
   {
+    path: '/test',
+    name: 'TestLampEffect',
+    component: () => import('../components/TestLampEffect.vue'),
+    meta: { 
+      title: '测试页面',
+      keepAlive: false
+    }
+  },
+  {
     path: '/blog',
     component: () => import('../layouts/BlogLayout.vue'),
     meta: { 
