@@ -89,7 +89,7 @@ import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
 import { ElMessage } from 'element-plus'
 import { Right } from '@element-plus/icons-vue'
-import AuroraBackground from '../../components/AuroraBackground.vue'
+import AuroraBackground from '../../components/InspiraUI/AuroraBackground.vue'
 
 // 文章列表状态
 const posts = ref([])
