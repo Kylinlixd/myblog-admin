@@ -61,6 +61,33 @@ const routes = [
           title: '文章详情',
           keepAlive: false
         }
+      },
+      {
+        path: 'categories',
+        name: 'BlogCategories',
+        component: () => import('../views/blog/BlogCategories.vue'),
+        meta: { 
+          title: '文章归类',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'about',
+        name: 'BlogAbout',
+        component: () => import('../views/blog/BlogAbout.vue'),
+        meta: { 
+          title: '关于我',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'dynamic',
+        name: 'BlogDynamic',
+        component: () => import('../views/blog/BlogDynamic.vue'),
+        meta: { 
+          title: '动态',
+          keepAlive: true
+        }
       }
     ]
   },

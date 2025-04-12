@@ -1,0 +1,275 @@
+<template>
+  <div class="about-container">
+    <div class="about-header">
+      <div class="avatar">
+        <img src="" alt="LiXD" onerror="this.src='https://ui-avatars.com/api/?name=LiXD&background=random'" />
+      </div>
+      <h1 class="name">LiXD</h1>
+      <div class="title">全栈开发工程师 / 技术博主</div>
+      <div class="social-links">
+        <a href="https://github.com/" target="_blank" class="social-item">
+          <i class="fab fa-github"></i>
+        </a>
+        <a href="https://twitter.com/" target="_blank" class="social-item">
+          <i class="fab fa-twitter"></i>
+        </a>
+        <a href="mailto:contact@example.com" class="social-item">
+          <i class="fas fa-envelope"></i>
+        </a>
+      </div>
+    </div>
+
+    <div class="about-content">
+      <section class="about-section">
+        <h2 class="section-title">关于我</h2>
+        <div class="section-content">
+          <p>嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。</p>
+          <p>通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。</p>
+        </div>
+      </section>
+
+      <section class="about-section">
+        <h2 class="section-title">技能与专长</h2>
+        <div class="section-content">
+          <div class="skills-grid">
+            <div class="skill-category">
+              <h3>前端开发</h3>
+              <div class="skill-items">
+                <div class="skill-item">HTML/CSS</div>
+                <div class="skill-item">JavaScript</div>
+                <div class="skill-item">Vue.js</div>
+                <div class="skill-item">React</div>
+                <div class="skill-item">TypeScript</div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>后端开发</h3>
+              <div class="skill-items">
+                <div class="skill-item">Node.js</div>
+                <div class="skill-item">Python</div>
+                <div class="skill-item">Django</div>
+                <div class="skill-item">Flask</div>
+                <div class="skill-item">Express</div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>数据库</h3>
+              <div class="skill-items">
+                <div class="skill-item">MySQL</div>
+                <div class="skill-item">MongoDB</div>
+                <div class="skill-item">Redis</div>
+                <div class="skill-item">PostgreSQL</div>
+              </div>
+            </div>
+            <div class="skill-category">
+              <h3>开发工具</h3>
+              <div class="skill-items">
+                <div class="skill-item">Git</div>
+                <div class="skill-item">Docker</div>
+                <div class="skill-item">Webpack</div>
+                <div class="skill-item">VS Code</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="about-section">
+        <h2 class="section-title">联系我</h2>
+        <div class="section-content">
+          <p>如果你有任何问题、合作意向或者只是想交个朋友，欢迎随时联系我。</p>
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <a href="mailto:contact@example.com">contact@example.com</a>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-globe"></i>
+              <a href="https://example.com" target="_blank">example.com</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
+
+<script setup>
+// 没有太多脚本逻辑，主要是静态内容展示
+import { onMounted } from 'vue'
+
+onMounted(() => {
+  // 加载FontAwesome图标，实际项目中建议通过正规的方式安装使用
+  const fontAwesome = document.createElement('link')
+  fontAwesome.rel = 'stylesheet'
+  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
+  document.head.appendChild(fontAwesome)
+})
+</script>
+
+<style scoped>
+.about-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+}
+
+.about-header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.title {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.social-item {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b5563;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.social-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+  color: #fff;
+}
+
+.about-section {
+  margin-bottom: 3rem;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #333;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+}
+
+.section-content {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #4b5563;
+}
+
+.section-content p {
+  margin-bottom: 1rem;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2rem;
+}
+
+.skill-category h3 {
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
+  color: #333;
+}
+
+.skill-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-item {
+  background-color: #f3e8ff;
+  color: #9333ea;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.contact-info {
+  margin-top: 1.5rem;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.8rem;
+}
+
+.contact-item i {
+  margin-right: 10px;
+  color: #6d28d9;
+}
+
+.contact-item a {
+  color: #4b5563;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.contact-item a:hover {
+  color: #6d28d9;
+}
+
+@media (max-width: 768px) {
+  .about-header {
+    margin-bottom: 2.5rem;
+  }
+  
+  .name {
+    font-size: 2rem;
+  }
+  
+  .skills-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+</style> 
