@@ -19,27 +19,7 @@
               <!-- <el-icon><i-ep-house /></el-icon> -->
               <span>首页</span>
             </router-link>
-            <router-link 
-              to="/blog/categories" 
-              class="nav-item" 
-              :class="{ 'active': $route.path === '/blog/categories' }"
-            >
-              <span>分类</span>
-            </router-link>
-            <router-link 
-              to="/blog/tags" 
-              class="nav-item" 
-              :class="{ 'active': $route.path === '/blog/tags' }"
-            >
-              <span>标签</span>
-            </router-link>
-            <router-link 
-              to="/blog/about" 
-              class="nav-item" 
-              :class="{ 'active': $route.path === '/blog/about' }"
-            >
-              <span>关于</span>
-            </router-link>
+            <!-- 移除其他导航项 -->
           </div>
         </nav>
         <div class="blog-search">
@@ -145,11 +125,10 @@
 </style>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search, Key } from '@element-plus/icons-vue'
-import { getRecentPosts} from '../api/blog'
-import { getCategoryList } from '../api/category'
+import { Search } from '@element-plus/icons-vue'
+import { getRecentPosts } from '../api/blog'
 import { useAppStore } from '../stores/app'
 import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButton.vue'
 
@@ -167,25 +146,8 @@ const handleSearch = () => {
   searchQuery.value = ''
 }
 
-
 // 最新文章
 const recentPosts = ref([])
-
-// 分类列表
-const categories = ref([])
-
-// 根据文章数量计算标签大小
-const getTagSize = (count) => {
-  const baseSize = 12
-  const maxSize = 20
-  const minCount = 1
-  const maxCount = Math.max(...tags.value.map(tag => tag.count))
-  
-  if (maxCount === minCount) return `${baseSize}px`
-  
-  const size = baseSize + ((count - minCount) / (maxCount - minCount)) * (maxSize - baseSize)
-  return `${size}px`
-}
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -199,17 +161,9 @@ const fetchData = async () => {
   try {
     appStore.startLoading('加载博客数据...')
     
-    
     // 获取最新文章
     const recentPostsData = await getRecentPosts(5)
     recentPosts.value = recentPostsData
-    
-    // 获取分类列表
-    const categoriesData = await getCategoryList()
-    categories.value = categoriesData.map(category => ({
-      ...category,
-      count: Math.floor(Math.random() * 20) // 模拟文章数量，实际应从API获取
-    }))
     
     appStore.endLoading()
   } catch (error) {

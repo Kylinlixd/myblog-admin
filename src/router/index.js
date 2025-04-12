@@ -53,44 +53,6 @@ const routes = [
         }
       },
       {
-        path: 'categories',
-        name: 'BlogCategories',
-        component: () => import('../views/blog/BlogCategories.vue'),
-        meta: { 
-          title: '文章分类',
-          keepAlive: true
-        }
-      },
-      {
-        path: 'categories/:id',
-        name: 'BlogCategoryDetail',
-        component: () => import('../views/blog/BlogCategories.vue'),
-        props: true,
-        meta: { 
-          title: '分类文章',
-          keepAlive: false
-        }
-      },
-      {
-        path: 'tags',
-        name: 'BlogTags',
-        component: () => import('../views/blog/BlogTags.vue'),
-        meta: { 
-          title: '文章标签',
-          keepAlive: true
-        }
-      },
-      {
-        path: 'tags/:id',
-        name: 'BlogTagDetail',
-        component: () => import('../views/blog/BlogTags.vue'),
-        props: true,
-        meta: { 
-          title: '标签文章',
-          keepAlive: false
-        }
-      },
-      {
         path: 'post/:id',
         name: 'BlogPost',
         component: () => import('../views/blog/BlogPost.vue'),
@@ -98,15 +60,6 @@ const routes = [
         meta: { 
           title: '文章详情',
           keepAlive: false
-        }
-      },
-      {
-        path: 'about',
-        name: 'BlogAbout',
-        component: () => import('../views/blog/BlogAbout.vue'),
-        meta: { 
-          title: '关于我',
-          keepAlive: true
         }
       }
     ]
