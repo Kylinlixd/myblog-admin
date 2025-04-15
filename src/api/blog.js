@@ -144,4 +144,21 @@ export function getCategoryList() {
     url: '/categories',
     method: 'get'
   })
+}
+
+/**
+ * 获取动态列表
+ * @param {Object} params - 查询参数
+ * @param {number} [params.page=1] - 页码
+ * @param {number} [params.pageSize=10] - 每页数量
+ * @returns {Promise<{total: number, items: Array}>}
+ */
+export function getDynamicList(params) {
+  return request.get('/blog/dynamics', params)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取动态列表失败'))
+    })
 } 
