@@ -1,41 +1,28 @@
 <template>
-  <div class="post-list">
+  <div class="dynamic-list">
     <div class="page-header">
-      <h2>文章管理</h2>
+      <h2>动态管理</h2>
       <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>新建文章
+        <el-icon><Plus /></el-icon>新建动态
       </el-button>
     </div>
     
     <el-card class="filter-card">
       <el-form :inline="true" :model="filterForm" class="filter-form" @submit.prevent="handleSearch">
-        <el-form-item label="标题">
+        <el-form-item label="内容">
           <el-input
             v-model="filterForm.keyword"
-            placeholder="请输入标题"
+            placeholder="请输入内容关键词"
             clearable
           />
         </el-form-item>
         
-        <el-form-item label="分类">
-          <el-select v-model="filterForm.categoryId" placeholder="请选择分类" clearable>
-            <el-option
-              v-for="item in categories"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="标签">
-          <el-select v-model="filterForm.tagId" placeholder="请选择标签" clearable>
-            <el-option
-              v-for="item in tags"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
-            />
+        <el-form-item label="类型">
+          <el-select v-model="filterForm.type" placeholder="请选择类型" clearable>
+            <el-option label="图文" value="image" />
+            <el-option label="视频" value="video" />
+            <el-option label="音频" value="audio" />
+            <el-option label="纯文本" value="text" />
           </el-select>
         </el-form-item>
         
@@ -61,24 +48,45 @@
       <div class="table-wrapper">
         <el-table
           v-loading="loading"
-          :data="postList"
+          :data="dynamicList"
           style="width: 100%"
           border
         >
-          <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
+          <el-table-column prop="content" label="内容" min-width="200" show-overflow-tooltip />
           
-          <el-table-column prop="categoryName" label="分类" width="120" />
-          
-          <el-table-column label="标签" width="180">
+          <el-table-column label="类型" width="120">
             <template #default="scope">
-              <el-tag
-                v-for="tag in scope.row.tags"
-                :key="tag.id"
-                size="small"
-                class="tag-item"
-              >
-                {{ tag.name }}
+              <el-tag :type="getTypeTagType(scope.row.type)">
+                {{ getTypeText(scope.row.type) }}
               </el-tag>
+            </template>
+          </el-table-column>
+          
+          <el-table-column label="媒体" width="180">
+            <template #default="scope">
+              <div v-if="scope.row.images && scope.row.images.length" class="media-preview">
+                <el-image
+                  v-for="(img, index) in scope.row.images.slice(0, 3)"
+                  :key="index"
+                  :src="img.url"
+                  :preview-src-list="scope.row.images.map(i => i.url)"
+                  fit="cover"
+                  class="preview-image"
+                />
+                <span v-if="scope.row.images.length > 3" class="more-count">
+                  +{{ scope.row.images.length - 3 }}
+                </span>
+              </div>
+              <div v-else-if="scope.row.video" class="media-preview">
+                <el-image
+                  :src="scope.row.video.cover"
+                  fit="cover"
+                  class="preview-image"
+                />
+              </div>
+              <div v-else-if="scope.row.audio" class="media-preview">
+                <el-icon><i-ep-headset /></el-icon>
+              </div>
             </template>
           </el-table-column>
           
@@ -149,31 +157,51 @@
     <!-- 预览对话框 -->
     <el-dialog
       v-model="previewVisible"
-      title="文章预览"
+      title="动态预览"
       width="70%"
       destroy-on-close
       :close-on-click-modal="false"
       :close-on-press-escape="false"
     >
       <div class="preview-wrapper">
-        <h2 class="preview-title">{{ previewPost.title }}</h2>
-        <div class="preview-meta">
-          <span class="preview-category">
-            <el-tag type="info">{{ previewPost.categoryName }}</el-tag>
-          </span>
-          <span class="preview-tags">
-            <el-tag
-              v-for="tag in previewPost.tags"
-              :key="tag.id"
-              size="small"
-              class="tag-item"
+        <div class="preview-content">
+          <!-- Markdown内容 -->
+          <div v-if="previewDynamic.content" class="markdown-content" v-html="renderMarkdown(previewDynamic.content)"></div>
+          
+          <!-- 图片展示 -->
+          <div v-if="previewDynamic.images && previewDynamic.images.length" class="image-gallery">
+            <el-image
+              v-for="(img, index) in previewDynamic.images"
+              :key="index"
+              :src="img.url"
+              :preview-src-list="previewDynamic.images.map(i => i.url)"
+              fit="cover"
+              class="gallery-image"
+            />
+          </div>
+          
+          <!-- 音频播放器 -->
+          <div v-if="previewDynamic.audio" class="audio-player">
+            <audio controls :src="previewDynamic.audio.url" class="audio-element">
+              您的浏览器不支持音频播放
+            </audio>
+          </div>
+          
+          <!-- 视频播放器 -->
+          <div v-if="previewDynamic.video" class="video-player">
+            <video
+              controls
+              :src="previewDynamic.video.url"
+              :poster="previewDynamic.video.cover"
+              class="video-element"
             >
-              {{ tag.name }}
-            </el-tag>
-          </span>
-          <span class="preview-time">{{ formatTime(previewPost.createTime) }}</span>
+              您的浏览器不支持视频播放
+            </video>
+          </div>
         </div>
-        <div class="preview-content markdown-body" v-html="previewPost.htmlContent"></div>
+        <div class="preview-meta">
+          <span class="preview-time">{{ formatTime(previewDynamic.createTime) }}</span>
+        </div>
       </div>
       <template #footer>
         <div class="dialog-footer">
@@ -185,30 +213,32 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { 
   Plus, Search, Refresh, Edit, View, Delete 
 } from '@element-plus/icons-vue'
-import { getPostList, deletePost } from '../../api/post'
-import { getCategoryList } from '../../api/category'
-import { getTagList } from '../../api/tag'
+import { getDynamicList, deleteDynamic } from '../../api/blog'
 import { useAppStore } from '@/stores/app'
-import { marked } from 'marked'
+import MarkdownIt from 'markdown-it'
 import dayjs from 'dayjs'
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 
 const router = useRouter()
 const appStore = useAppStore()
+
+// 创建Markdown渲染器
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+})
 
 // 数据加载状态
 const loading = ref(false)
 
 // 数据列表
-const postList = ref([])
-const categories = ref([])
-const tags = ref([])
+const dynamicList = ref([])
 
 // 分页相关
 const total = ref(0)
@@ -218,133 +248,101 @@ const pageSize = ref(10)
 // 筛选表单
 const filterForm = reactive({
   keyword: '',
-  categoryId: '',
-  tagId: '',
+  type: '',
   status: ''
 })
 
 // 预览相关
 const previewVisible = ref(false)
-const previewPost = ref({})
-
-// 分页配置
-const paginationConfig = {
-  total: '总计 {total} 条',
-  size: '{size} / 页'
-}
+const previewDynamic = ref({})
 
 // 格式化时间
 const formatTime = (time) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
-// 获取文章列表
-const fetchPostList = async () => {
+// 获取类型标签样式
+const getTypeTagType = (type) => {
+  const types = {
+    image: 'success',
+    video: 'warning',
+    audio: 'info',
+    text: ''
+  }
+  return types[type] || ''
+}
+
+// 获取类型文本
+const getTypeText = (type) => {
+  const types = {
+    image: '图文',
+    video: '视频',
+    audio: '音频',
+    text: '纯文本'
+  }
+  return types[type] || type
+}
+
+// 渲染Markdown内容
+const renderMarkdown = (content) => {
+  return md.render(content || '')
+}
+
+// 获取动态列表
+const fetchDynamicList = async () => {
   loading.value = true
   try {
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
       keyword: filterForm.keyword || undefined,
-      categoryId: filterForm.categoryId || undefined,
-      tagId: filterForm.tagId || undefined,
+      type: filterForm.type || undefined,
       status: filterForm.status || undefined
     }
-    
-    const res = await getPostList(params)
-    if (res && res.items) {
-      postList.value = res.items
-      total.value = res.total
+    const response = await getDynamicList(params)
+    if (response.code === 200) {
+      dynamicList.value = response.data.items
+      total.value = response.data.total
     } else {
-      console.error('文章列表数据格式不正确:', res)
-      postList.value = []
-      total.value = 0
+      ElMessage.error(response.message || '获取动态列表失败')
     }
   } catch (error) {
-    console.error('获取文章列表失败:', error)
-    ElMessage.error('获取文章列表失败')
-    postList.value = []
-    total.value = 0
+    ElMessage.error('获取动态列表失败')
+    console.error('获取动态列表失败:', error)
   } finally {
     loading.value = false
   }
 }
 
-// 获取分类和标签列表
-const fetchOptions = async () => {
-  try {
-    // 并行请求分类和标签数据
-    const [categoriesData, tagsData] = await Promise.all([
-      getCategoryList(),
-      getTagList()
-    ])
-    
-    categories.value = categoriesData
-    tags.value = tagsData
-  } catch (error) {
-    console.error('获取分类或标签数据失败:', error)
-    ElMessage.error('获取分类或标签数据失败')
-  }
-}
-
-// 搜索方法
+// 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  fetchPostList()
+  fetchDynamicList()
 }
 
-// 重置筛选表单
+// 重置
 const handleReset = () => {
-  Object.keys(filterForm).forEach(key => {
-    filterForm[key] = ''
-  })
-  currentPage.value = 1
-  fetchPostList()
+  filterForm.keyword = ''
+  filterForm.type = ''
+  filterForm.status = ''
+  handleSearch()
 }
 
-// 创建文章
+// 创建
 const handleCreate = () => {
-  try {
-    appStore.startLoading('正在准备编辑器...')
-    router.push('/dashboard/posts/create')
-    console.log('导航到创建文章页面: /dashboard/posts/create')
-  } catch (error) {
-    console.error('跳转到创建文章页面失败:', error)
-    appStore.endLoading() // 确保发生错误时结束加载状态
-    ElMessage.error('跳转到创建文章页面失败')
-  }
+  router.push('/dashboard/dynamics/create')
 }
 
-// 编辑文章
+// 编辑
 const handleEdit = (row) => {
-  appStore.startLoading('正在加载文章内容...')
-  router.push(`/dashboard/posts/edit/${row.id}`)
+  router.push(`/dashboard/dynamics/edit/${row.id}`)
 }
 
-// 预览文章
-const handlePreview = async (row) => {
-  try {
-    appStore.startLoading('正在加载预览...')
-    // 将 Markdown 内容转换为 HTML
-    const htmlContent = marked(row.content)
-    previewPost.value = {
-      ...row,
-      htmlContent
-    }
-    previewVisible.value = true
-  } catch (error) {
-    console.error('加载预览失败:', error)
-    ElMessage.error('加载预览失败')
-  } finally {
-    appStore.endLoading()
-  }
-}
-
-// 删除文章
+// 删除
 const handleDelete = (row) => {
   ElMessageBox.confirm(
-    `确定要删除文章 "${row.title}" 吗？`,
-    '提示',
+    '确定要删除这条动态吗？',
+    '警告',
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -352,258 +350,138 @@ const handleDelete = (row) => {
     }
   ).then(async () => {
     try {
-      await deletePost(row.id)
-      ElMessage.success('删除成功')
-      fetchPostList()
+      const response = await deleteDynamic(row.id)
+      if (response.code === 200) {
+        ElMessage.success('删除成功')
+        fetchDynamicList()
+      } else {
+        ElMessage.error(response.message || '删除失败')
+      }
     } catch (error) {
-      console.error('删除文章失败:', error)
-      ElMessage.error('删除文章失败')
+      ElMessage.error('删除失败')
+      console.error('删除动态失败:', error)
     }
-  }).catch(() => {
-    // 用户取消删除
-  })
+  }).catch(() => {})
 }
 
-// 分页方法
-const handleSizeChange = (size) => {
-  pageSize.value = size
-  fetchPostList()
+// 预览
+const handlePreview = (row) => {
+  previewDynamic.value = row
+  previewVisible.value = true
 }
 
-const handleCurrentChange = (page) => {
-  currentPage.value = page
-  fetchPostList()
+// 分页大小改变
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  fetchDynamicList()
 }
 
-onMounted(async () => {
-  await Promise.all([
-    fetchOptions(),
-    fetchPostList()
-  ])
+// 页码改变
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+  fetchDynamicList()
+}
+
+// 初始化
+onMounted(() => {
+  fetchDynamicList()
 })
 </script>
 
-<style scoped lang="scss">
-.post-list {
-  padding: 24px;
-  
-  .page-header {
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    
-    h2 {
-      margin: 0;
-      font-size: 24px;
-      color: #303133;
-    }
-  }
-  
-  .filter-card {
-    margin-bottom: 24px;
-  }
-  
-  .table-card {
-    .pagination-container {
-      margin-top: 20px;
-      display: flex;
-      justify-content: flex-end;
-    }
-  }
-  
-  .tag-item {
-    margin-right: 4px;
-    margin-bottom: 4px;
-  }
-  
-  .preview-wrapper {
-    padding: 20px;
-    
-    .preview-title {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: var(--text-primary);
-    }
-    
-    .preview-meta {
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      
-      .preview-category {
-        margin-right: 8px;
-      }
-      
-      .preview-tags {
-        display: flex;
-        gap: 4px;
-        flex-wrap: wrap;
-      }
-      
-      .preview-time {
-        color: var(--text-secondary);
-        font-size: 14px;
-      }
-    }
-    
-    .preview-content {
-      font-size: 16px;
-      line-height: 1.8;
-      color: var(--text-primary);
-      white-space: pre-wrap;
-    }
-  }
-  
-  .button-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  
-  @media (max-width: 768px) {
-    .button-container {
-      flex-direction: column;
-    }
-  }
-}
-
-:deep(.el-button-group) {
-  display: flex;
-  gap: 4px;
-  
-  .el-button {
-    margin: 0;
-    padding: 8px 12px;
-    
-    .el-icon {
-      margin-right: 4px;
-    }
-  }
-}
-
-:deep(.markdown-body) {
+<style scoped>
+.dynamic-list {
   padding: 20px;
-  background-color: var(--background-color);
-  border-radius: 4px;
-  
-  h1, h2, h3, h4, h5, h6 {
-    color: var(--text-primary);
-    margin-top: 24px;
-    margin-bottom: 16px;
-    font-weight: 600;
-  }
-  
-  h1 { font-size: 2em; }
-  h2 { font-size: 1.5em; }
-  h3 { font-size: 1.25em; }
-  h4 { font-size: 1.1em; }
-  h5 { font-size: 1em; }
-  h6 { font-size: 0.9em; }
-  
-  p {
-    margin-bottom: 16px;
-    line-height: 1.8;
-  }
-  
-  code {
-    background-color: var(--background-light);
-    padding: 2px 4px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 0.9em;
-  }
-  
-  pre {
-    background-color: var(--background-light);
-    padding: 16px;
-    border-radius: 4px;
-    overflow-x: auto;
-    margin-bottom: 16px;
-    
-    code {
-      background-color: transparent;
-      padding: 0;
-      font-size: 0.9em;
-    }
-  }
-  
-  blockquote {
-    border-left: 4px solid var(--border-color);
-    padding-left: 16px;
-    margin-left: 0;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 16px;
-    
-    th, td {
-      border: 1px solid var(--border-color);
-      padding: 8px;
-    }
-    
-    th {
-      background-color: var(--background-light);
-    }
-  }
-  
-  img {
-    max-width: 100%;
-    height: auto;
-    margin-bottom: 16px;
-  }
-  
-  ul, ol {
-    margin-bottom: 16px;
-    padding-left: 2em;
-    
-    li {
-      margin-bottom: 8px;
-      line-height: 1.8;
-    }
-  }
-  
-  hr {
-    border: none;
-    border-top: 1px solid var(--border-color);
-    margin: 24px 0;
-  }
-  
-  a {
-    color: var(--primary-color);
-    text-decoration: none;
-    
-    &:hover {
-      text-decoration: underline;
-    }
-  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+}
+
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.table-card {
+  margin-bottom: 20px;
+}
+
+.table-wrapper {
+  margin-bottom: 20px;
 }
 
 .pagination-container {
-  margin-top: 20px;
   display: flex;
   justify-content: flex-end;
-  
-  :deep(.el-pagination) {
-    .el-pagination__total {
-      color: var(--text-regular);
-      font-size: 14px;
-      margin-right: 16px;
-    }
-    
-    .el-pagination__sizes {
-      .el-input__inner {
-        color: var(--text-regular);
-        font-size: 14px;
-      }
-    }
-  }
+}
+
+.media-preview {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.preview-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.more-count {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.preview-wrapper {
+  padding: 20px;
+}
+
+.preview-content {
+  margin-bottom: 20px;
+}
+
+.markdown-content {
+  margin-bottom: 15px;
+}
+
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 200px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.audio-player,
+.video-player {
+  margin: 15px 0;
+}
+
+.audio-element,
+.video-element {
+  width: 100%;
+  border-radius: 4px;
+}
+
+.preview-meta {
+  display: flex;
+  justify-content: flex-end;
+  color: var(--el-text-color-secondary);
+  font-size: 0.9em;
 }
 </style>

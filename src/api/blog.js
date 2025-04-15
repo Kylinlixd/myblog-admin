@@ -154,11 +154,135 @@ export function getCategoryList() {
  * @returns {Promise<{total: number, items: Array}>}
  */
 export function getDynamicList(params) {
-  return request.get('/blog/dynamics', params)
+  return request.get('/blog/posts', params)
     .then(response => {
       if (response.code === 200) {
         return response.data
       }
       return Promise.reject(new Error(response.message || '获取动态列表失败'))
+    })
+}
+
+/**
+ * 获取动态详情
+ * @param {number} id - 动态ID
+ * @returns {Promise<Object>}
+ */
+export function getDynamicDetail(id) {
+  return request.get(`/blog/posts/${id}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取动态详情失败'))
+    })
+}
+
+/**
+ * 创建动态
+ * @param {Object} data - 动态数据
+ * @returns {Promise<Object>}
+ */
+export function createDynamic(data) {
+  return request.post('/blog/posts', data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '创建动态失败'))
+    })
+}
+
+/**
+ * 更新动态
+ * @param {number} id - 动态ID
+ * @param {Object} data - 动态数据
+ * @returns {Promise<Object>}
+ */
+export function updateDynamic(id, data) {
+  return request.put(`/blog/posts/${id}`, data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '更新动态失败'))
+    })
+}
+
+/**
+ * 删除动态
+ * @param {number} id - 动态ID
+ * @returns {Promise<void>}
+ */
+export function deleteDynamic(id) {
+  return request.delete(`/blog/posts/${id}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '删除动态失败'))
+    })
+}
+
+/**
+ * 点赞动态
+ * @param {number} id - 动态ID
+ * @returns {Promise<void>}
+ */
+export function likeDynamic(id) {
+  return request.post(`/blog/posts/${id}/like`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '点赞失败'))
+    })
+}
+
+/**
+ * 评论动态
+ * @param {number} id - 动态ID
+ * @param {Object} data - 评论数据
+ * @returns {Promise<Object>}
+ */
+export function commentDynamic(id, data) {
+  return request.post(`/blog/posts/${id}/comments`, data)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '评论失败'))
+    })
+}
+
+/**
+ * 获取动态评论列表
+ * @param {number} id - 动态ID
+ * @param {Object} params - 查询参数
+ * @returns {Promise<Array>}
+ */
+export function getDynamicComments(id, params) {
+  return request.get(`/blog/posts/${id}/comments`, params)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '获取评论列表失败'))
+    })
+}
+
+/**
+ * 删除动态评论
+ * @param {number} id - 动态ID
+ * @param {number} commentId - 评论ID
+ * @returns {Promise<void>}
+ */
+export function deleteDynamicComment(id, commentId) {
+  return request.delete(`/blog/posts/${id}/comments/${commentId}`)
+    .then(response => {
+      if (response.code === 200) {
+        return response.data
+      }
+      return Promise.reject(new Error(response.message || '删除评论失败'))
     })
 } 

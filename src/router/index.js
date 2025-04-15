@@ -110,45 +110,45 @@ const routes = [
         }
       },
       {
-        path: 'posts',
-        name: 'Posts',
+        path: 'dynamics',
+        name: 'Dynamics',
         component: () => import('../views/posts/PostList.vue'),
         meta: { 
-          title: '文章管理',
+          title: '动态管理',
           icon: 'Document',
           keepAlive: true
         }
       },
       {
-        path: 'posts/create',
-        name: 'CreatePost',
+        path: 'dynamics/create',
+        name: 'CreateDynamic',
         component: () => import('../views/posts/PostEdit.vue'),
         meta: { 
-          title: '创建文章',
+          title: '创建动态',
           icon: 'EditPen',
           keepAlive: false,
           hideInMenu: true
         }
       },
       {
-        path: 'posts/edit/:id',
-        name: 'EditPost',
+        path: 'dynamics/edit/:id',
+        name: 'EditDynamic',
         component: () => import('../views/posts/PostEdit.vue'),
         props: true,
         meta: { 
-          title: '编辑文章',
+          title: '编辑动态',
           icon: 'EditPen',
           keepAlive: false,
           hideInMenu: true
         }
       },
       {
-        path: 'posts/preview/:id',
-        name: 'PreviewPost',
+        path: 'dynamics/preview/:id',
+        name: 'PreviewDynamic',
         component: () => import('../views/posts/PostPreview.vue'),
         props: true,
         meta: { 
-          title: '预览文章',
+          title: '预览动态',
           icon: 'View',
           keepAlive: false,
           hideInMenu: true

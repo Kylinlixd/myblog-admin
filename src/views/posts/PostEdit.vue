@@ -1,639 +1,396 @@
 <template>
-  <div class="post-edit-container" :class="{ 'is-fullscreen': isFullscreen }">
-    <template v-if="!isFullscreen">
-      <div class="page-header">
-        <div class="header-left">
-          <h2 class="page-title">{{ isEdit ? '编辑文章' : '创建文章' }}</h2>
-        </div>
-        <div class="header-right">
-          <el-button @click="router.back()" plain>
-            <el-icon><ArrowLeft /></el-icon>
-            返回
-          </el-button>
-        </div>
+  <div class="dynamic-edit">
+    <div class="page-header">
+      <h2>{{ isEdit ? '编辑动态' : '新建动态' }}</h2>
+      <div class="header-actions">
+        <el-button @click="handleCancel">取消</el-button>
+        <el-button type="primary" @click="handleSave" :loading="saving">
+          保存
+        </el-button>
       </div>
-
-      <el-form
-        ref="formRef"
-        :model="postForm"
-        label-width="100px"
-        class="post-form"
-        label-position="top"
-        v-loading="loading"
-      >
-        <el-card class="form-card">
-          <template #header>
-            <div class="card-header">
-              <span>基本信息</span>
-            </div>
-          </template>
-          
-          <el-form-item label="文章标题" required>
-            <el-input v-model="postForm.title" placeholder="请输入文章标题"></el-input>
-          </el-form-item>
-          
-          <el-form-item label="文章摘要">
-            <el-input
-              v-model="postForm.summary"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入文章摘要"
-            ></el-input>
-          </el-form-item>
-          
-          <el-form-item label="文章状态">
-            <el-radio-group v-model="postForm.status">
-              <el-radio label="draft">草稿</el-radio>
-              <el-radio label="published">发布</el-radio>
-            </el-radio-group>
-          </el-form-item>
-        </el-card>
-        
-        <el-card class="form-card">
-          <template #header>
-            <div class="card-header">
-              <span>分类与标签</span>
-            </div>
-          </template>
-          
-          <el-form-item label="文章分类" required>
-            <el-select
-              v-model="postForm.categoryId"
-              placeholder="请选择文章分类"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="item in categories"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              ></el-option>
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="文章标签">
-            <el-select
-              v-model="postForm.tagIds"
-              multiple
-              placeholder="请选择文章标签"
-              style="width: 100%"
-            >
-              <el-option
-                v-for="item in tags"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              ></el-option>
-            </el-select>
-          </el-form-item>
-        </el-card>
-      </el-form>
-    </template>
-
-    <el-card class="form-card editor-card" :class="{ 'fullscreen-editor': isFullscreen }">
-      <template #header>
-        <div class="card-header">
-          <span>文章内容</span>
-          <div class="editor-tools">
-            <el-tooltip content="预览" placement="top">
-              <el-button
-                :type="showPreview ? 'primary' : 'default'"
-                circle
-                @click="togglePreview"
-              >
-                <el-icon><View /></el-icon>
-              </el-button>
-            </el-tooltip>
-            <el-tooltip :content="isFullscreen ? '退出全屏' : '全屏'" placement="top">
-              <el-button
-                :type="isFullscreen ? 'primary' : 'default'"
-                circle
-                @click="toggleFullscreen"
-              >
-                <el-icon><FullScreen /></el-icon>
-              </el-button>
-            </el-tooltip>
-          </div>
-        </div>
-      </template>
+    </div>
+    
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-width="80px"
+      class="edit-form"
+    >
+      <el-form-item label="内容" prop="content">
+        <MdEditor
+          v-model="form.content"
+          :preview="false"
+          :toolbars="toolbars"
+          @onUploadImg="handleUploadImage"
+        />
+      </el-form-item>
       
-      <el-form-item label="正文内容" required class="editor-form-item">
-        <div class="editor-container">
-          <MdEditor
-            v-model="postForm.content"
-            :theme="theme"
-            :preview-theme="previewTheme"
-            :code-theme="codeTheme"
-            :toolbars="toolbars"
-            :show-preview="showPreview"
-            :height="editorHeight"
-            placeholder="请输入Markdown内容..."
-            @onSave="handleQuickSave"
-            @onChange="handleEditorChange"
-            @onPreview="handlePreview"
+      <el-form-item label="类型" prop="type">
+        <el-select v-model="form.type" placeholder="请选择类型">
+          <el-option label="图文" value="image" />
+          <el-option label="视频" value="video" />
+          <el-option label="音频" value="audio" />
+          <el-option label="纯文本" value="text" />
+        </el-select>
+      </el-form-item>
+      
+      <!-- 图片上传 -->
+      <el-form-item v-if="form.type === 'image'" label="图片" prop="images">
+        <el-upload
+          v-model:file-list="form.images"
+          action="/api/upload"
+          list-type="picture-card"
+          :on-preview="handlePictureCardPreview"
+          :on-remove="handleRemove"
+          :on-success="handleUploadSuccess"
+          :before-upload="beforeImageUpload"
+          multiple
+        >
+          <el-icon><Plus /></el-icon>
+        </el-upload>
+        <el-dialog v-model="dialogVisible">
+          <img w-full :src="dialogImageUrl" alt="Preview Image" />
+        </el-dialog>
+      </el-form-item>
+      
+      <!-- 视频上传 -->
+      <el-form-item v-if="form.type === 'video'" label="视频" prop="video">
+        <el-upload
+          class="video-uploader"
+          action="/api/upload"
+          :show-file-list="false"
+          :on-success="handleVideoSuccess"
+          :before-upload="beforeVideoUpload"
+        >
+          <video
+            v-if="form.video?.url"
+            :src="form.video.url"
+            class="video"
+            controls
+          ></video>
+          <el-icon v-else class="video-uploader-icon"><Plus /></el-icon>
+        </el-upload>
+        <div class="video-cover" v-if="form.video?.cover">
+          <el-image
+            :src="form.video.cover"
+            fit="cover"
+            class="cover-image"
           />
         </div>
       </el-form-item>
-    </el-card>
-
-    <template v-if="!isFullscreen">
-      <div class="form-actions">
-        <el-button @click="router.back()">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">保存</el-button>
-        <el-button type="success" @click="handleSubmitAndPublish" v-if="postForm.status !== 'published'">保存并发布</el-button>
-      </div>
-    </template>
+      
+      <!-- 音频上传 -->
+      <el-form-item v-if="form.type === 'audio'" label="音频" prop="audio">
+        <el-upload
+          class="audio-uploader"
+          action="/api/upload"
+          :show-file-list="false"
+          :on-success="handleAudioSuccess"
+          :before-upload="beforeAudioUpload"
+        >
+          <audio
+            v-if="form.audio?.url"
+            :src="form.audio.url"
+            controls
+            class="audio"
+          ></audio>
+          <el-icon v-else class="audio-uploader-icon"><Plus /></el-icon>
+        </el-upload>
+      </el-form-item>
+      
+      <el-form-item label="状态" prop="status">
+        <el-radio-group v-model="form.status">
+          <el-radio label="published">发布</el-radio>
+          <el-radio label="draft">草稿</el-radio>
+        </el-radio-group>
+      </el-form-item>
+    </el-form>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed, onUnmounted, nextTick } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, View, FullScreen } from '@element-plus/icons-vue'
-import { getPostDetail, createPost, updatePost } from '../../api/post'
-import { getCategoryList } from '../../api/category'
-import { getTagList } from '../../api/tag'
-import { MdEditor } from 'md-editor-v3'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Plus } from '@element-plus/icons-vue'
+import MdEditor from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { useThemeStore } from '../../stores/theme'
-import { useAppStore } from '@/stores/app'
+import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/blog'
 
-const router = useRouter()
 const route = useRoute()
-const themeStore = useThemeStore()
-const appStore = useAppStore()
-const formRef = ref(null)
-const loading = ref(false)
-const categories = ref([])
-const tags = ref([])
-const showPreview = ref(false)
-const isFullscreen = ref(false)
-
-// 编辑器主题设置
-const theme = computed(() => themeStore.isDark ? 'dark' : 'light')
-const previewTheme = computed(() => themeStore.isDark ? 'dark' : 'light')
-const codeTheme = computed(() => themeStore.isDark ? 'atom-dark' : 'github')
-
-// 编辑器工具栏配置
-const toolbars = [
-  'bold', 'underline', 'italic', 'strikethrough', 'title', 'sub', 'sup', 'quote', 'unordered-list', 'ordered-list',
-  'task', 'code-row', 'code', 'link', 'image', 'table', 'revoke', 'next', 'save', 'preview', 'html-preview', 'catalog'
-]
+const router = useRouter()
 
 // 是否为编辑模式
 const isEdit = computed(() => !!route.params.id)
 
+// 表单引用
+const formRef = ref(null)
+
+// 保存状态
+const saving = ref(false)
+
 // 表单数据
-const postForm = reactive({
-  title: '',
+const form = reactive({
   content: '',
-  summary: '',
-  categoryId: '',
-  tagIds: [],
-  status: 'draft',
-  authorId: 1, // 假设作者ID为1
+  type: 'text',
+  images: [],
+  video: null,
+  audio: null,
+  status: 'draft'
 })
 
-// 获取分类和标签数据
-const fetchOptionsData = async () => {
-  try {
-    const [categoriesData, tagsData] = await Promise.all([
-      getCategoryList(),
-      getTagList()
-    ])
-    categories.value = categoriesData
-    tags.value = tagsData
-  } catch (error) {
-    console.error('获取分类或标签数据失败:', error)
-    ElMessage.error('获取分类或标签数据失败')
+// 表单验证规则
+const rules = {
+  content: [
+    { required: true, message: '请输入内容', trigger: 'blur' }
+  ],
+  type: [
+    { required: true, message: '请选择类型', trigger: 'change' }
+  ]
+}
+
+// 图片预览
+const dialogVisible = ref(false)
+const dialogImageUrl = ref('')
+
+// 编辑器工具栏配置
+const toolbars = {
+  bold: true,
+  italic: true,
+  title: true,
+  quote: true,
+  list: true,
+  code: true,
+  link: true,
+  image: true,
+  table: true,
+  preview: true,
+  expand: true,
+  undo: true,
+  redo: true
+}
+
+// 图片上传前检查
+const beforeImageUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件!')
+    return false
   }
-}
-
-// 获取文章详情
-const fetchPostDetail = async (id) => {
-  loading.value = true
-  try {
-    const res = await getPostDetail(id)
-    postForm.title = res.title
-    postForm.content = res.content
-    postForm.summary = res.summary
-    postForm.categoryId = res.categoryId || ''
-    postForm.status = res.status
-    postForm.tagIds = res.tags?.map(tag => tag.id) || []
-    
-    // 通知应用状态文章已加载完成
-    appStore.endLoading()
-  } catch (error) {
-    console.error('获取文章详情失败:', error)
-    ElMessage.error('获取文章详情失败: ' + (error.message || '未知错误'))
-    appStore.setLoadingError('获取文章详情失败')
-  } finally {
-    loading.value = false
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
   }
+  return true
 }
 
-// 切换预览状态
-const togglePreview = () => {
-  showPreview.value = !showPreview.value
-  // 强制更新编辑器高度，确保预览区域正确显示
-  nextTick(() => {
-    updateEditorHeight()
-  })
-}
+// 视频上传前检查
+const beforeVideoUpload = (file) => {
+  const isVideo = file.type.startsWith('video/')
+  const isLt50M = file.size / 1024 / 1024 < 50
 
-// 更新编辑器高度
-const updateEditorHeight = () => {
-  const editor = document.querySelector('.md-editor')
-  if (editor) {
-    if (isFullscreen.value) {
-      editor.style.height = '100%'
-    } else {
-      editor.style.height = 'calc(100vh - 500px)'
-    }
+  if (!isVideo) {
+    ElMessage.error('只能上传视频文件!')
+    return false
   }
-}
-
-// 计算编辑器高度
-const editorHeight = computed(() => {
-  if (isFullscreen.value) {
-    return '100%'
+  if (!isLt50M) {
+    ElMessage.error('视频大小不能超过 50MB!')
+    return false
   }
-  return 'calc(100vh - 500px)'
-})
-
-// 切换全屏状态
-const toggleFullscreen = () => {
-  isFullscreen.value = !isFullscreen.value
-  // 强制更新编辑器高度
-  nextTick(() => {
-    updateEditorHeight()
-  })
+  return true
 }
 
-// 预览处理
-const handlePreview = (v) => {
-  console.log('Preview content:', v)
-  // 强制更新编辑器高度
-  nextTick(() => {
-    updateEditorHeight()
-  })
+// 音频上传前检查
+const beforeAudioUpload = (file) => {
+  const isAudio = file.type.startsWith('audio/')
+  const isLt10M = file.size / 1024 / 1024 < 10
+
+  if (!isAudio) {
+    ElMessage.error('只能上传音频文件!')
+    return false
+  }
+  if (!isLt10M) {
+    ElMessage.error('音频大小不能超过 10MB!')
+    return false
+  }
+  return true
 }
 
-// 编辑器内容变化处理
-const handleEditorChange = (v) => {
-  postForm.content = v
-  // 自动保存到本地存储
-  localStorage.setItem('post_draft', JSON.stringify({
-    ...postForm,
-    timestamp: Date.now()
+// 处理图片预览
+const handlePictureCardPreview = (file) => {
+  dialogImageUrl.value = file.url
+  dialogVisible.value = true
+}
+
+// 处理图片移除
+const handleRemove = (file, fileList) => {
+  form.images = fileList
+}
+
+// 处理图片上传成功
+const handleUploadSuccess = (response, file, fileList) => {
+  form.images = fileList.map(file => ({
+    url: file.url,
+    name: file.name
   }))
 }
 
-// 从本地存储恢复草稿
-const restoreDraft = () => {
-  const draft = localStorage.getItem('post_draft')
-  if (draft) {
-    const { timestamp, ...draftData } = JSON.parse(draft)
-    // 如果草稿在24小时内，则恢复
-    if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-      Object.assign(postForm, draftData)
-      ElMessage.info('已恢复上次编辑的草稿')
-    } else {
-      localStorage.removeItem('post_draft')
-    }
+// 处理视频上传成功
+const handleVideoSuccess = (response, file) => {
+  form.video = {
+    url: response.url,
+    cover: response.cover || ''
   }
 }
 
-// Markdown编辑器快速保存
-const handleQuickSave = () => {
-  if (postForm.title) {
-    handleSubmit()
-  } else {
-    ElMessage.warning('请先填写文章标题')
+// 处理音频上传成功
+const handleAudioSuccess = (response, file) => {
+  form.audio = {
+    url: response.url
   }
 }
 
-// 提交表单
-const handleSubmit = async (isPublish = false) => {
-  // 手动表单验证
-  if (!postForm.title) {
-    ElMessage.warning('请填写文章标题')
-    return
-  }
-  
-  if (!postForm.content) {
-    ElMessage.warning('请填写文章内容')
-    return
-  }
-  
-  if (!postForm.categoryId) {
-    ElMessage.warning('请选择文章分类')
-    return
-  }
+// 处理编辑器图片上传
+const handleUploadImage = async (files, callback) => {
+  const formData = new FormData()
+  files.forEach(file => {
+    formData.append('files', file)
+  })
   
   try {
-    loading.value = true
-    appStore.setLoading(true, '正在保存文章...')
-    
-    // 确保状态值正确传递
-    const submitData = {
-      ...postForm,
-      status: isPublish ? 'published' : postForm.status // 如果是发布操作，强制设置为已发布
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await response.json()
+    if (data.code === 200) {
+      callback(data.data.map(url => url))
+    } else {
+      ElMessage.error('图片上传失败')
     }
+  } catch (error) {
+    console.error('图片上传失败:', error)
+    ElMessage.error('图片上传失败')
+  }
+}
+
+// 获取动态详情
+const fetchDynamicDetail = async (id) => {
+  try {
+    const response = await getDynamicDetail(id)
+    if (response.code === 200) {
+      Object.assign(form, response.data)
+    } else {
+      ElMessage.error(response.message || '获取动态详情失败')
+    }
+  } catch (error) {
+    console.error('获取动态详情失败:', error)
+    ElMessage.error('获取动态详情失败')
+  }
+}
+
+// 保存动态
+const handleSave = async () => {
+  if (!formRef.value) return
+  
+  try {
+    await formRef.value.validate()
+    saving.value = true
     
-    console.log('提交数据:', submitData) // 添加日志，方便调试
+    const data = {
+      ...form,
+      images: form.images.map(img => img.url)
+    }
     
     if (isEdit.value) {
-      // 更新文章
-      await updatePost(route.params.id, submitData)
+      await updateDynamic(route.params.id, data)
+      ElMessage.success('更新成功')
     } else {
-      // 创建新文章
-      await createPost(submitData)
+      await createDynamic(data)
+      ElMessage.success('创建成功')
     }
     
-    ElMessage.success(isEdit.value ? '文章更新成功' : '文章创建成功')
-    router.push('/dashboard/posts')
+    router.push('/dashboard/dynamics')
   } catch (error) {
-    console.error('保存文章失败:', error)
-    ElMessage.error('保存文章失败: ' + (error.message || '未知错误'))
+    console.error('保存失败:', error)
+    ElMessage.error('保存失败')
   } finally {
-    loading.value = false
-    appStore.endLoading()
+    saving.value = false
   }
 }
 
-// 保存并发布
-const handleSubmitAndPublish = async () => {
-  // 先设置状态为已发布
-  postForm.status = 'published'
-  await handleSubmit(true) // 传入 true 表示是发布操作
+// 取消编辑
+const handleCancel = () => {
+  router.push('/dashboard/dynamics')
 }
 
-onMounted(async () => {
-  // 获取分类和标签数据
-  await fetchOptionsData()
-  
-  // 如果是编辑模式，获取文章详情
+// 初始化
+onMounted(() => {
   if (isEdit.value) {
-    await fetchPostDetail(route.params.id)
-  } else {
-    // 创建模式尝试恢复草稿
-    restoreDraft()
-    // 创建模式不需要获取文章详情，直接结束加载
-    appStore.endLoading()
-  }
-  
-  // 初始化编辑器高度
-  nextTick(() => {
-    updateEditorHeight()
-  })
-})
-
-// 组件卸载时清理
-onUnmounted(() => {
-  if (!isEdit.value) {
-    // 如果是新建模式，保存草稿
-    if (postForm.title || postForm.content) {
-      localStorage.setItem('post_draft', JSON.stringify({
-        ...postForm,
-        timestamp: Date.now()
-      }))
-    }
+    fetchDynamicDetail(route.params.id)
   }
 })
 </script>
 
-<style scoped lang="scss">
-.post-edit-container {
-  padding: 24px;
-  min-height: 100vh;
-  overflow-y: auto;
-  transition: all 0.3s ease;
-  
-  &.is-fullscreen {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1000;
-    padding: 0;
-    background-color: var(--background-color);
-    overflow: hidden;
-    
-    .editor-card {
-      height: 100vh;
-      margin: 0;
-      border-radius: 0;
-      
-      &.fullscreen-editor {
-        :deep(.el-card__body) {
-          height: calc(100vh - 60px);
-          padding: 0;
-          display: flex;
-          flex-direction: column;
-        }
-      }
-    }
-    
-    .editor-container {
-      height: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      
-      :deep(.md-editor) {
-        height: 100% !important;
-        flex: 1;
-      }
-    }
-  }
-  
-  .post-form {
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 48px); // 减去容器的padding
-  }
-  
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    .page-title {
-      margin: 0;
-      font-size: 24px;
-      color: var(--text-primary);
-    }
-  }
-  
-  .form-card {
-    margin-bottom: 24px;
-    
-    &.editor-card {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-      
-      :deep(.el-card__body) {
-        flex: 1;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-      }
-    }
-    
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 20px;
-      
-      span {
-        font-size: 18px;
-        font-weight: 500;
-      }
-      
-      .editor-tools {
-        display: flex;
-        gap: 8px;
-      }
-    }
-  }
-  
-  .editor-form-item {
-    margin: 0;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    
-    :deep(.el-form-item__content) {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      margin-left: 0 !important; // 移除左边距
-    }
-  }
-  
-  .editor-container {
-    flex: 1;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    
-    :deep(.md-editor) {
-      flex: 1;
-      height: 100% !important;
-      border-radius: 0 !important; // 移除编辑器边框圆角
-    }
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-  }
+<style scoped>
+.dynamic-edit {
+  padding: 20px;
 }
 
-:deep(.md-editor) {
-  border: none !important;
-  margin: 0 !important;
-  z-index: 1 !important;
-  border-radius: 0 !important; // 移除编辑器边框圆角
-  
-  .md-editor-preview {
-    z-index: 10 !important;
-    height: 100% !important;
-  }
-  
-  .md-editor-toolbar {
-    z-index: 2 !important;
-  }
-  
-  .md-editor-content {
-    height: calc(100% - 40px) !important;
-  }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
 }
 
-:deep(.md-editor-toolbar-item) {
-  z-index: 1 !important;
+.edit-form {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-:deep(.md-editor-dark) {
-  --md-bk-color: var(--background-color) !important;
-  --md-hover-color: var(--background-light) !important;
-  --md-active-color: var(--background-light) !important;
-  --md-border-color: var(--border-color) !important;
-  --md-text-color: var(--text-primary) !important;
-  --md-preview-bg-color: var(--background-color) !important;
-  --md-preview-color: var(--text-primary) !important;
+.video-uploader,
+.audio-uploader {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
 }
 
-:deep(.md-editor-light) {
-  --md-bk-color: var(--background-color) !important;
-  --md-hover-color: var(--background-light) !important;
-  --md-active-color: var(--background-light) !important;
-  --md-border-color: var(--border-color) !important;
-  --md-text-color: var(--text-primary) !important;
-  --md-preview-bg-color: var(--background-color) !important;
-  --md-preview-color: var(--text-primary) !important;
+.video-uploader:hover,
+.audio-uploader:hover {
+  border-color: var(--el-color-primary);
 }
 
-:deep(.md-preview) {
-  background-color: var(--background-color) !important;
-  color: var(--text-primary) !important;
-  
-  h1, h2, h3, h4, h5, h6 {
-    color: var(--text-primary) !important;
-  }
-  
-  code {
-    background-color: var(--background-light) !important;
-    color: var(--text-primary) !important;
-  }
-  
-  pre {
-    background-color: var(--background-light) !important;
-    
-    code {
-      background-color: transparent !important;
-    }
-  }
-  
-  blockquote {
-    border-left-color: var(--border-color) !important;
-    color: var(--text-secondary) !important;
-  }
-  
-  table {
-    th, td {
-      border-color: var(--border-color) !important;
-    }
-    
-    th {
-      background-color: var(--background-light) !important;
-    }
-  }
+.video-uploader-icon,
+.audio-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 178px;
+  height: 178px;
+  text-align: center;
+  line-height: 178px;
 }
 
-.editor-card {
-  &.fullscreen-editor {
-    :deep(.el-card__body) {
-      height: calc(100vh - 60px);
-      display: flex;
-      flex-direction: column;
-      
-      .editor-container {
-        flex: 1;
-        height: 100%;
-      }
-    }
-  }
+.video,
+.audio {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.video-cover {
+  margin-top: 10px;
+}
+
+.cover-image {
+  width: 200px;
+  height: 120px;
+  border-radius: 4px;
 }
 </style> 
