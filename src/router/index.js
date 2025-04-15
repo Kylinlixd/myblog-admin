@@ -112,46 +112,41 @@ const routes = [
       {
         path: 'dynamics',
         name: 'Dynamics',
-        component: () => import('../views/posts/PostList.vue'),
-        meta: { 
+        component: () => import('../views/dynamics/DynamicList.vue'),
+        meta: {
           title: '动态管理',
-          icon: 'Document',
-          keepAlive: true
+          icon: 'dynamic',
+          roles: ['admin']
         }
       },
       {
         path: 'dynamics/create',
         name: 'CreateDynamic',
-        component: () => import('../views/posts/PostEdit.vue'),
-        meta: { 
-          title: '创建动态',
-          icon: 'EditPen',
-          keepAlive: false,
-          hideInMenu: true
+        component: () => import('../views/dynamics/DynamicEdit.vue'),
+        meta: {
+          title: '新建动态',
+          icon: 'dynamic',
+          roles: ['admin']
         }
       },
       {
         path: 'dynamics/edit/:id',
         name: 'EditDynamic',
-        component: () => import('../views/posts/PostEdit.vue'),
-        props: true,
-        meta: { 
+        component: () => import('../views/dynamics/DynamicEdit.vue'),
+        meta: {
           title: '编辑动态',
-          icon: 'EditPen',
-          keepAlive: false,
-          hideInMenu: true
+          icon: 'dynamic',
+          roles: ['admin']
         }
       },
       {
         path: 'dynamics/preview/:id',
         name: 'PreviewDynamic',
-        component: () => import('../views/posts/PostPreview.vue'),
-        props: true,
-        meta: { 
+        component: () => import('../views/dynamics/DynamicPreview.vue'),
+        meta: {
           title: '预览动态',
-          icon: 'View',
-          keepAlive: false,
-          hideInMenu: true
+          icon: 'dynamic',
+          roles: ['admin']
         }
       },
       {
