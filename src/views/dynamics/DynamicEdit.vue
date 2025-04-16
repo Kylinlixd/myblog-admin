@@ -60,6 +60,11 @@
           accept="image/*"
         >
           <el-icon><Plus /></el-icon>
+          <template #tip>
+            <div class="el-upload__tip">
+              支持 jpg、jpeg、png、gif 格式，单个文件不超过 2MB
+            </div>
+          </template>
         </el-upload>
       </el-form-item>
 
@@ -213,7 +218,15 @@ const fetchDynamicDetail = async () => {
 const beforeImageUpload = (file) => {
   const isImage = checkFileType(file, ['jpg', 'jpeg', 'png', 'gif'])
   const isLt2M = checkFileSize(file, 2)
-  return isImage && isLt2M
+  if (!isImage) {
+    ElMessage.error('只能上传图片格式的文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB!')
+    return false
+  }
+  return true
 }
 
 // 音频上传前检查
@@ -236,10 +249,12 @@ const handleImageSuccess = async (response, file) => {
     const result = await uploadImage(file.raw)
     form.value.images.push({
       name: file.name,
-      url: result.url
+      url: result.url,
+      loading: false
     })
   } catch (error) {
     console.error('图片上传失败:', error)
+    ElMessage.error('图片上传失败')
   }
 }
 
@@ -386,14 +401,28 @@ onMounted(() => {
   width: 100%;
 }
 
-:deep(.el-upload--picture-card) {
+.upload-list :deep(.el-upload--picture-card) {
   width: 100px;
   height: 100px;
   line-height: 100px;
 }
 
-:deep(.el-upload-list--picture-card .el-upload-list__item) {
+.upload-list :deep(.el-upload-list--picture-card .el-upload-list__item) {
   width: 100px;
   height: 100px;
+}
+
+.upload-list :deep(.el-upload-list__item-thumbnail) {
+  object-fit: cover;
+}
+
+.upload-list :deep(.el-upload-list__item-status-label) {
+  display: none;
+}
+
+.el-upload__tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 8px;
 }
 </style> 

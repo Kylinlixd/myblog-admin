@@ -5,6 +5,10 @@ import { useAppStore } from '../stores/app'
 
 const routes = [
   {
+    path: '/',
+    redirect: '/dashboard'
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import(/* webpackPrefetch: true */ '../views/Login.vue'),
@@ -21,10 +25,6 @@ const routes = [
       title: '注册',
       requiresAuth: false
     }
-  },
-  {
-    path: '/',
-    redirect: '/blog'
   },
   {
     path: '/test',
@@ -93,7 +93,7 @@ const routes = [
   },
   {
     path: '/dashboard',
-    component: () => import('../layouts/DefaultLayout.vue'),
+    component: () => import(/* webpackPrefetch: true */ '../layouts/DefaultLayout.vue'),
     meta: { 
       requiresAuth: true,
       title: '后台首页'
@@ -102,7 +102,7 @@ const routes = [
       {
         path: '',
         name: 'Dashboard',
-        component: () => import('../views/Dashboard.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/Dashboard.vue'),
         meta: { 
           title: '仪表盘',
           icon: 'Monitor',
@@ -112,7 +112,7 @@ const routes = [
       {
         path: 'dynamics',
         name: 'Dynamics',
-        component: () => import('../views/dynamics/DynamicList.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicList.vue'),
         meta: {
           title: '动态管理',
           icon: 'dynamic',
@@ -122,7 +122,7 @@ const routes = [
       {
         path: 'dynamics/create',
         name: 'CreateDynamic',
-        component: () => import('../views/dynamics/DynamicEdit.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
         meta: {
           title: '新建动态',
           icon: 'dynamic',
@@ -132,7 +132,7 @@ const routes = [
       {
         path: 'dynamics/edit/:id',
         name: 'EditDynamic',
-        component: () => import('../views/dynamics/DynamicEdit.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
         meta: {
           title: '编辑动态',
           icon: 'dynamic',
@@ -142,7 +142,7 @@ const routes = [
       {
         path: 'dynamics/preview/:id',
         name: 'PreviewDynamic',
-        component: () => import('../views/dynamics/DynamicPreview.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicPreview.vue'),
         meta: {
           title: '预览动态',
           icon: 'dynamic',

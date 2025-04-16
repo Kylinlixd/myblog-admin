@@ -8,138 +8,125 @@
     </div>
 
     <!-- 搜索表单 -->
-    <el-card class="filter-card">
-      <el-form :model="filterForm" inline>
-        <el-form-item label="内容">
-          <el-input
-            v-model="filterForm.content"
-            placeholder="请输入内容关键词"
-            clearable
-          />
-        </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="filterForm.type" placeholder="请选择类型" clearable>
-            <el-option label="纯文本" value="text" />
-            <el-option label="图文" value="image" />
-            <el-option label="音频" value="audio" />
-            <el-option label="视频" value="video" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filterForm.status" placeholder="请选择状态" clearable>
-            <el-option label="草稿" value="draft" />
-            <el-option label="已发布" value="published" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+    <el-form :model="searchForm" inline class="search-form">
+      <el-form-item label="内容">
+        <el-input
+          v-model="searchForm.keyword"
+          placeholder="请输入内容关键词"
+          clearable
+          @keyup.enter="handleSearch"
+        />
+      </el-form-item>
+      <el-form-item label="类型">
+        <el-select v-model="searchForm.type" placeholder="请选择类型" clearable>
+          <el-option label="文本" value="text" />
+          <el-option label="图片" value="image" />
+          <el-option label="音频" value="audio" />
+          <el-option label="视频" value="video" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="状态">
+        <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+          <el-option label="草稿" value="draft" />
+          <el-option label="已发布" value="published" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="handleSearch">搜索</el-button>
+        <el-button @click="handleReset">重置</el-button>
+      </el-form-item>
+    </el-form>
+
+    <!-- 骨架屏 -->
+    <DynamicListSkeleton v-if="loading" />
 
     <!-- 动态列表 -->
-    <el-card class="list-card">
-      <el-table
-        :data="dynamicList"
-        v-loading="loading"
-        style="width: 100%"
-      >
-        <el-table-column prop="content" label="内容" min-width="300">
-          <template #default="{ row }">
-            <div class="content-cell">
-              <div class="content-text" v-if="row.type === 'text'">
-                {{ row.content }}
-              </div>
-              <div v-else-if="row.type === 'image'" class="content-images">
-                <el-image
-                  v-for="(img, index) in row.images"
-                  :key="index"
-                  :src="img.url"
-                  :preview-src-list="row.images.map(i => i.url)"
-                  fit="cover"
-                  class="content-image"
-                />
-              </div>
-              <div v-else-if="row.type === 'audio'" class="content-audio">
-                <audio controls :src="row.audio.url" class="audio-element">
-                  您的浏览器不支持音频播放
-                </audio>
-              </div>
-              <div v-else-if="row.type === 'video'" class="content-video">
-                <video
-                  controls
-                  :src="row.video.url"
-                  :poster="row.video.cover"
-                  class="video-element"
-                >
-                  您的浏览器不支持视频播放
-                </video>
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="type" label="类型" width="100">
-          <template #default="{ row }">
-            <el-tag :type="getTypeTagType(row.type)">
-              {{ getTypeText(row.type) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'published' ? 'success' : 'info'">
-              {{ row.status === 'published' ? '已发布' : '草稿' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180">
-          <template #default="{ row }">
-            {{ formatTime(row.createTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
-          <template #default="{ row }">
-            <el-button-group>
-              <el-button
-                type="primary"
-                size="small"
-                @click="handleEdit(row)"
-              >
-                编辑
-              </el-button>
-              <el-button
-                type="success"
-                size="small"
-                @click="handlePreview(row)"
-              >
-                预览
-              </el-button>
-              <el-button
-                type="danger"
-                size="small"
-                @click="handleDelete(row)"
-              >
-                删除
-              </el-button>
-            </el-button-group>
-          </template>
-        </el-table-column>
-      </el-table>
+    <el-table
+      v-else
+      v-loading="tableLoading"
+      :data="dynamicList"
+      style="width: 100%"
+      border
+    >
+      <el-table-column prop="content" label="内容" min-width="200">
+        <template #default="{ row }">
+          <div class="content-cell">
+            <template v-if="row.type === 'text'">
+              <div class="text-content">{{ row.content }}</div>
+            </template>
+            <template v-else-if="row.type === 'image'">
+              <el-image
+                v-for="(img, index) in row.images"
+                :key="index"
+                :src="img.url"
+                :preview-src-list="row.images.map(i => i.url)"
+                fit="cover"
+                lazy
+                class="preview-image"
+              />
+            </template>
+            <template v-else-if="row.type === 'audio'">
+              <audio
+                v-if="row.audio"
+                :src="row.audio.url"
+                controls
+                class="preview-audio"
+              />
+            </template>
+            <template v-else-if="row.type === 'video'">
+              <video
+                v-if="row.video"
+                :src="row.video.url"
+                :poster="row.video.cover"
+                controls
+                class="preview-video"
+              />
+            </template>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="type" label="类型" width="100">
+        <template #default="{ row }">
+          <el-tag :type="getTypeTag(row.type)">{{ getTypeText(row.type) }}</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" width="100">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 'published' ? 'success' : 'info'">
+            {{ row.status === 'published' ? '已发布' : '草稿' }}
+          </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createdAt" label="创建时间" width="180" />
+      <el-table-column label="操作" width="200" fixed="right">
+        <template #default="{ row }">
+          <el-button-group>
+            <el-button type="primary" link @click="handleEdit(row)">
+              <el-icon><Edit /></el-icon>编辑
+            </el-button>
+            <el-button type="primary" link @click="handlePreview(row)">
+              <el-icon><View /></el-icon>预览
+            </el-button>
+            <el-button type="danger" link @click="handleDelete(row)">
+              <el-icon><Delete /></el-icon>删除
+            </el-button>
+          </el-button-group>
+        </template>
+      </el-table-column>
+    </el-table>
 
-      <!-- 分页 -->
-      <div class="pagination">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
-      </div>
-    </el-card>
+    <!-- 分页 -->
+    <div class="pagination">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 </template>
 
@@ -147,70 +134,45 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, View, Delete } from '@element-plus/icons-vue'
 import { getDynamicList, deleteDynamic } from '../../api/blog'
-import dayjs from 'dayjs'
+import DynamicListSkeleton from '../../components/Skeleton/DynamicListSkeleton.vue'
 
 const router = useRouter()
+const loading = ref(true)
+const tableLoading = ref(false)
+const dynamicList = ref([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
 
-// 搜索表单
-const filterForm = ref({
-  content: '',
+const searchForm = ref({
+  keyword: '',
   type: '',
   status: ''
 })
 
-// 列表数据
-const dynamicList = ref([])
-const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
-
-// 获取类型标签样式
-const getTypeTagType = (type) => {
-  const types = {
-    image: 'success',
-    video: 'warning',
-    audio: 'info',
-    text: ''
-  }
-  return types[type] || ''
-}
-
-// 获取类型文本
-const getTypeText = (type) => {
-  const types = {
-    image: '图文',
-    video: '视频',
-    audio: '音频',
-    text: '纯文本'
-  }
-  return types[type] || type
-}
-
-// 格式化时间
-const formatTime = (time) => {
-  return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
-}
-
 // 获取动态列表
 const fetchDynamicList = async () => {
-  loading.value = true
   try {
-    const params = {
+    tableLoading.value = true
+    const response = await getDynamicList({
       page: currentPage.value,
       pageSize: pageSize.value,
-      ...filterForm.value
+      ...searchForm.value
+    })
+    if (response.code === 200) {
+      dynamicList.value = response.data.list
+      total.value = response.data.total
+    } else {
+      ElMessage.error(response.message || '获取动态列表失败')
     }
-    const response = await getDynamicList(params)
-    dynamicList.value = response.items
-    total.value = response.total
   } catch (error) {
-    ElMessage.error('获取动态列表失败')
     console.error('获取动态列表失败:', error)
+    ElMessage.error('获取动态列表失败')
   } finally {
     loading.value = false
+    tableLoading.value = false
   }
 }
 
@@ -222,8 +184,8 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
-  filterForm.value = {
-    content: '',
+  searchForm.value = {
+    keyword: '',
     type: '',
     status: ''
   }
@@ -248,7 +210,7 @@ const handlePreview = (row) => {
 // 删除
 const handleDelete = (row) => {
   ElMessageBox.confirm(
-    '确定要删除这条动态吗？删除后无法恢复。',
+    '确定要删除这条动态吗？',
     '提示',
     {
       confirmButtonText: '确定',
@@ -257,12 +219,16 @@ const handleDelete = (row) => {
     }
   ).then(async () => {
     try {
-      await deleteDynamic(row.id)
-      ElMessage.success('删除成功')
-      fetchDynamicList()
+      const response = await deleteDynamic(row.id)
+      if (response.code === 200) {
+        ElMessage.success('删除成功')
+        fetchDynamicList()
+      } else {
+        ElMessage.error(response.message || '删除失败')
+      }
     } catch (error) {
+      console.error('删除动态失败:', error)
       ElMessage.error('删除失败')
-      console.error('删除失败:', error)
     }
   }).catch(() => {})
 }
@@ -279,7 +245,28 @@ const handleCurrentChange = (val) => {
   fetchDynamicList()
 }
 
-// 初始化
+// 获取类型标签
+const getTypeTag = (type) => {
+  const tags = {
+    text: '',
+    image: 'success',
+    audio: 'warning',
+    video: 'danger'
+  }
+  return tags[type] || ''
+}
+
+// 获取类型文本
+const getTypeText = (type) => {
+  const texts = {
+    text: '文本',
+    image: '图片',
+    audio: '音频',
+    video: '视频'
+  }
+  return texts[type] || type
+}
+
 onMounted(() => {
   fetchDynamicList()
 })
@@ -297,50 +284,36 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.filter-card {
-  margin-bottom: 20px;
-}
-
-.list-card {
+.search-form {
   margin-bottom: 20px;
 }
 
 .content-cell {
-  padding: 10px 0;
+  max-height: 200px;
+  overflow: hidden;
 }
 
-.content-text {
+.text-content {
   white-space: pre-wrap;
   word-break: break-all;
 }
 
-.content-images {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.content-image {
+.preview-image {
   width: 100px;
   height: 100px;
-  border-radius: 4px;
-  cursor: pointer;
+  margin-right: 10px;
+  object-fit: cover;
 }
 
-.content-audio,
-.content-video {
+.preview-audio,
+.preview-video {
   width: 100%;
-}
-
-.audio-element,
-.video-element {
-  width: 100%;
-  border-radius: 4px;
+  max-width: 300px;
 }
 
 .pagination {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
 </style> 
