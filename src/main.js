@@ -33,15 +33,29 @@ const preloadComponents = () => {
   }, 2000) // 延迟2秒，确保主应用已完成初始渲染
 }
 
+// 创建应用实例
 const app = createApp(App)
-const pinia = createPinia()
 
+// 初始化 Pinia
+const pinia = createPinia()
 app.use(pinia)
 
-// 注册所有图标
+// 注册 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component)
 }
+
+// 使用 Element Plus
+app.use(ElementPlus, {
+  locale: zhCn,
+  pagination: {
+    total: '总计 {total} 条',
+    size: '{size} / 页'
+  }
+})
+
+// 使用路由
+app.use(router)
 
 // 初始化主题
 const themeStore = useThemeStore()
@@ -84,15 +98,6 @@ if (process.env.NODE_ENV === 'production') {
   observer.observe({ entryTypes: ['resource'] })
 }
 
-app.use(router)
-app.use(ElementPlus, {
-  locale: zhCn,
-  pagination: {
-    total: '总计 {total} 条',
-    size: '{size} / 页'
-  }
-})
-
 // 预加载组件，在app挂载前进行
 preloadComponents()
 
@@ -101,12 +106,13 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then(registration => {
-        console.log('ServiceWorker 注册成功:', registration.scope)
+        console.log('ServiceWorker registration successful')
       })
-      .catch(error => {
-        console.log('ServiceWorker 注册失败:', error)
+      .catch(err => {
+        console.log('ServiceWorker registration failed: ', err)
       })
   })
 }
 
+// 挂载应用
 app.mount('#app')

@@ -100,15 +100,15 @@
     </div>
     
     <!-- 最近文章列表 -->
-    <div class="recent-posts">
-      <h2>最近文章</h2>
-      <div class="post-list">
-        <div v-for="post in recentPosts" :key="post.id" class="post-item">
-          <div class="post-title">{{ post.title }}</div>
-          <div class="post-meta">
-            <span>{{ post.createTime }}</span>
-            <span>{{ post.views }} 次浏览</span>
-          </div>
+    <div class="recent-dynamics">
+      <h3>最近动态</h3>
+      <div v-for="dynamic in recentDynamics" :key="dynamic.id" class="dynamic-item">
+        <div class="dynamic-content">{{ dynamic.content }}</div>
+        <div class="dynamic-meta">
+          <span class="dynamic-time">{{ formatDate(dynamic.createdAt) }}</span>
+          <el-tag :type="dynamic.status === 'published' ? 'success' : 'info'">
+            {{ dynamic.status === 'published' ? '已发布' : '草稿' }}
+          </el-tag>
         </div>
       </div>
     </div>
@@ -144,8 +144,8 @@ const performanceStats = ref({
   peakMemory: 0
 })
 
-// 最近文章
-const recentPosts = ref([])
+// 最近动态
+const recentDynamics = ref([])
 
 // 图表引用
 const loadTimeChart = ref(null)
@@ -172,29 +172,21 @@ const getStats = async () => {
   }
 }
 
-// 获取最近文章
-const getRecentPosts = async () => {
+// 获取最近动态
+const getRecentDynamics = async () => {
   try {
-    // 使用/posts接口并添加limit参数
-    const res = await request.get('/posts', { 
-      page: 1, 
-      pageSize: 5,
-      orderBy: 'createTime',
-      orderDir: 'desc'
+    const res = await request.get('/dynamics', {
+      params: {
+        limit: 5,
+        sort: 'createdAt:desc'
+      }
     })
-    if (res.code === 200 && res.data && res.data.items) {
-      recentPosts.value = res.data.items.map(post => ({
-        id: post.id,
-        title: post.title,
-        createTime: post.createTime,
-        views: post.views || 0
-      }))
-    } else {
-      throw new Error(res.message || '获取最近文章失败')
-    }
+    recentDynamics.value = res.data.items.map(dynamic => ({
+      ...dynamic,
+      createdAt: formatDate(dynamic.createdAt)
+    }))
   } catch (error) {
-    console.error('获取最近文章失败:', error)
-    ElMessage.error('获取最近文章失败: ' + (error.message || '未知错误'))
+    console.error('获取最近动态失败:', error)
   }
 }
 
@@ -218,7 +210,7 @@ const loadAllData = async () => {
     await Promise.race([
       Promise.all([
         getStats(),
-        getRecentPosts()
+        getRecentDynamics()
       ]),
       timeoutPromise
     ]);
@@ -464,64 +456,41 @@ onUnmounted(() => {
     }
   }
   
-  .recent-posts {
-    background: rgba(var(--background-primary-rgb), 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    
-    h2 {
-      margin: 0 0 24px;
-      font-size: 24px;
-      color: var(--text-primary);
-    }
-    
-    .post-list {
-      display: grid;
-      gap: 16px;
-      
-      .post-item {
-        background: rgba(var(--background-light-rgb), 0.5);
-        border-radius: 12px;
-        padding: 16px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        
-        &:hover {
-          transform: translateX(5px);
-          background: rgba(var(--background-light-rgb), 0.8);
-        }
-        
-        .post-title {
-          font-size: 16px;
-          font-weight: 500;
-          color: var(--text-primary);
-          margin-bottom: 8px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        
-        .post-meta {
-          display: flex;
-          gap: 16px;
-          font-size: 14px;
-          color: var(--text-secondary);
-          
-          span {
-            display: flex;
-            align-items: center;
-            
-            i {
-              margin-right: 4px;
-              font-size: 16px;
-            }
-          }
-        }
-      }
-    }
+  .recent-dynamics {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  }
+  
+  .dynamic-item {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .dynamic-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+  
+  .dynamic-content {
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+  
+  .dynamic-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  
+  .dynamic-time {
+    color: var(--text-tertiary);
   }
 }
 

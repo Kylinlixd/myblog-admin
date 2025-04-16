@@ -6,7 +6,10 @@ import { useAppStore } from '../stores/app'
 const routes = [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: (to) => {
+      const userStore = useUserStore()
+      return userStore.isLoggedIn ? '/dashboard' : '/login'
+    }
   },
   {
     path: '/login',
@@ -53,13 +56,12 @@ const routes = [
         }
       },
       {
-        path: 'post/:id',
-        name: 'BlogPost',
-        component: () => import('../views/blog/BlogPost.vue'),
-        props: true,
+        path: 'dynamic',
+        name: 'BlogDynamic',
+        component: () => import('../views/blog/BlogDynamic.vue'),
         meta: { 
-          title: '文章详情',
-          keepAlive: false
+          title: '动态',
+          keepAlive: true
         }
       },
       {
@@ -77,15 +79,6 @@ const routes = [
         component: () => import('../views/blog/BlogAbout.vue'),
         meta: { 
           title: '关于我',
-          keepAlive: true
-        }
-      },
-      {
-        path: 'dynamic',
-        name: 'BlogDynamic',
-        component: () => import('../views/blog/BlogDynamic.vue'),
-        meta: { 
-          title: '动态',
           keepAlive: true
         }
       }
@@ -231,6 +224,12 @@ router.beforeEach(async (to, from, next) => {
     // 检查权限
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
     const userStore = useUserStore()
+    
+    // 如果目标路由是登录页面，直接放行
+    if (to.path === '/login' || to.path === '/register') {
+      next()
+      return
+    }
     
     if (requiresAuth && !userStore.isLoggedIn) {
       console.log('需要登录权限，重定向到登录页面')

@@ -103,6 +103,25 @@ const handleRetry = () => {
     router.push(currentPath)
   }, 100)
 }
+
+const preloadComponents = () => {
+  // 只预加载关键路由
+  const importantRoutes = ['/dashboard', '/dynamics']
+  importantRoutes.forEach(route => {
+    router.resolve(route).matched.forEach(match => {
+      if (match.components) {
+        Object.values(match.components).forEach(component => {
+          if (typeof component === 'function') {
+            component()
+          }
+        })
+      }
+    })
+  })
+}
+
+// 延迟预加载，避免阻塞初始渲染
+setTimeout(preloadComponents, 2000)
 </script>
 
 <style lang="scss">

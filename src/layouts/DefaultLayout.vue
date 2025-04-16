@@ -18,9 +18,9 @@
           <el-icon><Monitor /></el-icon>
           <template #title>仪表盘</template>
         </el-menu-item>
-        <el-menu-item index="/dashboard/posts">
+        <el-menu-item index="/dynamics">
           <el-icon><Document /></el-icon>
-          <template #title>文章管理</template>
+          <template #title>动态管理</template>
         </el-menu-item>
         <el-menu-item index="/dashboard/categories">
           <el-icon><Folder /></el-icon>

@@ -23,10 +23,7 @@ export default defineConfig({
       'dayjs',
       'chart.js'
     ],
-    force: true, // 强制重新优化依赖
-    esbuildOptions: {
-      target: 'es2020', // 设置目标环境
-    }
+    force: true
   },
   css: {
     preprocessorOptions: {
@@ -38,6 +35,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    strictPort: true,
+    hmr: true,
     open: true,
     proxy: {
       '/api': {
@@ -49,21 +48,23 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: process.env.NODE_ENV === 'production',
-        drop_debugger: process.env.NODE_ENV === 'production'
+        drop_console: true,
+        drop_debugger: true
       }
     },
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['vue', 'vue-router', 'pinia'],
           'element-plus': ['element-plus'],
-          'editor': ['md-editor-v3']
+          'vue': ['vue', 'vue-router', 'pinia'],
+          'utils': ['axios', 'dayjs']
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000
   }
 })
