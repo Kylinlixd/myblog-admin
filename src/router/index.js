@@ -8,7 +8,7 @@ const routes = [
     path: '/',
     redirect: (to) => {
       const userStore = useUserStore()
-      return userStore.isLoggedIn ? '/dashboard' : '/login'
+      return userStore.isLoggedIn ? '/dashboard' : '/blog'
     }
   },
   {
@@ -40,7 +40,7 @@ const routes = [
   },
   {
     path: '/blog',
-    component: () => import('../layouts/BlogLayout.vue'),
+    component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
     meta: { 
       requiresAuth: false,
       title: '博客首页'
@@ -49,7 +49,7 @@ const routes = [
       {
         path: '',
         name: 'BlogHome',
-        component: () => import('../views/blog/BlogHome.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogHome.vue'),
         meta: { 
           title: '博客首页',
           keepAlive: true
@@ -58,7 +58,7 @@ const routes = [
       {
         path: 'dynamic',
         name: 'BlogDynamic',
-        component: () => import('../views/blog/BlogDynamic.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamic.vue'),
         meta: { 
           title: '动态',
           keepAlive: true
@@ -67,7 +67,7 @@ const routes = [
       {
         path: 'categories',
         name: 'BlogCategories',
-        component: () => import('../views/blog/BlogCategories.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategories.vue'),
         meta: { 
           title: '文章归类',
           keepAlive: true
@@ -76,7 +76,7 @@ const routes = [
       {
         path: 'about',
         name: 'BlogAbout',
-        component: () => import('../views/blog/BlogAbout.vue'),
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogAbout.vue'),
         meta: { 
           title: '关于我',
           keepAlive: true
