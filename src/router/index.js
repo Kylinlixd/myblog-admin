@@ -225,18 +225,27 @@ router.beforeEach(async (to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
     const userStore = useUserStore()
     
-    // 如果目标路由是登录页面，直接放行
-    if (to.path === '/login' || to.path === '/register') {
+    // 如果目标路由是登录页面，且用户未登录，重定向到博客首页
+    if (to.path === '/login' && !userStore.isLoggedIn) {
+      console.log('未登录用户访问登录页面，重定向到博客首页')
+      next({
+        path: '/blog',
+        replace: true
+      })
+      return
+    }
+    
+    // 如果目标路由是注册页面，直接放行
+    if (to.path === '/register') {
       next()
       return
     }
     
     if (requiresAuth && !userStore.isLoggedIn) {
-      console.log('需要登录权限，重定向到登录页面')
-      // 保存目标地址，登录后可以直接跳转
+      console.log('需要登录权限，重定向到博客首页')
       next({
-        path: '/login',
-        query: { redirect: to.fullPath }
+        path: '/blog',
+        replace: true
       })
       return
     }
