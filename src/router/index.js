@@ -222,13 +222,9 @@ router.beforeEach(async (to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
     const userStore = useUserStore()
     
-    // 如果目标路由是登录页面，且用户未登录，重定向到博客首页
-    if (to.path === '/login' && !userStore.isLoggedIn) {
-      console.log('未登录用户访问登录页面，重定向到博客首页')
-      next({
-        path: '/blog',
-        replace: true
-      })
+    // 如果目标路由是登录页面，直接放行
+    if (to.path === '/login') {
+      next()
       return
     }
     
