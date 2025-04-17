@@ -6,10 +6,7 @@ import { useAppStore } from '../stores/app'
 const routes = [
   {
     path: '/',
-    redirect: (to) => {
-      const userStore = useUserStore()
-      return userStore.isLoggedIn ? '/dashboard' : '/blog'
-    }
+    redirect: '/blog'
   },
   {
     path: '/login',
