@@ -87,7 +87,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getDynamicList } from '../../api/blog'
+import { getDynamicList } from '../../api/dynamic'
 import MarkdownIt from 'markdown-it'
 import { ElMessage } from 'element-plus'
 
@@ -278,4 +278,4 @@ onMounted(() => {
   color: var(--el-text-color-secondary);
   font-size: 0.9em;
 }
-</style> 
+</style>

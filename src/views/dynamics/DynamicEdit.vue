@@ -127,7 +127,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { View, Check, Close, Plus, Upload } from '@element-plus/icons-vue'
-import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/blog'
+import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadImage, uploadAudio, uploadVideo, checkFileSize, checkFileType } from '../../utils/upload'
 
 const route = useRoute()
@@ -425,4 +425,4 @@ onMounted(() => {
   color: #909399;
   margin-top: 8px;
 }
-</style> 
+</style>

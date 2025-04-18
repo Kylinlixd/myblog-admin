@@ -135,7 +135,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Edit, View, Delete } from '@element-plus/icons-vue'
-import { getDynamicList, deleteDynamic } from '../../api/blog'
+import { getDynamicList, deleteDynamic } from '../../api/dynamic'
 import DynamicListSkeleton from '../../components/Skeleton/DynamicListSkeleton.vue'
 
 const router = useRouter()
@@ -316,4 +316,4 @@ onMounted(() => {
   display: flex;
   justify-content: center;
 }
-</style> 
+</style>

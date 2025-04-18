@@ -62,7 +62,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Close } from '@element-plus/icons-vue'
-import { getDynamicDetail } from '../../api/blog'
+import { getDynamicDetail } from '../../api/dynamic'
 import MarkdownIt from 'markdown-it'
 import dayjs from 'dayjs'
 
@@ -200,4 +200,4 @@ onMounted(() => {
 .status-tag {
   margin-right: 10px;
 }
-</style> 
+</style>
