@@ -1,14 +1,15 @@
 <template>
   <div class="dynamic-list">
-    <div class="list-header">
-      <h2>动态管理</h2>
-      <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>新建动态
-      </el-button>
-    </div>
+    <PageHeader title="动态管理" icon="Promotion">
+      <template #actions>
+        <el-button type="primary" @click="handleCreate">
+          <el-icon><Plus /></el-icon>新建动态
+        </el-button>
+      </template>
+    </PageHeader>
 
     <!-- 搜索表单 -->
-    <el-form :model="searchForm" inline class="search-form">
+    <SearchForm :form="searchForm" @search="handleSearch" @reset="handleReset">
       <el-form-item label="内容">
         <el-input
           v-model="searchForm.keyword"
@@ -31,122 +32,118 @@
           <el-option label="已发布" value="published" />
         </el-select>
       </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleSearch">搜索</el-button>
-        <el-button @click="handleReset">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <!-- 骨架屏 -->
-    <DynamicListSkeleton v-if="loading" />
+    </SearchForm>
 
     <!-- 动态列表 -->
-    <el-table
-      v-else
-      v-loading="tableLoading"
+    <DataTable
       :data="dynamicList"
-      style="width: 100%"
-      border
+      :columns="columns"
+      :loading="loading"
+      row-key="id"
     >
-      <el-table-column prop="content" label="内容" min-width="200">
-        <template #default="{ row }">
-          <div class="content-cell">
-            <template v-if="row.type === 'text'">
-              <div class="text-content">{{ row.content }}</div>
-            </template>
-            <template v-else-if="row.type === 'image'">
-              <el-image
-                v-for="(img, index) in row.images"
-                :key="index"
-                :src="img.url"
-                :preview-src-list="row.images.map(i => i.url)"
-                fit="cover"
-                lazy
-                class="preview-image"
-              />
-            </template>
-            <template v-else-if="row.type === 'audio'">
-              <audio
-                v-if="row.audio"
-                :src="row.audio.url"
-                controls
-                class="preview-audio"
-              />
-            </template>
-            <template v-else-if="row.type === 'video'">
-              <video
-                v-if="row.video"
-                :src="row.video.url"
-                :poster="row.video.cover"
-                controls
-                class="preview-video"
-              />
-            </template>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="type" label="类型" width="100">
-        <template #default="{ row }">
-          <el-tag :type="getTypeTag(row.type)">{{ getTypeText(row.type) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 'published' ? 'success' : 'info'">
-            {{ row.status === 'published' ? '已发布' : '草稿' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createdAt" label="创建时间" width="180" />
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button-group>
-            <el-button type="primary" link @click="handleEdit(row)">
-              <el-icon><Edit /></el-icon>编辑
-            </el-button>
-            <el-button type="primary" link @click="handlePreview(row)">
-              <el-icon><View /></el-icon>预览
-            </el-button>
-            <el-button type="danger" link @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>删除
-            </el-button>
-          </el-button-group>
-        </template>
-      </el-table-column>
-    </el-table>
+      <template #content="{ row }">
+        <div class="content-cell">
+          <template v-if="row.type === 'text'">
+            <div class="text-content">{{ row.content }}</div>
+          </template>
+          <template v-else-if="row.type === 'image'">
+            <el-image
+              v-for="(img, index) in row.images"
+              :key="index"
+              :src="img.url"
+              :preview-src-list="row.images.map(i => i.url)"
+              fit="cover"
+              lazy
+              class="preview-image"
+            />
+          </template>
+          <template v-else-if="row.type === 'audio'">
+            <audio
+              v-if="row.audio"
+              :src="row.audio.url"
+              controls
+              class="preview-audio"
+            />
+          </template>
+          <template v-else-if="row.type === 'video'">
+            <video
+              v-if="row.video"
+              :src="row.video.url"
+              :poster="row.video.cover"
+              controls
+              class="preview-video"
+            />
+          </template>
+        </div>
+      </template>
+
+      <template #type="{ row }">
+        <el-tag :type="getTypeTag(row.type)">{{ getTypeText(row.type) }}</el-tag>
+      </template>
+
+      <template #status="{ row }">
+        <el-tag :type="row.status === 'published' ? 'success' : 'info'">
+          {{ row.status === 'published' ? '已发布' : '草稿' }}
+        </el-tag>
+      </template>
+
+      <template #actions="{ row }">
+        <el-button-group>
+          <el-button type="primary" link @click="handleEdit(row)">
+            <el-icon><Edit /></el-icon>编辑
+          </el-button>
+          <el-button type="primary" link @click="handlePreview(row)">
+            <el-icon><View /></el-icon>预览
+          </el-button>
+          <el-button type="danger" link @click="handleDelete(row)">
+            <el-icon><Delete /></el-icon>删除
+          </el-button>
+        </el-button-group>
+      </template>
+    </DataTable>
 
     <!-- 分页 -->
-    <div class="pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
+    <Pagination
+      :total="total"
+      :current-page="currentPage"
+      :page-size="pageSize"
+      @current-change="handleCurrentChange"
+      @size-change="handleSizeChange"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, View, Delete } from '@element-plus/icons-vue'
+import { Plus, Edit, View, Delete, Promotion } from '@element-plus/icons-vue'
 import { getDynamicList, deleteDynamic } from '../../api/dynamic'
-import DynamicListSkeleton from '../../components/Skeleton/DynamicListSkeleton.vue'
+
+// 导入通用组件
+import DataTable from '../../components/common/DataTable.vue'
+import Pagination from '../../components/common/Pagination.vue'
+import PageHeader from '../../components/common/PageHeader.vue'
+import SearchForm from '../../components/common/SearchForm.vue'
 
 const router = useRouter()
-const loading = ref(true)
-const tableLoading = ref(false)
+const loading = ref(false)
 const dynamicList = ref([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-const searchForm = ref({
+// 表格列配置
+const columns = [
+  { label: '内容', prop: 'content', slot: 'content', width: '300px' },
+  { label: '类型', prop: 'type', slot: 'type', width: '100px' },
+  { label: '状态', prop: 'status', slot: 'status', width: '100px' },
+  { label: '创建时间', prop: 'createdAt', width: '180px' },
+  { label: '操作', slot: 'actions', width: '200px', fixed: 'right' }
+]
+
+// 搜索表单
+const searchForm = reactive({
   keyword: '',
   type: '',
   status: ''
@@ -155,15 +152,15 @@ const searchForm = ref({
 // 获取动态列表
 const fetchDynamicList = async () => {
   try {
-    tableLoading.value = true
+    loading.value = true
     const response = await getDynamicList({
       page: currentPage.value,
       pageSize: pageSize.value,
-      ...searchForm.value
+      ...searchForm
     })
     if (response.code === 200) {
-      dynamicList.value = response.data.list
-      total.value = response.data.total
+      dynamicList.value = response.data.list || []
+      total.value = response.data.total || 0
     } else {
       ElMessage.error(response.message || '获取动态列表失败')
     }
@@ -172,7 +169,6 @@ const fetchDynamicList = async () => {
     ElMessage.error('获取动态列表失败')
   } finally {
     loading.value = false
-    tableLoading.value = false
   }
 }
 
@@ -184,11 +180,7 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
-  searchForm.value = {
-    keyword: '',
-    type: '',
-    status: ''
-  }
+  // 搜索表单组件会自动重置表单
   handleSearch()
 }
 
@@ -272,20 +264,9 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .dynamic-list {
   padding: 20px;
-}
-
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.search-form {
-  margin-bottom: 20px;
 }
 
 .content-cell {
@@ -309,11 +290,5 @@ onMounted(() => {
 .preview-video {
   width: 100%;
   max-width: 300px;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
 }
 </style>

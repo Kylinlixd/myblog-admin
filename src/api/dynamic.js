@@ -11,11 +11,12 @@ import request from '../utils/request';
  */
 export const getDynamicList = async (params) => {
   try {
-    const response = await request.get('/blog/dynamics', { params });
-    if (response.code === 200) {
-      return response.data;
-    }
-    throw new Error(response.message || '获取动态列表失败');
+    const response = await request.get('/api/dynamics', { params });
+    return { 
+      code: 200, 
+      data: response, 
+      message: 'success'
+    };
   } catch (error) {
     console.error('获取动态列表失败:', error);
     throw error;
@@ -30,11 +31,12 @@ export const getDynamicList = async (params) => {
  */
 export const updateDynamic = async (id, data) => {
   try {
-    const response = await request.put(`/blog/dynamics/${id}`, data);
-    if (response.code === 200) {
-      return response.data;
-    }
-    throw new Error(response.message || '更新动态失败');
+    const response = await request.put(`/api/dynamics/${id}`, data);
+    return { 
+      code: 200, 
+      data: response, 
+      message: 'success'
+    };
   } catch (error) {
     console.error('更新动态失败:', error);
     throw error;
@@ -48,11 +50,12 @@ export const updateDynamic = async (id, data) => {
  */
 export const deleteDynamic = async (id) => {
   try {
-    const response = await request.delete(`/blog/dynamics/${id}`);
-    if (response.code === 200) {
-      return response.data;
-    }
-    throw new Error(response.message || '删除动态失败');
+    const response = await request.delete(`/api/dynamics/${id}`);
+    return { 
+      code: 200, 
+      data: response, 
+      message: 'success'
+    };
   } catch (error) {
     console.error('删除动态失败:', error);
     throw error;
@@ -66,11 +69,12 @@ export const deleteDynamic = async (id) => {
  */
 export const getDynamicDetail = async (id) => {
   try {
-    const response = await request.get(`/blog/dynamics/${id}`);
-    if (response.code === 200) {
-      return response.data;
-    }
-    throw new Error(response.message || '获取动态详情失败');
+    const response = await request.get(`/api/dynamics/${id}`);
+    return { 
+      code: 200, 
+      data: response, 
+      message: 'success'
+    };
   } catch (error) {
     console.error('获取动态详情失败:', error);
     throw error;
@@ -84,11 +88,12 @@ export const getDynamicDetail = async (id) => {
  */
 export const createDynamic = async (data) => {
   try {
-    const response = await request.post('/blog/dynamics', data);
-    if (response.code === 200) {
-      return response.data;
-    }
-    throw new Error(response.message || '创建动态失败');
+    const response = await request.post('/api/dynamics', data);
+    return { 
+      code: 200, 
+      data: response, 
+      message: 'success'
+    };
   } catch (error) {
     console.error('创建动态失败:', error);
     throw error;

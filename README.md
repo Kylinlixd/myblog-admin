@@ -39,7 +39,7 @@ npm run build
 ## API 文档
 
 ### 基础信息
-- 基础路径: `/`
+- 基础路径: `/api`
 - 请求方式: REST
 - 数据格式: JSON
 - 认证方式: Bearer Token
@@ -201,62 +201,124 @@ npm run build
 - **描述**: 退出登录
 - **操作**: 移除本地存储中的token
 
-### 文章管理
 
-#### 1. 获取文章列表
-- **接口**: `/posts`
+### 动态管理
+
+#### 1. 获取动态列表
+- **接口**: `/api/dynamics`
 - **方法**: GET
-- **描述**: 获取文章列表，支持分页和筛选
+- **描述**: 获取动态列表，支持分页和筛选
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
   - page: number (页码，默认1)
   - pageSize: number (每页数量，默认10)
   - keyword: string (搜索关键词)
-  - categoryId: number (分类ID)
-  - tagId: number (标签ID)
+  - type: string (动态类型：text/image/audio/video)
   - status: string (状态：draft/published)
 - **响应数据**:
 ```json
 {
   "code": 200,
   "data": {
-    "total": "number",
-    "items": [{
-      "id": "number",
-      "title": "string",
-      "content": "string",
-      "summary": "string",
-      "categoryId": "number",
-      "categoryName": "string",
-      "tags": [{
-        "id": "number",
-        "name": "string"
-      }],
-      "status": "string",
-      "createdAt": "string",
-      "updatedAt": "string"
-    }]
+    "list": [
+      {
+        "id": "string",
+        "content": "string",
+        "type": "string",
+        "status": "string",
+        "createdAt": "string",
+        "updatedAt": "string",
+        "images": [
+          {
+            "url": "string",
+            "width": "number",
+            "height": "number"
+          }
+        ],
+        "audio": {
+          "url": "string",
+          "duration": "number"
+        },
+        "video": {
+          "url": "string",
+          "cover": "string",
+          "duration": "number"
+        }
+      }
+    ],
+    "total": "number"
   },
-  "message": "string"
+  "message": "success"
 }
 ```
 
-#### 2. 创建文章
-- **接口**: `/posts`
+#### 2. 获取动态详情
+- **接口**: `/api/dynamics/{id}`
+- **方法**: GET
+- **描述**: 获取动态详情
+- **请求头**:
+  - Authorization: Bearer {token}
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "string",
+    "content": "string",
+    "type": "string",
+    "status": "string",
+    "createdAt": "string",
+    "updatedAt": "string",
+    "images": [
+      {
+        "url": "string",
+        "width": "number",
+        "height": "number"
+      }
+    ],
+    "audio": {
+      "url": "string",
+      "duration": "number"
+    },
+    "video": {
+      "url": "string",
+      "cover": "string",
+      "duration": "number"
+    }
+  },
+  "message": "success"
+}
+```
+
+#### 3. 创建动态
+- **接口**: `/api/dynamics`
 - **方法**: POST
-- **描述**: 创建新文章
+- **描述**: 创建新动态
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
 ```json
 {
-  "title": "string",      // 文章标题
-  "content": "string",    // 文章内容
-  "summary": "string",    // 文章摘要
-  "categoryId": "number", // 分类ID
-  "tagIds": ["number"],   // 标签ID列表
-  "status": "string"      // 状态：draft/published
+  "content": "string",
+  "type": "string", // text, image, audio, video
+  "status": "string", // draft, published
+  "images": [
+    {
+      "url": "string",
+      "width": "number",
+      "height": "number"
+    }
+  ],
+  "audio": {
+    "url": "string",
+    "duration": "number"
+  },
+  "video": {
+    "url": "string",
+    "cover": "string",
+    "duration": "number"
+  }
 }
 ```
 - **响应数据**:
@@ -264,48 +326,63 @@ npm run build
 {
   "code": 200,
   "data": {
-    "id": "number"
+    "id": "string"
   },
-  "message": "string"
+  "message": "success"
 }
 ```
 
-#### 3. 更新文章
-- **接口**: `/posts/{id}`
+#### 4. 更新动态
+- **接口**: `/api/dynamics/{id}`
 - **方法**: PUT
-- **描述**: 更新文章信息
+- **描述**: 更新动态信息
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
 ```json
 {
-  "title": "string",
   "content": "string",
-  "summary": "string",
-  "categoryId": "number",
-  "tagIds": ["number"],
-  "status": "string"
+  "type": "string",
+  "status": "string",
+  "images": [
+    {
+      "url": "string",
+      "width": "number",
+      "height": "number"
+    }
+  ],
+  "audio": {
+    "url": "string",
+    "duration": "number"
+  },
+  "video": {
+    "url": "string",
+    "cover": "string",
+    "duration": "number"
+  }
 }
 ```
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
-#### 4. 删除文章
-- **接口**: `/posts/{id}`
+#### 5. 删除动态
+- **接口**: `/api/dynamics/{id}`
 - **方法**: DELETE
-- **描述**: 删除文章
+- **描述**: 删除动态
 - **请求头**:
   - Authorization: Bearer {token}
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -321,14 +398,29 @@ npm run build
 ```json
 {
   "code": 200,
-  "data": [{
-    "id": "number",
-    "name": "string",
-    "description": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  }],
-  "message": "string"
+  "data": [
+    {
+      "id": "number",
+      "name": "string",
+      "description": "string",
+      "parentId": "number",
+      "sort": "number",
+      "postCount": "number",
+      "children": [
+        {
+          "id": "number",
+          "name": "string",
+          "description": "string",
+          "parentId": "number",
+          "sort": "number",
+          "postCount": "number"
+        }
+      ],
+      "createdAt": "string",
+      "updatedAt": "string"
+    }
+  ],
+  "message": "success"
 }
 ```
 
@@ -342,7 +434,9 @@ npm run build
 ```json
 {
   "name": "string",        // 分类名称
-  "description": "string"  // 分类描述
+  "description": "string", // 分类描述
+  "parentId": "number",    // 父分类ID，可选
+  "sort": "number"         // 排序，可选
 }
 ```
 - **响应数据**:
@@ -352,7 +446,7 @@ npm run build
   "data": {
     "id": "number"
   },
-  "message": "string"
+  "message": "success"
 }
 ```
 
@@ -366,14 +460,17 @@ npm run build
 ```json
 {
   "name": "string",        // 分类名称
-  "description": "string"  // 分类描述
+  "description": "string", // 分类描述
+  "parentId": "number",    // 父分类ID，可选
+  "sort": "number"         // 排序，可选
 }
 ```
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -387,7 +484,8 @@ npm run build
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -396,20 +494,31 @@ npm run build
 #### 1. 获取标签列表
 - **接口**: `/tags`
 - **方法**: GET
-- **描述**: 获取标签列表
+- **描述**: 获取标签列表，支持分页
 - **请求头**:
   - Authorization: Bearer {token}
+- **请求参数**:
+  - page: number (页码，默认1)
+  - pageSize: number (每页数量，默认10)
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "data": [{
-    "id": "number",
-    "name": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  }],
-  "message": "string"
+  "data": {
+    "list": [
+      {
+        "id": "number",
+        "name": "string",
+        "description": "string",
+        "sort": "number",
+        "postCount": "number",
+        "createTime": "string",
+        "updateTime": "string"
+      }
+    ],
+    "total": "number"
+  },
+  "message": "success"
 }
 ```
 
@@ -422,7 +531,9 @@ npm run build
 - **请求参数**:
 ```json
 {
-  "name": "string"  // 标签名称
+  "name": "string",        // 标签名称
+  "description": "string", // 标签描述，可选
+  "sort": "number"         // 排序，可选
 }
 ```
 - **响应数据**:
@@ -432,7 +543,7 @@ npm run build
   "data": {
     "id": "number"
   },
-  "message": "string"
+  "message": "success"
 }
 ```
 
@@ -445,14 +556,17 @@ npm run build
 - **请求参数**:
 ```json
 {
-  "name": "string"  // 标签名称
+  "name": "string",        // 标签名称
+  "description": "string", // 标签描述，可选
+  "sort": "number"         // 排序，可选
 }
 ```
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -466,7 +580,8 @@ npm run build
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -489,20 +604,22 @@ npm run build
 {
   "code": 200,
   "data": {
-    "total": "number",
-    "items": [{
-      "id": "number",
-      "content": "string",
-      "postId": "number",
-      "postTitle": "string",
-      "author": "string",
-      "email": "string",
-      "status": "string",
-      "createdAt": "string",
-      "updatedAt": "string"
-    }]
+    "list": [
+      {
+        "id": "number",
+        "content": "string",
+        "postId": "number",
+        "postTitle": "string",
+        "author": "string",
+        "email": "string",
+        "status": "string",
+        "createTime": "string",
+        "updateTime": "string"
+      }
+    ],
+    "total": "number"
   },
-  "message": "string"
+  "message": "success"
 }
 ```
 
@@ -516,7 +633,8 @@ npm run build
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -530,7 +648,8 @@ npm run build
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -544,7 +663,8 @@ npm run build
 ```json
 {
   "code": 200,
-  "message": "string"
+  "data": null,
+  "message": "success"
 }
 ```
 
@@ -682,7 +802,88 @@ npm run build
 
 博客前台API主要供博客访问者使用，无需登录即可访问。这些接口用于展示博客文章、分类、标签等内容。
 
-### 1. 获取博客文章列表
+### 1. 获取博客动态列表
+
+- **接口**: `/blog/dynamics`
+- **方法**: GET
+- **描述**: 获取博客动态列表，支持分页
+- **请求参数**:
+  - page: number (页码，默认1)
+  - pageSize: number (每页数量，默认10)
+  - type: string (可选，动态类型：text/image/audio/video)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "total": 10,
+    "list": [
+      {
+        "id": "string",
+        "content": "string",
+        "type": "string",
+        "createdAt": "string",
+        "images": [
+          {
+            "url": "string",
+            "width": "number",
+            "height": "number"
+          }
+        ],
+        "audio": {
+          "url": "string",
+          "duration": "number"
+        },
+        "video": {
+          "url": "string",
+          "cover": "string",
+          "duration": "number"
+        }
+      }
+    ]
+  }
+}
+```
+
+### 2. 获取博客动态详情
+
+- **接口**: `/blog/dynamics/{id}`
+- **方法**: GET
+- **描述**: 获取指定ID的博客动态详情
+- **请求参数**:
+  - id: string (动态ID，路径参数)
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "id": "string",
+    "content": "string",
+    "type": "string",
+    "createdAt": "string",
+    "images": [
+      {
+        "url": "string",
+        "width": "number",
+        "height": "number"
+      }
+    ],
+    "audio": {
+      "url": "string",
+      "duration": "number"
+    },
+    "video": {
+      "url": "string",
+      "cover": "string",
+      "duration": "number"
+    }
+  }
+}
+```
+
+### 3. 获取博客文章列表
 
 - **接口**: `/blog/posts`
 - **方法**: GET
@@ -724,7 +925,7 @@ npm run build
 }
 ```
 
-### 2. 获取博客文章详情
+### 4. 获取博客文章详情
 
 - **接口**: `/blog/posts/{id}`
 - **方法**: GET
@@ -764,7 +965,7 @@ npm run build
 }
 ```
 
-### 3. 获取相邻文章
+### 5. 获取相邻文章
 
 - **接口**: `/blog/posts/{id}/adjacent`
 - **方法**: GET
@@ -786,7 +987,7 @@ npm run build
 }
 ```
 
-### 4. 获取热门文章
+### 6. 获取热门文章
 
 - **接口**: `/blog/posts/hot`
 - **方法**: GET
@@ -815,7 +1016,7 @@ npm run build
 }
 ```
 
-### 5. 获取最新文章
+### 7. 获取最新文章
 
 - **接口**: `/blog/posts/recent`
 - **方法**: GET
@@ -842,7 +1043,7 @@ npm run build
 }
 ```
 
-### 6. 获取分类下的文章
+### 8. 获取分类下的文章
 
 - **接口**: `/blog/categories/{categoryId}/posts`
 - **方法**: GET
@@ -874,7 +1075,7 @@ npm run build
 }
 ```
 
-### 7. 获取标签下的文章
+### 9. 获取标签下的文章
 
 - **接口**: `/blog/tags/{tagId}/posts`
 - **方法**: GET
@@ -906,7 +1107,7 @@ npm run build
 }
 ```
 
-### 8. 获取博客统计信息
+### 10. 获取博客统计信息
 
 - **接口**: `/blog/stats`
 - **方法**: GET
@@ -925,7 +1126,7 @@ npm run build
 }
 ```
 
-### 9. 获取关于我的信息
+### 11. 获取关于我的信息
 
 - **接口**: `/blog/about`
 - **方法**: GET
@@ -967,7 +1168,7 @@ npm run build
 }
 ```
 
-### 10. 增加文章浏览量
+### 12. 增加文章浏览量
 
 - **接口**: `/blog/posts/{id}/view`
 - **方法**: POST

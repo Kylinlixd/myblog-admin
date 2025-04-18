@@ -1,129 +1,71 @@
 <template>
   <div class="tag-list">
-    <div class="page-header">
-      <h2>标签管理</h2>
-      <button class="inspira-button" @click="handleCreate">
-        <i class="icon-plus"></i>新建标签
-      </button>
-    </div>
+    <PageHeader title="标签管理" icon="Collection">
+      <template #actions>
+        <el-button type="primary" @click="handleCreate">
+          <el-icon><Plus /></el-icon>新建标签
+        </el-button>
+      </template>
+    </PageHeader>
     
-    <div class="table-card">
-      <div class="table-wrapper" :class="{ 'is-loading': loading }">
-        <table class="inspira-table">
-          <thead>
-            <tr>
-              <th>标签名称</th>
-              <th>描述</th>
-              <th>文章数量</th>
-              <th>创建时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in tags" :key="row.id">
-              <td class="name-cell">{{ row.name }}</td>
-              <td class="description-cell">{{ row.description }}</td>
-              <td class="count-cell">{{ row.postCount }}</td>
-              <td>{{ row.createTime }}</td>
-              <td>
-                <div class="action-buttons">
-                  <button class="action-button" @click="handleEdit(row)">
-                    <i class="icon-edit"></i>编辑
-                  </button>
-                  <button class="action-button danger" @click="handleDelete(row)">
-                    <i class="icon-delete"></i>删除
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- 标签列表 -->
+    <DataTable
+      :data="tags"
+      :columns="columns"
+      :loading="loading"
+      row-key="id"
+    >
+      <template #name="{ row }">
+        <span class="tag-name">{{ row.name }}</span>
+      </template>
       
-      <div class="pagination">
-        <div class="pagination-info">
-          共 {{ total }} 条
-          <div class="page-size-selector">
-            <select v-model="pageSize" class="inspira-select" @change="handleSizeChange">
-              <option v-for="size in [10, 20, 50, 100]" :key="size" :value="size">
-                {{ size }}条/页
-              </option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="pagination-buttons">
-          <button
-            class="pagination-button"
-            :disabled="currentPage === 1"
-            @click="handleCurrentChange(currentPage - 1)"
-          >
-            <i class="icon-arrow-left"></i>
-          </button>
-          
-          <div class="page-numbers">
-            <button
-              v-for="page in pageNumbers"
-              :key="page"
-              class="pagination-button"
-              :class="{ active: page === currentPage }"
-              @click="handleCurrentChange(page)"
-            >
-              {{ page }}
-            </button>
-          </div>
-          
-          <button
-            class="pagination-button"
-            :disabled="currentPage === totalPages"
-            @click="handleCurrentChange(currentPage + 1)"
-          >
-            <i class="icon-arrow-right"></i>
-          </button>
-        </div>
-      </div>
-    </div>
+      <template #actions="{ row }">
+        <el-button-group>
+          <el-button type="primary" link @click="handleEdit(row)">
+            <el-icon><Edit /></el-icon>编辑
+          </el-button>
+          <el-button type="danger" link @click="handleDelete(row)">
+            <el-icon><Delete /></el-icon>删除
+          </el-button>
+        </el-button-group>
+      </template>
+    </DataTable>
+    
+    <!-- 分页 -->
+    <Pagination
+      :total="total"
+      :current-page="currentPage"
+      :page-size="pageSize"
+      @current-change="handleCurrentChange"
+      @size-change="handleSizeChange"
+    />
     
     <!-- 标签编辑对话框 -->
-    <div class="dialog" :class="{ 'is-active': dialogVisible }">
-      <div class="dialog-overlay" @click="dialogVisible = false"></div>
-      <div class="dialog-content">
-        <div class="dialog-header">
-          <h3>{{ dialogType === 'create' ? '新建标签' : '编辑标签' }}</h3>
-          <button class="close-button" @click="dialogVisible = false">
-            <i class="icon-close"></i>
-          </button>
-        </div>
-        
-        <form class="dialog-form" @submit.prevent="handleSubmit">
-          <el-form-item label="标签名称" prop="name">
-            <el-input v-model="tagForm.name" placeholder="请输入标签名称" />
-          </el-form-item>
-          
-          <el-form-item label="描述" prop="description">
-            <el-input
-              v-model="tagForm.description"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入标签描述"
-            />
-          </el-form-item>
-          
-          <el-form-item label="排序" prop="sort">
-            <el-input-number v-model="tagForm.sort" :min="0" :max="999" />
-          </el-form-item>
-          
-          <div class="dialog-footer">
-            <button type="button" class="inspira-button secondary" @click="dialogVisible = false">
-              取消
-            </button>
-            <button type="submit" class="inspira-button">
-              确定
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <DataFormDialog
+      v-model="dialogVisible"
+      :title="dialogType === 'create' ? '新建标签' : '编辑标签'"
+      :model="tagForm"
+      :rules="rules"
+      :loading="formLoading"
+      @submit="handleSubmit"
+    >
+      <el-form-item label="标签名称" prop="name">
+        <el-input v-model="tagForm.name" placeholder="请输入标签名称" />
+      </el-form-item>
+      
+      <el-form-item label="描述" prop="description">
+        <el-input
+          v-model="tagForm.description"
+          type="textarea"
+          :rows="3"
+          placeholder="请输入标签描述"
+        />
+      </el-form-item>
+      
+      <el-form-item label="排序" prop="sort">
+        <el-input-number v-model="tagForm.sort" :min="0" :max="999" />
+      </el-form-item>
+    </DataFormDialog>
   </div>
 </template>
 
@@ -131,15 +73,32 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getTagList, createTag, updateTag, deleteTag } from '../../api/tag'
+import { Plus, Edit, Delete, Collection } from '@element-plus/icons-vue'
+
+// 导入通用组件
+import DataTable from '../../components/common/DataTable.vue'
+import Pagination from '../../components/common/Pagination.vue'
+import PageHeader from '../../components/common/PageHeader.vue'
+import DataFormDialog from '../../components/common/DataFormDialog.vue'
+
+// 表格列配置
+const columns = [
+  { label: '标签名称', prop: 'name', slot: 'name', width: '200px' },
+  { label: '描述', prop: 'description', width: '300px' },
+  { label: '文章数量', prop: 'postCount', width: '100px' },
+  { label: '创建时间', prop: 'createTime', width: '180px' },
+  { label: '操作', slot: 'actions', width: '200px' }
+]
 
 // 数据列表
 const tags = ref([])
 const loading = ref(false)
+const formLoading = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-// 编辑表单
+// 编辑对话框
 const dialogVisible = ref(false)
 const dialogType = ref('create')
 const tagForm = reactive({
@@ -149,51 +108,15 @@ const tagForm = reactive({
   sort: 0
 })
 
-// 表单错误
-const errors = reactive({
-  name: '',
-  description: ''
-})
-
-// 分页计算
-const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
-const pageNumbers = computed(() => {
-  const pages = []
-  const maxVisible = 5
-  let start = Math.max(1, currentPage.value - Math.floor(maxVisible / 2))
-  let end = Math.min(totalPages.value, start + maxVisible - 1)
-  
-  if (end - start + 1 < maxVisible) {
-    start = Math.max(1, end - maxVisible + 1)
-  }
-  
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-  
-  return pages
-})
-
-// 表单验证
-const validateForm = () => {
-  let isValid = true
-  errors.name = ''
-  errors.description = ''
-  
-  if (!tagForm.name) {
-    errors.name = '请输入标签名称'
-    isValid = false
-  } else if (tagForm.name.length < 2 || tagForm.name.length > 50) {
-    errors.name = '长度在 2 到 50 个字符'
-    isValid = false
-  }
-  
-  if (tagForm.description && tagForm.description.length > 200) {
-    errors.description = '长度不能超过 200 个字符'
-    isValid = false
-  }
-  
-  return isValid
+// 表单规则
+const rules = {
+  name: [
+    { required: true, message: '请输入标签名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  description: [
+    { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
+  ]
 }
 
 // 获取标签列表
@@ -204,8 +127,12 @@ const getTags = async () => {
       page: currentPage.value,
       pageSize: pageSize.value
     })
-    tags.value = response.list || []
-    total.value = response.total || 0
+    if (response.code === 200) {
+      tags.value = response.data.list || []
+      total.value = response.data.total || 0
+    } else {
+      ElMessage.error(response.message || '获取标签列表失败')
+    }
   } catch (error) {
     console.error('获取标签列表失败:', error)
     ElMessage.error('获取标签列表失败')
@@ -214,7 +141,20 @@ const getTags = async () => {
   }
 }
 
-// 新建标签
+// 页码改变
+const handleCurrentChange = (page) => {
+  currentPage.value = page
+  getTags()
+}
+
+// 每页条数改变
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+  getTags()
+}
+
+// 打开新建标签对话框
 const handleCreate = () => {
   dialogType.value = 'create'
   Object.keys(tagForm).forEach(key => {
@@ -223,7 +163,7 @@ const handleCreate = () => {
   dialogVisible.value = true
 }
 
-// 编辑标签
+// 打开编辑标签对话框
 const handleEdit = (row) => {
   dialogType.value = 'edit'
   Object.keys(tagForm).forEach(key => {
@@ -233,61 +173,60 @@ const handleEdit = (row) => {
 }
 
 // 删除标签
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除"${row.name}"标签吗？删除后无法恢复，且相关文章将失去此标签。`,
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
-    await deleteTag(row.id)
-    ElMessage.success('删除成功')
-    getTags()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除标签失败:', error)
-      ElMessage.error('删除标签失败')
+const handleDelete = (row) => {
+  ElMessageBox.confirm(
+    '确定要删除该标签吗？',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
     }
-  }
+  ).then(async () => {
+    try {
+      const response = await deleteTag(row.id)
+      if (response.code === 200) {
+        ElMessage.success('删除成功')
+        getTags()
+      } else {
+        ElMessage.error(response.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除标签失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }).catch(() => {})
 }
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!validateForm()) return
-  
+  formLoading.value = true
   try {
     if (dialogType.value === 'create') {
-      await createTag(tagForm)
-      ElMessage.success('创建成功')
+      const response = await createTag(tagForm)
+      if (response.code === 200) {
+        ElMessage.success('创建成功')
+        dialogVisible.value = false
+        getTags()
+      } else {
+        ElMessage.error(response.message || '创建失败')
+      }
     } else {
-      const { id, ...updateData } = tagForm
-      await updateTag(id, updateData)
-      ElMessage.success('更新成功')
+      const response = await updateTag(tagForm.id, tagForm)
+      if (response.code === 200) {
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        getTags()
+      } else {
+        ElMessage.error(response.message || '更新失败')
+      }
     }
-    
-    dialogVisible.value = false
-    getTags()
   } catch (error) {
-    console.error('操作失败:', error)
-    ElMessage.error(error.message || '操作失败，请稍后重试')
+    console.error('提交标签失败:', error)
+    ElMessage.error('操作失败，请稍后重试')
+  } finally {
+    formLoading.value = false
   }
-}
-
-// 分页处理
-const handleSizeChange = (size) => {
-  pageSize.value = size
-  currentPage.value = 1
-  getTags()
-}
-
-const handleCurrentChange = (page) => {
-  currentPage.value = page
-  getTags()
 }
 
 onMounted(() => {
@@ -295,446 +234,23 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .tag-list {
-  padding: 24px;
-  
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    h2 {
-      margin: 0;
-      font-size: 24px;
-      color: var(--text-primary);
-    }
-  }
-  
-  .table-card {
-    background: rgba(var(--background-primary-rgb), 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    
-    .table-wrapper {
-      position: relative;
-      overflow-x: auto;
-      
-      &.is-loading {
-        &::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(var(--background-primary-rgb), 0.5);
-          backdrop-filter: blur(4px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1;
-        }
-        
-        &::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 40px;
-          height: 40px;
-          border: 3px solid var(--border-color);
-          border-top-color: var(--primary-color);
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          z-index: 2;
-        }
-      }
-    }
-    
-    .inspira-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      
-      th {
-        background: rgba(var(--background-light-rgb), 0.5);
-        padding: 16px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        text-align: left;
-        white-space: nowrap;
-        
-        &:first-child {
-          border-top-left-radius: 8px;
-        }
-        
-        &:last-child {
-          border-top-right-radius: 8px;
-        }
-      }
-      
-      td {
-        padding: 16px;
-        border-top: 1px solid var(--border-color);
-        
-        &.name-cell {
-          font-weight: 500;
-          color: var(--text-primary);
-        }
-        
-        &.description-cell {
-          max-width: 300px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        
-        &.count-cell {
-          text-align: center;
-        }
-      }
-      
-      tr {
-        transition: background-color 0.3s ease;
-        
-        &:hover {
-          background: rgba(var(--background-light-rgb), 0.3);
-        }
-      }
-      
-      .action-buttons {
-        display: flex;
-        gap: 8px;
-        
-        .action-button {
-          display: inline-flex;
-          align-items: center;
-          padding: 6px 12px;
-          border-radius: 4px;
-          font-size: 12px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          background: rgba(var(--background-light-rgb), 0.5);
-          color: var(--text-secondary);
-          
-          i {
-            margin-right: 4px;
-            font-size: 14px;
-          }
-          
-          &:hover {
-            background: rgba(var(--background-light-rgb), 0.8);
-            color: var(--text-primary);
-          }
-          
-          &.danger {
-            background: rgba(var(--danger-color-rgb), 0.1);
-            color: var(--danger-color);
-            
-            &:hover {
-              background: rgba(var(--danger-color-rgb), 0.2);
-            }
-          }
-        }
-      }
-    }
-    
-    .pagination {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 24px;
-      
-      .pagination-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--text-secondary);
-        font-size: 14px;
-        
-        .page-size-selector {
-          width: 100px;
-        }
-      }
-      
-      .pagination-buttons {
-        display: flex;
-        gap: 8px;
-        
-        .pagination-button {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          width: 32px;
-          height: 32px;
-          border-radius: 4px;
-          font-size: 14px;
-          border: 1px solid var(--border-color);
-          background: transparent;
-          color: var(--text-secondary);
-          cursor: pointer;
-          transition: all 0.3s ease;
-          
-          &:hover:not(:disabled) {
-            background: rgba(var(--background-light-rgb), 0.5);
-            color: var(--text-primary);
-            border-color: var(--primary-color);
-          }
-          
-          &.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-          }
-          
-          &:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-        }
-      }
-    }
-  }
-  
-  .dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    
-    &.is-active {
-      opacity: 1;
-      visibility: visible;
-      
-      .dialog-content {
-        transform: translateY(0);
-      }
-    }
-    
-    .dialog-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(5px);
-    }
-    
-    .dialog-content {
-      position: relative;
-      width: 90%;
-      max-width: 500px;
-      max-height: 90vh;
-      background: rgba(var(--background-primary-rgb), 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
-      transform: translateY(20px);
-      transition: transform 0.3s ease;
-      
-      .dialog-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        border-bottom: 1px solid var(--border-color);
-        
-        h3 {
-          margin: 0;
-          font-size: 20px;
-          color: var(--text-primary);
-        }
-        
-        .close-button {
-          background: none;
-          border: none;
-          color: var(--text-secondary);
-          cursor: pointer;
-          padding: 4px;
-          transition: color 0.3s ease;
-          
-          &:hover {
-            color: var(--text-primary);
-          }
-        }
-      }
-      
-      .dialog-form {
-        padding: 20px;
-        overflow-y: auto;
-        
-        .form-group {
-          margin-bottom: 20px;
-          
-          label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-            font-size: 14px;
-          }
-          
-          .error-message {
-            display: block;
-            margin-top: 4px;
-            color: var(--danger-color);
-            font-size: 12px;
-          }
-          
-          .number-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            
-            .number-button {
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              width: 32px;
-              height: 32px;
-              border-radius: 4px;
-              border: 1px solid var(--border-color);
-              background: transparent;
-              color: var(--text-secondary);
-              cursor: pointer;
-              transition: all 0.3s ease;
-              
-              &:hover {
-                background: rgba(var(--background-light-rgb), 0.5);
-                color: var(--text-primary);
-                border-color: var(--primary-color);
-              }
-            }
-            
-            .inspira-input {
-              width: 80px;
-              text-align: center;
-            }
-          }
-        }
-        
-        .dialog-footer {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid var(--border-color);
-        }
-      }
-    }
-  }
+  padding: 20px;
 }
 
-@keyframes spin {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-.inspira-input,
-.inspira-select,
-.inspira-textarea {
-  width: 100%;
-  height: 40px;
-  background: rgba(51, 102, 153, 0.2);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 0 12px;
-  color: rgba(255, 255, 255, 0.9);
+.tag-name {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: rgba(64, 158, 255, 0.1);
+  color: #409eff;
+  border-radius: 16px;
   font-size: 14px;
-  transition: all 0.3s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: rgba(0, 255, 255, 0.6);
-    box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.1);
-  }
-  
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-  
-  &.is-error {
-    border-color: #ff6b6b;
-    
-    &:focus {
-      box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
-    }
-  }
 }
 
-.inspira-textarea {
-  height: auto;
-  min-height: 80px;
-  padding: 12px;
-  resize: vertical;
-}
-
-.inspira-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.763L10.825 4z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
-}
-
-.inspira-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 20px;
-  background: linear-gradient(45deg, #336699, #0066cc);
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  &.secondary {
-    background: rgba(51, 102, 153, 0.2);
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    
-    &:hover {
-      background: rgba(51, 102, 153, 0.3);
-      border-color: rgba(0, 255, 255, 0.6);
-    }
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
+:global([data-theme='dark']) {
+  .tag-name {
+    background-color: rgba(64, 158, 255, 0.2);
   }
 }
 </style> 

@@ -223,13 +223,18 @@ router.beforeEach(async (to, from, next) => {
     
     // 如果目标路由是登录页面或注册页面，直接放行
     if (to.path === '/login' || to.path === '/register') {
+      // 如果已登录且试图访问登录页，重定向到首页
+      if (userStore.isLoggedIn && to.path === '/login') {
+        next({ path: '/dashboard', replace: true })
+        return
+      }
       next()
       return
     }
     
     if (requiresAuth && !userStore.isLoggedIn) {
-      console.log('需要登录权限，重定向到博客首页')
-      next({ path: '/blog', replace: true })
+      console.log('需要登录权限，重定向到登录页面')
+      next({ path: '/login', query: { redirect: to.fullPath }, replace: true })
       return
     }
     
@@ -248,23 +253,6 @@ router.beforeEach(async (to, from, next) => {
           })
         }
       })
-      
-      // 并行预加载所有组件，但不阻塞导航
-      if (componentsToLoad.length > 0) {
-        try {
-          Promise.all(componentsToLoad).catch(error => {
-            console.error('组件预加载失败:', error)
-          })
-        } catch (error) {
-          console.error('组件预加载执行错误:', error)
-        }
-      }
-    }
-    
-    // 处理首次加载或从空路由跳转的情况
-    if (from.name === null || from.path === '/loading-redirect') {
-      // 立即显示加载状态
-      appStore.startLoading(to.meta.loadingText || '页面加载中...')
     }
 })
 

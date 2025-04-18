@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <!-- 添加漂浮的多边形碎片 -->
-    <div class="floating-shape" v-for="n in 21" :key="n" :style="generateRandomStyle()"></div>
+    <div class="floating-shape" v-for="n in 21" :key="n" :style="shapeStyles[n-1]"></div>
     
     <div class="login-box">
       <div class="login-header">
@@ -91,8 +91,11 @@ const errors = reactive({
   password: ''
 })
 
+// 预生成所有浮动形状的样式，避免在重新渲染时重新生成
+const shapeStyles = Array(21).fill(null).map(() => generateRandomStyle())
+
 // 生成随机样式函数
-const generateRandomStyle = () => {
+function generateRandomStyle() {
   // 随机位置
   const top = Math.random() * 100 + '%'
   const left = Math.random() * 100 + '%'

@@ -12,6 +12,13 @@ import { useThemeStore } from './stores/theme'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { useUserStore } from './stores/user'
 
+// 如果开启了模拟数据，加载模拟数据模块
+if (import.meta.env.VITE_USE_MOCK === 'true') {
+  import('./mock').then(({ setupMock }) => {
+    setupMock()
+  })
+}
+
 // 预加载常用组件
 const preloadComponents = () => {
   // 获取主要路由组件并预加载

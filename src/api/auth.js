@@ -104,6 +104,14 @@ export function refreshToken() {
  * @returns {Promise<void>}
  */
 export function logout() {
+  // 确保立即移除token
   localStorage.removeItem('token')
-  return Promise.resolve()
+  
+  // 正常情况下会有一个实际的API调用
+  // 这里简化为直接返回成功
+  return Promise.resolve({
+    code: 200,
+    message: 'success',
+    data: null
+  })
 } 

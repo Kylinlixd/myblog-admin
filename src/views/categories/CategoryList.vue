@@ -1,131 +1,102 @@
 <template>
   <div class="category-list">
-    <div class="page-header">
-      <h2>分类管理</h2>
-      <button class="inspira-button" @click="handleCreate">
-        <i class="icon-plus"></i>新建分类
-      </button>
-    </div>
+    <PageHeader title="分类管理" icon="Folder">
+      <template #actions>
+        <el-button type="primary" @click="handleCreate">
+          <el-icon><Plus /></el-icon>新建分类
+        </el-button>
+      </template>
+    </PageHeader>
     
-    <div class="table-card">
-      <div class="table-wrapper" :class="{ 'is-loading': loading }">
-        <table class="inspira-table">
-          <thead>
-            <tr>
-              <th>分类名称</th>
-              <th>描述</th>
-              <th>文章数量</th>
-              <th>创建时间</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="category in categories" :key="category.id">
-              <tr>
-                <td class="name-cell">
-                  <span class="category-name">{{ category.name }}</span>
-                </td>
-                <td class="description-cell">{{ category.description }}</td>
-                <td class="count-cell">{{ category.postCount }}</td>
-                <td>{{ category.createdAt }}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="action-button" @click="handleEdit(category)">
-                      <i class="icon-edit"></i>编辑
-                    </button>
-                    <button class="action-button" @click="handleAddChild(category)">
-                      <i class="icon-plus"></i>添加子分类
-                    </button>
-                    <button class="action-button danger" @click="handleDelete(category)">
-                      <i class="icon-delete"></i>删除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <template v-if="category.children && category.children.length">
-                <tr v-for="child in category.children" :key="child.id" class="child-row">
-                  <td class="name-cell">
-                    <span class="category-name child">{{ child.name }}</span>
-                  </td>
-                  <td class="description-cell">{{ child.description }}</td>
-                  <td class="count-cell">{{ child.postCount }}</td>
-                  <td>{{ child.createTime }}</td>
-                  <td>
-                    <div class="action-buttons">
-                      <button class="action-button" @click="handleEdit(child)">
-                        <i class="icon-edit"></i>编辑
-                      </button>
-                      <button class="action-button" @click="handleAddChild(child)">
-                        <i class="icon-plus"></i>添加子分类
-                      </button>
-                      <button class="action-button danger" @click="handleDelete(child)">
-                        <i class="icon-delete"></i>删除
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </template>
-            </template>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <!-- 分类数据表格 -->
+    <DataTable
+      :loading="loading"
+      :columns="columns"
+    >
+      <tr v-for="category in categories" :key="category.id">
+        <td class="name-cell">
+          <span class="category-name">{{ category.name }}</span>
+        </td>
+        <td class="description-cell">{{ category.description }}</td>
+        <td class="count-cell">{{ category.postCount }}</td>
+        <td>{{ category.createdAt }}</td>
+        <td>
+          <div class="action-buttons">
+            <el-button type="primary" link @click="handleEdit(category)">
+              <el-icon><Edit /></el-icon>编辑
+            </el-button>
+            <el-button type="primary" link @click="handleAddChild(category)">
+              <el-icon><Plus /></el-icon>添加子分类
+            </el-button>
+            <el-button type="danger" link @click="handleDelete(category)">
+              <el-icon><Delete /></el-icon>删除
+            </el-button>
+          </div>
+        </td>
+      </tr>
+      <template v-for="category in categories" :key="`children-${category.id}`">
+        <tr v-for="child in category.children" :key="child.id" class="child-row">
+          <td class="name-cell">
+            <span class="category-name child">{{ child.name }}</span>
+          </td>
+          <td class="description-cell">{{ child.description }}</td>
+          <td class="count-cell">{{ child.postCount }}</td>
+          <td>{{ child.createTime }}</td>
+          <td>
+            <div class="action-buttons">
+              <el-button type="primary" link @click="handleEdit(child)">
+                <el-icon><Edit /></el-icon>编辑
+              </el-button>
+              <el-button type="danger" link @click="handleDelete(child)">
+                <el-icon><Delete /></el-icon>删除
+              </el-button>
+            </div>
+          </td>
+        </tr>
+      </template>
+    </DataTable>
     
     <!-- 分类编辑对话框 -->
-    <div class="dialog" :class="{ 'is-active': dialogVisible }">
-      <div class="dialog-overlay" @click="dialogVisible = false"></div>
-      <div class="dialog-content">
-        <div class="dialog-header">
-          <h3>{{ dialogType === 'create' ? '新建分类' : '编辑分类' }}</h3>
-          <button class="close-button" @click="dialogVisible = false">
-            <i class="icon-close"></i>
-          </button>
-        </div>
-        
-        <el-form class="dialog-form" @submit.prevent="handleSubmit">
-          <el-form-item label="上级分类" prop="parentId">
-            <el-select
-              v-model="categoryForm.parentId"
-              placeholder="请选择上级分类"
-              clearable
-            >
-              <el-option
-                v-for="item in categoryOptions"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-              />
-            </el-select>
-          </el-form-item>
-          
-          <el-form-item label="分类名称" prop="name">
-            <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
-          </el-form-item>
-          
-          <el-form-item label="描述" prop="description">
-            <el-input
-              v-model="categoryForm.description"
-              type="textarea"
-              :rows="3"
-              placeholder="请输入分类描述"
-            />
-          </el-form-item>
-          
-          <el-form-item label="排序" prop="sort">
-            <el-input-number v-model="categoryForm.sort" :min="0" :max="999" />
-          </el-form-item>
-          
-          <div class="dialog-footer">
-            <button type="button" class="inspira-button secondary" @click="dialogVisible = false">
-              取消
-            </button>
-            <button type="submit" class="inspira-button">
-              确定
-            </button>
-          </div>
-        </el-form>
-      </div>
-    </div>
+    <DataFormDialog
+      v-model="dialogVisible"
+      :title="dialogType === 'create' ? '新建分类' : '编辑分类'"
+      :model="categoryForm"
+      :rules="rules"
+      :loading="formLoading"
+      @submit="handleSubmit"
+    >
+      <el-form-item label="上级分类" prop="parentId">
+        <el-select
+          v-model="categoryForm.parentId"
+          placeholder="请选择上级分类"
+          clearable
+        >
+          <el-option
+            v-for="item in categoryOptions"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      
+      <el-form-item label="分类名称" prop="name">
+        <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
+      </el-form-item>
+      
+      <el-form-item label="描述" prop="description">
+        <el-input
+          v-model="categoryForm.description"
+          type="textarea"
+          :rows="3"
+          placeholder="请输入分类描述"
+        />
+      </el-form-item>
+      
+      <el-form-item label="排序" prop="sort">
+        <el-input-number v-model="categoryForm.sort" :min="0" :max="999" />
+      </el-form-item>
+    </DataFormDialog>
   </div>
 </template>
 
@@ -133,12 +104,28 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from '../../api/category'
+import { Plus, Edit, Delete, Folder } from '@element-plus/icons-vue'
+
+// 导入通用组件
+import DataTable from '../../components/common/DataTable.vue'
+import PageHeader from '../../components/common/PageHeader.vue'
+import DataFormDialog from '../../components/common/DataFormDialog.vue'
+
+// 表格列配置
+const columns = [
+  { label: '分类名称', width: '200px' },
+  { label: '描述', width: '300px' },
+  { label: '文章数量', width: '100px' },
+  { label: '创建时间', width: '180px' },
+  { label: '操作', width: '250px' }
+]
 
 // 数据列表
 const categories = ref([])
 const loading = ref(false)
+const formLoading = ref(false)
 
-// 编辑表单
+// 编辑对话框
 const dialogVisible = ref(false)
 const dialogType = ref('create')
 const categoryForm = reactive({
@@ -149,57 +136,46 @@ const categoryForm = reactive({
   sort: 0
 })
 
-// 表单错误
-const errors = reactive({
-  name: '',
-  description: ''
-})
+// 表单规则
+const rules = {
+  name: [
+    { required: true, message: '请输入分类名称', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
+  description: [
+    { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
+  ]
+}
 
 // 分类选项（用于选择器）
 const categoryOptions = ref([])
-
-// 表单验证
-const validateForm = () => {
-  let isValid = true
-  errors.name = ''
-  errors.description = ''
-  
-  if (!categoryForm.name) {
-    errors.name = '请输入分类名称'
-    isValid = false
-  } else if (categoryForm.name.length < 2 || categoryForm.name.length > 50) {
-    errors.name = '长度在 2 到 50 个字符'
-    isValid = false
-  }
-  
-  if (categoryForm.description && categoryForm.description.length > 200) {
-    errors.description = '长度不能超过 200 个字符'
-    isValid = false
-  }
-  
-  return isValid
-}
 
 // 获取分类列表
 const getCategories = async () => {
   loading.value = true
   try {
-    const list = await getCategoryList()
-    categories.value = list
-    // 更新分类选项（排除当前编辑的分类及其子分类）
-    categoryOptions.value = list.filter(item => {
-      if (categoryForm.id && item.id === categoryForm.id) return false
-      if (categoryForm.id && item.parentId === categoryForm.id) return false
-      return true
-    })
+    const response = await getCategoryList()
+    if (response.code === 200) {
+      categories.value = response.data || []
+      
+      // 更新分类选项（排除当前编辑的分类及其子分类）
+      categoryOptions.value = categories.value.filter(item => {
+        if (categoryForm.id && item.id === categoryForm.id) return false
+        if (categoryForm.id && item.parentId === categoryForm.id) return false
+        return true
+      })
+    } else {
+      ElMessage.error(response.message || '获取分类列表失败')
+    }
   } catch (error) {
     console.error('获取分类列表失败:', error)
+    ElMessage.error('获取分类列表失败')
   } finally {
     loading.value = false
   }
 }
 
-// 新建分类
+// 打开新建分类对话框
 const handleCreate = () => {
   dialogType.value = 'create'
   Object.keys(categoryForm).forEach(key => {
@@ -208,7 +184,7 @@ const handleCreate = () => {
   dialogVisible.value = true
 }
 
-// 编辑分类
+// 打开编辑分类对话框
 const handleEdit = (row) => {
   dialogType.value = 'edit'
   Object.keys(categoryForm).forEach(key => {
@@ -217,59 +193,73 @@ const handleEdit = (row) => {
   dialogVisible.value = true
 }
 
-// 添加子分类
-const handleAddChild = (row) => {
+// 打开添加子分类对话框
+const handleAddChild = (parent) => {
   dialogType.value = 'create'
   Object.keys(categoryForm).forEach(key => {
     categoryForm[key] = key === 'sort' ? 0 : ''
   })
-  categoryForm.parentId = row.id
+  categoryForm.parentId = parent.id
   dialogVisible.value = true
-}
-
-// 删除分类
-const handleDelete = async (row) => {
-  try {
-    await ElMessageBox.confirm(
-      `确定要删除"${row.name}"分类吗？删除后无法恢复，且相关文章将失去此分类。`,
-      '提示',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
-    await deleteCategory(row.id)
-    ElMessage.success('删除成功')
-    getCategories()
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除失败:', error)
-    }
-  }
 }
 
 // 提交表单
 const handleSubmit = async () => {
-  if (!validateForm()) return
-  
+  formLoading.value = true
   try {
     if (dialogType.value === 'create') {
-      await createCategory(categoryForm)
-      ElMessage.success('创建成功')
+      const response = await createCategory(categoryForm)
+      if (response.code === 200) {
+        ElMessage.success('创建成功')
+        dialogVisible.value = false
+        getCategories()
+      } else {
+        ElMessage.error(response.message || '创建失败')
+      }
     } else {
-      const { id, ...updateData } = categoryForm
-      await updateCategory(id, updateData)
-      ElMessage.success('更新成功')
+      const response = await updateCategory(categoryForm.id, categoryForm)
+      if (response.code === 200) {
+        ElMessage.success('更新成功')
+        dialogVisible.value = false
+        getCategories()
+      } else {
+        ElMessage.error(response.message || '更新失败')
+      }
     }
-    
-    dialogVisible.value = false
-    getCategories()
   } catch (error) {
-    console.error('操作失败:', error)
-    ElMessage.error(error.message || '操作失败，请稍后重试')
+    console.error('提交分类失败:', error)
+    ElMessage.error('操作失败，请稍后重试')
+  } finally {
+    formLoading.value = false
   }
+}
+
+// 删除分类
+const handleDelete = (row) => {
+  ElMessageBox.confirm(
+    row.children && row.children.length ? 
+      '该分类包含子分类，删除将同时删除所有子分类，确定继续吗？' : 
+      '确定要删除该分类吗？',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      const response = await deleteCategory(row.id)
+      if (response.code === 200) {
+        ElMessage.success('删除成功')
+        getCategories()
+      } else {
+        ElMessage.error(response.message || '删除失败')
+      }
+    } catch (error) {
+      console.error('删除分类失败:', error)
+      ElMessage.error('删除失败')
+    }
+  }).catch(() => {})
 }
 
 onMounted(() => {
@@ -277,426 +267,46 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .category-list {
-  padding: 24px;
-  
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+  padding: 20px;
+}
+
+.name-cell {
+  .category-name {
+    font-weight: 500;
     
-    h2 {
-      margin: 0;
-      font-size: 24px;
-      color: var(--text-primary);
-    }
-  }
-  
-  .table-card {
-    background: rgba(var(--background-primary-rgb), 0.8);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    
-    .table-wrapper {
+    &.child {
       position: relative;
-      overflow-x: auto;
+      padding-left: 20px;
       
-      &.is-loading {
-        &::after {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(var(--background-primary-rgb), 0.5);
-          backdrop-filter: blur(4px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1;
-        }
-        
-        &::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 40px;
-          height: 40px;
-          border: 3px solid var(--border-color);
-          border-top-color: var(--primary-color);
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-          z-index: 2;
-        }
-      }
-    }
-    
-    .inspira-table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      
-      th {
-        background: rgba(var(--background-light-rgb), 0.5);
-        padding: 16px;
-        font-weight: 500;
-        color: var(--text-secondary);
-        text-align: left;
-        white-space: nowrap;
-        
-        &:first-child {
-          border-top-left-radius: 8px;
-        }
-        
-        &:last-child {
-          border-top-right-radius: 8px;
-        }
-      }
-      
-      td {
-        padding: 16px;
-        border-top: 1px solid var(--border-color);
-        
-        &.name-cell {
-          .category-name {
-            display: flex;
-            align-items: center;
-            font-weight: 500;
-            
-            &.child {
-              padding-left: 24px;
-              position: relative;
-              
-              &::before {
-                content: '';
-                position: absolute;
-                left: 8px;
-                top: 50%;
-                width: 12px;
-                height: 1px;
-                background-color: var(--border-color);
-              }
-              
-              &::after {
-                content: '';
-                position: absolute;
-                left: 8px;
-                top: 0;
-                width: 1px;
-                height: 100%;
-                background-color: var(--border-color);
-              }
-            }
-          }
-        }
-        
-        &.description-cell {
-          max-width: 300px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        
-        &.count-cell {
-          text-align: center;
-        }
-      }
-      
-      tr {
-        transition: background-color 0.3s ease;
-        
-        &:hover {
-          background: rgba(var(--background-light-rgb), 0.3);
-        }
-        
-        &.child-row {
-          background: rgba(var(--background-light-rgb), 0.1);
-          
-          &:hover {
-            background: rgba(var(--background-light-rgb), 0.3);
-          }
-        }
-      }
-      
-      .action-buttons {
-        display: flex;
-        gap: 8px;
-        
-        .action-button {
-          display: inline-flex;
-          align-items: center;
-          padding: 6px 12px;
-          border-radius: 4px;
-          font-size: 12px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          background: rgba(var(--background-light-rgb), 0.5);
-          color: var(--text-secondary);
-          
-          i {
-            margin-right: 4px;
-            font-size: 14px;
-          }
-          
-          &:hover {
-            background: rgba(var(--background-light-rgb), 0.8);
-            color: var(--text-primary);
-          }
-          
-          &.danger {
-            background: rgba(var(--danger-color-rgb), 0.1);
-            color: var(--danger-color);
-            
-            &:hover {
-              background: rgba(var(--danger-color-rgb), 0.2);
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  .dialog {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-    
-    &.is-active {
-      opacity: 1;
-      visibility: visible;
-      
-      .dialog-content {
-        transform: translateY(0);
-      }
-    }
-    
-    .dialog-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(5px);
-    }
-    
-    .dialog-content {
-      position: relative;
-      width: 90%;
-      max-width: 500px;
-      max-height: 90vh;
-      background: rgba(var(--background-primary-rgb), 0.95);
-      backdrop-filter: blur(20px);
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
-      transform: translateY(20px);
-      transition: transform 0.3s ease;
-      
-      .dialog-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px;
-        border-bottom: 1px solid var(--border-color);
-        
-        h3 {
-          margin: 0;
-          font-size: 20px;
-          color: var(--text-primary);
-        }
-        
-        .close-button {
-          background: none;
-          border: none;
-          color: var(--text-secondary);
-          cursor: pointer;
-          padding: 4px;
-          transition: color 0.3s ease;
-          
-          &:hover {
-            color: var(--text-primary);
-          }
-        }
-      }
-      
-      .dialog-form {
-        padding: 20px;
-        overflow-y: auto;
-        
-        .form-group {
-          margin-bottom: 20px;
-          
-          label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--text-secondary);
-            font-size: 14px;
-          }
-          
-          .error-message {
-            display: block;
-            margin-top: 4px;
-            color: var(--danger-color);
-            font-size: 12px;
-          }
-          
-          .number-input {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            
-            .number-button {
-              display: inline-flex;
-              align-items: center;
-              justify-content: center;
-              width: 32px;
-              height: 32px;
-              border-radius: 4px;
-              border: 1px solid var(--border-color);
-              background: transparent;
-              color: var(--text-secondary);
-              cursor: pointer;
-              transition: all 0.3s ease;
-              
-              &:hover {
-                background: rgba(var(--background-light-rgb), 0.5);
-                color: var(--text-primary);
-                border-color: var(--primary-color);
-              }
-            }
-            
-            .inspira-input {
-              width: 80px;
-              text-align: center;
-            }
-          }
-        }
-        
-        .dialog-footer {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          margin-top: 20px;
-          padding-top: 20px;
-          border-top: 1px solid var(--border-color);
-        }
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 12px;
+        height: 12px;
+        margin-top: -6px;
+        border-left: 1px solid #909399;
+        border-bottom: 1px solid #909399;
       }
     }
   }
 }
 
-@keyframes spin {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
+.description-cell {
+  color: #606266;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.inspira-input,
-.inspira-select,
-.inspira-textarea {
-  width: 100%;
-  height: 40px;
-  background: rgba(51, 102, 153, 0.2);
-  border: 1px solid rgba(0, 255, 255, 0.3);
-  border-radius: 8px;
-  padding: 0 12px;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  transition: all 0.3s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: rgba(0, 255, 255, 0.6);
-    box-shadow: 0 0 0 2px rgba(0, 255, 255, 0.1);
-  }
-  
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-  }
-  
-  &.is-error {
-    border-color: #ff6b6b;
-    
-    &:focus {
-      box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
-    }
-  }
+.count-cell {
+  text-align: center;
 }
 
-.inspira-textarea {
-  height: auto;
-  min-height: 80px;
-  padding: 12px;
-  resize: vertical;
-}
-
-.inspira-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.763L10.825 4z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  padding-right: 32px;
-}
-
-.inspira-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 40px;
-  padding: 0 20px;
-  background: linear-gradient(45deg, #336699, #0066cc);
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 255, 255, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  &.secondary {
-    background: rgba(51, 102, 153, 0.2);
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    
-    &:hover {
-      background: rgba(51, 102, 153, 0.3);
-      border-color: rgba(0, 255, 255, 0.6);
-    }
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
-  }
+.child-row {
+  background-color: rgba(0, 0, 0, 0.02);
 }
 </style> 

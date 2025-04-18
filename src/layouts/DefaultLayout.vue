@@ -109,10 +109,15 @@ const handleLogout = async () => {
       cancelButtonText: '取消',
       type: 'warning'
     })
-    userStore.logout()
-    router.push('/login')
+    await userStore.logout()
+    // 确保在路由跳转前已完全清除登录状态
+    localStorage.removeItem('token')
+    setTimeout(() => {
+      router.push('/login')
+    }, 100)
   } catch (error) {
     // 用户取消操作
+    console.log('用户取消退出登录')
   }
 }
 </script>

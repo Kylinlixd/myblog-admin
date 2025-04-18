@@ -87,11 +87,14 @@ export const useUserStore = defineStore('user', {
     
     async logout() {
       try {
+        // 尝试调用退出API
         await logout()
       } catch (error) {
         console.error('退出登录失败:', error)
       } finally {
+        // 清除状态，无论API调用是否成功
         this.clearUserData()
+        this.initialized = false
       }
     },
     
