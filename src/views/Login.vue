@@ -150,38 +150,77 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .login-container {
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(-45deg, #336699, #003366, #0066cc, #0099ff);
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
+  background: linear-gradient(-45deg, #1e5799, #2989d8, #207cca, #7db9e8);
+  background-size: 300% 300%;
+  animation: gradient 8s ease infinite;
   position: relative;
   overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 50%);
+    pointer-events: none;
+  }
 }
 
 .login-box {
   width: 400px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: -1;
+  }
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 
+      0 15px 40px rgba(0, 0, 0, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  }
 }
 
 .login-header {
   text-align: center;
   margin-bottom: 40px;
-}
 
-.login-header h2 {
-  margin: 0;
-  font-size: 24px;
-  color: #333;
-  margin-bottom: 8px;
+  h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 8px;
+  }
 }
 
 .subtitle {
@@ -200,30 +239,29 @@ onMounted(() => {
   }
   
   .error-message {
-    color: #f56c6c;
+    color: var(--el-color-danger);
     font-size: 12px;
-    margin-top: 4px;
   }
   
   .login-button {
     width: 100%;
     height: 40px;
+    font-size: 16px;
   }
-}
-
-.form-footer {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 14px;
-  color: #666;
   
-  .link {
-    color: #409eff;
-    text-decoration: none;
-    margin-left: 4px;
+  .form-footer {
+    text-align: center;
+    margin-top: 20px;
+    color: #666;
     
-    &:hover {
-      text-decoration: underline;
+    .link {
+      color: var(--el-color-primary);
+      text-decoration: none;
+      margin-left: 8px;
+      
+      &:hover {
+        text-decoration: underline;
+      }
     }
   }
 }
@@ -232,11 +270,35 @@ onMounted(() => {
   0% {
     background-position: 0% 50%;
   }
+  25% {
+    background-position: 50% 100%;
+  }
   50% {
     background-position: 100% 50%;
   }
+  75% {
+    background-position: 50% 0%;
+  }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+:global([data-theme='dark']) {
+  .login-box {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  .login-header h2 {
+    color: #fff;
+  }
+  
+  .subtitle {
+    color: #999;
+  }
+  
+  .form-footer {
+    color: #999;
   }
 }
 </style> 

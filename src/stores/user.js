@@ -5,7 +5,8 @@ import { login, register, getUserInfo, logout, changePassword, updateUserProfile
 export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: null,
-    token: localStorage.getItem('token') || ''
+    token: localStorage.getItem('token') || '',
+    initialized: false
   }),
   
   getters: {
@@ -16,6 +17,24 @@ export const useUserStore = defineStore('user', {
   },
   
   actions: {
+    async initialize() {
+      if (this.initialized) {
+        return
+      }
+      
+      if (this.token) {
+        try {
+          await this.getUserInfo()
+        } catch (error) {
+          console.error('初始化用户信息失败:', error)
+          this.clearUserData()
+        }
+      }
+      
+      this.initialized = true
+      return this.userInfo
+    },
+    
     async login(username, password) {
       try {
         const response = await login({ username, password })
@@ -24,6 +43,7 @@ export const useUserStore = defineStore('user', {
         this.token = response.token
         this.userInfo = response.userInfo
         localStorage.setItem('token', response.token)
+        this.initialized = true
         
         return true
       } catch (error) {

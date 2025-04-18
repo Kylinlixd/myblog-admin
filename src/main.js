@@ -10,6 +10,7 @@ import './styles/main.scss'
 import { ElMessage } from 'element-plus'
 import { useThemeStore } from './stores/theme'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
+import { useUserStore } from './stores/user'
 
 // 预加载常用组件
 const preloadComponents = () => {
@@ -39,6 +40,14 @@ const app = createApp(App)
 // 初始化 Pinia
 const pinia = createPinia()
 app.use(pinia)
+
+// 初始化用户状态
+const userStore = useUserStore()
+userStore.initialize().then(() => {
+  console.log('用户状态初始化完成')
+}).catch(error => {
+  console.error('用户状态初始化失败:', error)
+})
 
 // 注册 Element Plus 图标
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
