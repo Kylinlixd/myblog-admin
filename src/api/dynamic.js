@@ -23,6 +23,43 @@ export const getDynamicList = async (params) => {
 }
 
 /**
+ * 更新动态
+ * @param {string} id - 动态ID
+ * @param {Object} data - 要更新的动态数据
+ * @returns {Promise<Object>} 更新结果
+ */
+export const updateDynamic = async (id, data) => {
+  try {
+    const response = await request.put(`/blog/dynamics/${id}`, data);
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '更新动态失败');
+  } catch (error) {
+    console.error('更新动态失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 删除动态
+ * @param {string} id - 动态ID
+ * @returns {Promise<Object>} 删除结果
+ */
+export const deleteDynamic = async (id) => {
+  try {
+    const response = await request.delete(`/blog/dynamics/${id}`);
+    if (response.code === 200) {
+      return response.data;
+    }
+    throw new Error(response.message || '删除动态失败');
+  } catch (error) {
+    console.error('删除动态失败:', error);
+    throw error;
+  }
+}
+
+/**
  * 获取动态详情
  * @param {string} id - 动态ID
  * @returns {Promise<Object>} 动态详情数据

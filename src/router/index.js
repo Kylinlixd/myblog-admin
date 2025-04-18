@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
-import { useUserStore } from '../stores/user'
 import { useAppStore } from '../stores/app'
+import { useUserStore } from '../stores/user'
+import { createPinia } from 'pinia'
+const pinia = createPinia()
 
 
 const routes = [
@@ -215,12 +217,12 @@ router.beforeEach(async (to, from, next) => {
     }
     
     // 重置错误状态
-    const appStore = useAppStore()
+    const appStore = useAppStore(pinia)
     appStore.hasError = false
     
     // 检查权限
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
-    const userStore = useUserStore()
+    const userStore = useUserStore(pinia)
     
     if (to.path === '/login' || to.path === '/register') {
       next()
@@ -291,7 +293,7 @@ function redirectToLogin(to, next) {
 
 // 路由加载完成后处理
 router.afterEach((to) => {
-  const appStore = useAppStore()
+  const appStore = useAppStore(pinia)
   
   // 设置文档标题
   if (to.meta && to.meta.title) {
