@@ -5,7 +5,7 @@ import request from '../utils/request'
  * @returns {Promise<Array>}
  */
 export function getTagList() {
-  return request.get('/tags')
+  return request.get('/api/tags')
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -21,7 +21,7 @@ export function getTagList() {
  * @returns {Promise<{id: number}>}
  */
 export function createTag(data) {
-  return request.post('/tags', data)
+  return request.post('/api/tags', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -38,7 +38,7 @@ export function createTag(data) {
  * @returns {Promise<void>}
  */
 export function updateTag(id, data) {
-  return request.put(`/tags/${id}`, data)
+  return request.put(`/api/tags/${id}`, data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -53,7 +53,7 @@ export function updateTag(id, data) {
  * @returns {Promise<void>}
  */
 export function deleteTag(id) {
-  return request.delete(`/tags/${id}`)
+  return request.delete(`/api/tags/${id}`)
     .then(response => {
       if (response.code === 200) {
         return response.data

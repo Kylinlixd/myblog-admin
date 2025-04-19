@@ -5,7 +5,7 @@ import request from '../utils/request'
  * @returns {Promise<Array>}
  */
 export function getCategoryList() {
-  return request.get('/categories')
+  return request.get('/api/categories')
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -22,7 +22,7 @@ export function getCategoryList() {
  * @returns {Promise<{id: number}>}
  */
 export function createCategory(data) {
-  return request.post('/categories', data)
+  return request.post('/api/categories', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -40,7 +40,7 @@ export function createCategory(data) {
  * @returns {Promise<void>}
  */
 export function updateCategory(id, data) {
-  return request.put(`/categories/${id}`, data)
+  return request.put(`/api/categories/${id}`, data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -55,7 +55,7 @@ export function updateCategory(id, data) {
  * @returns {Promise<void>}
  */
 export function deleteCategory(id) {
-  return request.delete(`/categories/${id}`)
+  return request.delete(`/api/categories/${id}`)
     .then(response => {
       if (response.code === 200) {
         return response.data

@@ -135,15 +135,15 @@ const updateDynamicResponse = () => {
 // 导出API路由映射
 export default {
   // 后台管理API
-  '/dynamics': adminDynamicListResponse,
-  '/dynamics/:id': adminDynamicDetailResponse,
+  '/api/dynamics': adminDynamicListResponse,
+  '/api/dynamics/:id': adminDynamicDetailResponse,
   
   // 前台博客API
   '/blog/dynamics': frontDynamicListResponse,
   '/blog/dynamics/:id': frontDynamicDetailResponse,
   
   // 其他API
-  '/dynamics/create': createDynamicResponse,
-  '/dynamics/update/:id': updateDynamicResponse,
-  '/dynamics/delete/:id': deleteDynamicResponse
+  '/api/dynamics/create': createDynamicResponse,
+  '/api/dynamics/update/:id': updateDynamicResponse,
+  '/api/dynamics/delete/:id': deleteDynamicResponse
 } 

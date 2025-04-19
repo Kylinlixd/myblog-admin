@@ -12,7 +12,7 @@ import request from '../utils/request'
  */
 export function getCommentList(params) {
   return request({
-    url: '/comments',
+    url: '/api/comments',
     method: 'get',
     params
   }).then(response => {
@@ -30,7 +30,7 @@ export function getCommentList(params) {
  */
 export function approveComment(id) {
   return request({
-    url: `/comments/${id}/approve`,
+    url: `/api/comments/${id}/approve`,
     method: 'put'
   }).then(response => {
     if (response.code === 200) {
@@ -47,7 +47,7 @@ export function approveComment(id) {
  */
 export function rejectComment(id) {
   return request({
-    url: `/comments/${id}/reject`,
+    url: `/api/comments/${id}/reject`,
     method: 'put'
   }).then(response => {
     if (response.code === 200) {
@@ -64,7 +64,7 @@ export function rejectComment(id) {
  */
 export function deleteComment(id) {
   return request({
-    url: `/comments/${id}`,
+    url: `/api/comments/${id}`,
     method: 'delete'
   }).then(response => {
     if (response.code === 200) {
