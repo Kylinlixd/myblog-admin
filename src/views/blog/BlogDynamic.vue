@@ -87,7 +87,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getDynamicList } from '../../api/dynamic'
+import { getBlogDynamics } from '../../api/blog'
 import MarkdownIt from 'markdown-it'
 import { ElMessage } from 'element-plus'
 
@@ -127,7 +127,7 @@ const fetchDynamicList = async () => {
       page: page.value,
       pageSize: pageSize.value
     }
-    const response = await getDynamicList(params)
+    const response = await getBlogDynamics(params)
     if (response.code === 200) {
       const { items, total } = response.data
       dynamicList.value = [...dynamicList.value, ...items]

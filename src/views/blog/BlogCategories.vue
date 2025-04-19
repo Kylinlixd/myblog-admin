@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getCategoryList } from '@/api/category'
+import { getCategoryList } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
@@ -31,19 +31,18 @@ const fetchCategories = async () => {
   try {
     appStore.startLoading('加载分类数据...')
     
-    // 使用模拟数据，实际项目应替换为API调用
-    const categoriesData = [
-      { id: 1, name: '前端开发', count: 32, description: '前端技术、框架及最佳实践' },
-      { id: 2, name: '后端开发', count: 24, description: '服务器端开发技术与架构' },
-      { id: 3, name: '移动开发', count: 18, description: '移动应用开发及跨平台技术' },
-      { id: 4, name: '数据库', count: 15, description: '数据库设计与优化' },
-      { id: 5, name: '云计算', count: 12, description: '云服务及云原生架构' },
-      { id: 6, name: '人工智能', count: 9, description: '机器学习与AI应用' },
-      { id: 7, name: '开发工具', count: 21, description: '提高效率的开发工具与资源' },
-      { id: 8, name: '项目管理', count: 11, description: '项目规划、执行与团队协作' }
-    ]
+    // 使用真实API调用获取分类数据
+    const response = await getCategoryList()
+    if (response.code === 200) {
+      categories.value = response.data.map(category => ({
+        ...category,
+        count: category.count || 0
+      }))
+    } else {
+      console.error('获取分类数据失败:', response.message)
+      appStore.setLoadingError('获取分类数据失败，请刷新重试')
+    }
     
-    categories.value = categoriesData
     appStore.endLoading()
   } catch (error) {
     console.error('获取分类数据失败:', error)

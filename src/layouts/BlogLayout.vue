@@ -455,7 +455,7 @@
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
-import { getRecentPosts } from '../api/blog'
+import { getRecentDynamics } from '../api/blog'
 import { useAppStore } from '../stores/app'
 import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButton.vue'
 
@@ -513,8 +513,8 @@ const handleSearch = () => {
   searchQuery.value = ''
 }
 
-// 最新文章
-const recentPosts = ref([])
+// 最新动态
+const recentDynamics = ref([])
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -528,9 +528,9 @@ const fetchData = async () => {
   try {
     appStore.startLoading('加载博客数据...')
     
-    // 获取最新文章
-    const recentPostsData = await getRecentPosts(5)
-    recentPosts.value = recentPostsData
+    // 获取最新动态
+    const params = { limit: 5 }; const response = await getRecentDynamics(params)
+    if (response.code === 200) { recentDynamics.value = response.data }
     
     appStore.endLoading()
   } catch (error) {

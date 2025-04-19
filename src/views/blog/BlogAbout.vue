@@ -2,18 +2,18 @@
   <div class="about-container">
     <div class="about-header">
       <div class="avatar">
-        <img src="" alt="LiXD" onerror="this.src='https://ui-avatars.com/api/?name=LiXD&background=random'" />
+        <img :src="profile.avatar" alt="LiXD" onerror="this.src='https://ui-avatars.com/api/?name=LiXD&background=random'" />
       </div>
-      <h1 class="name">LiXD</h1>
-      <div class="title">全栈开发工程师 / 技术博主</div>
+      <h1 class="name">{{ profile.name || 'LiXD' }}</h1>
+      <div class="title">{{ profile.title || '全栈开发工程师 / 技术博主' }}</div>
       <div class="social-links">
-        <a href="https://github.com/" target="_blank" class="social-item">
+        <a v-if="profile.github" :href="profile.github" target="_blank" class="social-item">
           <i class="fab fa-github"></i>
         </a>
-        <a href="https://twitter.com/" target="_blank" class="social-item">
+        <a v-if="profile.twitter" :href="profile.twitter" target="_blank" class="social-item">
           <i class="fab fa-twitter"></i>
         </a>
-        <a href="mailto:contact@example.com" class="social-item">
+        <a v-if="profile.email" :href="`mailto:${profile.email}`" class="social-item">
           <i class="fas fa-envelope"></i>
         </a>
       </div>
@@ -23,8 +23,11 @@
       <section class="about-section">
         <h2 class="section-title">关于我</h2>
         <div class="section-content">
-          <p>嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。</p>
-          <p>通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。</p>
+          <div v-if="profile.bio" v-html="profile.bio"></div>
+          <div v-else>
+            <p>嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。</p>
+            <p>通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。</p>
+          </div>
         </div>
       </section>
 
@@ -32,42 +35,10 @@
         <h2 class="section-title">技能与专长</h2>
         <div class="section-content">
           <div class="skills-grid">
-            <div class="skill-category">
-              <h3>前端开发</h3>
+            <div v-for="(skills, category) in profile.skills || defaultSkills" :key="category" class="skill-category">
+              <h3>{{ category }}</h3>
               <div class="skill-items">
-                <div class="skill-item">HTML/CSS</div>
-                <div class="skill-item">JavaScript</div>
-                <div class="skill-item">Vue.js</div>
-                <div class="skill-item">React</div>
-                <div class="skill-item">TypeScript</div>
-              </div>
-            </div>
-            <div class="skill-category">
-              <h3>后端开发</h3>
-              <div class="skill-items">
-                <div class="skill-item">Node.js</div>
-                <div class="skill-item">Python</div>
-                <div class="skill-item">Django</div>
-                <div class="skill-item">Flask</div>
-                <div class="skill-item">Express</div>
-              </div>
-            </div>
-            <div class="skill-category">
-              <h3>数据库</h3>
-              <div class="skill-items">
-                <div class="skill-item">MySQL</div>
-                <div class="skill-item">MongoDB</div>
-                <div class="skill-item">Redis</div>
-                <div class="skill-item">PostgreSQL</div>
-              </div>
-            </div>
-            <div class="skill-category">
-              <h3>开发工具</h3>
-              <div class="skill-items">
-                <div class="skill-item">Git</div>
-                <div class="skill-item">Docker</div>
-                <div class="skill-item">Webpack</div>
-                <div class="skill-item">VS Code</div>
+                <div v-for="skill in skills" :key="skill" class="skill-item">{{ skill }}</div>
               </div>
             </div>
           </div>
@@ -79,13 +50,13 @@
         <div class="section-content">
           <p>如果你有任何问题、合作意向或者只是想交个朋友，欢迎随时联系我。</p>
           <div class="contact-info">
-            <div class="contact-item">
+            <div v-if="profile.email" class="contact-item">
               <i class="fas fa-envelope"></i>
-              <a href="mailto:contact@example.com">contact@example.com</a>
+              <a :href="`mailto:${profile.email}`">{{ profile.email }}</a>
             </div>
-            <div class="contact-item">
+            <div v-if="profile.website" class="contact-item">
               <i class="fas fa-globe"></i>
-              <a href="https://example.com" target="_blank">example.com</a>
+              <a :href="profile.website" target="_blank">{{ profile.website }}</a>
             </div>
           </div>
         </div>
@@ -95,15 +66,50 @@
 </template>
 
 <script setup>
-// 没有太多脚本逻辑，主要是静态内容展示
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
+import { getAboutInfo } from '@/api/blog'
+import { useAppStore } from '@/stores/app'
+
+const appStore = useAppStore()
+const profile = ref({})
+
+// 默认技能数据
+const defaultSkills = {
+  '前端开发': ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TypeScript'],
+  '后端开发': ['Node.js', 'Python', 'Django', 'Flask', 'Express'],
+  '数据库': ['MySQL', 'MongoDB', 'Redis', 'PostgreSQL'],
+  '开发工具': ['Git', 'Docker', 'Webpack', 'VS Code']
+}
+
+// 获取关于我页面数据
+const fetchAboutInfo = async () => {
+  try {
+    appStore.startLoading('加载个人资料...')
+    const response = await getAboutInfo()
+    if (response.code === 200) {
+      profile.value = response.data
+    } else {
+      console.error('获取个人资料失败:', response.message)
+    }
+  } catch (error) {
+    console.error('获取个人资料失败:', error)
+  } finally {
+    appStore.endLoading()
+  }
+}
 
 onMounted(() => {
-  // 加载FontAwesome图标，实际项目中建议通过正规的方式安装使用
-  const fontAwesome = document.createElement('link')
-  fontAwesome.rel = 'stylesheet'
-  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
-  document.head.appendChild(fontAwesome)
+  // 加载FontAwesome图标
+  if (!document.getElementById('font-awesome-css')) {
+    const fontAwesome = document.createElement('link')
+    fontAwesome.id = 'font-awesome-css'
+    fontAwesome.rel = 'stylesheet'
+    fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
+    document.head.appendChild(fontAwesome)
+  }
+  
+  // 获取个人资料
+  fetchAboutInfo()
 })
 </script>
 
