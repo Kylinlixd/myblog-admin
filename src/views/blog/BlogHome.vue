@@ -39,7 +39,7 @@
       <div class="articles-container">
         <!-- 根据过滤条件显示不同文章 -->
         <div v-for="article in filteredArticles" :key="article.id" class="article-card">
-          <router-link :to="`/blog/post/${article.id}`" class="article-link">
+          <router-link :to="`/blog/dynamic`" class="article-link">
             <div class="article-image">
               <img :src="article.cover" :alt="article.title" />
             </div>

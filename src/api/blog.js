@@ -1,6 +1,5 @@
 import request from '../utils/request'
 
-
 /**
  * 获取分类列表
  * @returns {Promise<Object>} 分类列表数据
@@ -10,6 +9,153 @@ export function getCategoryList() {
     url: '/categories',
     method: 'get'
   })
+}
+
+/**
+ * 获取动态列表
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码
+ * @param {number} params.pageSize - 每页数量
+ * @param {string} params.keyword - 搜索关键词
+ * @param {string} params.type - 动态类型
+ * @returns {Promise<Object>} 动态列表数据
+ */
+export const getBlogDynamics = async (params) => {
+  try {
+    const response = await request.get('/blog/dynamics', { params });
+    return response;
+  } catch (error) {
+    console.error('获取动态列表失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取动态详情
+ * @param {string} id - 动态ID
+ * @returns {Promise<Object>} 动态详情数据
+ */
+export const getBlogDynamicDetail = async (id) => {
+  try {
+    const response = await request.get(`/blog/dynamics/${id}`);
+    return response;
+  } catch (error) {
+    console.error('获取动态详情失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取相邻动态
+ * @param {string} id - 当前动态ID
+ * @returns {Promise<Object>} 相邻动态数据
+ */
+export const getAdjacentDynamics = async (id) => {
+  try {
+    const response = await request.get(`/blog/dynamics/${id}/adjacent`);
+    return response;
+  } catch (error) {
+    console.error('获取相邻动态失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取热门动态
+ * @param {Object} params - 查询参数
+ * @param {number} params.limit - 获取数量
+ * @returns {Promise<Object>} 热门动态数据
+ */
+export const getHotDynamics = async (params) => {
+  try {
+    const response = await request.get('/blog/dynamics/hot', { params });
+    return response;
+  } catch (error) {
+    console.error('获取热门动态失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取最新动态
+ * @param {Object} params - 查询参数
+ * @param {number} params.limit - 获取数量
+ * @returns {Promise<Object>} 最新动态数据
+ */
+export const getRecentDynamics = async (params) => {
+  try {
+    const response = await request.get('/blog/dynamics/recent', { params });
+    return response;
+  } catch (error) {
+    console.error('获取最新动态失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取分类下的动态
+ * @param {number} categoryId - 分类ID
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码
+ * @param {number} params.pageSize - 每页数量
+ * @returns {Promise<Object>} 动态列表数据
+ */
+export const getCategoryDynamics = async (categoryId, params) => {
+  try {
+    const response = await request.get(`/blog/categories/${categoryId}/dynamics`, { params });
+    return response;
+  } catch (error) {
+    console.error('获取分类下的动态失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 获取标签下的动态
+ * @param {number} tagId - 标签ID
+ * @param {Object} params - 查询参数
+ * @param {number} params.page - 页码
+ * @param {number} params.pageSize - 每页数量
+ * @returns {Promise<Object>} 动态列表数据
+ */
+export const getTagDynamics = async (tagId, params) => {
+  try {
+    const response = await request.get(`/blog/tags/${tagId}/dynamics`, { params });
+    return response;
+  } catch (error) {
+    console.error('获取标签下的动态失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 增加动态浏览量
+ * @param {string} id - 动态ID
+ * @returns {Promise<Object>} 结果
+ */
+export const increaseDynamicView = async (id) => {
+  try {
+    const response = await request.post(`/blog/dynamics/${id}/view`);
+    return response;
+  } catch (error) {
+    console.error('增加动态浏览量失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 创建动态
+ * @param {Object} data - 动态数据
+ * @returns {Promise<Object>} 创建结果
+ */
+export const createDynamic = async (data) => {
+  try {
+    const response = await request.post('/blog/dynamics', data);
+    return response;
+  } catch (error) {
+    console.error('创建动态失败:', error);
+    throw error;
+  }
 }
 
 /**
@@ -31,6 +177,23 @@ export const updateDynamic = async (id, data) => {
   }
 }
 
+/**
+ * 删除动态
+ * @param {string} id - 动态ID
+ * @returns {Promise<Object>} 删除结果
+ */
+export const deleteDynamic = async (id) => {
+  try {
+    const response = await request.delete(`/blog/dynamics/${id}`)
+    if (response.code === 200) {
+      return response.data
+    }
+    throw new Error(response.message || '删除动态失败')
+  } catch (error) {
+    console.error('删除动态失败:', error)
+    throw error
+  }
+}
 
 /**
  * 点赞动态
@@ -108,39 +271,6 @@ export const deleteDynamicComment = async (id, commentId) => {
 }
 
 /**
- * 获取博客动态列表
- * @param {Object} params - 查询参数
- * @param {number} params.page - 页码
- * @param {number} params.pageSize - 每页数量
- * @param {string} params.type - 动态类型
- * @returns {Promise<Object>} 动态列表数据
- */
-export const getBlogDynamics = async (params) => {
-  try {
-    const response = await request.get('/blog/dynamics', { params });
-    return response;
-  } catch (error) {
-    console.error('获取博客动态列表失败:', error);
-    throw error;
-  }
-}
-
-/**
- * 获取博客动态详情
- * @param {string} id - 动态ID
- * @returns {Promise<Object>} 动态详情数据
- */
-export const getBlogDynamicDetail = async (id) => {
-  try {
-    const response = await request.get(`/blog/dynamics/${id}`);
-    return response;
-  } catch (error) {
-    console.error('获取博客动态详情失败:', error);
-    throw error;
-  }
-}
-
-/**
  * 获取博客统计信息
  * @returns {Promise<Object>} 博客统计数据
  */
@@ -153,3 +283,18 @@ export const getBlogStats = async () => {
     throw error;
   }
 }
+
+/**
+ * 获取关于我的信息
+ * @returns {Promise<Object>} 关于我的数据
+ */
+export const getAboutInfo = async () => {
+  try {
+    const response = await request.get('/blog/about');
+    return response;
+  } catch (error) {
+    console.error('获取关于我的信息失败:', error);
+    throw error;
+  }
+}
+
