@@ -1,6 +1,6 @@
 <template>
   <div class="login-container">
-    <!-- 添加漂浮的多边形碎片 -->
+    <!-- 添加漂浮的多边形碎片，但让它们不影响登录框 -->
     <div class="floating-shape" v-for="n in 21" :key="n" :style="shapeStyles[n-1]"></div>
     
     <div class="login-box">
@@ -251,6 +251,7 @@ onMounted(() => {
       var(--clip7, 0%) var(--clip8, 100%)
     );
     will-change: transform;
+    z-index: -5;
 
     &::before {
       content: '';
@@ -293,9 +294,9 @@ onMounted(() => {
 .login-box {
   width: 400px;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border-radius: 12px;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.2),
@@ -303,6 +304,8 @@ onMounted(() => {
   border: 1px solid rgba(255, 255, 255, 0.3);
   overflow: hidden;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 20;
   
   &::before {
     content: '';
@@ -311,9 +314,9 @@ onMounted(() => {
     left: -10px;
     right: -10px;
     bottom: -10px;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
     z-index: -1;
   }
   

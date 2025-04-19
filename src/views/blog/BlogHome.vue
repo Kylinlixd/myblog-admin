@@ -134,68 +134,22 @@ const getFilterDescription = () => {
 // 获取文章数据
 const fetchArticles = async () => {
   try {
-    // 模拟从API获取数据
-    // 实际项目中应该替换为真实的API调用
-    const mockArticles = [
-      {
-        id: 1,
-        title: 'Vue 3 Composition API 实战指南',
-        excerpt: '本文介绍了Vue 3 Composition API的核心概念和实战应用，帮助你提升前端开发效率。',
-        date: '2023-06-15',
-        category: '技术分享',
-        cover: 'https://picsum.photos/id/180/600/400',
-        views: 1520
-      },
-      {
-        id: 2,
-        title: '如何构建高性能Node.js应用',
-        excerpt: '从架构设计到性能优化，全方位解析Node.js应用开发的最佳实践。',
-        date: '2023-05-28',
-        category: '技术分享',
-        cover: 'https://picsum.photos/id/26/600/400',
-        views: 1280
-      },
-      {
-        id: 3,
-        title: '旅行中的意外收获',
-        excerpt: '一次计划外的旅行，让我重新思考生活的意义和工作的价值。',
-        date: '2023-07-10',
-        category: '生活随笔',
-        cover: 'https://picsum.photos/id/42/600/400',
-        views: 860
-      },
-      {
-        id: 4,
-        title: 'Docker容器化部署实践',
-        excerpt: '从零开始学习Docker，掌握容器化部署的核心技能。',
-        date: '2023-06-28',
-        category: '技术分享',
-        cover: 'https://picsum.photos/id/96/600/400',
-        views: 2100
-      },
-      {
-        id: 5,
-        title: '读《原子习惯》有感',
-        excerpt: '如何通过微小的改变，实现巨大的成长。这本书给了我很多启发。',
-        date: '2023-07-18',
-        category: '生活随笔',
-        cover: 'https://picsum.photos/id/100/600/400',
-        views: 760
-      },
-      {
-        id: 6,
-        title: 'TypeScript高级类型体操',
-        excerpt: '深入探讨TypeScript的类型系统，掌握高级类型编程技巧。',
-        date: '2023-07-25',
-        category: '技术分享',
-        cover: 'https://picsum.photos/id/237/600/400',
-        views: 1860
-      }
-    ]
+    // 从实际API获取数据
+    // TODO: 替换为实际的API调用
+    const response = await fetch('/blog/articles');
+    const data = await response.json();
     
-    articles.value = mockArticles
+    if (data && data.code === 200) {
+      articles.value = data.data.list || [];
+    } else {
+      // 如果API还未准备好，使用空数组
+      articles.value = [];
+      console.warn('API返回数据格式不正确或者API未准备好');
+    }
   } catch (error) {
-    console.error('获取文章数据失败:', error)
+    console.error('获取文章数据失败:', error);
+    // 发生错误时使用空数组
+    articles.value = [];
   }
 }
 

@@ -1,4 +1,4 @@
-import request from '../utils/request'
+import blogRequest from '../utils/blogRequest'
 
 /**
  * 获取分类列表
@@ -6,7 +6,7 @@ import request from '../utils/request'
  */
 export function getCategoryList() {
   try {
-    return request.get('/blog/categories');
+    return blogRequest.get('/categories');
   } catch (error) {
     console.error('获取分类列表失败:', error);
     throw error;
@@ -24,7 +24,7 @@ export function getCategoryList() {
  */
 export const getBlogDynamics = async (params) => {
   try {
-    const response = await request.get('/blog/dynamics', { params });
+    const response = await blogRequest.get('/dynamics', { params });
     return response;
   } catch (error) {
     console.error('获取动态列表失败:', error);
@@ -39,7 +39,7 @@ export const getBlogDynamics = async (params) => {
  */
 export const getBlogDynamicDetail = async (id) => {
   try {
-    const response = await request.get(`/blog/dynamics/${id}`);
+    const response = await blogRequest.get(`/dynamics/${id}`);
     return response;
   } catch (error) {
     console.error('获取动态详情失败:', error);
@@ -54,7 +54,7 @@ export const getBlogDynamicDetail = async (id) => {
  */
 export const getAdjacentDynamics = async (id) => {
   try {
-    const response = await request.get(`/blog/dynamics/${id}/adjacent`);
+    const response = await blogRequest.get(`/dynamics/${id}/adjacent`);
     return response;
   } catch (error) {
     console.error('获取相邻动态失败:', error);
@@ -70,7 +70,7 @@ export const getAdjacentDynamics = async (id) => {
  */
 export const getHotDynamics = async (params) => {
   try {
-    const response = await request.get('/blog/dynamics/hot', { params });
+    const response = await blogRequest.get('/dynamics/hot', { params });
     return response;
   } catch (error) {
     console.error('获取热门动态失败:', error);
@@ -86,7 +86,7 @@ export const getHotDynamics = async (params) => {
  */
 export const getRecentDynamics = async (params) => {
   try {
-    const response = await request.get('/blog/dynamics/recent', { params });
+    const response = await blogRequest.get('/dynamics/recent', { params });
     return response;
   } catch (error) {
     console.error('获取最新动态失败:', error);
@@ -104,7 +104,7 @@ export const getRecentDynamics = async (params) => {
  */
 export const getCategoryDynamics = async (categoryId, params) => {
   try {
-    const response = await request.get(`/blog/categories/${categoryId}/dynamics`, { params });
+    const response = await blogRequest.get(`/categories/${categoryId}/dynamics`, { params });
     return response;
   } catch (error) {
     console.error('获取分类下的动态失败:', error);
@@ -122,7 +122,7 @@ export const getCategoryDynamics = async (categoryId, params) => {
  */
 export const getTagDynamics = async (tagId, params) => {
   try {
-    const response = await request.get(`/blog/tags/${tagId}/dynamics`, { params });
+    const response = await blogRequest.get(`/tags/${tagId}/dynamics`, { params });
     return response;
   } catch (error) {
     console.error('获取标签下的动态失败:', error);
@@ -137,7 +137,7 @@ export const getTagDynamics = async (tagId, params) => {
  */
 export const increaseDynamicView = async (id) => {
   try {
-    const response = await request.post(`/blog/dynamics/${id}/view`);
+    const response = await blogRequest.post(`/dynamics/${id}/view`);
     return response;
   } catch (error) {
     console.error('增加动态浏览量失败:', error);
@@ -152,7 +152,7 @@ export const increaseDynamicView = async (id) => {
  */
 export const createDynamic = async (data) => {
   try {
-    const response = await request.post('/blog/dynamics', data);
+    const response = await blogRequest.post('/dynamics', data);
     return response;
   } catch (error) {
     console.error('创建动态失败:', error);
@@ -168,7 +168,7 @@ export const createDynamic = async (data) => {
  */
 export const updateDynamic = async (id, data) => {
   try {
-    const response = await request.put(`/blog/dynamics/${id}`, data)
+    const response = await blogRequest.put(`/dynamics/${id}`, data)
     if (response.code === 200) {
       return response.data
     }
@@ -186,7 +186,7 @@ export const updateDynamic = async (id, data) => {
  */
 export const deleteDynamic = async (id) => {
   try {
-    const response = await request.delete(`/blog/dynamics/${id}`)
+    const response = await blogRequest.delete(`/dynamics/${id}`)
     if (response.code === 200) {
       return response.data
     }
@@ -204,7 +204,7 @@ export const deleteDynamic = async (id) => {
  */
 export const likeDynamic = async (id) => {
   try {
-    const response = await request.post(`/blog/dynamics/${id}/like`)
+    const response = await blogRequest.post(`/dynamics/${id}/like`)
     if (response.code === 200) {
       return response.data
     }
@@ -223,7 +223,7 @@ export const likeDynamic = async (id) => {
  */
 export const commentDynamic = async (id, data) => {
   try {
-    const response = await request.post(`/blog/dynamics/${id}/comment`, data)
+    const response = await blogRequest.post(`/dynamics/${id}/comment`, data)
     if (response.code === 200) {
       return response.data
     }
@@ -242,7 +242,7 @@ export const commentDynamic = async (id, data) => {
  */
 export const getDynamicComments = async (id, params) => {
   try {
-    const response = await request.get(`/blog/dynamics/${id}/comments`, { params })
+    const response = await blogRequest.get(`/dynamics/${id}/comments`, { params })
     if (response.code === 200) {
       return response.data
     }
@@ -261,7 +261,7 @@ export const getDynamicComments = async (id, params) => {
  */
 export const deleteDynamicComment = async (id, commentId) => {
   try {
-    const response = await request.delete(`/blog/dynamics/${id}/comments/${commentId}`)
+    const response = await blogRequest.delete(`/dynamics/${id}/comments/${commentId}`)
     if (response.code === 200) {
       return response.data
     }
@@ -278,7 +278,7 @@ export const deleteDynamicComment = async (id, commentId) => {
  */
 export const getBlogStats = async () => {
   try {
-    const response = await request.get('/blog/stats');
+    const response = await blogRequest.get('/stats');
     return response;
   } catch (error) {
     console.error('获取博客统计信息失败:', error);
@@ -292,7 +292,7 @@ export const getBlogStats = async () => {
  */
 export const getAboutInfo = async () => {
   try {
-    const response = await request.get('/blog/about');
+    const response = await blogRequest.get('/about');
     return response;
   } catch (error) {
     console.error('获取关于我的信息失败:', error);
