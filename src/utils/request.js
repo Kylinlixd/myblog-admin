@@ -99,6 +99,9 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
+    // 添加调试日志
+    console.log(`[Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
+    
     return config
   },
   error => {

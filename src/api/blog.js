@@ -5,10 +5,12 @@ import request from '../utils/request'
  * @returns {Promise<Object>} 分类列表数据
  */
 export function getCategoryList() {
-  return request({
-    url: '/blog/categories',
-    method: 'get'
-  })
+  try {
+    return request.get('/blog/categories');
+  } catch (error) {
+    console.error('获取分类列表失败:', error);
+    throw error;
+  }
 }
 
 /**

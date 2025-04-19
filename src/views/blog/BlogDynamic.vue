@@ -123,13 +123,14 @@ const fetchDynamicList = async () => {
   
   loading.value = true
   try {
+    // 直接展开params对象中的属性
     const response = await getBlogDynamics({
       page: page.value,
       pageSize: pageSize.value
     })
     if (response.code === 200) {
-      const { items, total } = response.data
-      dynamicList.value = [...dynamicList.value, ...items]
+      const { list = [], total = 0 } = response.data || {}
+      dynamicList.value = [...dynamicList.value, ...list]
       hasMore.value = dynamicList.value.length < total
     } else {
       ElMessage.error(response.message || '获取动态列表失败')
