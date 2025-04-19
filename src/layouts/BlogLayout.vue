@@ -65,7 +65,7 @@
         <div class="blog-search">
           <el-input
             v-model="searchQuery"
-            placeholder="搜索文章..."
+            placeholder="搜索动态..."
             :prefix-icon="Search"
             @keyup.enter="handleSearch"
             clearable
