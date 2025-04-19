@@ -529,7 +529,9 @@ const fetchData = async () => {
     appStore.startLoading('加载博客数据...')
     
     // 获取最新动态
-    const params = { limit: 5 }; const response = await getRecentDynamics(params)
+    const response = await getRecentDynamics({
+      limit: 5
+    })
     if (response.code === 200) { recentDynamics.value = response.data }
     
     appStore.endLoading()

@@ -160,7 +160,7 @@ let memoryChartInstance = null
 // 获取统计数据
 const getStats = async () => {
   try {
-    const res = await request.get('/stats')
+    const res = await request.get('/api/stats')
     if (res.code === 200 && res.data) {
       stats.value = res.data
     } else {
@@ -175,7 +175,7 @@ const getStats = async () => {
 // 获取最近动态
 const getRecentDynamics = async () => {
   try {
-    const res = await request.get('/dynamics', {
+    const res = await request.get('/api/dynamics', {
       params: {
         limit: 5,
         sort: 'createdAt:desc'

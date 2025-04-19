@@ -123,11 +123,10 @@ const fetchDynamicList = async () => {
   
   loading.value = true
   try {
-    const params = {
+    const response = await getBlogDynamics({
       page: page.value,
       pageSize: pageSize.value
-    }
-    const response = await getBlogDynamics(params)
+    })
     if (response.code === 200) {
       const { items, total } = response.data
       dynamicList.value = [...dynamicList.value, ...items]
