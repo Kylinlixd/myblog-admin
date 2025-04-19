@@ -11,7 +11,7 @@ import request from '../utils/request';
  */
 export const getDynamicList = async (params) => {
   try {
-    const response = await request.get('/api/dynamics', { params });
+    const response = await request.get('/dynamics', { params });
     return { 
       code: 200, 
       data: response, 
@@ -31,7 +31,7 @@ export const getDynamicList = async (params) => {
  */
 export const updateDynamic = async (id, data) => {
   try {
-    const response = await request.put(`/api/dynamics/${id}`, data);
+    const response = await request.put(`/dynamics/${id}`, data);
     return { 
       code: 200, 
       data: response, 
@@ -50,7 +50,7 @@ export const updateDynamic = async (id, data) => {
  */
 export const deleteDynamic = async (id) => {
   try {
-    const response = await request.delete(`/api/dynamics/${id}`);
+    const response = await request.delete(`/dynamics/${id}`);
     return { 
       code: 200, 
       data: response, 
@@ -69,7 +69,7 @@ export const deleteDynamic = async (id) => {
  */
 export const getDynamicDetail = async (id) => {
   try {
-    const response = await request.get(`/api/dynamics/${id}`);
+    const response = await request.get(`/dynamics/${id}`);
     return { 
       code: 200, 
       data: response, 
@@ -88,7 +88,7 @@ export const getDynamicDetail = async (id) => {
  */
 export const createDynamic = async (data) => {
   try {
-    const response = await request.post('/api/dynamics', data);
+    const response = await request.post('/dynamics', data);
     return { 
       code: 200, 
       data: response, 
