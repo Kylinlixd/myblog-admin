@@ -19,8 +19,8 @@ export const getDynamicList = async (params) => {
     
     console.log('认证头:', headers);
     
-    // 确保使用的是完整路径 - 修改为后台API的直接路径
-    const response = await request.get('/api/dynamics', { 
+    // 确保使用的是完整路径 - 修改为后台API的直接路径（不要加/api前缀，因为request.js已经有了）
+    const response = await request.get('/dynamics', { 
       params,
       headers
     });
@@ -53,7 +53,7 @@ export const updateDynamic = async (id, data) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.put(`/api/dynamics/${id}`, data, { headers });
+    const response = await request.put(`/dynamics/${id}`, data, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -76,7 +76,7 @@ export const deleteDynamic = async (id) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.delete(`/api/dynamics/${id}`, { headers });
+    const response = await request.delete(`/dynamics/${id}`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -99,7 +99,7 @@ export const getDynamicDetail = async (id) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.get(`/api/dynamics/${id}`, { headers });
+    const response = await request.get(`/dynamics/${id}`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -124,7 +124,7 @@ export const createDynamic = async (data) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.post('/api/dynamics', data, { headers });
+    const response = await request.post('/dynamics', data, { headers });
     return { 
       code: 200, 
       data: response, 

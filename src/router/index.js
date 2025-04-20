@@ -1,11 +1,26 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import { useAppStore } from '../stores/app'
 import { useUserStore } from '../stores/user'
+import { ElMessage } from 'element-plus'
 
 const routes = [
   {
     path: '/',
     redirect: '/blog'
+  },
+  {
+    path: '/dynamics',
+    redirect: '/dashboard/dynamics',
+    meta: { requiresAuth: false } // 确保重定向不被权限拦截
+  },
+  {
+    path: '/dynamics-test',
+    name: 'DynamicsTest',
+    component: () => import('../views/DynamicsTest.vue'),
+    meta: { 
+      title: '动态管理测试',
+      requiresAuth: false
+    }
   },
   {
     path: '/login',
@@ -31,7 +46,8 @@ const routes = [
     component: () => import('../components/TestLampEffect.vue'),
     meta: { 
       title: '测试页面',
-      keepAlive: false
+      keepAlive: false,
+      requiresAuth: true // 测试页面需要登录验证
     }
   },
   {
@@ -48,7 +64,8 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogHome.vue'),
         meta: { 
           title: '博客首页',
-          keepAlive: true
+          keepAlive: true,
+          requiresAuth: false
         }
       },
       {
@@ -56,8 +73,9 @@ const routes = [
         name: 'BlogDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamic.vue'),
         meta: { 
-          title: '动态',
-          keepAlive: true
+          title: '博客动态',
+          keepAlive: true,
+          requiresAuth: false
         }
       },
       {
@@ -66,7 +84,8 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategories.vue'),
         meta: { 
           title: '文章归类',
-          keepAlive: true
+          keepAlive: true,
+          requiresAuth: false
         }
       },
       {
@@ -75,7 +94,8 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogAbout.vue'),
         meta: { 
           title: '关于我',
-          keepAlive: true
+          keepAlive: true,
+          requiresAuth: false
         }
       }
     ]
@@ -104,8 +124,7 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicList.vue'),
         meta: {
           title: '动态管理',
-          icon: 'dynamic',
-          roles: ['admin']
+          icon: 'dynamic'
         }
       },
       {
@@ -114,8 +133,7 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
         meta: {
           title: '新建动态',
-          icon: 'dynamic',
-          roles: ['admin']
+          icon: 'dynamic'
         }
       },
       {
@@ -124,8 +142,7 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
         meta: {
           title: '编辑动态',
-          icon: 'dynamic',
-          roles: ['admin']
+          icon: 'dynamic'
         }
       },
       {
@@ -134,8 +151,7 @@ const routes = [
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicPreview.vue'),
         meta: {
           title: '预览动态',
-          icon: 'dynamic',
-          roles: ['admin']
+          icon: 'dynamic'
         }
       },
       {
@@ -190,7 +206,8 @@ const routes = [
     component: () => import('../views/NotFound.vue'),
     meta: {
       title: '页面未找到',
-      hideInMenu: true
+      hideInMenu: true,
+      requiresAuth: false
     }
   }
 ]
@@ -211,15 +228,26 @@ router.beforeEach(async (to, from, next) => {
     // 仅在开发环境记录路由切换
     if (process.env.NODE_ENV === 'development') {
       console.log('App路由切换:', from.path, '->', to.path)
+      console.log('目标路由元数据:', to.meta)
     }
     
     // 重置错误状态
     const appStore = useAppStore()
     appStore.hasError = false
     
+    // 判断是否为博客前台页面
+    const isBlogPage = to.path.startsWith('/blog')
+    
     // 检查权限
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
     const userStore = useUserStore()
+    
+    // 调试用户状态
+    if (process.env.NODE_ENV === 'development') {
+      console.log('用户登录状态:', userStore.isLoggedIn)
+      console.log('用户信息:', userStore.userInfo)
+      console.log('路由需要验证:', requiresAuth)
+    }
     
     // 如果目标路由是登录页面或注册页面，直接放行
     if (to.path === '/login' || to.path === '/register') {
@@ -232,10 +260,40 @@ router.beforeEach(async (to, from, next) => {
       return
     }
     
+    // 如果是博客前台页面，无需登录验证，直接放行
+    if (isBlogPage) {
+      console.log('博客前台页面，无需验证')
+      next()
+      return
+    }
+    
+    // 如果访问的是需要登录的页面，且用户未登录，则重定向到登录页
     if (requiresAuth && !userStore.isLoggedIn) {
       console.log('需要登录权限，重定向到登录页面')
       next({ path: '/login', query: { redirect: to.fullPath }, replace: true })
       return
+    }
+    
+    // 处理/dynamics直接访问的特殊情况
+    if (to.path === '/dynamics' && !userStore.isLoggedIn) {
+      // 如果未登录，先重定向到登录页
+      next({ path: '/login', query: { redirect: '/dashboard/dynamics' }, replace: true })
+      return
+    }
+    
+    // 验证角色权限
+    const requiredRoles = to.meta.roles
+    if (requiredRoles && requiredRoles.length > 0) {
+      const userRoles = userStore.userInfo?.roles || []
+      console.log('检查角色权限:', requiredRoles, '用户角色:', userRoles)
+      
+      const hasRole = requiredRoles.some(role => userRoles.includes(role))
+      if (!hasRole) {
+        console.log('用户没有所需角色权限')
+        next({ path: '/dashboard', replace: true })
+        ElMessage.error('您没有权限访问该页面')
+        return
+      }
     }
     
     next()
