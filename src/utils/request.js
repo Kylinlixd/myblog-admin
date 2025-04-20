@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import router from '../router'
 import { useAppStore } from '../stores/app'
 
@@ -29,7 +29,7 @@ const increasePendingCount = () => {
     pendingRequests.timeoutId = setTimeout(() => {
       if (pendingRequests.count > 0) {
         console.log('[Request] 全局请求超时')
-        ElMessage.error('请求超时，请检查网络连接')
+        message.error('请求超时，请检查网络连接')
         const appStore = useAppStore()
         appStore.setLoadingError('请求超时，请检查网络连接')
       }
@@ -128,25 +128,25 @@ service.interceptors.response.use(
         // 如果是访问博客前台，不需要登录，就不要强制跳转到登录页面
         const isVisitingBlog = window.location.pathname.startsWith('/blog')
         if (!isVisitingBlog) {
-          ElMessage.error('登录已过期，请重新登录')
+          message.error('登录已过期，请重新登录')
           // 清除token
           localStorage.removeItem('token')
           // 跳转到登录页
           router.push('/login')
         }
       } else if (status === 403) {
-        ElMessage.error('您没有权限进行此操作')
+        message.error('您没有权限进行此操作')
       } else if (status === 404) {
-        ElMessage.error('请求的资源不存在')
+        message.error('请求的资源不存在')
       } else if (status >= 500) {
-        ElMessage.error('服务器错误，请稍后重试')
+        message.error('服务器错误，请稍后重试')
       } else {
-        ElMessage.error(error.response.data?.message || '请求失败')
+        message.error(error.response.data?.message || '请求失败')
       }
     } else if (error.request) {
-      ElMessage.error('无法连接到服务器，请检查网络连接')
+      message.error('无法连接到服务器，请检查网络连接')
     } else {
-      ElMessage.error('请求发送失败')
+      message.error('请求发送失败')
     }
     
     return Promise.reject(error)

@@ -1,130 +1,136 @@
 <template>
   <div class="dynamic-list">
-    <PageHeader title="动态管理" icon="Promotion">
-      <template #actions>
-        <el-button type="primary" @click="handleCreate">
-          <el-icon><Plus /></el-icon>新建动态
-        </el-button>
-      </template>
-    </PageHeader>
-
-    <!-- 搜索表单 -->
-    <SearchForm :form="searchForm" @search="handleSearch" @reset="handleReset">
-      <el-form-item label="内容">
-        <el-input
-          v-model="searchForm.keyword"
-          placeholder="请输入内容关键词"
-          clearable
-          @keyup.enter="handleSearch"
-        />
-      </el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="searchForm.type" placeholder="请选择类型" clearable>
-          <el-option label="文本" value="text" />
-          <el-option label="图片" value="image" />
-          <el-option label="音频" value="audio" />
-          <el-option label="视频" value="video" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-          <el-option label="草稿" value="draft" />
-          <el-option label="已发布" value="published" />
-        </el-select>
-      </el-form-item>
-    </SearchForm>
-
-    <!-- 动态列表 -->
-    <DataTable
-      :data="dynamicList"
+    <div class="header-actions">
+      <a-button type="primary" @click="handleCreate">
+        <template #icon><plus-outlined /></template>新建动态
+      </a-button>
+    </div>
+    
+    <div class="search-area">
+      <a-form layout="inline" :model="searchForm" @finish="handleSearch">
+        <a-form-item label="内容">
+          <a-input
+            v-model:value="searchForm.keyword"
+            placeholder="请输入关键词"
+            allow-clear
+          />
+        </a-form-item>
+        
+        <a-form-item label="类型">
+          <a-select v-model:value="searchForm.type" placeholder="请选择类型" allow-clear style="width: 120px">
+            <a-select-option value="text">文本</a-select-option>
+            <a-select-option value="image">图片</a-select-option>
+            <a-select-option value="audio">音频</a-select-option>
+            <a-select-option value="video">视频</a-select-option>
+          </a-select>
+        </a-form-item>
+        
+        <a-form-item label="状态">
+          <a-select v-model:value="searchForm.status" placeholder="请选择状态" allow-clear style="width: 120px">
+            <a-select-option value="draft">草稿</a-select-option>
+            <a-select-option value="published">已发布</a-select-option>
+          </a-select>
+        </a-form-item>
+        
+        <a-form-item>
+          <a-button type="primary" html-type="submit">
+            <template #icon><search-outlined /></template>
+            搜索
+          </a-button>
+          <a-button style="margin-left: 8px" @click="handleReset">
+            <template #icon><reload-outlined /></template>
+            重置
+          </a-button>
+        </a-form-item>
+      </a-form>
+    </div>
+    
+    <a-table
       :columns="columns"
+      :data-source="dynamicList"
       :loading="loading"
+      :pagination="false"
       row-key="id"
+      class="dynamic-table"
     >
-      <template #content="{ row }">
-        <div class="content-cell">
-          <template v-if="row.type === 'text'">
-            <div class="text-content">{{ row.content }}</div>
-          </template>
-          <template v-else-if="row.type === 'image'">
-            <el-image
-              v-for="(img, index) in row.images"
-              :key="index"
-              :src="img.url"
-              :preview-src-list="row.images.map(i => i.url)"
-              fit="cover"
-              lazy
-              class="preview-image"
-            />
-          </template>
-          <template v-else-if="row.type === 'audio'">
-            <audio
-              v-if="row.audio"
-              :src="row.audio.url"
-              controls
-              class="preview-audio"
-            />
-          </template>
-          <template v-else-if="row.type === 'video'">
-            <video
-              v-if="row.video"
-              :src="row.video.url"
-              :poster="row.video.cover"
-              controls
-              class="preview-video"
-            />
-          </template>
-        </div>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'content'">
+          <div class="content-cell">
+            <template v-if="record.type === 'text'">
+              <div class="text-content">{{ record.content }}</div>
+            </template>
+            <template v-else-if="record.type === 'image'">
+              <a-image 
+                v-for="(url, index) in record.mediaUrls" 
+                :key="index"
+                :src="url" 
+                class="preview-image"
+                :width="100" 
+              />
+            </template>
+            <template v-else-if="record.type === 'audio'">
+              <audio controls class="preview-audio" :src="record.mediaUrls[0]"></audio>
+            </template>
+            <template v-else-if="record.type === 'video'">
+              <video controls class="preview-video" :src="record.mediaUrls[0]"></video>
+            </template>
+          </div>
+        </template>
+        
+        <template v-else-if="column.key === 'type'">
+          <a-tag :color="getTypeColor(record.type)">{{ getTypeText(record.type) }}</a-tag>
+        </template>
+        
+        <template v-else-if="column.key === 'status'">
+          <a-tag :color="record.status === 'published' ? 'success' : 'default'">
+            {{ record.status === 'published' ? '已发布' : '草稿' }}
+          </a-tag>
+        </template>
+        
+        <template v-else-if="column.key === 'action'">
+          <a-space>
+            <a-button type="primary" @click="handleEdit(record)">
+              <template #icon><edit-outlined /></template>
+              编辑
+            </a-button>
+            <a-button type="primary" @click="handlePreview(record)">
+              <template #icon><eye-outlined /></template>
+              预览
+            </a-button>
+            <a-button type="primary" danger @click="handleDelete(record)">
+              <template #icon><delete-outlined /></template>
+              删除
+            </a-button>
+          </a-space>
+        </template>
       </template>
-
-      <template #type="{ row }">
-        <el-tag :type="getTypeTag(row.type)">{{ getTypeText(row.type) }}</el-tag>
-      </template>
-
-      <template #status="{ row }">
-        <el-tag :type="row.status === 'published' ? 'success' : 'info'">
-          {{ row.status === 'published' ? '已发布' : '草稿' }}
-        </el-tag>
-      </template>
-
-      <template #actions="{ row }">
-        <el-button-group>
-          <el-button type="primary" link @click="handleEdit(row)">
-            <el-icon><Edit /></el-icon>编辑
-          </el-button>
-          <el-button type="primary" link @click="handlePreview(row)">
-            <el-icon><View /></el-icon>预览
-          </el-button>
-          <el-button type="danger" link @click="handleDelete(row)">
-            <el-icon><Delete /></el-icon>删除
-          </el-button>
-        </el-button-group>
-      </template>
-    </DataTable>
-
-    <!-- 分页 -->
-    <Pagination
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @current-change="handleCurrentChange"
-      @size-change="handleSizeChange"
-    />
+    </a-table>
+    
+    <div class="pagination-container">
+      <a-pagination
+        v-model:current="currentPage"
+        v-model:pageSize="pageSize"
+        :total="total"
+        :showSizeChanger="true"
+        @change="handlePageChange"
+      />
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, View, Delete, Promotion } from '@element-plus/icons-vue'
+import { message, Modal } from 'ant-design-vue'
+import { 
+  PlusOutlined, 
+  EditOutlined, 
+  EyeOutlined, 
+  DeleteOutlined,
+  SearchOutlined,
+  ReloadOutlined
+} from '@ant-design/icons-vue'
 import { getDynamicList, deleteDynamic } from '../../api/dynamic'
-
-// 导入通用组件
-import DataTable from '../../components/common/DataTable.vue'
-import Pagination from '../../components/common/Pagination.vue'
-import PageHeader from '../../components/common/PageHeader.vue'
-import SearchForm from '../../components/common/SearchForm.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -135,11 +141,36 @@ const pageSize = ref(10)
 
 // 表格列配置
 const columns = [
-  { label: '内容', prop: 'content', slot: 'content', width: '300px' },
-  { label: '类型', prop: 'type', slot: 'type', width: '100px' },
-  { label: '状态', prop: 'status', slot: 'status', width: '100px' },
-  { label: '创建时间', prop: 'createdAt', width: '180px' },
-  { label: '操作', slot: 'actions', width: '200px', fixed: 'right' }
+  {
+    title: '内容',
+    dataIndex: 'content',
+    key: 'content',
+    width: '300px'
+  },
+  {
+    title: '类型',
+    dataIndex: 'type',
+    key: 'type',
+    width: '100px'
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: '100px'
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    width: '180px'
+  },
+  {
+    title: '操作',
+    key: 'action',
+    fixed: 'right',
+    width: '220px'
+  }
 ]
 
 // 搜索表单
@@ -153,20 +184,34 @@ const searchForm = reactive({
 const fetchDynamicList = async () => {
   try {
     loading.value = true
-    const response = await getDynamicList({
+    
+    // 检查用户是否已登录
+    const token = localStorage.getItem('token')
+    if (!token) {
+      message.error('请先登录')
+      router.push('/login')
+      return
+    }
+    
+    // 构建请求参数，避免嵌套的params结构
+    const requestParams = {
       page: currentPage.value,
-      pageSize: pageSize.value,
-      ...searchForm
-    })
+      limit: pageSize.value,
+      keyword: searchForm.keyword,
+      type: searchForm.type,
+      status: searchForm.status
+    }
+    
+    const response = await getDynamicList(requestParams)
     if (response.code === 200) {
       dynamicList.value = response.data.list || []
       total.value = response.data.total || 0
     } else {
-      ElMessage.error(response.message || '获取动态列表失败')
+      message.error(response.message || '获取动态列表失败')
     }
   } catch (error) {
     console.error('获取动态列表失败:', error)
-    ElMessage.error('获取动态列表失败')
+    message.error('获取动态列表失败')
   } finally {
     loading.value = false
   }
@@ -180,7 +225,9 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
-  // 搜索表单组件会自动重置表单
+  searchForm.keyword = ''
+  searchForm.type = ''
+  searchForm.status = ''
   handleSearch()
 }
 
@@ -201,51 +248,44 @@ const handlePreview = (row) => {
 
 // 删除
 const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    '确定要删除这条动态吗？',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    try {
-      const response = await deleteDynamic(row.id)
-      if (response.code === 200) {
-        ElMessage.success('删除成功')
-        fetchDynamicList()
-      } else {
-        ElMessage.error(response.message || '删除失败')
+  Modal.confirm({
+    title: '确认删除',
+    content: '确定要删除这条动态吗？',
+    okText: '确定',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        const response = await deleteDynamic(row.id)
+        if (response.code === 200) {
+          message.success('删除成功')
+          fetchDynamicList()
+        } else {
+          message.error(response.message || '删除失败')
+        }
+      } catch (error) {
+        console.error('删除动态失败:', error)
+        message.error('删除失败')
       }
-    } catch (error) {
-      console.error('删除动态失败:', error)
-      ElMessage.error('删除失败')
     }
-  }).catch(() => {})
-}
-
-// 分页大小改变
-const handleSizeChange = (val) => {
-  pageSize.value = val
-  fetchDynamicList()
+  })
 }
 
 // 页码改变
-const handleCurrentChange = (val) => {
-  currentPage.value = val
+const handlePageChange = (page, pageSize) => {
+  currentPage.value = page
   fetchDynamicList()
 }
 
-// 获取类型标签
-const getTypeTag = (type) => {
-  const tags = {
-    text: '',
-    image: 'success',
-    audio: 'warning',
-    video: 'danger'
+// 获取类型颜色
+const getTypeColor = (type) => {
+  const colors = {
+    text: 'blue',
+    image: 'green',
+    audio: 'orange',
+    video: 'red'
   }
-  return tags[type] || ''
+  return colors[type] || 'default'
 }
 
 // 获取类型文本
@@ -259,7 +299,39 @@ const getTypeText = (type) => {
   return texts[type] || type
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 检查用户是否已登录
+  const token = localStorage.getItem('token')
+  if (!token) {
+    message.error('请先登录')
+    router.push('/login')
+    return
+  }
+  
+  console.log('组件已挂载，当前令牌:', token.substring(0, 10) + '...')
+  
+  // 直接测试API连接
+  try {
+    const testResponse = await fetch('/api/dynamics', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    console.log('直接fetch测试响应状态:', testResponse.status)
+    if (testResponse.ok) {
+      const data = await testResponse.json()
+      console.log('直接fetch测试响应数据:', data)
+    } else {
+      console.error('直接fetch测试失败:', await testResponse.text())
+    }
+  } catch (fetchError) {
+    console.error('直接fetch测试异常:', fetchError)
+  }
+  
+  // 使用正常方式获取数据
   fetchDynamicList()
 })
 </script>
@@ -267,6 +339,17 @@ onMounted(() => {
 <style lang="scss" scoped>
 .dynamic-list {
   padding: 20px;
+}
+
+.header-actions {
+  margin-bottom: 20px;
+}
+
+.search-area {
+  margin-bottom: 20px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 4px;
 }
 
 .content-cell {
@@ -280,8 +363,6 @@ onMounted(() => {
 }
 
 .preview-image {
-  width: 100px;
-  height: 100px;
   margin-right: 10px;
   object-fit: cover;
 }
@@ -290,5 +371,16 @@ onMounted(() => {
 .preview-video {
   width: 100%;
   max-width: 300px;
+}
+
+.pagination-container {
+  margin-top: 20px;
+  text-align: right;
+}
+
+:global([data-theme='dark']) {
+  .search-area {
+    background: #1f1f1f;
+  }
 }
 </style>

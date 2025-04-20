@@ -1,15 +1,13 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import Antd from 'ant-design-vue'
+import 'ant-design-vue/dist/reset.css'
 import App from './App.vue'
 import router from './router'
 import '@/styles/tailwind.css'
 import './styles/main.scss'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import { useThemeStore } from './stores/theme'
-import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { useUserStore } from './stores/user'
 
 // 预加载常用组件
@@ -49,19 +47,8 @@ userStore.initialize().then(() => {
   console.error('用户状态初始化失败:', error)
 })
 
-// 注册 Element Plus 图标
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
-}
-
-// 使用 Element Plus
-app.use(ElementPlus, {
-  locale: zhCn,
-  pagination: {
-    total: '总计 {total} 条',
-    size: '{size} / 页'
-  }
-})
+// 使用 Ant Design Vue
+app.use(Antd)
 
 // 使用路由
 app.use(router)
@@ -77,7 +64,7 @@ app.config.errorHandler = (err, vm, info) => {
   console.error('错误信息:', info)
   
   // 显示错误提示
-  ElMessage.error('操作失败，请稍后重试')
+  message.error('操作失败，请稍后重试')
   
   // 可以在这里添加错误上报逻辑
   if (process.env.NODE_ENV === 'production') {

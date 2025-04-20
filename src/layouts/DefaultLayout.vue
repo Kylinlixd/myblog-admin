@@ -18,10 +18,22 @@
           <el-icon><Monitor /></el-icon>
           <template #title>仪表盘</template>
         </el-menu-item>
-        <el-menu-item index="/dynamics">
-          <el-icon><Document /></el-icon>
-          <template #title>动态管理</template>
-        </el-menu-item>
+        
+        <el-sub-menu index="/dashboard/dynamics">
+          <template #title>
+            <el-icon><Document /></el-icon>
+            <span>动态管理</span>
+          </template>
+          <el-menu-item index="/dashboard/dynamics">
+            <el-icon><Document /></el-icon>
+            <span>动态列表</span>
+          </el-menu-item>
+          <el-menu-item index="/dashboard/dynamics/create">
+            <el-icon><Plus /></el-icon>
+            <span>新建动态</span>
+          </el-menu-item>
+        </el-sub-menu>
+        
         <el-menu-item index="/dashboard/categories">
           <el-icon><Folder /></el-icon>
           <template #title>分类管理</template>
@@ -76,7 +88,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Monitor, Document, Folder, Collection, Fold, Expand, ChatDotRound } from '@element-plus/icons-vue'
+import { Monitor, Document, Folder, Collection, Fold, Expand, ChatDotRound, Plus } from '@element-plus/icons-vue'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { useAppStore } from '../stores/app'
@@ -89,7 +101,13 @@ const router = useRouter()
 const userStore = useUserStore()
 const themeStore = useThemeStore()
 const appStore = useAppStore()
-const activeMenu = computed(() => route.path)
+const activeMenu = computed(() => {
+  // 处理子路由高亮
+  if (route.path.startsWith('/dashboard/dynamics/')) {
+    return '/dashboard/dynamics'
+  }
+  return route.path
+})
 const isCollapse = computed(() => appStore.sidebarCollapsed)
 
 // 切换侧边栏
@@ -161,7 +179,8 @@ const handleLogout = async () => {
     .el-menu {
       border-right: none;
       
-      :deep(.el-menu-item) {
+      :deep(.el-menu-item),
+      :deep(.el-sub-menu__title) {
         height: 50px;
         line-height: 50px;
         margin: 4px 0;
@@ -193,6 +212,32 @@ const handleLogout = async () => {
         
         .el-icon {
           font-size: 18px;
+        }
+      }
+      
+      :deep(.el-sub-menu) {
+        .el-sub-menu__title {
+          color: var(--text-primary);
+        }
+        
+        &.is-active {
+          > .el-sub-menu__title {
+            color: #409EFF;
+          }
+        }
+        
+        .el-menu {
+          background-color: transparent;
+        }
+        
+        .el-menu-item {
+          height: 40px;
+          line-height: 40px;
+          padding-left: 40px !important;
+          
+          &.is-active {
+            background: linear-gradient(90deg, #409EFF 0%, #36cfc9 100%);
+          }
         }
       }
     }

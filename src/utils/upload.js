@@ -1,5 +1,6 @@
+import { message } from 'ant-design-vue'
+import axios from 'axios'
 import request from './request'
-import { ElMessage } from 'element-plus'
 
 /**
  * 上传文件
@@ -24,7 +25,7 @@ export const uploadFile = async (file, type) => {
     }
     throw new Error(response.message || '上传失败')
   } catch (error) {
-    ElMessage.error(error.message || '上传失败')
+    message.error(error.message || '上传失败')
     throw error
   }
 }
@@ -65,7 +66,7 @@ export const uploadVideo = async (file) => {
 export const checkFileSize = (file, maxSize) => {
   const isLtSize = file.size / 1024 / 1024 < maxSize
   if (!isLtSize) {
-    ElMessage.error(`文件大小不能超过 ${maxSize}MB!`)
+    message.error(`文件大小不能超过 ${maxSize}MB!`)
   }
   return isLtSize
 }
@@ -80,7 +81,7 @@ export const checkFileType = (file, types) => {
   const extension = file.name.split('.').pop().toLowerCase()
   const isValid = types.includes(extension)
   if (!isValid) {
-    ElMessage.error(`只能上传 ${types.join(', ')} 格式的文件!`)
+    message.error(`只能上传 ${types.join(', ')} 格式的文件!`)
   }
   return isValid
 } 

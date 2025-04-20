@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import router from '../router'
 import { useAppStore } from '../stores/app'
 
@@ -29,7 +29,7 @@ const increasePendingCount = () => {
     pendingRequests.timeoutId = setTimeout(() => {
       if (pendingRequests.count > 0) {
         console.log('[BlogRequest] 全局请求超时')
-        ElMessage.error('请求超时，请检查网络连接')
+        message.error('请求超时，请检查网络连接')
         const appStore = useAppStore()
         appStore.setLoadingError('请求超时，请检查网络连接')
       }
@@ -125,20 +125,20 @@ service.interceptors.response.use(
       
       if (status === 401) {
         // 博客前台不需要处理401，只显示错误信息
-        ElMessage.error('请登录后执行此操作')
+        message.error('请登录后执行此操作')
       } else if (status === 403) {
-        ElMessage.error('您没有权限进行此操作')
+        message.error('您没有权限进行此操作')
       } else if (status === 404) {
-        ElMessage.error('请求的资源不存在')
+        message.error('请求的资源不存在')
       } else if (status >= 500) {
-        ElMessage.error('服务器错误，请稍后重试')
+        message.error('服务器错误，请稍后重试')
       } else {
-        ElMessage.error(error.response.data?.message || '请求失败')
+        message.error(error.response.data?.message || '请求失败')
       }
     } else if (error.request) {
-      ElMessage.error('无法连接到服务器，请检查网络连接')
+      message.error('无法连接到服务器，请检查网络连接')
     } else {
-      ElMessage.error('请求发送失败')
+      message.error('请求发送失败')
     }
     
     return Promise.reject(error)

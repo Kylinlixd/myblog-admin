@@ -4,14 +4,30 @@ import request from '../utils/request';
  * 获取动态列表
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码
- * @param {number} params.pageSize - 每页数量
+ * @param {number} params.limit - 每页数量
  * @param {string} params.type - 动态类型
  * @param {string} params.status - 状态
  * @returns {Promise<Object>} 动态列表数据
  */
 export const getDynamicList = async (params) => {
   try {
-    const response = await request.get('/api/dynamics', { params });
+    console.log('获取动态列表参数:', params);
+    
+    // 获取token
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    console.log('认证头:', headers);
+    
+    // 确保使用的是完整路径 - 修改为后台API的直接路径
+    const response = await request.get('/api/dynamics', { 
+      params,
+      headers
+    });
+    
+    console.log('动态列表API响应:', response);
+    
+    // 构造标准响应
     return { 
       code: 200, 
       data: response, 
@@ -31,7 +47,13 @@ export const getDynamicList = async (params) => {
  */
 export const updateDynamic = async (id, data) => {
   try {
-    const response = await request.put(`/api/dynamics/${id}`, data);
+    console.log(`更新动态 ID:${id}, 数据:`, data);
+    
+    // 获取token
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const response = await request.put(`/api/dynamics/${id}`, data, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -50,7 +72,11 @@ export const updateDynamic = async (id, data) => {
  */
 export const deleteDynamic = async (id) => {
   try {
-    const response = await request.delete(`/api/dynamics/${id}`);
+    // 获取token
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const response = await request.delete(`/api/dynamics/${id}`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -69,7 +95,11 @@ export const deleteDynamic = async (id) => {
  */
 export const getDynamicDetail = async (id) => {
   try {
-    const response = await request.get(`/api/dynamics/${id}`);
+    // 获取token
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const response = await request.get(`/api/dynamics/${id}`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -88,7 +118,13 @@ export const getDynamicDetail = async (id) => {
  */
 export const createDynamic = async (data) => {
   try {
-    const response = await request.post('/api/dynamics', data);
+    console.log('创建动态数据:', data);
+    
+    // 获取token
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    const response = await request.post('/api/dynamics', data, { headers });
     return { 
       code: 200, 
       data: response, 

@@ -17,11 +17,12 @@ export const useThemeStore = defineStore('theme', () => {
   // 应用主题
   const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme)
-    // 更新 Element Plus 主题
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = `//unpkg.com/element-plus/dist/index.css`
-    document.head.appendChild(link)
+    // 更新Ant Design Vue主题相关样式
+    if (theme === 'dark') {
+      document.body.setAttribute('data-antd-theme', 'dark')
+    } else {
+      document.body.setAttribute('data-antd-theme', 'light')
+    }
   }
   
   // 初始化主题

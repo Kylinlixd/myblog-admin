@@ -52,7 +52,7 @@ const routes = [
         }
       },
       {
-        path: 'dynamic',
+        path: 'blogdynamic',
         name: 'BlogDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamic.vue'),
         meta: { 

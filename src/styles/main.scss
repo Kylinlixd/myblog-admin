@@ -6,145 +6,249 @@
 @forward './nprogress';
 @forward './animations';
 
+/* 引入自定义字体 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-// CSS变量
+/* 全局变量 */
 :root {
-  // 颜色变量
-  --primary-color: #409EFF;
-  --primary-color-rgb: 64, 158, 255;
-  --success-color: #67C23A;
-  --success-color-rgb: 103, 194, 58;
-  --warning-color: #E6A23C;
-  --warning-color-rgb: 230, 162, 60;
-  --danger-color: #F56C6C;
-  --danger-color-rgb: 245, 108, 108;
-  --info-color: #909399;
-  --info-color-rgb: 144, 147, 153;
+  /* Ant Design 主色 */
+  --primary-color: #1890ff;
+  --primary-color-hover: #40a9ff;
+  --primary-color-active: #096dd9;
+  --primary-color-outline: rgba(24, 144, 255, 0.2);
   
-  // 文本颜色
-  --text-primary: #303133;
-  --text-primary-rgb: 48, 49, 51;
-  --text-regular: #606266;
-  --text-secondary: #909399;
-  --text-placeholder: #C0C4CC;
+  /* 功能色 */
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #f5222d;
+  --info-color: #1890ff;
   
-  // 边框颜色
-  --border-color: #DCDFE6;
-  --border-light: #E4E7ED;
-  --border-lighter: #EBEEF5;
-  --border-extra-light: #F2F6FC;
+  /* 中性色 */
+  --heading-color: rgba(0, 0, 0, 0.85);
+  --text-color: rgba(0, 0, 0, 0.65);
+  --text-color-secondary: rgba(0, 0, 0, 0.45);
+  --disabled-color: rgba(0, 0, 0, 0.25);
+  --border-color: #d9d9d9;
+  --border-color-split: #f0f0f0;
+  --background-color-light: #f5f5f5;
+  --background-color-base: #f0f0f0;
   
-  // 背景颜色
-  --background-color: #F5F7FA;
-  --background-color-rgb: 245, 247, 250;
-  --background-light: #FAFAFA;
-  --background-dark: #E4E7ED;
-  --background-primary-rgb: 245, 247, 250;
+  /* 字体 */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
   
-  // 其他变量
-  --box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  --transition-duration: 0.3s;
-  --transition-timing: ease;
-  --border-radius: 4px;
+  /* 字号 */
+  --font-size-base: 14px;
+  --font-size-sm: 12px;
+  --font-size-lg: 16px;
+  
+  /* 边框圆角 */
+  --border-radius-base: 2px;
+  --border-radius-sm: 2px;
+  
+  /* 动画 */
+  --animation-duration-base: 0.2s;
+  --animation-duration-slow: 0.3s;
+  --animation-duration-slower: 0.45s;
 }
 
-// 暗色主题
+/* 暗色主题变量 */
 [data-theme='dark'] {
-  --primary-color: #409EFF;
-  --primary-color-rgb: 64, 158, 255;
-  --success-color: #67C23A;
-  --success-color-rgb: 103, 194, 58;
-  --warning-color: #E6A23C;
-  --warning-color-rgb: 230, 162, 60;
-  --danger-color: #F56C6C;
-  --danger-color-rgb: 245, 108, 108;
-  --info-color: #909399;
-  --info-color-rgb: 144, 147, 153;
+  --primary-color: #177ddc;
+  --primary-color-hover: #1890ff;
+  --primary-color-active: #0050b3;
+  --primary-color-outline: rgba(24, 144, 255, 0.2);
   
-  --text-primary: #E5EAF3;
-  --text-primary-rgb: 229, 234, 243;
-  --text-regular: #CFD3DC;
-  --text-secondary: #A3A6AD;
-  --text-placeholder: #8D9095;
+  --success-color: #49aa19;
+  --warning-color: #d89614;
+  --error-color: #a61d24;
+  --info-color: #177ddc;
   
-  --border-color: #4C4D4F;
-  --border-light: #414243;
-  --border-lighter: #363637;
-  --border-extra-light: #2B2B2C;
-  
-  --background-color: #141414;
-  --background-color-rgb: 20, 20, 20;
-  --background-light: #1D1D1D;
-  --background-dark: #363636;
-  --background-primary-rgb: 20, 20, 20;
-  
-  --box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+  --heading-color: rgba(255, 255, 255, 0.85);
+  --text-color: rgba(255, 255, 255, 0.65);
+  --text-color-secondary: rgba(255, 255, 255, 0.45);
+  --disabled-color: rgba(255, 255, 255, 0.25);
+  --border-color: #303030;
+  --border-color-split: #303030;
+  --background-color-light: #141414;
+  --background-color-base: #262626;
 }
 
-// 全局过渡
-.theme-transition {
-  transition: background-color var(--transition-duration) var(--transition-timing),
-              color var(--transition-duration) var(--transition-timing),
-              border-color var(--transition-duration) var(--transition-timing),
-              box-shadow var(--transition-duration) var(--transition-timing);
-}
-
-// 全局样式
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+/* 设置全局默认样式 */
+html,
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-color);
+  background-color: #f0f2f5;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background-color);
-  color: var(--text-primary);
 }
 
-#app {
-  height: 100%;
+[data-theme='dark'] body {
+  background-color: #1f1f1f;
 }
 
-// 滚动条样式
+/* 链接样式 */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  
+  &:hover {
+    color: var(--primary-color-hover);
+  }
+  
+  &:active {
+    color: var(--primary-color-active);
+  }
+}
+
+/* 标题样式 */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading-color);
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 24px;
+}
+
+h3 {
+  font-size: 20px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  font-size: 12px;
+}
+
+/* 常见布局类 */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 2px;
+  padding: 24px;
+  box-shadow: 0 1px 2px -2px rgba(0, 0, 0, 0.16), 0 3px 6px 0 rgba(0, 0, 0, 0.12), 0 5px 12px 4px rgba(0, 0, 0, 0.09);
+}
+
+[data-theme='dark'] .card {
+  background: #1f1f1f;
+}
+
+/* 表格样式 */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* 按钮样式 */
+.btn {
+  border-radius: var(--border-radius-base);
+  transition: all var(--animation-duration-base);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--heading-color);
+}
+
+.form-text {
+  margin-top: 4px;
+  font-size: var(--font-size-sm);
+  color: var(--text-color-secondary);
+}
+
+/* 文本工具类 */
+.text-primary { color: var(--primary-color); }
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-danger { color: var(--error-color); }
+.text-info { color: var(--info-color); }
+.text-muted { color: var(--text-color-secondary); }
+
+/* 背景工具类 */
+.bg-primary { background-color: var(--primary-color); }
+.bg-success { background-color: var(--success-color); }
+.bg-warning { background-color: var(--warning-color); }
+.bg-danger { background-color: var(--error-color); }
+.bg-info { background-color: var(--info-color); }
+.bg-light { background-color: var(--background-color-light); }
+
+/* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background-light);
+  background: #f1f1f1;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: #c1c1c1;
   border-radius: 3px;
-  
-  &:hover {
-    background: var(--text-light);
-  }
 }
 
-// Element Plus 主题覆盖
-.el-button--primary {
-  --el-button-bg-color: var(--primary-color);
-  --el-button-border-color: var(--primary-color);
-  --el-button-hover-bg-color: var(--primary-color-dark);
-  --el-button-hover-border-color: var(--primary-color-dark);
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-.el-input__wrapper {
-  --el-input-border-color: var(--border-color);
-  --el-input-hover-border-color: var(--primary-color);
-  --el-input-focus-border-color: var(--primary-color);
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: #1f1f1f;
 }
 
-.el-menu {
-  --el-menu-bg-color: var(--background-color);
-  --el-menu-hover-bg-color: var(--background-light);
-  --el-menu-active-color: var(--primary-color);
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #434343;
 }
 
-.el-card {
-  --el-card-border-color: var(--border-color);
-  --el-card-border-radius: var(--border-radius);
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Ant Design 样式覆盖 */
+.ant-layout-header {
+  height: 64px;
+  padding: 0 24px;
+  line-height: 64px;
+}
+
+.ant-layout-content {
+  min-height: 280px;
+  padding: 24px;
+}
+
+.ant-layout-footer {
+  padding: 24px;
+  text-align: center;
 }

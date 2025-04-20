@@ -9,59 +9,68 @@
         <p class="subtitle">欢迎回来，请登录您的账号</p>
       </div>
       
-      <form
+      <a-form
         ref="loginForm"
         class="login-form"
-        @submit.prevent="handleLogin"
+        :model="loginData"
+        @finish="handleLogin"
       >
         <div class="form-item">
           <div class="input-wrapper">
-            <el-input
-              v-model="loginData.username"
-              placeholder="用户名"
-              :class="{ 'is-error': errors.username }"
+            <a-form-item
+              name="username"
+              :rules="[{ required: true, message: '请输入用户名' }]"
             >
-              <template #prefix>
-                <el-icon><User /></el-icon>
-              </template>
-            </el-input>
+              <a-input
+                v-model:value="loginData.username"
+                placeholder="用户名"
+                size="large"
+              >
+                <template #prefix>
+                  <user-outlined />
+                </template>
+              </a-input>
+            </a-form-item>
           </div>
-          <span class="error-message" v-if="errors.username">{{ errors.username }}</span>
         </div>
         
         <div class="form-item">
           <div class="input-wrapper">
-            <el-input
-              v-model="loginData.password"
-              type="password"
-              placeholder="密码"
-              :class="{ 'is-error': errors.password }"
-              show-password
+            <a-form-item
+              name="password"
+              :rules="[{ required: true, message: '请输入密码' }]"
             >
-              <template #prefix>
-                <el-icon><Lock /></el-icon>
-              </template>
-            </el-input>
+              <a-input-password
+                v-model:value="loginData.password"
+                placeholder="密码"
+                size="large"
+              >
+                <template #prefix>
+                  <lock-outlined />
+                </template>
+              </a-input-password>
+            </a-form-item>
           </div>
-          <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
         </div>
         
         <div class="form-item">
-          <el-button
+          <a-button
             type="primary"
-            native-type="submit"
+            html-type="submit"
             :loading="loading"
             class="login-button"
+            size="large"
+            block
           >
             {{ loading ? '登录中...' : '登录' }}
-          </el-button>
+          </a-button>
         </div>
         
         <div class="form-footer">
           <span>还没有账号？</span>
           <router-link to="/register" class="link">立即注册</router-link>
         </div>
-      </form>
+      </a-form>
     </div>
   </div>
 </template>
@@ -71,8 +80,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useAppStore } from '../stores/app'
-import { ElMessage } from 'element-plus'
-import { User, Lock } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -82,11 +91,6 @@ const loginForm = ref(null)
 const loading = ref(false)
 
 const loginData = reactive({
-  username: '',
-  password: ''
-})
-
-const errors = reactive({
   username: '',
   password: ''
 })
@@ -138,39 +142,13 @@ function generateRandomStyle() {
   }
 }
 
-const validateForm = () => {
-  let isValid = true
-  errors.username = ''
-  errors.password = ''
-  
-  if (!loginData.username) {
-    errors.username = '请输入用户名'
-    isValid = false
-  } else if (loginData.username.length < 3 || loginData.username.length > 20) {
-    errors.username = '长度在 3 到 20 个字符'
-    isValid = false
-  }
-  
-  if (!loginData.password) {
-    errors.password = '请输入密码'
-    isValid = false
-  } else if (loginData.password.length < 6 || loginData.password.length > 20) {
-    errors.password = '长度在 6 到 20 个字符'
-    isValid = false
-  }
-  
-  return isValid
-}
-
 const handleLogin = async () => {
-  if (!validateForm()) return
-  
   loading.value = true
   try {
     const success = await userStore.login(loginData.username, loginData.password)
     
     if (success) {
-      ElMessage.success('登录成功')
+      message.success('登录成功')
       // 获取重定向地址，如果没有则跳转到仪表盘
       const redirect = route.query.redirect || '/dashboard'
       
@@ -182,11 +160,11 @@ const handleLogin = async () => {
         router.push(redirect)
       }, 1000)
     } else {
-      errors.password = '用户名或密码错误'
+      message.error('用户名或密码错误')
     }
   } catch (error) {
     console.error('登录失败:', error)
-    errors.password = '登录失败，请稍后重试'
+    message.error('登录失败，请稍后重试')
   } finally {
     loading.value = false
   }
@@ -355,11 +333,6 @@ onMounted(() => {
     margin-bottom: 8px;
   }
   
-  .error-message {
-    color: var(--el-color-danger);
-    font-size: 12px;
-  }
-  
   .login-button {
     width: 100%;
     height: 40px;
@@ -372,7 +345,7 @@ onMounted(() => {
     color: #666;
     
     .link {
-      color: var(--el-color-primary);
+      color: #1890ff; // Ant Design 主颜色
       text-decoration: none;
       margin-left: 8px;
       

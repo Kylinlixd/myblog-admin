@@ -16,7 +16,7 @@ export default defineConfig({
       'vue',
       'vue-router',
       'pinia',
-      'element-plus',
+      'ant-design-vue',
       'axios',
       'lodash-es',
       '@vueuse/core',
@@ -58,7 +58,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'element-plus': ['element-plus'],
+          'ant-design-vue': ['ant-design-vue'],
           'vue': ['vue', 'vue-router', 'pinia'],
           'utils': ['axios', 'dayjs']
         }
