@@ -86,7 +86,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import { getBlogDynamics } from '../../api/blog'
 import MarkdownIt from 'markdown-it'
 import { ElMessage } from 'element-plus'
@@ -104,6 +104,7 @@ const dynamicList = ref([])
 const page = ref(1)
 const pageSize = ref(10)
 const hasMore = ref(true)
+const fetchedPages = ref(new Set()) // 用于跟踪已请求的页码
 
 // 渲染Markdown内容
 const renderMarkdown = (content) => {
@@ -118,8 +119,14 @@ const formatDate = (dateString) => {
 }
 
 // 获取动态列表
-const fetchDynamicList = async () => {
+const fetchDynamicList = async (isRefresh = false) => {
   if (loading.value) return
+  
+  // 如果不是刷新，且该页已加载过，则跳过请求
+  if (!isRefresh && fetchedPages.value.has(page.value)) {
+    console.log(`页码 ${page.value} 已加载过，跳过重复请求`)
+    return
+  }
   
   loading.value = true
   console.log('前台博客页面请求动态列表，页码:', page.value, '每页数量:', pageSize.value)
@@ -134,7 +141,19 @@ const fetchDynamicList = async () => {
     
     if (response.code === 200) {
       const { list = [], total = 0 } = response.data || {}
-      dynamicList.value = [...dynamicList.value, ...list]
+      
+      if (isRefresh) {
+        // 如果是刷新，清空现有列表
+        dynamicList.value = [...list]
+        // 重置已获取页面记录
+        fetchedPages.value = new Set([page.value])
+      } else {
+        // 追加数据
+        dynamicList.value = [...dynamicList.value, ...list]
+        // 记录已获取的页码
+        fetchedPages.value.add(page.value)
+      }
+      
       hasMore.value = dynamicList.value.length < total
     } else {
       ElMessage.error(response.message || '获取动态列表失败')
@@ -145,6 +164,12 @@ const fetchDynamicList = async () => {
   } finally {
     loading.value = false
   }
+}
+
+// 刷新列表
+const refreshList = () => {
+  page.value = 1
+  fetchDynamicList(true)
 }
 
 // 加载更多
@@ -168,6 +193,14 @@ const handleComment = (item) => {
 // 初始化
 onMounted(() => {
   fetchDynamicList()
+})
+
+// 当组件被keep-alive激活时
+onActivated(() => {
+  // 页面激活时检查是否需要刷新
+  if (fetchedPages.value.size === 0) {
+    fetchDynamicList()
+  }
 })
 </script>
 

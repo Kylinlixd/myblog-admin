@@ -6,7 +6,7 @@ import blogRequest from '../utils/blogRequest'
  */
 export function getCategoryList() {
   try {
-    return blogRequest.get('/blog/categories');
+    return blogRequest.get('/blog/categories', { baseURL: '' });
   } catch (error) {
     console.error('获取分类列表失败:', error);
     throw error;
@@ -51,7 +51,7 @@ export const getBlogDynamics = async (params) => {
  */
 export const getBlogDynamicDetail = async (id) => {
   try {
-    const response = await blogRequest.get(`/blog/dynamics/${id}`);
+    const response = await blogRequest.get(`/blog/dynamics/${id}`, { baseURL: '' });
     return response;
   } catch (error) {
     console.error('获取动态详情失败:', error);
@@ -66,7 +66,7 @@ export const getBlogDynamicDetail = async (id) => {
  */
 export const getAdjacentDynamics = async (id) => {
   try {
-    const response = await blogRequest.get(`/blog/dynamics/${id}/adjacent`);
+    const response = await blogRequest.get(`/blog/dynamics/${id}/adjacent`, { baseURL: '' });
     return response;
   } catch (error) {
     console.error('获取相邻动态失败:', error);
@@ -82,7 +82,10 @@ export const getAdjacentDynamics = async (id) => {
  */
 export const getHotDynamics = async (params) => {
   try {
-    const response = await blogRequest.get('/blog/dynamics/hot', { params });
+    const response = await blogRequest.get('/blog/dynamics/hot', { 
+      params,
+      baseURL: ''
+    });
     return response;
   } catch (error) {
     console.error('获取热门动态失败:', error);

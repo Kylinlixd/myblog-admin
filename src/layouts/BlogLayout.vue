@@ -528,6 +528,13 @@ const fetchData = async () => {
   try {
     appStore.startLoading('加载博客数据...')
     
+    // 检查当前路由，如果是动态列表页面，则不请求最新动态，避免重复请求
+    if (router.currentRoute.value.path === '/blog/blogdynamic') {
+      console.log('当前是动态列表页面，不重复请求最新动态')
+      appStore.endLoading()
+      return
+    }
+    
     console.log('准备加载博客前台最新动态...')
     // 获取最新动态
     const response = await getRecentDynamics({
