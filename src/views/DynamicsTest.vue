@@ -198,8 +198,13 @@ const fetchBlogDynamics = async () => {
   blogResponse.value = {}
   
   try {
-    console.log('正在请求博客动态API:', blogApiUrl.value)
-    const response = await axios.get(blogApiUrl.value)
+    const url = blogApiUrl.value
+    console.log('正在请求博客动态API:', url)
+    console.log('使用axios直接请求，不受环境变量影响')
+    const response = await axios.get(url, {
+      // 明确不使用baseURL
+      baseURL: '',
+    })
     blogResponse.value = response.data
     console.log('博客动态API响应:', response)
   } catch (error) {

@@ -5,7 +5,8 @@ import { useAppStore } from '../stores/app'
 
 // 创建专用于博客前台的 axios 实例，baseURL 为空或 /blog
 const service = axios.create({
-  baseURL: '/blog', // 直接使用 /blog 前缀，不再添加 /api
+  // 明确指定baseURL，覆盖全局环境变量设置
+  baseURL: '', // 设置为空字符串，由API调用处提供完整路径
   timeout: 15000, // 15秒超时
   headers: {
     'Content-Type': 'application/json'
@@ -99,8 +100,19 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
+    // 确保baseURL不会被环境变量覆盖
+    if (config.baseURL === undefined || config.baseURL === null) {
+      config.baseURL = '';
+    }
+    
     // 添加调试日志
-    console.log(`[BlogRequest] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
+    console.log(`[BlogRequest] 发送请求:`, {
+      方法: config.method.toUpperCase(),
+      baseURL: config.baseURL,
+      url: config.url,
+      完整URL: (config.baseURL || '') + config.url,
+      参数: config.params || {}
+    });
     
     return config
   },

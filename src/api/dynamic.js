@@ -11,7 +11,9 @@ import request from '../utils/request';
  */
 export const getDynamicList = async (params) => {
   try {
+    const apiUrl = '/dynamics';
     console.log('获取动态列表参数:', params);
+    console.log('API完整URL:', request.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL || '', apiUrl);
     
     // 获取token
     const token = localStorage.getItem('token');
@@ -20,7 +22,7 @@ export const getDynamicList = async (params) => {
     console.log('认证头:', headers);
     
     // 确保使用的是完整路径 - 修改为后台API的直接路径（不要加/api前缀，因为request.js已经有了）
-    const response = await request.get('/dynamics', { 
+    const response = await request.get(apiUrl, { 
       params,
       headers
     });

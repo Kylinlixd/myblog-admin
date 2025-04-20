@@ -24,7 +24,19 @@ export function getCategoryList() {
  */
 export const getBlogDynamics = async (params) => {
   try {
-    const response = await blogRequest.get('/blog/dynamics', { params });
+    console.log('前台博客请求动态列表，参数:', params);
+    
+    // 确保每次请求重置axios配置，避免使用全局环境变量
+    const apiUrl = '/blog/dynamics';
+    console.log('使用的请求URL:', apiUrl);
+    
+    // 显式设置config，确保不使用全局环境变量的baseURL
+    const response = await blogRequest.get(apiUrl, { 
+      params,
+      baseURL: '' // 强制设置为空字符串
+    });
+    
+    console.log('前台博客动态响应:', response);
     return response;
   } catch (error) {
     console.error('获取动态列表失败:', error);
@@ -86,7 +98,19 @@ export const getHotDynamics = async (params) => {
  */
 export const getRecentDynamics = async (params) => {
   try {
-    const response = await blogRequest.get('/blog/dynamics/recent', { params });
+    console.log('调用前台博客API获取最新动态，参数:', params);
+    
+    // 确保使用博客前台API的正确路径
+    const apiUrl = '/blog/dynamics/recent';
+    console.log('前台API请求URL:', apiUrl);
+    
+    // 显式设置config，确保不使用全局环境变量的baseURL
+    const response = await blogRequest.get(apiUrl, { 
+      params,
+      baseURL: '' // 强制设置为空字符串
+    });
+    
+    console.log('前台博客API响应:', response);
     return response;
   } catch (error) {
     console.error('获取最新动态失败:', error);

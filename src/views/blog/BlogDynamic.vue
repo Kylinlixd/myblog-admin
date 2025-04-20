@@ -122,12 +122,16 @@ const fetchDynamicList = async () => {
   if (loading.value) return
   
   loading.value = true
+  console.log('前台博客页面请求动态列表，页码:', page.value, '每页数量:', pageSize.value)
+  
   try {
-    // 直接展开params对象中的属性
+    // 调用前台博客API获取动态
     const response = await getBlogDynamics({
       page: page.value,
       pageSize: pageSize.value
     })
+    console.log('前台博客动态列表API响应:', response)
+    
     if (response.code === 200) {
       const { list = [], total = 0 } = response.data || {}
       dynamicList.value = [...dynamicList.value, ...list]

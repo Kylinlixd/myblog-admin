@@ -11,7 +11,7 @@ const routes = [
   {
     path: '/dynamics',
     redirect: '/dashboard/dynamics',
-    meta: { requiresAuth: false } // 确保重定向不被权限拦截
+    meta: { requiresAuth: true } // 修改为需要权限验证，因为要重定向到后台管理页面
   },
   {
     path: '/dynamics-test',
@@ -275,9 +275,17 @@ router.beforeEach(async (to, from, next) => {
     }
     
     // 处理/dynamics直接访问的特殊情况
-    if (to.path === '/dynamics' && !userStore.isLoggedIn) {
-      // 如果未登录，先重定向到登录页
-      next({ path: '/login', query: { redirect: '/dashboard/dynamics' }, replace: true })
+    if (to.path === '/dynamics') {
+      console.log('访问/dynamics路径，准备重定向到/dashboard/dynamics')
+      if (!userStore.isLoggedIn) {
+        // 如果未登录，先重定向到登录页
+        console.log('用户未登录，重定向到登录页面，登录后跳转到/dashboard/dynamics')
+        next({ path: '/login', query: { redirect: '/dashboard/dynamics' }, replace: true })
+      } else {
+        // 已登录，直接重定向到dashboard/dynamics
+        console.log('用户已登录，直接重定向到/dashboard/dynamics')
+        next({ path: '/dashboard/dynamics', replace: true })
+      }
       return
     }
     

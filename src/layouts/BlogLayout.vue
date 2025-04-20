@@ -24,9 +24,9 @@
             
             <!-- 动态菜单 - 改为直接链接 -->
             <router-link 
-              to="/blog/dynamic" 
+              to="/blog/blogdynamic" 
               class="nav-item" 
-              :class="{ 'active': $route.path === '/blog/dynamic' }"
+              :class="{ 'active': $route.path === '/blog/blogdynamic' }"
               v-slot="{ isActive }"
             >
               <div class="nav-content">
@@ -528,10 +528,13 @@ const fetchData = async () => {
   try {
     appStore.startLoading('加载博客数据...')
     
+    console.log('准备加载博客前台最新动态...')
     // 获取最新动态
     const response = await getRecentDynamics({
       limit: 5
     })
+    console.log('博客前台最新动态API响应:', response)
+    
     if (response.code === 200) { recentDynamics.value = response.data }
     
     appStore.endLoading()
