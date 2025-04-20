@@ -131,27 +131,6 @@ const getFilterDescription = () => {
   }
 }
 
-// 获取文章数据
-const fetchArticles = async () => {
-  try {
-    // 从实际API获取数据
-    // TODO: 替换为实际的API调用
-    const response = await fetch('/blog/articles');
-    const data = await response.json();
-    
-    if (data && data.code === 200) {
-      articles.value = data.data.list || [];
-    } else {
-      // 如果API还未准备好，使用空数组
-      articles.value = [];
-      console.warn('API返回数据格式不正确或者API未准备好');
-    }
-  } catch (error) {
-    console.error('获取文章数据失败:', error);
-    // 发生错误时使用空数组
-    articles.value = [];
-  }
-}
 
 // 监听路由变化，更新过滤条件
 watchEffect(() => {
@@ -165,9 +144,6 @@ watchEffect(() => {
   }
 })
 
-onMounted(() => {
-  fetchArticles()
-})
 </script>
 
 <style scoped>
