@@ -1,4 +1,35 @@
-import blogRequest from '../utils/blogRequest'
+import axios from 'axios'
+
+// 创建专用于博客前台的axios实例
+const blogAxios = axios.create({
+  baseURL: '', // 设置为空，避免与全局环境变量冲突
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 请求拦截器
+blogAxios.interceptors.request.use(
+  config => {
+    console.log(`[Blog] 发送请求:`, {
+      方法: config.method.toUpperCase(),
+      URL: config.url,
+      参数: config.params || {}
+    });
+    return config
+  },
+  error => Promise.reject(error)
+)
+
+// 响应拦截器
+blogAxios.interceptors.response.use(
+  response => response.data,
+  error => {
+    console.error('博客API请求错误:', error)
+    return Promise.reject(error)
+  }
+)
 
 /**
  * 获取分类列表
@@ -6,7 +37,7 @@ import blogRequest from '../utils/blogRequest'
  */
 export function getCategoryList() {
   try {
-    return blogRequest.get('/blog/categories', { baseURL: '' });
+    return blogAxios.get('/blog/categories');
   } catch (error) {
     console.error('获取分类列表失败:', error);
     throw error;
@@ -25,17 +56,8 @@ export function getCategoryList() {
 export const getBlogDynamics = async (params) => {
   try {
     console.log('前台博客请求动态列表，参数:', params);
-    
-    // 确保每次请求重置axios配置，避免使用全局环境变量
     const apiUrl = '/blog/dynamics';
-    console.log('使用的请求URL:', apiUrl);
-    
-    // 显式设置config，确保不使用全局环境变量的baseURL
-    const response = await blogRequest.get(apiUrl, { 
-      params,
-      baseURL: '' // 强制设置为空字符串
-    });
-    
+    const response = await blogAxios.get(apiUrl, { params });
     console.log('前台博客动态响应:', response);
     return response;
   } catch (error) {
@@ -51,7 +73,7 @@ export const getBlogDynamics = async (params) => {
  */
 export const getBlogDynamicDetail = async (id) => {
   try {
-    const response = await blogRequest.get(`/blog/dynamics/${id}`, { baseURL: '' });
+    const response = await blogAxios.get(`/blog/dynamics/${id}`);
     return response;
   } catch (error) {
     console.error('获取动态详情失败:', error);
@@ -66,7 +88,7 @@ export const getBlogDynamicDetail = async (id) => {
  */
 export const getAdjacentDynamics = async (id) => {
   try {
-    const response = await blogRequest.get(`/blog/dynamics/${id}/adjacent`, { baseURL: '' });
+    const response = await blogAxios.get(`/blog/dynamics/${id}/adjacent`);
     return response;
   } catch (error) {
     console.error('获取相邻动态失败:', error);
@@ -82,10 +104,7 @@ export const getAdjacentDynamics = async (id) => {
  */
 export const getHotDynamics = async (params) => {
   try {
-    const response = await blogRequest.get('/blog/dynamics/hot', { 
-      params,
-      baseURL: ''
-    });
+    const response = await blogAxios.get('/blog/dynamics/hot', { params });
     return response;
   } catch (error) {
     console.error('获取热门动态失败:', error);
@@ -102,17 +121,9 @@ export const getHotDynamics = async (params) => {
 export const getRecentDynamics = async (params) => {
   try {
     console.log('调用前台博客API获取最新动态，参数:', params);
-    
-    // 确保使用博客前台API的正确路径
     const apiUrl = '/blog/dynamics/recent';
     console.log('前台API请求URL:', apiUrl);
-    
-    // 显式设置config，确保不使用全局环境变量的baseURL
-    const response = await blogRequest.get(apiUrl, { 
-      params,
-      baseURL: '' // 强制设置为空字符串
-    });
-    
+    const response = await blogAxios.get(apiUrl, { params });
     console.log('前台博客API响应:', response);
     return response;
   } catch (error) {
@@ -131,7 +142,7 @@ export const getRecentDynamics = async (params) => {
  */
 export const getCategoryDynamics = async (categoryId, params) => {
   try {
-    const response = await blogRequest.get(`/blog/categories/${categoryId}/dynamics`, { params });
+    const response = await blogAxios.get(`/blog/categories/${categoryId}/dynamics`, { params });
     return response;
   } catch (error) {
     console.error('获取分类下的动态失败:', error);
@@ -149,7 +160,7 @@ export const getCategoryDynamics = async (categoryId, params) => {
  */
 export const getTagDynamics = async (tagId, params) => {
   try {
-    const response = await blogRequest.get(`/blog/tags/${tagId}/dynamics`, { params });
+    const response = await blogAxios.get(`/blog/tags/${tagId}/dynamics`, { params });
     return response;
   } catch (error) {
     console.error('获取标签下的动态失败:', error);
@@ -164,7 +175,7 @@ export const getTagDynamics = async (tagId, params) => {
  */
 export const increaseDynamicView = async (id) => {
   try {
-    const response = await blogRequest.post(`/blog/dynamics/${id}/view`);
+    const response = await blogAxios.post(`/blog/dynamics/${id}/view`);
     return response;
   } catch (error) {
     console.error('增加动态浏览量失败:', error);
@@ -179,7 +190,7 @@ export const increaseDynamicView = async (id) => {
  */
 export const createDynamic = async (data) => {
   try {
-    const response = await blogRequest.post('/blog/dynamics', data);
+    const response = await blogAxios.post('/blog/dynamics', data);
     return response;
   } catch (error) {
     console.error('创建动态失败:', error);
@@ -195,7 +206,7 @@ export const createDynamic = async (data) => {
  */
 export const updateDynamic = async (id, data) => {
   try {
-    const response = await blogRequest.put(`/blog/dynamics/${id}`, data)
+    const response = await blogAxios.put(`/blog/dynamics/${id}`, data)
     if (response.code === 200) {
       return response.data
     }
@@ -213,7 +224,7 @@ export const updateDynamic = async (id, data) => {
  */
 export const deleteDynamic = async (id) => {
   try {
-    const response = await blogRequest.delete(`/blog/dynamics/${id}`)
+    const response = await blogAxios.delete(`/blog/dynamics/${id}`)
     if (response.code === 200) {
       return response.data
     }
@@ -231,7 +242,7 @@ export const deleteDynamic = async (id) => {
  */
 export const likeDynamic = async (id) => {
   try {
-    const response = await blogRequest.post(`/blog/dynamics/${id}/like`)
+    const response = await blogAxios.post(`/blog/dynamics/${id}/like`)
     if (response.code === 200) {
       return response.data
     }
@@ -250,7 +261,7 @@ export const likeDynamic = async (id) => {
  */
 export const commentDynamic = async (id, data) => {
   try {
-    const response = await blogRequest.post(`/blog/dynamics/${id}/comment`, data)
+    const response = await blogAxios.post(`/blog/dynamics/${id}/comment`, data)
     if (response.code === 200) {
       return response.data
     }
@@ -269,7 +280,7 @@ export const commentDynamic = async (id, data) => {
  */
 export const getDynamicComments = async (id, params) => {
   try {
-    const response = await blogRequest.get(`/blog/dynamics/${id}/comments`, { params });
+    const response = await blogAxios.get(`/blog/dynamics/${id}/comments`, { params });
     if (response.code === 200) {
       return response.data;
     }
@@ -288,7 +299,7 @@ export const getDynamicComments = async (id, params) => {
  */
 export const deleteDynamicComment = async (id, commentId) => {
   try {
-    const response = await blogRequest.delete(`/blog/dynamics/${id}/comments/${commentId}`)
+    const response = await blogAxios.delete(`/blog/dynamics/${id}/comments/${commentId}`)
     if (response.code === 200) {
       return response.data
     }
@@ -305,7 +316,7 @@ export const deleteDynamicComment = async (id, commentId) => {
  */
 export const getBlogStats = async () => {
   try {
-    const response = await blogRequest.get('/blog/stats')
+    const response = await blogAxios.get('/blog/stats')
     if (response.code === 200) {
       return response.data
     }
@@ -322,7 +333,7 @@ export const getBlogStats = async () => {
  */
 export const getAboutInfo = async () => {
   try {
-    const response = await blogRequest.get('/blog/about')
+    const response = await blogAxios.get('/blog/about')
     if (response.code === 200) {
       return response.data
     }

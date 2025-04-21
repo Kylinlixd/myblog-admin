@@ -455,7 +455,6 @@
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search } from '@element-plus/icons-vue'
-import { getRecentDynamics } from '../api/blog'
 import { useAppStore } from '../stores/app'
 import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButton.vue'
 
@@ -479,23 +478,6 @@ const closeMenuOnOutsideClick = (event) => {
   }
 }
 
-// 获取动态菜单数据
-const fetchDynamicMenuItems = async () => {
-  try {
-    // 模拟从API获取数据
-    // 实际项目中应该替换为真实的API调用
-    const data = [
-      { title: '最新动态', path: '/blog/latest' },
-      { title: '热门文章', path: '/blog/hot' },
-      { title: '技术分享', path: '/blog/tech' },
-      { title: '生活随笔', path: '/blog/life' }
-    ]
-    
-    dynamicMenuItems.value = data
-  } catch (error) {
-    console.error('获取动态菜单数据失败:', error)
-  }
-}
 
 // 监听路由变化关闭菜单
 watch(() => router.currentRoute.value, () => {
@@ -513,9 +495,6 @@ const handleSearch = () => {
   searchQuery.value = ''
 }
 
-// 最新动态
-const recentDynamics = ref([])
-
 // 格式化日期
 const formatDate = (dateString) => {
   if (!dateString) return ''
@@ -523,36 +502,7 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-// 获取数据
-const fetchData = async () => {
-  try {
-    appStore.startLoading('加载博客数据...')
-    
-    // 检查当前路由，如果是动态列表页面，则不请求最新动态，避免重复请求
-    if (router.currentRoute.value.path === '/blog/blogdynamic') {
-      console.log('当前是动态列表页面，不重复请求最新动态')
-      appStore.endLoading()
-      return
-    }
-    
-    console.log('准备加载博客前台最新动态...')
-    // 获取最新动态
-    const response = await getRecentDynamics({
-      limit: 5
-    })
-    console.log('博客前台最新动态API响应:', response)
-    
-    if (response.code === 200) { recentDynamics.value = response.data }
-    
-    appStore.endLoading()
-  } catch (error) {
-    console.error('获取博客数据失败:', error)
-    appStore.setLoadingError('获取博客数据失败，请刷新重试')
-  }
-}
-
 onMounted(() => {
-  fetchData()
   fetchDynamicMenuItems()
   document.addEventListener('click', closeMenuOnOutsideClick)
 })

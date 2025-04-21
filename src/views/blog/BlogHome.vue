@@ -28,33 +28,7 @@
         </div>
       </div>
     </WavyBackground>
-    
-    <!-- 动态过滤内容区域 -->
-    <div v-if="currentFilter" class="filtered-content">
-      <div class="filter-header">
-        <h1 class="filter-title">{{ getFilterTitle() }}</h1>
-        <p class="filter-desc">{{ getFilterDescription() }}</p>
-      </div>
-      
-      <div class="articles-container">
-        <!-- 根据过滤条件显示不同文章 -->
-        <div v-for="article in filteredArticles" :key="article.id" class="article-card">
-          <router-link :to="`/blog/dynamic`" class="article-link">
-            <div class="article-image">
-              <img :src="article.cover" :alt="article.title" />
-            </div>
-            <div class="article-content">
-              <div class="article-meta">
-                <span class="article-date">{{ article.date }}</span>
-                <span class="article-category">{{ article.category }}</span>
-              </div>
-              <h3 class="article-title">{{ article.title }}</h3>
-              <p class="article-excerpt">{{ article.excerpt }}</p>
-            </div>
-          </router-link>
-        </div>
-      </div>
-    </div>
+
   </div>
 </template>
 
@@ -108,29 +82,6 @@ const filteredArticles = computed(() => {
       return articles.value
   }
 })
-
-// 获取过滤标题
-const getFilterTitle = () => {
-  switch(currentFilter.value) {
-    case 'latest': return '最新动态'
-    case 'hot': return '热门文章'
-    case 'tech': return '技术分享'
-    case 'life': return '生活随笔'
-    default: return '博客文章'
-  }
-}
-
-// 获取过滤描述
-const getFilterDescription = () => {
-  switch(currentFilter.value) {
-    case 'latest': return '查看最新发布的内容和动态'
-    case 'hot': return '最受欢迎的文章和内容精选'
-    case 'tech': return '与技术相关的教程、经验和思考'
-    case 'life': return '生活点滴、随想和个人成长'
-    default: return '所有文章'
-  }
-}
-
 
 // 监听路由变化，更新过滤条件
 watchEffect(() => {
