@@ -89,13 +89,11 @@ blogAxios.interceptors.response.use(
  * @returns {Promise} 分类列表
  */
 export function getBlogCategoryList() {
-  return request({
-    url: createBlogApiUrl('categories'),
-    method: 'get'
-  }).catch(error => {
-    console.error('获取博客分类列表失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl('categories'))
+    .catch(error => {
+      console.error('获取博客分类列表失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -154,13 +152,11 @@ export function getBlogDynamicDetail(id) {
  * @returns {Promise} 相邻动态
  */
 export function getAdjacentDynamics(id) {
-  return request({
-    url: createBlogApiUrl(`dynamics/${id}/adjacent`),
-    method: 'get'
-  }).catch(error => {
-    console.error('获取相邻博客动态失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/adjacent`))
+    .catch(error => {
+      console.error('获取相邻博客动态失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -169,14 +165,11 @@ export function getAdjacentDynamics(id) {
  * @returns {Promise} 热门动态
  */
 export function getHotDynamics(params) {
-  return request({
-    url: createBlogApiUrl('dynamics/hot'),
-    method: 'get',
-    params
-  }).catch(error => {
-    console.error('获取热门博客动态失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl('dynamics/hot'), { params })
+    .catch(error => {
+      console.error('获取热门博客动态失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -185,14 +178,11 @@ export function getHotDynamics(params) {
  * @returns {Promise} 最近动态
  */
 export function getRecentDynamics(params) {
-  return request({
-    url: createBlogApiUrl('dynamics/recent'),
-    method: 'get',
-    params
-  }).catch(error => {
-    console.error('获取最近博客动态失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl('dynamics/recent'), { params })
+    .catch(error => {
+      console.error('获取最近博客动态失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -202,14 +192,11 @@ export function getRecentDynamics(params) {
  * @returns {Promise} 动态列表
  */
 export function getCategoryDynamics(categoryId, params) {
-  return request({
-    url: createBlogApiUrl(`categories/${categoryId}/dynamics`),
-    method: 'get',
-    params
-  }).catch(error => {
-    console.error('获取分类下的博客动态失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl(`categories/${categoryId}/dynamics`), { params })
+    .catch(error => {
+      console.error('获取分类下的博客动态失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -261,14 +248,11 @@ export function searchBlogDynamics(params) {
  * @returns {Promise} 动态列表
  */
 export function getTagDynamics(tagId, params) {
-  return request({
-    url: createBlogApiUrl(`tags/${tagId}/dynamics`),
-    method: 'get',
-    params
-  }).catch(error => {
-    console.error('获取标签下的博客动态失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl(`tags/${tagId}/dynamics`), { params })
+    .catch(error => {
+      console.error('获取标签下的博客动态失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -276,13 +260,11 @@ export function getTagDynamics(tagId, params) {
  * @returns {Promise} 标签列表
  */
 export function getBlogTagList() {
-  return request({
-    url: createBlogApiUrl('tags'),
-    method: 'get'
-  }).catch(error => {
-    console.error('获取博客标签列表失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl('tags'))
+    .catch(error => {
+      console.error('获取博客标签列表失败:', error)
+      throw error
+    })
 }
 
 /**

@@ -5,7 +5,7 @@ import { useAppStore } from '../stores/app'
 
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '', // 使用环境变量中的API前缀，默认为空
+  baseURL: '/api', // 直接设置为/api，不依赖环境变量
   timeout: 15000, // 15秒超时
   headers: {
     'Content-Type': 'application/json'
@@ -71,18 +71,30 @@ const retryRequest = async (fn, times = retryConfig.retryTimes) => {
 // 请求方法封装
 const request = {
   get(url, params, config = {}) {
+    // 确保URL不要以/api开头，因为baseURL已经是/api
+    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
+    console.log(`[Request] GET 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
     return service.get(url, { params, ...config })
   },
   
   post(url, data, config = {}) {
+    // 确保URL不要以/api开头，因为baseURL已经是/api
+    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
+    console.log(`[Request] POST 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
     return service.post(url, data, config)
   },
   
   put(url, data, config = {}) {
+    // 确保URL不要以/api开头，因为baseURL已经是/api
+    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
+    console.log(`[Request] PUT 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
     return service.put(url, data, config)
   },
   
   delete(url, config = {}) {
+    // 确保URL不要以/api开头，因为baseURL已经是/api
+    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
+    console.log(`[Request] DELETE 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
     return service.delete(url, config)
   }
 }

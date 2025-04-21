@@ -40,44 +40,30 @@ export default defineConfig({
     hmr: true,
     open: true,
     proxy: {
-      // 优化后的代理规则
+      // 后台管理API代理规则 - 修改为不移除/api前缀
       '/api': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => {
-          // 记录重写前的路径
-          console.log('\n[API代理] 接收请求:', path);
-          
-          // 检测重复前缀，例如/api/api/xxx
-          if (path.match(/^\/api\/api\//)) {
-            console.log('[API代理] 检测到重复前缀，将/api/api/修正为/api/');
-            const fixed = path.replace(/^\/api\/api\//, '/api/');
-            console.log('[API代理] 修正后:', fixed);
-            // 去掉第一个/api前缀
-            const rewritten = fixed.replace(/^\/api/, '');
-            console.log('[API代理] 最终重写为:', rewritten);
-            console.log('[API代理] 最终请求URL:', 'http://127.0.0.1:8000' + rewritten);
-            return rewritten;
-          }
-          
-          // 正常移除一个/api前缀
-          const rewritten = path.replace(/^\/api/, '');
-          console.log('[API代理] 重写后:', rewritten);
-          console.log('[API代理] 最终请求URL:', 'http://127.0.0.1:8000' + rewritten);
-          return rewritten;
+          // 记录请求路径
+          console.log('\n[后台API] 原始请求路径:', path);
+          console.log('[后台API] 不移除/api前缀，保持原样:', path);
+          console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + path);
+          // 不移除/api前缀，直接返回原始路径
+          return path;
         }
       },
+      // 博客前台API代理规则
       '/blog': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => {
-          // 记录重写前的路径
-          console.log('\n[Blog代理] 接收请求:', path);
-          // 这里不进行路径重写，保持原样
-          console.log('[Blog代理] 保持原始路径:', path);
-          console.log('[Blog代理] 最终请求URL:', 'http://127.0.0.1:8000' + path);
+          // 记录请求路径
+          console.log('\n[博客API] 原始请求路径:', path);
+          // 保持原始路径不变
+          console.log('[博客API] 最终请求URL:', 'http://127.0.0.1:8000' + path);
           return path;
         }
       }
