@@ -68,8 +68,57 @@
             placeholder="搜索动态..."
             :prefix-icon="Search"
             @keyup.enter="handleSearch"
+            @focus="showSearchSuggestions = true"
             clearable
-          />
+          >
+            <template #append>
+              <el-button @click="handleSearch">
+                <el-icon><i-ep-search /></el-icon>
+              </el-button>
+            </template>
+          </el-input>
+          
+          <!-- 搜索建议下拉 -->
+          <div v-if="showSearchSuggestions && (searchHistory.length > 0 || hotSearches.length > 0)" class="search-suggestions">
+            <!-- 历史搜索 -->
+            <div v-if="searchHistory.length > 0" class="suggestion-section">
+              <div class="suggestion-header">
+                <span>历史搜索</span>
+                <el-button type="text" size="small" @click="clearSearchHistory">
+                  <el-icon><i-ep-delete /></el-icon>
+                </el-button>
+              </div>
+              <div class="suggestion-list">
+                <div 
+                  v-for="(item, index) in searchHistory.slice(0, 5)" 
+                  :key="`history-${index}`" 
+                  class="suggestion-item" 
+                  @click="useSearchSuggestion(item)"
+                >
+                  <el-icon><i-ep-time /></el-icon>
+                  <span>{{ item }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 热门搜索 -->
+            <div v-if="hotSearches.length > 0" class="suggestion-section">
+              <div class="suggestion-header">
+                <span>热门搜索</span>
+              </div>
+              <div class="suggestion-list">
+                <div 
+                  v-for="(item, index) in hotSearches" 
+                  :key="`hot-${index}`" 
+                  class="suggestion-item" 
+                  @click="useSearchSuggestion(item)"
+                >
+                  <el-icon><i-ep-hot /></el-icon>
+                  <span>{{ item }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <!-- 登录按钮 -->
         <div class="login-btn">
@@ -166,6 +215,7 @@
     flex-shrink: 0;
     width: 200px;
     margin-right: 15px;
+    position: relative;
     
     .el-input__inner {
       border-radius: 20px;
@@ -173,6 +223,61 @@
       
       &:focus {
         box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.2);
+      }
+    }
+    
+    .search-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      z-index: 150;
+      margin-top: 5px;
+      padding: 10px 0;
+    }
+
+    .suggestion-section {
+      margin-bottom: 10px;
+    }
+
+    .suggestion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 15px;
+      margin-bottom: 5px;
+      color: #666;
+      font-size: 0.9em;
+      font-weight: bold;
+    }
+
+    .suggestion-list {
+      padding: 0 5px;
+    }
+
+    .suggestion-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+      font-size: 0.9em;
+      
+      &:hover {
+        background-color: #f5f5f5;
+        color: #c084fc;
+      }
+      
+      .el-icon {
+        margin-right: 8px;
+        font-size: 14px;
+        color: #999;
       }
     }
   }
@@ -465,35 +570,99 @@ const appStore = useAppStore()
 const showDynamicMenu = ref(false)
 const dynamicMenuItems = ref([])
 
+// 搜索相关
+const searchQuery = ref('')
+const showSearchSuggestions = ref(false)
+const searchHistory = ref([])
+const hotSearches = ref([
+  '前端技术', 'Vue3', 'JavaScript', '旅行日记', '摄影技巧'
+])
+
 // 切换动态菜单显示状态
 const toggleDynamicMenu = () => {
   showDynamicMenu.value = !showDynamicMenu.value
 }
 
-// 点击其他区域关闭菜单
+// 点击其他区域关闭菜单和搜索建议
 const closeMenuOnOutsideClick = (event) => {
   const menu = document.querySelector('.dynamic-menu')
   if (menu && !menu.contains(event.target)) {
     showDynamicMenu.value = false
   }
+  
+  const searchContainer = document.querySelector('.blog-search')
+  if (searchContainer && !searchContainer.contains(event.target)) {
+    showSearchSuggestions.value = false
+  }
 }
 
+// 搜索
+const handleSearch = () => {
+  if (!searchQuery.value.trim()) return
+  
+  // 保存到搜索历史
+  saveSearchHistory(searchQuery.value)
+  
+  router.push({
+    path: '/blog/search',
+    query: { keyword: searchQuery.value.trim() }
+  })
+  searchQuery.value = ''
+  showSearchSuggestions.value = false
+}
+
+// 使用搜索建议
+const useSearchSuggestion = (suggestion) => {
+  searchQuery.value = suggestion
+  handleSearch()
+}
+
+// 加载搜索历史
+const loadSearchHistory = () => {
+  try {
+    const history = localStorage.getItem('search_history')
+    if (history) {
+      searchHistory.value = JSON.parse(history)
+    }
+  } catch (error) {
+    console.error('加载搜索历史失败:', error)
+    searchHistory.value = []
+  }
+}
+
+// 保存搜索历史
+const saveSearchHistory = (keyword) => {
+  if (!keyword.trim()) return
+  
+  // 移除相同的关键词并添加到最前面
+  searchHistory.value = searchHistory.value.filter(item => item !== keyword)
+  searchHistory.value.unshift(keyword)
+  
+  // 限制历史记录数量
+  if (searchHistory.value.length > 10) {
+    searchHistory.value = searchHistory.value.slice(0, 10)
+  }
+  
+  // 保存到localStorage
+  try {
+    localStorage.setItem('search_history', JSON.stringify(searchHistory.value))
+  } catch (error) {
+    console.error('保存搜索历史失败:', error)
+  }
+}
+
+// 清除搜索历史
+const clearSearchHistory = (e) => {
+  e.stopPropagation() // 阻止事件冒泡
+  searchHistory.value = []
+  localStorage.removeItem('search_history')
+}
 
 // 监听路由变化关闭菜单
 watch(() => router.currentRoute.value, () => {
   showDynamicMenu.value = false
+  showSearchSuggestions.value = false
 })
-
-// 搜索
-const searchQuery = ref('')
-const handleSearch = () => {
-  if (!searchQuery.value.trim()) return
-  router.push({
-    path: '/blog',
-    query: { keyword: searchQuery.value.trim() }
-  })
-  searchQuery.value = ''
-}
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -502,9 +671,25 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
+// 获取动态菜单项 
+const fetchDynamicMenuItems = async () => {
+  try {
+    // 这里可以从API获取动态菜单项
+    // 目前直接使用静态数据
+    dynamicMenuItems.value = [
+      { id: 1, name: '全部动态', path: '/blog/blogdynamic' },
+      { id: 2, name: '热门动态', path: '/blog/blogdynamic?sort=hot' },
+      { id: 3, name: '最新动态', path: '/blog/blogdynamic?sort=new' }
+    ]
+  } catch (error) {
+    console.error('获取动态菜单项失败:', error)
+  }
+}
+
 onMounted(() => {
   fetchDynamicMenuItems()
   document.addEventListener('click', closeMenuOnOutsideClick)
+  loadSearchHistory()
 })
 
 // 组件销毁时移除事件监听

@@ -97,6 +97,16 @@ const routes = [
           keepAlive: true,
           requiresAuth: false
         }
+      },
+      {
+        path: 'search',
+        name: 'BlogSearch',
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogSearch.vue'),
+        meta: { 
+          title: '搜索结果',
+          keepAlive: false,
+          requiresAuth: false
+        }
       }
     ]
   },

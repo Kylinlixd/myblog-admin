@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getCategoryList } from '@/api/blog'
+import { getBlogCategoryList } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
@@ -32,7 +32,7 @@ const fetchCategories = async () => {
     appStore.startLoading('加载分类数据...')
     
     // 使用真实API调用获取分类数据
-    const response = await getCategoryList()
+    const response = await getBlogCategoryList()
     if (response.code === 200) {
       categories.value = response.data.map(category => ({
         ...category,

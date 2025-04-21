@@ -104,11 +104,35 @@ export function getBlogCategoryList() {
  * @returns {Promise} 动态列表
  */
 export function getBlogDynamics(params) {
+  console.log('[Blog API] 获取动态列表, 参数:', params);
+  console.log('[Blog API] 请求URL:', createBlogApiUrl('dynamics'));
+  
   return blogAxios.get(createBlogApiUrl('dynamics'), { params })
-    .catch(error => {
-      console.error('获取博客动态列表失败:', error)
-      throw error
+    .then(response => {
+      console.log('[Blog API] 获取动态列表响应:', response);
+      
+      // 处理不同的响应格式
+      if (response && typeof response === 'object') {
+        // 标准格式 {code: 200, data: {...}}
+        if (response.code === 200 && response.data) {
+          console.log('[Blog API] 返回标准响应格式');
+          return response;
+        }
+        
+        // 直接返回数据对象
+        if (response.list || Array.isArray(response)) {
+          console.log('[Blog API] 返回直接数据格式');
+          return response;
+        }
+      }
+      
+      console.log('[Blog API] 无法识别的响应格式, 原样返回');
+      return response;
     })
+    .catch(error => {
+      console.error('[Blog API] 获取博客动态列表失败:', error);
+      throw error;
+    });
 }
 
 /**
@@ -186,6 +210,48 @@ export function getCategoryDynamics(categoryId, params) {
     console.error('获取分类下的博客动态失败:', error)
     throw error
   })
+}
+
+/**
+ * 搜索博客动态
+ * @param {Object} params 搜索参数
+ * @param {string} params.keyword 搜索关键词
+ * @param {number} params.page 页码
+ * @param {number} params.pageSize 每页数量
+ * @param {string} params.type 动态类型（可选）
+ * @param {string} params.sortBy 排序方式（可选）
+ * @returns {Promise} 搜索结果
+ */
+export function searchBlogDynamics(params) {
+  console.log('[Blog API] 搜索动态, 参数:', params);
+  console.log('[Blog API] 搜索URL:', createBlogApiUrl('dynamics/search'));
+  
+  return blogAxios.get(createBlogApiUrl('dynamics/search'), { params })
+    .then(response => {
+      console.log('[Blog API] 搜索响应:', response);
+      
+      // 处理不同的响应格式
+      if (response && typeof response === 'object') {
+        // 标准格式 {code: 200, data: {...}}
+        if (response.code === 200 && response.data) {
+          console.log('[Blog API] 返回标准响应格式');
+          return response;
+        }
+        
+        // 直接返回数据对象
+        if (response.list || Array.isArray(response)) {
+          console.log('[Blog API] 返回直接数据格式');
+          return response;
+        }
+      }
+      
+      console.log('[Blog API] 无法识别的响应格式, 原样返回');
+      return response;
+    })
+    .catch(error => {
+      console.error('[Blog API] 搜索动态失败:', error);
+      throw error;
+    });
 }
 
 /**
@@ -282,13 +348,16 @@ export function deleteDynamic(id) {
  * @returns {Promise} 点赞结果
  */
 export function likeDynamic(id) {
-  return request({
-    url: createBlogApiUrl(`dynamics/${id}/like`),
-    method: 'post'
-  }).catch(error => {
-    console.error('点赞博客动态失败:', error)
-    throw error
-  })
+  console.log('[Blog API] 点赞动态, ID:', id);
+  return blogAxios.post(createBlogApiUrl(`dynamics/${id}/like`))
+    .then(response => {
+      console.log('[Blog API] 点赞响应:', response);
+      return response;
+    })
+    .catch(error => {
+      console.error('[Blog API] 点赞失败:', error);
+      throw error;
+    });
 }
 
 /**
@@ -298,14 +367,16 @@ export function likeDynamic(id) {
  * @returns {Promise} 评论结果
  */
 export function commentDynamic(id, data) {
-  return request({
-    url: createBlogApiUrl(`dynamics/${id}/comments`),
-    method: 'post',
-    data
-  }).catch(error => {
-    console.error('评论博客动态失败:', error)
-    throw error
-  })
+  console.log('[Blog API] 发表评论, ID:', id, '数据:', data);
+  return blogAxios.post(createBlogApiUrl(`dynamics/${id}/comments`), data)
+    .then(response => {
+      console.log('[Blog API] 评论响应:', response);
+      return response;
+    })
+    .catch(error => {
+      console.error('[Blog API] 评论失败:', error);
+      throw error;
+    });
 }
 
 /**
@@ -315,14 +386,26 @@ export function commentDynamic(id, data) {
  * @returns {Promise} 评论列表
  */
 export function getDynamicComments(id, params) {
-  return request({
-    url: createBlogApiUrl(`dynamics/${id}/comments`),
-    method: 'get',
-    params
-  }).catch(error => {
-    console.error('获取博客动态评论失败:', error)
-    throw error
-  })
+  console.log('[Blog API] 获取评论, ID:', id, '参数:', params);
+  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/comments`), { params })
+    .then(response => {
+      console.log('[Blog API] 获取评论响应:', response);
+      
+      // 处理不同的响应格式
+      if (response && typeof response === 'object') {
+        if (response.code === 200 && response.data) {
+          return response.data;
+        }
+        if (response.list || Array.isArray(response)) {
+          return response;
+        }
+      }
+      return response;
+    })
+    .catch(error => {
+      console.error('[Blog API] 获取评论失败:', error);
+      throw error;
+    });
 }
 
 /**
@@ -332,13 +415,12 @@ export function getDynamicComments(id, params) {
  * @returns {Promise} 删除结果
  */
 export function deleteDynamicComment(dynamicId, commentId) {
-  return request({
-    url: createBlogApiUrl(`dynamics/${dynamicId}/comments/${commentId}`),
-    method: 'delete'
-  }).catch(error => {
-    console.error('删除博客动态评论失败:', error)
-    throw error
-  })
+  return blogAxios.delete(createBlogApiUrl(`dynamics/${dynamicId}/comments/${commentId}`))
+    .then(response => response.data)
+    .catch(error => {
+      console.error('删除评论失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -346,13 +428,12 @@ export function deleteDynamicComment(dynamicId, commentId) {
  * @returns {Promise} 统计数据
  */
 export function getBlogStats() {
-  return request({
-    url: createBlogApiUrl('stats'),
-    method: 'get'
-  }).catch(error => {
-    console.error('获取博客统计数据失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl('stats'))
+    .then(response => response.data)
+    .catch(error => {
+      console.error('获取博客统计数据失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -360,13 +441,12 @@ export function getBlogStats() {
  * @returns {Promise} 关于页面数据
  */
 export function getAboutInfo() {
-  return request({
-    url: createBlogApiUrl('about'),
-    method: 'get'
-  }).catch(error => {
-    console.error('获取关于页面信息失败:', error)
-    throw error
-  })
+  return blogAxios.get(createBlogApiUrl('about'))
+    .then(response => response.data)
+    .catch(error => {
+      console.error('获取关于页面信息失败:', error)
+      throw error
+    })
 }
 
 /**
@@ -375,13 +455,10 @@ export function getAboutInfo() {
  * @returns {Promise} 更新结果
  */
 export function updateAboutInfo(data) {
-  return request({
-    url: createBlogApiUrl('about'),
-    method: 'put',
-    data
-  }).catch(error => {
-    console.error('更新关于页面信息失败:', error)
-    throw error
-  })
+  return blogAxios.put(createBlogApiUrl('about'), data)
+    .then(response => response.data)
+    .catch(error => {
+      console.error('更新关于页面信息失败:', error)
+      throw error
+    })
 }
-
