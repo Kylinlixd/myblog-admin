@@ -1,4 +1,15 @@
 import axios from 'axios'
+import { getEnvValue } from '../utils/env'
+import { ElMessage } from 'element-plus'
+import request from '../utils/request'
+
+// 获取前台API路径前缀，始终使用/blog
+const getBlogApiPrefix = () => {
+  // 不使用VITE_API_BASE_URL，避免与后台API混淆
+  const prefix = getEnvValue('VITE_BLOG_API_BASE_URL', '/blog')
+  console.log(`[Blog] 使用API前缀: ${prefix}`)
+  return prefix
+}
 
 // 创建专用于博客前台的axios实例
 const blogAxios = axios.create({
@@ -9,14 +20,49 @@ const blogAxios = axios.create({
   }
 })
 
+// 禁用默认baseURL，确保不会被环境变量覆盖
+delete blogAxios.defaults.baseURL
+
+/**
+ * 创建博客API URL
+ * @param {string} path - API路径
+ * @returns {string} 完整的API URL
+ */
+export function createBlogApiUrl(path) {
+  // 如果路径已经以/blog开头，直接返回，避免重复前缀
+  if (path.startsWith('/blog/')) {
+    console.log(`[Blog] URL已包含/blog前缀，保持不变: ${path}`);
+    return path;
+  }
+  
+  // 确保path不以/开头，避免出现双斜杠
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path
+  // 统一返回blog API格式
+  const url = `/blog/${cleanPath}`;
+  console.log(`[Blog] 创建URL: ${url}`);
+  return url;
+}
+
 // 请求拦截器
 blogAxios.interceptors.request.use(
   config => {
+    // 强制覆盖baseURL，确保使用正确的路径前缀
+    config.baseURL = '';
+    
+    // 确保URL以/blog开头，避免使用环境变量
+    if (config.url && !config.url.startsWith('/blog/')) {
+      // 使用修正后的createBlogApiUrl函数确保正确添加前缀
+      config.url = createBlogApiUrl(config.url)
+    }
+    
+    // 详细记录请求信息，帮助调试
     console.log(`[Blog] 发送请求:`, {
       方法: config.method.toUpperCase(),
       URL: config.url,
+      完整请求URL: (config.baseURL || '') + config.url,
       参数: config.params || {}
     });
+    
     return config
   },
   error => Promise.reject(error)
@@ -24,7 +70,14 @@ blogAxios.interceptors.request.use(
 
 // 响应拦截器
 blogAxios.interceptors.response.use(
-  response => response.data,
+  response => {
+    console.log(`[Blog] 接收响应:`, {
+      URL: response.config.url,
+      状态: response.status,
+      响应数据类型: typeof response.data
+    });
+    return response.data
+  },
   error => {
     console.error('博客API请求错误:', error)
     return Promise.reject(error)
@@ -32,315 +85,303 @@ blogAxios.interceptors.response.use(
 )
 
 /**
- * 获取分类列表
- * @returns {Promise<Object>} 分类列表数据
+ * 获取博客分类列表
+ * @returns {Promise} 分类列表
  */
-export function getCategoryList() {
-  try {
-    return blogAxios.get('/blog/categories');
-  } catch (error) {
-    console.error('获取分类列表失败:', error);
-    throw error;
-  }
+export function getBlogCategoryList() {
+  return request({
+    url: createBlogApiUrl('categories'),
+    method: 'get'
+  }).catch(error => {
+    console.error('获取博客分类列表失败:', error)
+    throw error
+  })
 }
 
 /**
- * 获取动态列表
- * @param {Object} params - 查询参数
- * @param {number} params.page - 页码
- * @param {number} params.pageSize - 每页数量
- * @param {string} params.keyword - 搜索关键词
- * @param {string} params.type - 动态类型
- * @returns {Promise<Object>} 动态列表数据
+ * 获取博客动态列表
+ * @param {Object} params 分页参数
+ * @returns {Promise} 动态列表
  */
-export const getBlogDynamics = async (params) => {
-  try {
-    console.log('前台博客请求动态列表，参数:', params);
-    const apiUrl = '/blog/dynamics';
-    const response = await blogAxios.get(apiUrl, { params });
-    console.log('前台博客动态响应:', response);
-    return response;
-  } catch (error) {
-    console.error('获取动态列表失败:', error);
-    throw error;
-  }
+export function getBlogDynamics(params) {
+  return blogAxios.get(createBlogApiUrl('dynamics'), { params })
+    .catch(error => {
+      console.error('获取博客动态列表失败:', error)
+      throw error
+    })
 }
 
 /**
- * 获取动态详情
- * @param {string} id - 动态ID
- * @returns {Promise<Object>} 动态详情数据
+ * 获取博客动态详情
+ * @param {string} id 动态ID
+ * @returns {Promise} 动态详情
  */
-export const getBlogDynamicDetail = async (id) => {
-  try {
-    const response = await blogAxios.get(`/blog/dynamics/${id}`);
-    return response;
-  } catch (error) {
-    console.error('获取动态详情失败:', error);
-    throw error;
-  }
+export function getBlogDynamicDetail(id) {
+  return blogAxios.get(createBlogApiUrl(`dynamics/${id}`))
+    .catch(error => {
+      console.error('获取博客动态详情失败:', error)
+      throw error
+    })
 }
 
 /**
- * 获取相邻动态
- * @param {string} id - 当前动态ID
- * @returns {Promise<Object>} 相邻动态数据
+ * 获取相邻的博客动态
+ * @param {string} id 动态ID
+ * @returns {Promise} 相邻动态
  */
-export const getAdjacentDynamics = async (id) => {
-  try {
-    const response = await blogAxios.get(`/blog/dynamics/${id}/adjacent`);
-    return response;
-  } catch (error) {
-    console.error('获取相邻动态失败:', error);
-    throw error;
-  }
+export function getAdjacentDynamics(id) {
+  return request({
+    url: createBlogApiUrl(`dynamics/${id}/adjacent`),
+    method: 'get'
+  }).catch(error => {
+    console.error('获取相邻博客动态失败:', error)
+    throw error
+  })
 }
 
 /**
- * 获取热门动态
- * @param {Object} params - 查询参数
- * @param {number} params.limit - 获取数量
- * @returns {Promise<Object>} 热门动态数据
+ * 获取热门博客动态
+ * @param {Object} params 查询参数
+ * @returns {Promise} 热门动态
  */
-export const getHotDynamics = async (params) => {
-  try {
-    const response = await blogAxios.get('/blog/dynamics/hot', { params });
-    return response;
-  } catch (error) {
-    console.error('获取热门动态失败:', error);
-    throw error;
-  }
+export function getHotDynamics(params) {
+  return request({
+    url: createBlogApiUrl('dynamics/hot'),
+    method: 'get',
+    params
+  }).catch(error => {
+    console.error('获取热门博客动态失败:', error)
+    throw error
+  })
 }
 
 /**
- * 获取最新动态
- * @param {Object} params - 查询参数
- * @param {number} params.limit - 获取数量
- * @returns {Promise<Object>} 最新动态数据
+ * 获取最近博客动态
+ * @param {Object} params 查询参数
+ * @returns {Promise} 最近动态
  */
-export const getRecentDynamics = async (params) => {
-  try {
-    console.log('调用前台博客API获取最新动态，参数:', params);
-    const apiUrl = '/blog/dynamics/recent';
-    console.log('前台API请求URL:', apiUrl);
-    const response = await blogAxios.get(apiUrl, { params });
-    console.log('前台博客API响应:', response);
-    return response;
-  } catch (error) {
-    console.error('获取最新动态失败:', error);
-    throw error;
-  }
+export function getRecentDynamics(params) {
+  return request({
+    url: createBlogApiUrl('dynamics/recent'),
+    method: 'get',
+    params
+  }).catch(error => {
+    console.error('获取最近博客动态失败:', error)
+    throw error
+  })
 }
 
 /**
- * 获取分类下的动态
- * @param {number} categoryId - 分类ID
- * @param {Object} params - 查询参数
- * @param {number} params.page - 页码
- * @param {number} params.pageSize - 每页数量
- * @returns {Promise<Object>} 动态列表数据
+ * 获取分类下的博客动态
+ * @param {string} categoryId 分类ID
+ * @param {Object} params 分页参数
+ * @returns {Promise} 动态列表
  */
-export const getCategoryDynamics = async (categoryId, params) => {
-  try {
-    const response = await blogAxios.get(`/blog/categories/${categoryId}/dynamics`, { params });
-    return response;
-  } catch (error) {
-    console.error('获取分类下的动态失败:', error);
-    throw error;
-  }
+export function getCategoryDynamics(categoryId, params) {
+  return request({
+    url: createBlogApiUrl(`categories/${categoryId}/dynamics`),
+    method: 'get',
+    params
+  }).catch(error => {
+    console.error('获取分类下的博客动态失败:', error)
+    throw error
+  })
 }
 
 /**
- * 获取标签下的动态
- * @param {number} tagId - 标签ID
- * @param {Object} params - 查询参数
- * @param {number} params.page - 页码
- * @param {number} params.pageSize - 每页数量
- * @returns {Promise<Object>} 动态列表数据
+ * 获取标签下的博客动态
+ * @param {string} tagId 标签ID
+ * @param {Object} params 分页参数
+ * @returns {Promise} 动态列表
  */
-export const getTagDynamics = async (tagId, params) => {
-  try {
-    const response = await blogAxios.get(`/blog/tags/${tagId}/dynamics`, { params });
-    return response;
-  } catch (error) {
-    console.error('获取标签下的动态失败:', error);
-    throw error;
-  }
+export function getTagDynamics(tagId, params) {
+  return request({
+    url: createBlogApiUrl(`tags/${tagId}/dynamics`),
+    method: 'get',
+    params
+  }).catch(error => {
+    console.error('获取标签下的博客动态失败:', error)
+    throw error
+  })
+}
+
+/**
+ * 获取标签列表
+ * @returns {Promise} 标签列表
+ */
+export function getBlogTagList() {
+  return request({
+    url: createBlogApiUrl('tags'),
+    method: 'get'
+  }).catch(error => {
+    console.error('获取博客标签列表失败:', error)
+    throw error
+  })
 }
 
 /**
  * 增加动态浏览量
- * @param {string} id - 动态ID
- * @returns {Promise<Object>} 结果
+ * @param {string} id 动态ID
+ * @returns {Promise}
  */
-export const increaseDynamicView = async (id) => {
-  try {
-    const response = await blogAxios.post(`/blog/dynamics/${id}/view`);
-    return response;
-  } catch (error) {
-    console.error('增加动态浏览量失败:', error);
-    throw error;
-  }
+export function increaseDynamicView(id) {
+  return blogAxios.put(createBlogApiUrl(`dynamics/${id}/view`))
+    .then(response => response.data)
+    .catch(error => {
+      console.error('增加浏览量失败:', error)
+      throw error
+    })
 }
 
 /**
  * 创建动态
- * @param {Object} data - 动态数据
- * @returns {Promise<Object>} 创建结果
+ * @param {Object} data 动态数据
+ * @returns {Promise} 新创建的动态
  */
-export const createDynamic = async (data) => {
-  try {
-    const response = await blogAxios.post('/blog/dynamics', data);
-    return response;
-  } catch (error) {
-    console.error('创建动态失败:', error);
-    throw error;
-  }
+export function createDynamic(data) {
+  return blogAxios.post(createBlogApiUrl('dynamics'), data)
+    .then(response => response.data)
+    .catch(error => {
+      console.error('创建动态失败:', error)
+      throw error
+    })
 }
 
 /**
  * 更新动态
- * @param {string} id - 动态ID
- * @param {Object} data - 动态数据
- * @returns {Promise<Object>} 更新结果
+ * @param {string} id 动态ID
+ * @param {Object} data 动态数据
+ * @returns {Promise} 更新后的动态
  */
-export const updateDynamic = async (id, data) => {
-  try {
-    const response = await blogAxios.put(`/blog/dynamics/${id}`, data)
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '更新动态失败')
-  } catch (error) {
-    console.error('更新动态失败:', error)
-    throw error
-  }
+export function updateDynamic(id, data) {
+  return blogAxios.put(createBlogApiUrl(`dynamics/${id}`), data)
+    .then(response => response.data)
+    .catch(error => {
+      console.error('更新动态失败:', error)
+      throw error
+    })
 }
 
 /**
  * 删除动态
- * @param {string} id - 动态ID
- * @returns {Promise<Object>} 删除结果
+ * @param {string} id 动态ID
+ * @returns {Promise}
  */
-export const deleteDynamic = async (id) => {
-  try {
-    const response = await blogAxios.delete(`/blog/dynamics/${id}`)
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '删除动态失败')
-  } catch (error) {
-    console.error('删除动态失败:', error)
-    throw error
-  }
+export function deleteDynamic(id) {
+  return blogAxios.delete(createBlogApiUrl(`dynamics/${id}`))
+    .then(response => response.data)
+    .catch(error => {
+      console.error('删除动态失败:', error)
+      throw error
+    })
 }
 
 /**
- * 点赞动态
- * @param {string} id - 动态ID
- * @returns {Promise<Object>} 点赞结果
+ * 点赞博客动态
+ * @param {string} id 动态ID
+ * @returns {Promise} 点赞结果
  */
-export const likeDynamic = async (id) => {
-  try {
-    const response = await blogAxios.post(`/blog/dynamics/${id}/like`)
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '点赞失败')
-  } catch (error) {
-    console.error('点赞失败:', error)
+export function likeDynamic(id) {
+  return request({
+    url: createBlogApiUrl(`dynamics/${id}/like`),
+    method: 'post'
+  }).catch(error => {
+    console.error('点赞博客动态失败:', error)
     throw error
-  }
+  })
 }
 
 /**
- * 评论动态
- * @param {string} id - 动态ID
- * @param {Object} data - 评论数据
- * @returns {Promise<Object>} 评论结果
+ * 评论博客动态
+ * @param {string} id 动态ID
+ * @param {Object} data 评论内容
+ * @returns {Promise} 评论结果
  */
-export const commentDynamic = async (id, data) => {
-  try {
-    const response = await blogAxios.post(`/blog/dynamics/${id}/comment`, data)
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '评论失败')
-  } catch (error) {
-    console.error('评论失败:', error)
+export function commentDynamic(id, data) {
+  return request({
+    url: createBlogApiUrl(`dynamics/${id}/comments`),
+    method: 'post',
+    data
+  }).catch(error => {
+    console.error('评论博客动态失败:', error)
     throw error
-  }
+  })
 }
 
 /**
- * 获取动态评论列表
- * @param {string} id - 动态ID
- * @param {Object} params - 查询参数
- * @returns {Promise<Object>} 评论列表数据
+ * 获取博客动态评论
+ * @param {string} id 动态ID
+ * @param {Object} params 分页参数
+ * @returns {Promise} 评论列表
  */
-export const getDynamicComments = async (id, params) => {
-  try {
-    const response = await blogAxios.get(`/blog/dynamics/${id}/comments`, { params });
-    if (response.code === 200) {
-      return response.data;
-    }
-    throw new Error(response.message || '获取评论列表失败');
-  } catch (error) {
-    console.error('获取评论列表失败:', error);
-    throw error;
-  }
+export function getDynamicComments(id, params) {
+  return request({
+    url: createBlogApiUrl(`dynamics/${id}/comments`),
+    method: 'get',
+    params
+  }).catch(error => {
+    console.error('获取博客动态评论失败:', error)
+    throw error
+  })
 }
 
 /**
- * 删除动态评论
- * @param {string} id - 动态ID
- * @param {string} commentId - 评论ID
- * @returns {Promise<Object>} 删除结果
+ * 删除博客动态评论
+ * @param {string} dynamicId 动态ID
+ * @param {string} commentId 评论ID
+ * @returns {Promise} 删除结果
  */
-export const deleteDynamicComment = async (id, commentId) => {
-  try {
-    const response = await blogAxios.delete(`/blog/dynamics/${id}/comments/${commentId}`)
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '删除评论失败')
-  } catch (error) {
-    console.error('删除评论失败:', error)
+export function deleteDynamicComment(dynamicId, commentId) {
+  return request({
+    url: createBlogApiUrl(`dynamics/${dynamicId}/comments/${commentId}`),
+    method: 'delete'
+  }).catch(error => {
+    console.error('删除博客动态评论失败:', error)
     throw error
-  }
+  })
 }
 
 /**
- * 获取博客统计信息
- * @returns {Promise<Object>} 博客统计信息
+ * 获取博客统计数据
+ * @returns {Promise} 统计数据
  */
-export const getBlogStats = async () => {
-  try {
-    const response = await blogAxios.get('/blog/stats')
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '获取统计信息失败')
-  } catch (error) {
-    console.error('获取统计信息失败:', error)
+export function getBlogStats() {
+  return request({
+    url: createBlogApiUrl('stats'),
+    method: 'get'
+  }).catch(error => {
+    console.error('获取博客统计数据失败:', error)
     throw error
-  }
+  })
 }
 
 /**
- * 获取关于我页面信息
- * @returns {Promise<Object>} 关于我页面信息
+ * 获取关于页面信息
+ * @returns {Promise} 关于页面数据
  */
-export const getAboutInfo = async () => {
-  try {
-    const response = await blogAxios.get('/blog/about')
-    if (response.code === 200) {
-      return response.data
-    }
-    throw new Error(response.message || '获取关于我信息失败')
-  } catch (error) {
-    console.error('获取关于我信息失败:', error)
+export function getAboutInfo() {
+  return request({
+    url: createBlogApiUrl('about'),
+    method: 'get'
+  }).catch(error => {
+    console.error('获取关于页面信息失败:', error)
     throw error
-  }
+  })
+}
+
+/**
+ * 更新关于页面信息
+ * @param {Object} data 关于页面数据
+ * @returns {Promise} 更新结果
+ */
+export function updateAboutInfo(data) {
+  return request({
+    url: createBlogApiUrl('about'),
+    method: 'put',
+    data
+  }).catch(error => {
+    console.error('更新关于页面信息失败:', error)
+    throw error
+  })
 }
 

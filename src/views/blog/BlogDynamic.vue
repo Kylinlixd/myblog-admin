@@ -87,9 +87,9 @@
 
 <script setup>
 import { ref, onMounted, onActivated } from 'vue'
-import { getBlogDynamics } from '../../api/blog'
 import MarkdownIt from 'markdown-it'
 import { ElMessage } from 'element-plus'
+import { createBlogApiUrl } from '../../api/blog'
 
 // 创建Markdown渲染器
 const md = new MarkdownIt({
@@ -132,15 +132,32 @@ const fetchDynamicList = async (isRefresh = false) => {
   console.log('前台博客页面请求动态列表，页码:', page.value, '每页数量:', pageSize.value)
   
   try {
-    // 调用前台博客API获取动态
-    const response = await getBlogDynamics({
+    // 直接使用原生fetch请求，绕过所有axios配置
+    const apiParams = new URLSearchParams({
       page: page.value,
       pageSize: pageSize.value
     })
-    console.log('前台博客动态列表API响应:', response)
     
-    if (response.code === 200) {
-      const { list = [], total = 0 } = response.data || {}
+    // 使用辅助函数创建API URL，确保正确的路径前缀
+    const url = createBlogApiUrl('dynamics') + `?${apiParams.toString()}`
+    console.log('发送请求URL:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('前台博客动态列表API响应:', data)
+    
+    if (data.code === 200) {
+      const { list = [], total = 0 } = data.data || {}
       
       if (isRefresh) {
         // 如果是刷新，清空现有列表
@@ -156,7 +173,7 @@ const fetchDynamicList = async (isRefresh = false) => {
       
       hasMore.value = dynamicList.value.length < total
     } else {
-      ElMessage.error(response.message || '获取动态列表失败')
+      ElMessage.error(data.message || '获取动态列表失败')
     }
   } catch (error) {
     ElMessage.error('获取动态列表失败')
@@ -179,15 +196,131 @@ const loadMore = () => {
 }
 
 // 点赞
-const handleLike = (item) => {
-  // TODO: 实现点赞功能
-  ElMessage.success('点赞成功')
+const handleLike = async (item) => {
+  if (loading.value) return
+  if (item.isLiking) return
+  
+  item.isLiking = true
+  try {
+    // 使用辅助函数创建API URL
+    const url = createBlogApiUrl(`dynamics/${item.id}/like`)
+    console.log('发送点赞请求:', url)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('前台博客动态点赞API响应:', data)
+    
+    if (data.code === 200) {
+      item.likes = data.data.likes
+    } else {
+      ElMessage.error(data.message || '点赞失败')
+    }
+  } catch (error) {
+    ElMessage.error('点赞失败')
+    console.error('点赞失败:', error)
+  } finally {
+    item.isLiking = false
+  }
 }
 
-// 评论
-const handleComment = (item) => {
-  // TODO: 实现评论功能
-  ElMessage.info('评论功能开发中')
+// 获取评论
+const fetchComments = async (item) => {
+  if (item.isLoadingComments) return
+  if (item.commentsLoaded) return
+  
+  item.isLoadingComments = true
+  try {
+    // 使用辅助函数创建API URL
+    const url = createBlogApiUrl(`dynamics/${item.id}/comments`)
+    console.log('获取评论请求:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('前台博客动态评论API响应:', data)
+    
+    if (data.code === 200) {
+      item.comments = data.data.comments
+      item.commentsLoaded = true
+    } else {
+      ElMessage.error(data.message || '获取评论失败')
+    }
+  } catch (error) {
+    ElMessage.error('获取评论失败')
+    console.error('获取评论失败:', error)
+  } finally {
+    item.isLoadingComments = false
+  }
+}
+
+// 提交评论
+const submitComment = async (item) => {
+  if (!commentContent.value.trim()) {
+    ElMessage.warning('评论内容不能为空')
+    return
+  }
+  
+  if (item.isSubmittingComment) return
+  item.isSubmittingComment = true
+  
+  try {
+    // 使用辅助函数创建API URL
+    const url = createBlogApiUrl(`dynamics/${item.id}/comments`)
+    console.log('提交评论请求:', url)
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        content: commentContent.value,
+        nickname: nickname.value || '匿名用户',
+        email: email.value || ''
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error(`请求失败: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('前台博客动态评论提交API响应:', data)
+    
+    if (data.code === 200) {
+      item.comments = data.data.comments
+      item.isSubmittingComment = false
+      commentContent.value = ''
+    } else {
+      ElMessage.error(data.message || '提交评论失败')
+    }
+  } catch (error) {
+    ElMessage.error('提交评论失败')
+    console.error('提交评论失败:', error)
+  } finally {
+    item.isSubmittingComment = false
+  }
 }
 
 // 初始化
