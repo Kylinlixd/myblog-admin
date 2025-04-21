@@ -4,7 +4,7 @@ import request from '../utils/request';
  * 获取动态列表
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码
- * @param {number} params.limit - 每页数量
+ * @param {number} params.pageSize - 每页数量
  * @param {string} params.type - 动态类型
  * @param {string} params.status - 状态
  * @returns {Promise<Object>} 动态列表数据
@@ -13,6 +13,16 @@ export const getDynamicList = async (params) => {
   try {
     const apiUrl = '/dynamics';
     console.log('获取动态列表参数:', params);
+    
+    // 转换参数名称，确保与后端一致
+    const apiParams = {
+      ...params,
+      // 如果后端期望的参数名是limit而不是pageSize，做转换
+      limit: params.pageSize,
+      // 其他可能需要的转换
+    };
+    
+    console.log('转换后的API参数:', apiParams);
     console.log('API完整URL:', request.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL || '', apiUrl);
     
     // 获取token
@@ -23,11 +33,11 @@ export const getDynamicList = async (params) => {
     
     // 确保使用的是完整路径 - 修改为后台API的直接路径（不要加/api前缀，因为request.js已经有了）
     const response = await request.get(apiUrl, { 
-      params,
+      params: apiParams,
       headers
     });
     
-    console.log('动态列表API响应:', response);
+    console.log('动态列表API响应原始数据:', response);
     
     // 构造标准响应
     return { 

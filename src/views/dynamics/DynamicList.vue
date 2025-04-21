@@ -34,6 +34,13 @@
             <el-button size="small" type="danger" @click="deleteDynamic(scope.row)">删除</el-button>
           </template>
         </el-table-column>
+        <template #empty>
+          <div class="empty-state">
+            <el-empty description="暂无动态数据">
+              <el-button type="primary" @click="navigateToCreate">创建新动态</el-button>
+            </el-empty>
+          </div>
+        </template>
       </el-table>
       
       <div class="pagination-container">
@@ -79,11 +86,50 @@ const fetchDynamics = async () => {
       pageSize: pageSize.value
     })
     console.log('动态列表API响应:', res)
-    dynamicList.value = res.data.items || []
-    total.value = res.data.total || 0
+    
+    // 增加更详细的响应检查和日志
+    if (res && res.code === 200) {
+      console.log('处理响应数据:', res.data)
+      
+      // 检查响应数据的结构
+      if (res.data && typeof res.data === 'object') {
+        if (Array.isArray(res.data)) {
+          // 如果直接返回数组
+          dynamicList.value = res.data || []
+          total.value = res.data.length || 0
+          console.log('响应是数组类型，长度:', dynamicList.value.length)
+        } else if (res.data.items) {
+          // 如果返回带分页的对象结构
+          dynamicList.value = res.data.items || []
+          total.value = res.data.total || 0
+          console.log('响应是带分页结构，条目数:', dynamicList.value.length, '总数:', total.value)
+        } else {
+          // 尝试其他可能的结构
+          const possibleItems = res.data.list || res.data.data || res.data.records || []
+          dynamicList.value = possibleItems
+          total.value = res.data.total || res.data.totalCount || res.data.count || possibleItems.length || 0
+          console.log('响应是其他结构，提取数据后条目数:', dynamicList.value.length)
+        }
+      } else {
+        console.warn('响应数据异常:', res.data)
+        dynamicList.value = []
+        total.value = 0
+      }
+    } else {
+      console.warn('API响应状态码非200或响应为空')
+      dynamicList.value = []
+      total.value = 0
+    }
+    
+    // 即使没有数据也显示空表格
+    if (dynamicList.value.length === 0) {
+      console.log('没有找到动态数据，显示空表格')
+    }
   } catch (error) {
     console.error('获取动态列表失败:', error)
     ElMessage.error('获取动态列表失败')
+    dynamicList.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
