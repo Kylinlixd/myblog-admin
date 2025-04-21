@@ -19,7 +19,7 @@
           <template #title>仪表盘</template>
         </el-menu-item>
         
-        <el-sub-menu index="/dashboard/dynamics">
+        <el-sub-menu index="dynamics">
           <template #title>
             <el-icon><Document /></el-icon>
             <span>动态管理</span>
@@ -102,10 +102,15 @@ const userStore = useUserStore()
 const themeStore = useThemeStore()
 const appStore = useAppStore()
 const activeMenu = computed(() => {
+  // 打印当前路径，帮助调试
+  console.log('当前路由路径:', route.path)
+  
   // 处理子路由高亮
   if (route.path.startsWith('/dashboard/dynamics/')) {
     return '/dashboard/dynamics'
   }
+  
+  // 处理其他路由
   return route.path
 })
 const isCollapse = computed(() => appStore.sidebarCollapsed)
