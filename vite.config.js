@@ -25,8 +25,7 @@ export default defineConfig({
       'dayjs',
       'chart.js'
     ],
-    force: true,
-    exclude: []
+    force: true
   },
   css: {
     preprocessorOptions: {

@@ -60,8 +60,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Close } from '@element-plus/icons-vue'
+import { ElMessage } from '../../utils/elementToAntd'
 import { getDynamicDetail } from '../../api/dynamic'
 import MarkdownIt from 'markdown-it'
 import dayjs from 'dayjs'

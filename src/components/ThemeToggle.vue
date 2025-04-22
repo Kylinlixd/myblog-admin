@@ -1,13 +1,12 @@
 <template>
   <div class="theme-toggle" @click="handleToggle">
-    <moon-outlined v-if="currentTheme === 'light'" />
-    <sun-outlined v-else />
+    <BulbOutlined v-if="currentTheme === 'light'" />
+    <BulbFilled v-else />
   </div>
 </template>
 
 <script setup>
-import { SunOutlined } from '@ant-design/icons-vue';  
-import { MoonOutlined } from '@ant-design/icons-vue';
+import { BulbOutlined, BulbFilled } from '@ant-design/icons-vue'
 import { useThemeStore } from '../stores/theme'
 import { storeToRefs } from 'pinia'
 

@@ -81,7 +81,9 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useAppStore } from '../stores/app'
 import { message } from 'ant-design-vue'
-import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+// 分别导入图标组件
+import { UserOutlined } from '@ant-design/icons-vue'
+import { LockOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
