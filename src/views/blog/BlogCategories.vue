@@ -51,7 +51,10 @@ const fetchCategories = async () => {
 }
 
 onMounted(() => {
-  fetchCategories()
+  // 只有在访问分类页面时才加载数据
+  if (window.location.pathname.includes('/blog/categories')) {
+    fetchCategories()
+  }
 })
 </script>
 

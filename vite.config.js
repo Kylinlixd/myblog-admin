@@ -59,9 +59,27 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
+        bypass: (req, res, proxyOptions) => {
+          // 如果是对 /blog/ 的 GET 请求，直接返回 200 状态码，不发送到后端
+          if (req.url === '/blog/' && req.method === 'GET') {
+            console.log('[博客API] 拦截对根路径的请求:', req.url);
+            return true; // 返回 true 表示绕过代理
+          }
+          
+          // 其他请求正常代理
+          console.log('[博客API] 正常代理请求:', req.url);
+          return false;
+        },
         rewrite: (path) => {
           // 记录请求路径
           console.log('\n[博客API] 原始请求路径:', path);
+          
+          // 如果路径是/blog，重写为/blog/
+          if (path === '/blog') {
+            console.log('[博客API] 将/blog重写为/blog/');
+            return '/blog/';
+          }
+          
           // 保持原始路径不变
           console.log('[博客API] 最终请求URL:', 'http://127.0.0.1:8000' + path);
           return path;

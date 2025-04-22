@@ -22,6 +22,14 @@ export const useUserStore = defineStore('user', {
         return
       }
       
+      // 检查是否在博客前台
+      const isBlogPage = window.location.pathname.startsWith('/blog')
+      if (isBlogPage) {
+        console.log('博客前台页面，跳过用户信息初始化')
+        this.initialized = true
+        return null
+      }
+      
       if (this.token) {
         try {
           await this.getUserInfo()

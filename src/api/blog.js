@@ -35,6 +35,12 @@ export function createBlogApiUrl(path) {
     return path;
   }
   
+  // 处理直接访问/blog路径的情况
+  if (path === '/blog') {
+    console.log(`[Blog] 请求/blog路径，修正为/blog/`);
+    return '/blog/';
+  }
+  
   // 确保path不以/开头，避免出现双斜杠
   const cleanPath = path.startsWith('/') ? path.substring(1) : path
   // 使用相对路径，通过开发服务器代理转发

@@ -375,13 +375,16 @@ const useMockData = () => {
 
 // 初始化
 onMounted(() => {
-  fetchDynamicList()
+  // 只有在访问动态页面时才加载数据
+  if (window.location.pathname.includes('/blog/blogdynamic')) {
+    fetchDynamicList()
+  }
 })
 
 // 当组件被keep-alive激活时
 onActivated(() => {
   // 页面激活时检查是否需要刷新
-  if (fetchedPages.value.size === 0) {
+  if (window.location.pathname.includes('/blog/blogdynamic') && fetchedPages.value.size === 0) {
     fetchDynamicList()
   }
 })

@@ -568,9 +568,6 @@ import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButt
 const router = useRouter()
 const appStore = useAppStore()
 
-// 动态菜单状态
-const showDynamicMenu = ref(false)
-const dynamicMenuItems = ref([])
 
 // 搜索相关
 const searchQuery = ref('')
@@ -673,25 +670,10 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-// 获取动态菜单项 
-const fetchDynamicMenuItems = async () => {
-  try {
-    // 这里可以从API获取动态菜单项
-    // 目前直接使用静态数据
-    dynamicMenuItems.value = [
-      { id: 1, name: '全部动态', path: '/blog/blogdynamic' },
-      { id: 2, name: '热门动态', path: '/blog/blogdynamic?sort=hot' },
-      { id: 3, name: '最新动态', path: '/blog/blogdynamic?sort=new' }
-    ]
-  } catch (error) {
-    console.error('获取动态菜单项失败:', error)
-  }
-}
-
 onMounted(() => {
-  fetchDynamicMenuItems()
   document.addEventListener('click', closeMenuOnOutsideClick)
   loadSearchHistory()
+  // 不要在这里调用任何API请求
 })
 
 // 组件销毁时移除事件监听

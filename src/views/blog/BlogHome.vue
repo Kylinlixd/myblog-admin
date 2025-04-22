@@ -34,7 +34,7 @@
 
 <script setup>
 import WavyBackground from '@/components/InspiraUI/WavyBackground.vue'
-import { ref, onMounted, watchEffect, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 // 接收通过路由传递的过滤参数
@@ -65,16 +65,6 @@ const techStack = [
 ]
 
 // 监听路由变化，更新过滤条件
-watchEffect(() => {
-  const routeFilter = route.params.filter || route.query.filter || props.filter
-  
-  if (routeFilter) {
-    currentFilter.value = routeFilter
-    console.log('当前过滤条件:', currentFilter.value)
-  } else {
-    currentFilter.value = ''
-  }
-})
 
 </script>
 

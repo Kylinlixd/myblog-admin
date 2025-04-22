@@ -108,8 +108,11 @@ onMounted(() => {
     document.head.appendChild(fontAwesome)
   }
   
-  // 获取个人资料
-  fetchAboutInfo()
+  // 只有在访问关于页面时才加载数据
+  if (window.location.pathname.includes('/blog/about')) {
+    // 获取个人资料
+    fetchAboutInfo()
+  }
 })
 </script>
 

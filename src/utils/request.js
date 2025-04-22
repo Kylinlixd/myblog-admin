@@ -71,31 +71,31 @@ const retryRequest = async (fn, times = retryConfig.retryTimes) => {
 // 请求方法封装
 const request = {
   get(url, params, config = {}) {
-    // 确保URL不要以/api开头，因为baseURL已经是/api
-    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
-    console.log(`[Request] GET 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
-    return service.get(url, { params, ...config })
+    // 避免重复的/api前缀
+    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
+    console.log(`[Request] GET 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    return service.get(finalUrl, { params, ...config })
   },
   
   post(url, data, config = {}) {
-    // 确保URL不要以/api开头，因为baseURL已经是/api
-    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
-    console.log(`[Request] POST 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
-    return service.post(url, data, config)
+    // 避免重复的/api前缀
+    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
+    console.log(`[Request] POST 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    return service.post(finalUrl, data, config)
   },
   
   put(url, data, config = {}) {
-    // 确保URL不要以/api开头，因为baseURL已经是/api
-    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
-    console.log(`[Request] PUT 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
-    return service.put(url, data, config)
+    // 避免重复的/api前缀
+    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
+    console.log(`[Request] PUT 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    return service.put(finalUrl, data, config)
   },
   
   delete(url, config = {}) {
-    // 确保URL不要以/api开头，因为baseURL已经是/api
-    const finalUrl = url.startsWith('/api') ? url : `/api${url}`;
-    console.log(`[Request] DELETE 请求 原始URL: ${url}，最终完整URL: ${finalUrl}`);
-    return service.delete(url, config)
+    // 避免重复的/api前缀
+    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
+    console.log(`[Request] DELETE 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    return service.delete(finalUrl, config)
   }
 }
 

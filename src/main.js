@@ -58,11 +58,17 @@ app.use(pinia)
 
 // 初始化用户状态
 const userStore = useUserStore()
-userStore.initialize().then(() => {
-  console.log('用户状态初始化完成')
-}).catch(error => {
-  console.error('用户状态初始化失败:', error)
-})
+// 检查当前路径是否是博客前台页面，避免在博客页面发送不必要的API请求
+const isBlogPage = window.location.pathname.startsWith('/blog')
+if (!isBlogPage) {
+  userStore.initialize().then(() => {
+    console.log('用户状态初始化完成')
+  }).catch(error => {
+    console.error('用户状态初始化失败:', error)
+  })
+} else {
+  console.log('博客前台页面，跳过用户状态初始化')
+}
 
 // 使用 Ant Design Vue
 app.use(Antd)
