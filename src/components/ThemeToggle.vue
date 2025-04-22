@@ -6,7 +6,8 @@
 </template>
 
 <script setup>
-import { BulbOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons-vue'
+import { SunOutlined } from '@ant-design/icons-vue';  
+import { MoonOutlined } from '@ant-design/icons-vue';
 import { useThemeStore } from '../stores/theme'
 import { storeToRefs } from 'pinia'
 

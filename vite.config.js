@@ -18,6 +18,7 @@ export default defineConfig({
       'vue-router',
       'pinia',
       'ant-design-vue',
+      '@ant-design/icons-vue',
       'axios',
       'lodash-es',
       '@vueuse/core',
@@ -25,8 +26,7 @@ export default defineConfig({
       'chart.js'
     ],
     force: true,
-    // 避免优化时访问/blog路径
-    exclude: ['element-plus', '@element-plus/icons-vue']
+    exclude: []
   },
   css: {
     preprocessorOptions: {
@@ -39,15 +39,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     strictPort: false,
-    hmr: {
-      // 配置HMR检测，阻止不必要的请求
-      protocol: 'ws',
-      host: 'localhost',
-      port: 3000,
-      path: '/__hmr',
-      clientPort: 3000,
-      overlay: true
-    },
+    hmr: true,
     open: true,
     proxy: {
       // 后台管理API代理规则 - 修改为不移除/api前缀
