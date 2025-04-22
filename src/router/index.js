@@ -113,9 +113,10 @@ const routes = [
   {
     path: '/dashboard',
     component: () => import(/* webpackPrefetch: true */ '../layouts/DefaultLayout.vue'),
+    redirect: '/dashboard',
     meta: { 
       requiresAuth: true,
-      title: '后台首页'
+      title: '控制台'
     },
     children: [
       {
@@ -135,6 +136,13 @@ const routes = [
         meta: {
           title: '动态管理',
           icon: 'dynamic'
+        }
+      },
+      {
+        path: 'dynmics',
+        redirect: '/dashboard/dynamics',
+        meta: {
+          title: '动态管理'
         }
       },
       {

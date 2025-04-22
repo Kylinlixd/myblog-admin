@@ -8,41 +8,43 @@
       <el-menu
         :default-active="activeMenu"
         class="el-menu-vertical"
-        :router="true"
         :collapse="isCollapse"
         background-color="var(--background-color)"
         text-color="var(--text-primary)"
         active-text-color="#ffffff"
+        @open="handleOpen"
       >
-        <el-menu-item index="/dashboard">
+        <el-menu-item index="/dashboard" @click="navigateTo('/dashboard')">
           <el-icon><Monitor /></el-icon>
           <template #title>仪表盘</template>
         </el-menu-item>
         
-        <el-sub-menu index="dynamics">
+        <el-sub-menu popper-class="dynamic-submenu">
           <template #title>
-            <el-icon><Document /></el-icon>
-            <span>动态管理</span>
+            <div class="submenu-title" @click.stop="handleSubmenuClick">
+              <el-icon><Document /></el-icon>
+              <span>动态管理</span>
+            </div>
           </template>
-          <el-menu-item index="/dashboard/dynamics">
+          <el-menu-item index="/dashboard/dynamics" @click="navigateTo('/dashboard/dynamics')">
             <el-icon><Document /></el-icon>
             <span>动态列表</span>
           </el-menu-item>
-          <el-menu-item index="/dashboard/dynamics/create">
+          <el-menu-item index="/dashboard/dynamics/create" @click="navigateTo('/dashboard/dynamics/create')">
             <el-icon><Plus /></el-icon>
             <span>新建动态</span>
           </el-menu-item>
         </el-sub-menu>
         
-        <el-menu-item index="/dashboard/categories">
+        <el-menu-item index="/dashboard/categories" @click="navigateTo('/dashboard/categories')">
           <el-icon><Folder /></el-icon>
           <template #title>分类管理</template>
         </el-menu-item>
-        <el-menu-item index="/dashboard/tags">
+        <el-menu-item index="/dashboard/tags" @click="navigateTo('/dashboard/tags')">
           <el-icon><Collection /></el-icon>
           <template #title>标签管理</template>
         </el-menu-item>
-        <el-menu-item index="/dashboard/comments">
+        <el-menu-item index="/dashboard/comments" @click="navigateTo('/dashboard/comments')">
           <el-icon><ChatDotRound /></el-icon>
           <template #title>评论管理</template>
         </el-menu-item>
@@ -115,6 +117,12 @@ const activeMenu = computed(() => {
 })
 const isCollapse = computed(() => appStore.sidebarCollapsed)
 
+// 统一的导航方法
+const navigateTo = (path) => {
+  console.log('导航到路径:', path)
+  router.push(path)
+}
+
 // 切换侧边栏
 const toggleSidebar = () => {
   appStore.toggleSidebar()
@@ -141,6 +149,22 @@ const handleLogout = async () => {
   } catch (error) {
     // 用户取消操作
     console.log('用户取消退出登录')
+  }
+}
+
+// 处理子菜单点击事件 - 停止事件传播防止菜单自动导航
+const handleSubmenuClick = (event) => {
+  event.stopPropagation()
+  console.log('子菜单标题点击，直接导航到/dashboard/dynamics')
+  navigateTo('/dashboard/dynamics')
+}
+
+// 处理菜单打开事件
+const handleOpen = (key, keyPath) => {
+  console.log('菜单打开:', key, keyPath)
+  // 如果是动态管理菜单打开，可以自动导航到动态列表页面
+  if (key === 'dynamics' || key.includes('dynamics')) {
+    navigateTo('/dashboard/dynamics')
   }
 }
 </script>
@@ -332,5 +356,26 @@ const handleLogout = async () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.submenu-title {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  
+  .el-icon {
+    margin-right: 8px;
+  }
+}
+
+// 父菜单标题样式修复
+:deep(.el-sub-menu__title) {
+  padding: 0 !important;
+  
+  .submenu-title {
+    padding: 0 20px;
+  }
 }
 </style> 
