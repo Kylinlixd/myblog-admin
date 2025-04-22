@@ -159,7 +159,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../../utils/elementToAntd'
 import { useUserStore } from '../../stores/user'
 import { changePassword } from '../../api/auth'
 import defaultAvatar from '../../assets/default-avatar.png'

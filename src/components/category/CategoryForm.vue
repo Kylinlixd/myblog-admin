@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, reactive, watchEffect, defineEmits, defineProps } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../../utils/elementToAntd'
 import { createCategory, updateCategory } from '../../api/category'
 
 const props = defineProps({

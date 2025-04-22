@@ -99,7 +99,7 @@
 <script setup>
 import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../../utils/elementToAntd'
 // 导入API函数而不是仅导入createBlogApiUrl
 import { 
   getBlogDynamics, 

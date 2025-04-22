@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { ElSkeleton, ElSkeletonItem } from 'element-plus'
+import { ElSkeleton, ElSkeletonItem } from '../../utils/elementToAntd'
 </script>
 
 <style scoped>

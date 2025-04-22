@@ -159,7 +159,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage } from '../utils/elementToAntd'
 
 // 状态变量
 const blogLoading = ref(false)

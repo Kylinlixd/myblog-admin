@@ -2,23 +2,24 @@
   <div class="dynamic-preview">
     <div class="preview-header">
       <h2>动态预览</h2>
-      <el-button @click="handleClose">
-        <el-icon><Close /></el-icon>关闭
-      </el-button>
+      <a-button @click="handleClose">
+        <template #icon><close-outlined /></template>关闭
+      </a-button>
     </div>
     
-    <el-card class="preview-card">
+    <a-card class="preview-card">
       <div class="preview-content">
         <!-- Markdown内容 -->
         <div v-if="dynamic.content" class="markdown-content" v-html="renderMarkdown(dynamic.content)"></div>
         
         <!-- 图片展示 -->
         <div v-if="dynamic.images && dynamic.images.length" class="image-gallery">
-          <el-image
+          <a-image
             v-for="(img, index) in dynamic.images"
             :key="index"
             :src="img.url"
-            :preview-src-list="dynamic.images.map(i => i.url)"
+            :preview="true"
+            :preview-src="img.url"
             fit="cover"
             class="gallery-image"
           />
@@ -45,15 +46,15 @@
       </div>
       
       <div class="preview-meta">
-        <el-tag :type="getTypeTagType(dynamic.type)" class="type-tag">
+        <a-tag :color="getTypeTagColor(dynamic.type)" class="type-tag">
           {{ getTypeText(dynamic.type) }}
-        </el-tag>
-        <el-tag :type="dynamic.status === 'published' ? 'success' : 'info'" class="status-tag">
+        </a-tag>
+        <a-tag :color="dynamic.status === 'published' ? 'success' : ''" class="status-tag">
           {{ dynamic.status === 'published' ? '已发布' : '草稿' }}
-        </el-tag>
+        </a-tag>
         <span class="preview-time">{{ formatTime(dynamic.createTime) }}</span>
       </div>
-    </el-card>
+    </a-card>
   </div>
 </template>
 
@@ -64,6 +65,7 @@ import { ElMessage } from '../../utils/elementToAntd'
 import { getDynamicDetail } from '../../api/dynamic'
 import MarkdownIt from 'markdown-it'
 import dayjs from 'dayjs'
+import { CloseOutlined } from '@ant-design/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -83,15 +85,15 @@ const formatTime = (time) => {
   return dayjs(time).format('YYYY-MM-DD HH:mm:ss')
 }
 
-// 获取类型标签样式
-const getTypeTagType = (type) => {
-  const types = {
-    image: 'success',
-    video: 'warning',
-    audio: 'info',
+// 获取类型标签颜色
+const getTypeTagColor = (type) => {
+  const colors = {
+    image: 'green',
+    video: 'orange',
+    audio: 'blue',
     text: ''
   }
-  return types[type] || ''
+  return colors[type] || ''
 }
 
 // 获取类型文本
