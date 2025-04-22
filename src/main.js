@@ -22,6 +22,11 @@ const preloadComponents = () => {
   setTimeout(() => {
     console.log('开始预加载重要组件')
     importantRoutes.forEach(route => {
+      // 排除blog相关组件以避免不必要的API请求
+      if (route.path.includes('/blog')) {
+        return; // 跳过博客相关组件的预加载
+      }
+      
       if (route.components && route.components.default && typeof route.components.default === 'function') {
         // 异步预加载
         route.components.default().catch(err => {

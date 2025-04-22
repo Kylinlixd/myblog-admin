@@ -24,7 +24,9 @@ export default defineConfig({
       'dayjs',
       'chart.js'
     ],
-    force: true
+    force: true,
+    // 避免优化时访问/blog路径
+    exclude: ['element-plus', '@element-plus/icons-vue']
   },
   css: {
     preprocessorOptions: {
@@ -37,7 +39,15 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     strictPort: false,
-    hmr: true,
+    hmr: {
+      // 配置HMR检测，阻止不必要的请求
+      protocol: 'ws',
+      host: 'localhost',
+      port: 3000,
+      path: '/__hmr',
+      clientPort: 3000,
+      overlay: true
+    },
     open: true,
     proxy: {
       // 后台管理API代理规则 - 修改为不移除/api前缀
@@ -59,29 +69,45 @@ export default defineConfig({
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,
-        bypass: (req, res, proxyOptions) => {
-          // 如果是对 /blog/ 的 GET 请求，直接返回 200 状态码，不发送到后端
-          if (req.url === '/blog/' && req.method === 'GET') {
-            console.log('[博客API] 拦截对根路径的请求:', req.url);
-            return true; // 返回 true 表示绕过代理
+        bypass: function(req, res, proxyOptions) {
+          // 获取请求信息
+          const url = req.url;
+          const method = req.method;
+          const acceptHeader = req.headers.accept || '';
+          const isHtmlRequest = acceptHeader.includes('text/html');
+          
+          // 调试信息
+          console.log(`[博客请求] ${method} ${url}`, isHtmlRequest ? '(HTML页面请求)' : '(API请求)');
+          
+          // 处理刷新页面情况 - 任何HTML请求都由Vite处理
+          if (isHtmlRequest) {
+            console.log('[博客页面] 检测到HTML请求，交给Vite处理:', url);
+            return '/'; // 关键修改：返回根路径，让Vite的SPA路由处理
           }
           
-          // 其他请求正常代理
-          console.log('[博客API] 正常代理请求:', req.url);
+          // 拦截一般API请求
+          if (/^\/blog(\/)?$/.test(url) && method === 'GET' && !isHtmlRequest) {
+            console.log('[博客API] 拦截一般API请求:', url);
+            res.statusCode = 200;
+            res.end('{"success":true}');
+            return true;
+          }
+          
+          // 所有其他请求正常代理
+          console.log('[博客请求] 正常代理:', url);
           return false;
         },
         rewrite: (path) => {
-          // 记录请求路径
-          console.log('\n[博客API] 原始请求路径:', path);
+          // 记录重写前的路径
+          console.log('[博客重写] 原始路径:', path);
           
-          // 如果路径是/blog，重写为/blog/
+          // 统一blog路径格式
           if (path === '/blog') {
-            console.log('[博客API] 将/blog重写为/blog/');
+            console.log('[博客重写] 将/blog改为/blog/');
             return '/blog/';
           }
           
-          // 保持原始路径不变
-          console.log('[博客API] 最终请求URL:', 'http://127.0.0.1:8000' + path);
+          // 其他路径保持不变
           return path;
         }
       }
