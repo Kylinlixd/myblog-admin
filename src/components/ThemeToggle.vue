@@ -1,13 +1,12 @@
 <template>
-  <button class="theme-toggle" @click="handleToggle">
-    <el-icon :size="20">
-      <component :is="currentTheme === 'light' ? 'Moon' : 'Sunny'" />
-    </el-icon>
-  </button>
+  <div class="theme-toggle" @click="handleToggle">
+    <moon-outlined v-if="currentTheme === 'light'" />
+    <sun-outlined v-else />
+  </div>
 </template>
 
 <script setup>
-import { Moon, Sunny } from '@element-plus/icons-vue'
+import { BulbOutlined, SunOutlined, MoonOutlined } from '@ant-design/icons-vue'
 import { useThemeStore } from '../stores/theme'
 import { storeToRefs } from 'pinia'
 

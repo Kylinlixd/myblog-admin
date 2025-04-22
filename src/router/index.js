@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import { useAppStore } from '../stores/app'
 import { useUserStore } from '../stores/user'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 const routes = [
   {
@@ -10,8 +10,11 @@ const routes = [
   },
   {
     path: '/dynamics',
-    redirect: '/dashboard/dynamics',
-    meta: { requiresAuth: true } // 修改为需要权限验证，因为要重定向到后台管理页面
+    component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicList.vue'),
+    meta: { 
+      requiresAuth: true,
+      title: '动态管理'
+    }
   },
   {
     path: '/dynamics-test',
@@ -139,13 +142,6 @@ const routes = [
         }
       },
       {
-        path: 'dynmics',
-        redirect: '/dashboard/dynamics',
-        meta: {
-          title: '动态管理'
-        }
-      },
-      {
         path: 'dynamics/create',
         name: 'CreateDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
@@ -265,6 +261,7 @@ router.beforeEach(async (to, from, next) => {
       console.log('用户登录状态:', userStore.isLoggedIn)
       console.log('用户信息:', userStore.userInfo)
       console.log('路由需要验证:', requiresAuth)
+      console.log('匹配到的路由:', to.matched.map(r => ({path: r.path, name: r.name})))
     }
     
     // 如果目标路由是登录页面或注册页面，直接放行
@@ -292,21 +289,6 @@ router.beforeEach(async (to, from, next) => {
       return
     }
     
-    // 处理/dynamics直接访问的特殊情况
-    if (to.path === '/dynamics') {
-      console.log('访问/dynamics路径，准备重定向到/dashboard/dynamics')
-      if (!userStore.isLoggedIn) {
-        // 如果未登录，先重定向到登录页
-        console.log('用户未登录，重定向到登录页面，登录后跳转到/dashboard/dynamics')
-        next({ path: '/login', query: { redirect: '/dashboard/dynamics' }, replace: true })
-      } else {
-        // 已登录，直接重定向到dashboard/dynamics
-        console.log('用户已登录，直接重定向到/dashboard/dynamics')
-        next({ path: '/dashboard/dynamics', replace: true })
-      }
-      return
-    }
-    
     // 验证角色权限
     const requiredRoles = to.meta.roles
     if (requiredRoles && requiredRoles.length > 0) {
@@ -317,7 +299,7 @@ router.beforeEach(async (to, from, next) => {
       if (!hasRole) {
         console.log('用户没有所需角色权限')
         next({ path: '/dashboard', replace: true })
-        ElMessage.error('您没有权限访问该页面')
+        message.error('您没有权限访问该页面')
         return
       }
     }
@@ -376,6 +358,14 @@ router.afterEach((to) => {
       appStore.endLoading()
     }, 100)
   }
+})
+
+// 添加路由错误处理
+router.onError((error) => {
+  console.error('路由错误:', error)
+  const appStore = useAppStore()
+  appStore.hasError = true
+  appStore.errorMessage = error.message || '路由加载失败'
 })
 
 export default router

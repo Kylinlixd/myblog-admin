@@ -252,3 +252,51 @@ h6 {
   padding: 24px;
   text-align: center;
 }
+
+/* 防止样式冲突 */
+:where(.ant-btn, .ant-input, .ant-menu, .ant-submenu) {
+  box-sizing: border-box;
+}
+
+/* Ant Design Vue 响应式优化 */
+.ant-layout {
+  min-height: 100vh;
+}
+
+/* 移动端样式优化 */
+@media screen and (max-width: 768px) {
+  .ant-table {
+    font-size: 12px;
+  }
+  
+  .ant-table-thead > tr > th,
+  .ant-table-tbody > tr > td {
+    padding: 8px;
+  }
+  
+  .ant-form-item {
+    margin-bottom: 12px;
+  }
+  
+  .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+  
+  .ant-btn {
+    padding: 0 8px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .ant-card-body {
+    padding: 12px;
+  }
+  
+  .ant-pagination {
+    font-size: 12px;
+  }
+  
+  .ant-drawer-body {
+    padding: 12px;
+  }
+}

@@ -4,8 +4,8 @@
     <h1 class="error-title">页面未找到</h1>
     <p class="error-message">抱歉，您访问的页面不存在或已被移动</p>
     <div class="actions">
-      <el-button type="primary" @click="goHome">返回首页</el-button>
-      <el-button @click="goBack">返回上一页</el-button>
+      <a-button type="primary" @click="goHome">返回首页</a-button>
+      <a-button @click="goBack">返回上一页</a-button>
     </div>
   </div>
 </template>

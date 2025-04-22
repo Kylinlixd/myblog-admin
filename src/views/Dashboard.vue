@@ -3,16 +3,6 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-header">
-          <i class="icon-document"></i>
-          <h3>文章总数</h3>
-        </div>
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.postCount }}</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-header">
           <i class="icon-folder"></i>
           <h3>分类总数</h3>
         </div>
@@ -106,9 +96,9 @@
         <div class="dynamic-content">{{ dynamic.content }}</div>
         <div class="dynamic-meta">
           <span class="dynamic-time">{{ formatDate(dynamic.createdAt) }}</span>
-          <el-tag :type="dynamic.status === 'published' ? 'success' : 'info'">
+          <a-tag :color="dynamic.status === 'published' ? 'success' : 'default'">
             {{ dynamic.status === 'published' ? '已发布' : '草稿' }}
-          </el-tag>
+          </a-tag>
         </div>
       </div>
     </div>
@@ -120,7 +110,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import Chart from 'chart.js/auto'
 import request from '../utils/request'
 import { useAppStore } from '../stores/app'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 // 应用状态
 const appStore = useAppStore()
@@ -128,7 +118,6 @@ const loading = ref(true)
 
 // 统计数据
 const stats = ref({
-  postCount: 0,
   categoryCount: 0,
   tagCount: 0,
   totalViews: 0
@@ -168,7 +157,7 @@ const getStats = async () => {
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
-    ElMessage.error('获取统计数据失败: ' + (error.message || '未知错误'))
+    message.error('获取统计数据失败: ' + (error.message || '未知错误'))
   }
 }
 
@@ -228,10 +217,8 @@ const loadAllData = async () => {
     loading.value = false
     
     // 显示重试按钮
-    ElMessage({
-      type: 'error',
-      message: '加载仪表盘数据失败，请重试',
-      showClose: true,
+    message.error({
+      content: '加载仪表盘数据失败，请重试',
       duration: 5000
     })
   }

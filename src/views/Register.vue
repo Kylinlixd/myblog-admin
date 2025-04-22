@@ -101,7 +101,7 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -189,18 +189,18 @@ const handleRegister = async () => {
     })
     
     if (success) {
-      ElMessage.success('注册成功')
+      message.success('注册成功')
       // 注册成功后跳转到仪表盘
       router.push('/dashboard')
     } else {
-      ElMessage.error('注册失败，请稍后重试')
+      message.error('注册失败，请稍后重试')
     }
   } catch (error) {
     console.error('注册失败:', error)
     if (error.message) {
-      ElMessage.error(error.message)
+      message.error(error.message)
     } else {
-      ElMessage.error('注册失败，请稍后重试')
+      message.error('注册失败，请稍后重试')
     }
   } finally {
     loading.value = false

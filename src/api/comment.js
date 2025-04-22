@@ -5,7 +5,6 @@ import request from '../utils/request'
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码
  * @param {number} params.pageSize - 每页数量
- * @param {string} [params.postTitle] - 文章标题
  * @param {string} [params.author] - 评论者
  * @param {string} [params.status] - 评论状态
  * @returns {Promise<{list: Array, total: number}>}

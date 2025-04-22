@@ -125,6 +125,12 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value)
   }
   
+  // 添加直接设置侧边栏折叠状态的方法
+  function setSidebarCollapsed(status) {
+    sidebarCollapsed.value = status
+    localStorage.setItem('sidebarCollapsed', status)
+  }
+  
   return {
     isLoading,
     loadingText,
@@ -137,6 +143,7 @@ export const useAppStore = defineStore('app', () => {
     setLoadingError,
     retryLoading,
     resetLoadingState,
-    toggleSidebar
+    toggleSidebar,
+    setSidebarCollapsed
   }
 })

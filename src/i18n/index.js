@@ -29,7 +29,6 @@ const messages = {
     dashboard: {
       title: '仪表盘',
       stats: {
-        posts: '文章总数',
         categories: '分类总数',
         tags: '标签总数',
         views: '总浏览量'
@@ -41,29 +40,6 @@ const messages = {
         memory: '内存使用'
       }
     },
-    posts: {
-      title: '文章管理',
-      create: '新建文章',
-      edit: '编辑文章',
-      list: {
-        title: '标题',
-        category: '分类',
-        tags: '标签',
-        status: '状态',
-        views: '浏览量',
-        createTime: '创建时间',
-        actions: '操作'
-      },
-      form: {
-        title: '标题',
-        content: '内容',
-        category: '分类',
-        tags: '标签',
-        status: '状态',
-        publish: '发布',
-        draft: '草稿'
-      }
-    },
     categories: {
       title: '分类管理',
       create: '新建分类',
@@ -71,7 +47,6 @@ const messages = {
       list: {
         name: '名称',
         description: '描述',
-        postCount: '文章数',
         createTime: '创建时间',
         actions: '操作'
       },
@@ -89,7 +64,6 @@ const messages = {
       list: {
         name: '名称',
         description: '描述',
-        postCount: '文章数',
         createTime: '创建时间',
         actions: '操作'
       },
@@ -143,7 +117,6 @@ const messages = {
     dashboard: {
       title: 'Dashboard',
       stats: {
-        posts: 'Total Posts',
         categories: 'Total Categories',
         tags: 'Total Tags',
         views: 'Total Views'
@@ -155,29 +128,6 @@ const messages = {
         memory: 'Memory Usage'
       }
     },
-    posts: {
-      title: 'Post Management',
-      create: 'Create Post',
-      edit: 'Edit Post',
-      list: {
-        title: 'Title',
-        category: 'Category',
-        tags: 'Tags',
-        status: 'Status',
-        views: 'Views',
-        createTime: 'Create Time',
-        actions: 'Actions'
-      },
-      form: {
-        title: 'Title',
-        content: 'Content',
-        category: 'Category',
-        tags: 'Tags',
-        status: 'Status',
-        publish: 'Publish',
-        draft: 'Draft'
-      }
-    },
     categories: {
       title: 'Category Management',
       create: 'Create Category',
@@ -185,7 +135,6 @@ const messages = {
       list: {
         name: 'Name',
         description: 'Description',
-        postCount: 'Post Count',
         createTime: 'Create Time',
         actions: 'Actions'
       },
@@ -203,7 +152,6 @@ const messages = {
       list: {
         name: 'Name',
         description: 'Description',
-        postCount: 'Post Count',
         createTime: 'Create Time',
         actions: 'Actions'
       },

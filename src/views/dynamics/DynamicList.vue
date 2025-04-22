@@ -2,66 +2,70 @@
   <div class="dynamic-list">
     <div class="page-header">
       <h2>动态列表</h2>
-      <el-button type="primary" @click="navigateToCreate">
-        <el-icon><Plus /></el-icon>新建动态
-      </el-button>
+      <a-button type="primary" @click="navigateToCreate">
+        <template #icon><plus-outlined /></template>
+        新建动态
+      </a-button>
     </div>
     
-    <el-card class="list-card">
-      <el-table 
-        v-loading="loading" 
-        :data="dynamicList" 
-        border 
-        style="width: 100%">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="标题" min-width="200" />
-        <el-table-column label="封面图" width="120">
-          <template #default="scope">
-            <el-image 
-              v-if="scope.row.coverImage" 
-              :src="scope.row.coverImage" 
-              style="width: 80px; height: 45px" 
-              fit="cover" />
+    <a-card class="list-card">
+      <a-table
+        :loading="loading"
+        :dataSource="dynamicList"
+        :columns="responsive ? columnsForMobile : columns"
+        :pagination="false"
+        :scroll="responsive ? { x: 600 } : {}"
+        bordered
+      >
+        <template #bodyCell="{ column, record }">
+          <template v-if="column.key === 'coverImage'">
+            <a-image
+              v-if="record.coverImage"
+              :src="record.coverImage"
+              :width="80"
+              :height="45"
+              :preview="false"
+            />
             <span v-else>无封面</span>
           </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="创建时间" width="180" />
-        <el-table-column prop="updatedAt" label="更新时间" width="180" />
-        <el-table-column label="操作" width="200">
-          <template #default="scope">
-            <el-button size="small" @click="viewDetail(scope.row)">查看</el-button>
-            <el-button size="small" type="primary" @click="editDynamic(scope.row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="deleteDynamic(scope.row)">删除</el-button>
+
+          <template v-if="column.key === 'action'">
+            <a-space>
+              <a-button size="small" @click="viewDetail(record)">查看</a-button>
+              <a-button size="small" type="primary" @click="editDynamic(record)">编辑</a-button>
+              <a-button size="small" danger @click="deleteDynamic(record)">删除</a-button>
+            </a-space>
           </template>
-        </el-table-column>
-        <template #empty>
+        </template>
+
+        <template #emptyText>
           <div class="empty-state">
-            <el-empty description="暂无动态数据">
-              <el-button type="primary" @click="navigateToCreate">创建新动态</el-button>
-            </el-empty>
+            <a-empty description="暂无动态数据">
+              <a-button type="primary" @click="navigateToCreate">创建新动态</a-button>
+            </a-empty>
           </div>
         </template>
-      </el-table>
+      </a-table>
       
       <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="currentPage"
-          v-model:page-size="pageSize"
+        <a-pagination
+          v-model:current="currentPage"
+          v-model:pageSize="pageSize"
           :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+          :pageSizeOptions="['10', '20', '50', '100']"
+          :showSizeChanger="true"
+          :showTotal="total => `共 ${total} 条`"
+          @change="handlePageChange"
         />
       </div>
-    </el-card>
+    </a-card>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { ref, onMounted, reactive, onUnmounted } from 'vue'
+import { message, Modal } from 'ant-design-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynamic'
 
@@ -71,6 +75,66 @@ const dynamicList = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const responsive = ref(false)
+
+// 表格列定义
+const columns = [
+  {
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
+    width: 80
+  },
+  {
+    title: '标题',
+    dataIndex: 'title',
+    key: 'title'
+  },
+  {
+    title: '封面图',
+    dataIndex: 'coverImage',
+    key: 'coverImage',
+    width: 120
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    width: 180
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updatedAt',
+    key: 'updatedAt',
+    width: 180
+  },
+  {
+    title: '操作',
+    key: 'action',
+    width: 200
+  }
+]
+
+// 移动端优化的列定义
+const columnsForMobile = [
+  {
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
+    width: 60
+  },
+  {
+    title: '标题',
+    dataIndex: 'title',
+    key: 'title'
+  },
+  {
+    title: '操作',
+    key: 'action',
+    fixed: 'right',
+    width: 100
+  }
+]
 
 // 获取动态列表
 const fetchDynamics = async () => {
@@ -127,7 +191,7 @@ const fetchDynamics = async () => {
     }
   } catch (error) {
     console.error('获取动态列表失败:', error)
-    ElMessage.error('获取动态列表失败')
+    message.error('获取动态列表失败')
     dynamicList.value = []
     total.value = 0
   } finally {
@@ -141,52 +205,62 @@ const navigateToCreate = () => {
 }
 
 // 查看动态详情
-const viewDetail = (row) => {
+const viewDetail = (record) => {
   // 这里可以打开一个对话框显示详情，或者跳转到详情页
-  window.open(`/blog/blogdynamic?id=${row.id}`, '_blank')
+  window.open(`/blog/blogdynamic?id=${record.id}`, '_blank')
 }
 
 // 编辑动态
-const editDynamic = (row) => {
-  router.push(`/dashboard/dynamics/edit/${row.id}`)
+const editDynamic = (record) => {
+  router.push(`/dashboard/dynamics/edit/${record.id}`)
 }
 
 // 删除动态
-const deleteDynamic = async (row) => {
-  try {
-    await ElMessageBox.confirm('确认删除该动态吗？此操作不可恢复', '警告', {
-      confirmButtonText: '确认',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-    
-    loading.value = true
-    await deleteAdminDynamic(row.id)
-    ElMessage.success('删除成功')
-    fetchDynamics() // 重新加载列表
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除动态失败:', error)
-      ElMessage.error('删除动态失败')
+const deleteDynamic = (record) => {
+  Modal.confirm({
+    title: '警告',
+    content: '确认删除该动态吗？此操作不可恢复',
+    okText: '确认',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      try {
+        loading.value = true
+        await deleteAdminDynamic(record.id)
+        message.success('删除成功')
+        fetchDynamics() // 重新加载列表
+      } catch (error) {
+        console.error('删除动态失败:', error)
+        message.error('删除动态失败')
+      } finally {
+        loading.value = false
+      }
     }
-  } finally {
-    loading.value = false
-  }
+  })
 }
 
-// 处理分页
-const handleSizeChange = (val) => {
-  pageSize.value = val
+// 处理分页变化
+const handlePageChange = (page, pageSize) => {
+  currentPage.value = page
+  pageSize.value = pageSize
   fetchDynamics()
 }
 
-const handleCurrentChange = (val) => {
-  currentPage.value = val
-  fetchDynamics()
+// 检测设备尺寸
+const checkResponsive = () => {
+  responsive.value = window.innerWidth < 768
 }
 
 onMounted(() => {
   fetchDynamics()
+  
+  // 检测响应式
+  checkResponsive()
+  window.addEventListener('resize', checkResponsive)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkResponsive)
 })
 </script>
 
@@ -202,6 +276,13 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+.page-header h2 {
+  margin-bottom: 0;
+  font-weight: 600;
+  font-size: 18px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
 .list-card {
   margin-bottom: 20px;
 }
@@ -209,6 +290,33 @@ onMounted(() => {
 .pagination-container {
   margin-top: 20px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
+}
+
+/* 移动端样式 */
+@media screen and (max-width: 768px) {
+  .dynamic-list {
+    padding: 12px;
+  }
+  
+  .page-header {
+    margin-bottom: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .page-header h2 {
+    font-size: 16px;
+  }
+  
+  .list-card {
+    margin-bottom: 12px;
+  }
+  
+  .pagination-container {
+    margin-top: 12px;
+    justify-content: center;
+  }
 }
 </style>

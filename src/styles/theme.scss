@@ -82,31 +82,6 @@ $themes: (
               box-shadow var(--transition-duration) var(--transition-timing);
 }
 
-// Element Plus 主题覆盖
-.el-button--primary {
-  --el-button-bg-color: var(--primary-color);
-  --el-button-border-color: var(--primary-color);
-  --el-button-hover-bg-color: var(--primary-color-dark);
-  --el-button-hover-border-color: var(--primary-color-dark);
-}
-
-.el-input__wrapper {
-  --el-input-border-color: var(--border-color);
-  --el-input-hover-border-color: var(--primary-color);
-  --el-input-focus-border-color: var(--primary-color);
-}
-
-.el-menu {
-  --el-menu-bg-color: var(--background-color);
-  --el-menu-hover-bg-color: var(--background-light);
-  --el-menu-active-color: var(--primary-color);
-}
-
-.el-card {
-  --el-card-border-color: var(--border-color);
-  --el-card-border-radius: var(--border-radius);
-}
-
 // 导出变量
 :export {
   themes: 'light dark';

@@ -63,20 +63,22 @@
           </div>
         </nav>
         <div class="blog-search">
-          <el-input
-            v-model="searchQuery"
+          <a-input
+            v-model:value="searchQuery"
             placeholder="搜索动态..."
-            :prefix-icon="Search"
-            @keyup.enter="handleSearch"
+            @pressEnter="handleSearch"
             @focus="showSearchSuggestions = true"
-            clearable
+            allowClear
           >
-            <template #append>
-              <el-button @click="handleSearch">
-                <el-icon><i-ep-search /></el-icon>
-              </el-button>
+            <template #prefix>
+              <search-outlined />
             </template>
-          </el-input>
+            <template #addonAfter>
+              <a-button @click="handleSearch">
+                <search-outlined />
+              </a-button>
+            </template>
+          </a-input>
           
           <!-- 搜索建议下拉 -->
           <div v-if="showSearchSuggestions && (searchHistory.length > 0 || hotSearches.length > 0)" class="search-suggestions">
@@ -84,9 +86,9 @@
             <div v-if="searchHistory.length > 0" class="suggestion-section">
               <div class="suggestion-header">
                 <span>历史搜索</span>
-                <el-button type="text" size="small" @click="clearSearchHistory">
-                  <el-icon><i-ep-delete /></el-icon>
-                </el-button>
+                <a-button type="link" size="small" @click="clearSearchHistory">
+                  <delete-outlined />
+                </a-button>
               </div>
               <div class="suggestion-list">
                 <div 
@@ -95,7 +97,7 @@
                   class="suggestion-item" 
                   @click="useSearchSuggestion(item)"
                 >
-                  <el-icon><i-ep-time /></el-icon>
+                  <clock-circle-outlined />
                   <span>{{ item }}</span>
                 </div>
               </div>
@@ -113,7 +115,7 @@
                   class="suggestion-item" 
                   @click="useSearchSuggestion(item)"
                 >
-                  <el-icon><i-ep-hot /></el-icon>
+                  <fire-outlined />
                   <span>{{ item }}</span>
                 </div>
               </div>
@@ -157,7 +159,7 @@
     </footer>
 
     <!-- 回到顶部按钮 -->
-    <el-backtop :right="30" :bottom="30" />
+    <a-back-top :visibilityHeight="300" :style="{ right: '30px', bottom: '30px' }" />
   </div>
 </template>
 
@@ -559,7 +561,7 @@
 <script setup>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { Search } from '@element-plus/icons-vue'
+import { SearchOutlined, DeleteOutlined, ClockCircleOutlined, FireOutlined } from '@ant-design/icons-vue'
 import { useAppStore } from '../stores/app'
 import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButton.vue'
 

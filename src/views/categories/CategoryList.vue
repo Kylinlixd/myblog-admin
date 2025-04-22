@@ -1,10 +1,10 @@
 <template>
   <div class="category-list">
-    <PageHeader title="分类管理" icon="Folder">
+    <PageHeader title="分类管理" icon="FolderOutlined">
       <template #actions>
-        <el-button type="primary" @click="handleCreate">
-          <el-icon><Plus /></el-icon>新建分类
-        </el-button>
+        <a-button type="primary" @click="handleCreate">
+          <template #icon><plus-outlined /></template>新建分类
+        </a-button>
       </template>
     </PageHeader>
     
@@ -18,19 +18,18 @@
           <span class="category-name">{{ category.name }}</span>
         </td>
         <td class="description-cell">{{ category.description }}</td>
-        <td class="count-cell">{{ category.postCount }}</td>
         <td>{{ category.createdAt }}</td>
         <td>
           <div class="action-buttons">
-            <el-button type="primary" link @click="handleEdit(category)">
-              <el-icon><Edit /></el-icon>编辑
-            </el-button>
-            <el-button type="primary" link @click="handleAddChild(category)">
-              <el-icon><Plus /></el-icon>添加子分类
-            </el-button>
-            <el-button type="danger" link @click="handleDelete(category)">
-              <el-icon><Delete /></el-icon>删除
-            </el-button>
+            <a-button type="primary" @click="handleEdit(category)">
+              <template #icon><edit-outlined /></template>编辑
+            </a-button>
+            <a-button type="primary" @click="handleAddChild(category)">
+              <template #icon><plus-outlined /></template>添加子分类
+            </a-button>
+            <a-button type="primary" danger @click="handleDelete(category)">
+              <template #icon><delete-outlined /></template>删除
+            </a-button>
           </div>
         </td>
       </tr>
@@ -40,16 +39,15 @@
             <span class="category-name child">{{ child.name }}</span>
           </td>
           <td class="description-cell">{{ child.description }}</td>
-          <td class="count-cell">{{ child.postCount }}</td>
           <td>{{ child.createTime }}</td>
           <td>
             <div class="action-buttons">
-              <el-button type="primary" link @click="handleEdit(child)">
-                <el-icon><Edit /></el-icon>编辑
-              </el-button>
-              <el-button type="danger" link @click="handleDelete(child)">
-                <el-icon><Delete /></el-icon>删除
-              </el-button>
+              <a-button type="primary" @click="handleEdit(child)">
+                <template #icon><edit-outlined /></template>编辑
+              </a-button>
+              <a-button type="primary" danger @click="handleDelete(child)">
+                <template #icon><delete-outlined /></template>删除
+              </a-button>
             </div>
           </td>
         </tr>
@@ -65,46 +63,46 @@
       :loading="formLoading"
       @submit="handleSubmit"
     >
-      <el-form-item label="上级分类" prop="parentId">
-        <el-select
-          v-model="categoryForm.parentId"
+      <a-form-item label="上级分类" name="parentId">
+        <a-select
+          v-model:value="categoryForm.parentId"
           placeholder="请选择上级分类"
-          clearable
+          allowClear
         >
-          <el-option
+          <a-select-option
             v-for="item in categoryOptions"
             :key="item.id"
-            :label="item.name"
             :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
+          >
+            {{ item.name }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
       
-      <el-form-item label="分类名称" prop="name">
-        <el-input v-model="categoryForm.name" placeholder="请输入分类名称" />
-      </el-form-item>
+      <a-form-item label="分类名称" name="name">
+        <a-input v-model:value="categoryForm.name" placeholder="请输入分类名称" />
+      </a-form-item>
       
-      <el-form-item label="描述" prop="description">
-        <el-input
-          v-model="categoryForm.description"
-          type="textarea"
+      <a-form-item label="描述" name="description">
+        <a-textarea
+          v-model:value="categoryForm.description"
           :rows="3"
           placeholder="请输入分类描述"
         />
-      </el-form-item>
+      </a-form-item>
       
-      <el-form-item label="排序" prop="sort">
-        <el-input-number v-model="categoryForm.sort" :min="0" :max="999" />
-      </el-form-item>
+      <a-form-item label="排序" name="sort">
+        <a-input-number v-model:value="categoryForm.sort" :min="0" :max="999" />
+      </a-form-item>
     </DataFormDialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { message, Modal } from 'ant-design-vue'
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from '../../api/category'
-import { Plus, Edit, Delete, Folder } from '@element-plus/icons-vue'
+import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons-vue'
 
 // 导入通用组件
 import DataTable from '../../components/common/DataTable.vue'
@@ -115,7 +113,6 @@ import DataFormDialog from '../../components/common/DataFormDialog.vue'
 const columns = [
   { label: '分类名称', width: '200px' },
   { label: '描述', width: '300px' },
-  { label: '文章数量', width: '100px' },
   { label: '创建时间', width: '180px' },
   { label: '操作', width: '250px' }
 ]
@@ -165,11 +162,11 @@ const getCategories = async () => {
         return true
       })
     } else {
-      ElMessage.error(response.message || '获取分类列表失败')
+      message.error(response.message || '获取分类列表失败')
     }
   } catch (error) {
     console.error('获取分类列表失败:', error)
-    ElMessage.error('获取分类列表失败')
+    message.error('获取分类列表失败')
   } finally {
     loading.value = false
   }
@@ -210,25 +207,25 @@ const handleSubmit = async () => {
     if (dialogType.value === 'create') {
       const response = await createCategory(categoryForm)
       if (response.code === 200) {
-        ElMessage.success('创建成功')
+        message.success('创建成功')
         dialogVisible.value = false
         getCategories()
       } else {
-        ElMessage.error(response.message || '创建失败')
+        message.error(response.message || '创建失败')
       }
     } else {
       const response = await updateCategory(categoryForm.id, categoryForm)
       if (response.code === 200) {
-        ElMessage.success('更新成功')
+        message.success('更新成功')
         dialogVisible.value = false
         getCategories()
       } else {
-        ElMessage.error(response.message || '更新失败')
+        message.error(response.message || '更新失败')
       }
     }
   } catch (error) {
     console.error('提交分类失败:', error)
-    ElMessage.error('操作失败，请稍后重试')
+    message.error('操作失败，请稍后重试')
   } finally {
     formLoading.value = false
   }
@@ -236,30 +233,29 @@ const handleSubmit = async () => {
 
 // 删除分类
 const handleDelete = (row) => {
-  ElMessageBox.confirm(
-    row.children && row.children.length ? 
+  Modal.confirm({
+    title: '提示',
+    content: row.children && row.children.length ? 
       '该分类包含子分类，删除将同时删除所有子分类，确定继续吗？' : 
       '确定要删除该分类吗？',
-    '提示',
-    {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(async () => {
-    try {
-      const response = await deleteCategory(row.id)
-      if (response.code === 200) {
-        ElMessage.success('删除成功')
-        getCategories()
-      } else {
-        ElMessage.error(response.message || '删除失败')
+    okText: '确定',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        const response = await deleteCategory(row.id)
+        if (response.code === 200) {
+          message.success('删除成功')
+          getCategories()
+        } else {
+          message.error(response.message || '删除失败')
+        }
+      } catch (error) {
+        console.error('删除分类失败:', error)
+        message.error('删除失败')
       }
-    } catch (error) {
-      console.error('删除分类失败:', error)
-      ElMessage.error('删除失败')
     }
-  }).catch(() => {})
+  })
 }
 
 onMounted(() => {
@@ -300,10 +296,6 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.count-cell {
-  text-align: center;
 }
 
 .child-row {

@@ -2,7 +2,7 @@
   <div class="page-header">
     <div class="title">
       <slot name="icon">
-        <el-icon v-if="icon"><component :is="icon" /></el-icon>
+        <component :is="icon" v-if="icon" />
       </slot>
       <h2>{{ title }}</h2>
     </div>
@@ -47,7 +47,7 @@ defineProps({
       color: #303133;
     }
     
-    .el-icon {
+    .anticon {
       margin-right: 8px;
       font-size: 22px;
       color: #0096ff;

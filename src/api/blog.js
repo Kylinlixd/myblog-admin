@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { getEnvValue } from '../utils/env'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import request from '../utils/request'
 
 // 获取前台API路径前缀，始终使用/blog
@@ -13,15 +13,15 @@ const getBlogApiPrefix = () => {
 
 // 创建专用于博客前台的axios实例
 const blogAxios = axios.create({
-  baseURL: '', // 设置为空，避免与全局环境变量冲突
+  baseURL: '', // 使用相对路径，通过开发服务器代理
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
-// 禁用默认baseURL，确保不会被环境变量覆盖
-delete blogAxios.defaults.baseURL
+// 禁用默认baseURL覆盖
+// delete blogAxios.defaults.baseURL
 
 /**
  * 创建博客API URL
@@ -37,7 +37,7 @@ export function createBlogApiUrl(path) {
   
   // 确保path不以/开头，避免出现双斜杠
   const cleanPath = path.startsWith('/') ? path.substring(1) : path
-  // 统一返回blog API格式
+  // 使用相对路径，通过开发服务器代理转发
   const url = `/blog/${cleanPath}`;
   console.log(`[Blog] 创建URL: ${url}`);
   return url;
@@ -46,10 +46,10 @@ export function createBlogApiUrl(path) {
 // 请求拦截器
 blogAxios.interceptors.request.use(
   config => {
-    // 强制覆盖baseURL，确保使用正确的路径前缀
-    config.baseURL = '';
+    // 不要覆盖baseURL，保持为空或相对路径
+    // config.baseURL = ''; - 删除这行
     
-    // 确保URL以/blog开头，避免使用环境变量
+    // 确保URL以/blog开头
     if (config.url && !config.url.startsWith('/blog/')) {
       // 使用修正后的createBlogApiUrl函数确保正确添加前缀
       config.url = createBlogApiUrl(config.url)
@@ -59,7 +59,7 @@ blogAxios.interceptors.request.use(
     console.log(`[Blog] 发送请求:`, {
       方法: config.method.toUpperCase(),
       URL: config.url,
-      完整请求URL: (config.baseURL || '') + config.url,
+      完整请求URL: window.location.origin + config.url,
       参数: config.params || {}
     });
     

@@ -1,27 +1,27 @@
 <template>
   <div class="theme-switch">
-    <el-dropdown @command="handleThemeChange">
-      <span class="theme-switch-trigger">
+    <a-dropdown @select="handleThemeChange">
+      <a class="theme-switch-trigger">
         <i class="icon-theme"></i>
         {{ currentThemeLabel }}
-      </span>
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item command="light">
+      </a>
+      <template #overlay>
+        <a-menu>
+          <a-menu-item key="light">
             <i class="icon-sun"></i>
             {{ t('theme.light') }}
-          </el-dropdown-item>
-          <el-dropdown-item command="dark">
+          </a-menu-item>
+          <a-menu-item key="dark">
             <i class="icon-moon"></i>
             {{ t('theme.dark') }}
-          </el-dropdown-item>
-          <el-dropdown-item command="high-contrast">
+          </a-menu-item>
+          <a-menu-item key="high-contrast">
             <i class="icon-contrast"></i>
             {{ t('theme.highContrast') }}
-          </el-dropdown-item>
-        </el-dropdown-menu>
+          </a-menu-item>
+        </a-menu>
       </template>
-    </el-dropdown>
+    </a-dropdown>
   </div>
 </template>
 

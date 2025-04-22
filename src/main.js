@@ -35,6 +35,23 @@ const preloadComponents = () => {
 // 创建应用实例
 const app = createApp(App)
 
+// 添加API请求URL验证（开发环境）
+if (process.env.NODE_ENV === 'development') {
+  console.log('开发环境启用API请求URL验证')
+  // 验证前端请求是否正确发送
+  const originalFetch = window.fetch
+  window.fetch = function(url, options) {
+    if (typeof url === 'string' && (url.startsWith('/blog') || url.startsWith('/api'))) {
+      console.log('[请求拦截] 通过fetch发送请求:', url)
+      // 确保URL是相对路径，会通过开发服务器代理
+      if (url.startsWith('http')) {
+        console.warn('[请求拦截] 检测到绝对URL，这可能导致CORS问题或绕过代理:', url)
+      }
+    }
+    return originalFetch.apply(this, arguments)
+  }
+}
+
 // 初始化 Pinia
 const pinia = createPinia()
 app.use(pinia)

@@ -1,23 +1,23 @@
 <template>
   <div class="search-form">
-    <el-form :model="form" inline @submit.prevent="handleSearch">
+    <a-form :model="form" layout="inline" @submit.prevent="handleSearch">
       <slot></slot>
       
       <div class="form-buttons">
-        <el-button type="primary" @click="handleSearch">
-          <el-icon><Search /></el-icon>搜索
-        </el-button>
-        <el-button @click="handleReset">
-          <el-icon><RefreshRight /></el-icon>重置
-        </el-button>
+        <a-button type="primary" @click="handleSearch">
+          <template #icon><search-outlined /></template>搜索
+        </a-button>
+        <a-button @click="handleReset">
+          <template #icon><reload-outlined /></template>重置
+        </a-button>
       </div>
-    </el-form>
+    </a-form>
   </div>
 </template>
 
 <script setup>
 import { defineProps, defineEmits, watch } from 'vue'
-import { Search, RefreshRight } from '@element-plus/icons-vue'
+import { SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({
   form: {
@@ -77,11 +77,11 @@ const handleReset = () => {
 
 @media (max-width: 768px) {
   .search-form {
-    .el-form {
+    .a-form {
       display: flex;
       flex-direction: column;
       
-      .el-form-item {
+      .a-form-item {
         margin-right: 0;
         margin-bottom: 16px;
       }

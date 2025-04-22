@@ -47,7 +47,6 @@ const props = defineProps({
 
 const route = useRoute()
 const currentFilter = ref(props.filter || '')
-const articles = ref([])
 
 // 技术栈数据
 const techStack = [
@@ -64,24 +63,6 @@ const techStack = [
   'Kubernetes',
   'Git'
 ]
-
-// 过滤后的文章
-const filteredArticles = computed(() => {
-  if (!currentFilter.value) return articles.value
-  
-  switch(currentFilter.value) {
-    case 'latest':
-      return articles.value.sort((a, b) => new Date(b.date) - new Date(a.date))
-    case 'hot':
-      return articles.value.sort((a, b) => b.views - a.views)
-    case 'tech':
-      return articles.value.filter(article => article.category === '技术分享')
-    case 'life':
-      return articles.value.filter(article => article.category === '生活随笔')
-    default:
-      return articles.value
-  }
-})
 
 // 监听路由变化，更新过滤条件
 watchEffect(() => {

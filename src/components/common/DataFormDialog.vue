@@ -1,28 +1,28 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
+  <a-modal
+    v-model:visible="dialogVisible"
     :title="title"
     :width="width"
     :destroy-on-close="destroyOnClose"
-    @closed="handleClosed"
+    @after-close="handleClosed"
   >
-    <el-form
+    <a-form
       ref="formRef"
       :model="model"
       :rules="rules"
-      label-width="100px"
+      :label-col="{ span: 6 }"
+      :wrapper-col="{ span: 16 }"
       @submit.prevent="handleSubmit"
     >
       <slot></slot>
-      
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="handleCancel">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" :loading="loading">确定</el-button>
-        </div>
-      </template>
-    </el-form>
-  </el-dialog>
+    </a-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <a-button @click="handleCancel">取消</a-button>
+        <a-button type="primary" @click="handleSubmit" :loading="loading">确定</a-button>
+      </div>
+    </template>
+  </a-modal>
 </template>
 
 <script setup>
@@ -106,7 +106,7 @@ const handleClosed = () => {
   justify-content: flex-end;
   padding-top: 16px;
   
-  .el-button {
+  .a-button {
     margin-left: 10px;
   }
 }
