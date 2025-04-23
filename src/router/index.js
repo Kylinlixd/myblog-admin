@@ -17,15 +17,6 @@ const routes = [
     }
   },
   {
-    path: '/dynamics-test',
-    name: 'DynamicsTest',
-    component: () => import('../views/DynamicsTest.vue'),
-    meta: { 
-      title: '动态管理测试',
-      requiresAuth: false
-    }
-  },
-  {
     path: '/login',
     name: 'Login',
     component: () => import(/* webpackPrefetch: true */ '../views/Login.vue'),

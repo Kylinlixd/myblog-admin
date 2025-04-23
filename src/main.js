@@ -129,6 +129,7 @@ if (process.env.NODE_ENV === 'production') {
 preloadComponents()
 
 // 注册 Service Worker
+/* 暂时注释掉Service Worker，解决前台页面刷新问题
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
@@ -140,6 +141,7 @@ if ('serviceWorker' in navigator) {
       })
   })
 }
+*/
 
 // 挂载应用
 app.mount('#app')

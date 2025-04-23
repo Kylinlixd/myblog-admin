@@ -66,7 +66,7 @@
           <a-input
             v-model:value="searchQuery"
             placeholder="搜索动态..."
-            @pressEnter="handleSearch"
+            @press-enter="handleSearch"
             @focus="showSearchSuggestions = true"
             allowClear
           >
@@ -219,7 +219,7 @@
     margin-right: 15px;
     position: relative;
     
-    .el-input__inner {
+    .ant-input {
       border-radius: 20px;
       transition: all 0.3s ease;
       
@@ -276,7 +276,7 @@
         color: #c084fc;
       }
       
-      .el-icon {
+      .anticon {
         margin-right: 8px;
         font-size: 14px;
         color: #999;
