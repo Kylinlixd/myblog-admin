@@ -4,26 +4,26 @@
       <h2 class="page-title">个人资料</h2>
     </div>
     
-    <el-card class="profile-card">
+    <a-card class="profile-card">
       <template #header>
         <div class="card-header">
           <span>基本信息</span>
-          <el-button 
+          <a-button 
             type="primary" 
             size="small" 
             @click="isEditingProfile = true" 
             v-if="!isEditingProfile"
           >
             编辑资料
-          </el-button>
+          </a-button>
         </div>
       </template>
       
       <div class="profile-info" v-if="!isEditingProfile">
         <div class="avatar-container">
-          <el-avatar :size="120" :src="userInfo.avatar || defaultAvatar">
+          <a-avatar :size="120" :src="userInfo.avatar || defaultAvatar">
             {{ userInfo.nickname?.charAt(0) || userInfo.username?.charAt(0) }}
-          </el-avatar>
+          </a-avatar>
         </div>
         
         <div class="info-list">
@@ -55,111 +55,111 @@
       </div>
       
       <div class="profile-edit" v-else>
-        <el-form
+        <a-form
           ref="profileFormRef"
           :model="profileForm"
           :rules="profileRules"
           label-width="100px"
         >
-          <el-form-item label="头像">
+          <a-form-item label="头像">
             <div class="avatar-upload">
-              <el-avatar :size="100" :src="profileForm.avatar || defaultAvatar">
+              <a-avatar :size="100" :src="profileForm.avatar || defaultAvatar">
                 {{ profileForm.nickname?.charAt(0) || userInfo.username?.charAt(0) }}
-              </el-avatar>
-              <el-upload
+              </a-avatar>
+              <a-upload
                 class="upload-btn"
                 action="/api/upload/avatar"
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload"
               >
-                <el-button type="primary" size="small">更换头像</el-button>
-              </el-upload>
+                <a-button type="primary" size="small">更换头像</a-button>
+              </a-upload>
             </div>
-          </el-form-item>
+          </a-form-item>
           
-          <el-form-item label="昵称" prop="nickname">
-            <el-input v-model="profileForm.nickname" placeholder="请输入昵称" />
-          </el-form-item>
+          <a-form-item label="昵称" prop="nickname">
+            <a-input v-model="profileForm.nickname" placeholder="请输入昵称" />
+          </a-form-item>
           
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="profileForm.email" placeholder="请输入邮箱" />
-          </el-form-item>
+          <a-form-item label="邮箱" prop="email">
+            <a-input v-model="profileForm.email" placeholder="请输入邮箱" />
+          </a-form-item>
           
-          <el-form-item label="个人简介" prop="bio">
-            <el-input
+          <a-form-item label="个人简介" prop="bio">
+            <a-input
               v-model="profileForm.bio"
               type="textarea"
               :rows="4"
               placeholder="请输入个人简介"
             />
-          </el-form-item>
+          </a-form-item>
           
-          <el-form-item>
-            <el-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">
+          <a-form-item>
+            <a-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">
               保存资料
-            </el-button>
-            <el-button @click="cancelProfileEdit">取消</el-button>
-          </el-form-item>
-        </el-form>
+            </a-button>
+            <a-button @click="cancelProfileEdit">取消</a-button>
+          </a-form-item>
+        </a-form>
       </div>
-    </el-card>
+    </a-card>
     
-    <el-card class="password-card">
+    <a-card class="password-card">
       <template #header>
         <div class="card-header">
           <span>修改密码</span>
         </div>
       </template>
       
-      <el-form
+      <a-form
         ref="passwordFormRef"
         :model="passwordForm"
         :rules="passwordRules"
         label-width="100px"
         @submit.prevent="handlePasswordChange"
       >
-        <el-form-item label="原密码" prop="oldPassword">
-          <el-input
+        <a-form-item label="原密码" prop="oldPassword">
+          <a-input
             v-model="passwordForm.oldPassword"
             type="password"
             placeholder="请输入原密码"
             show-password
           />
-        </el-form-item>
+        </a-form-item>
         
-        <el-form-item label="新密码" prop="newPassword">
-          <el-input
+        <a-form-item label="新密码" prop="newPassword">
+          <a-input
             v-model="passwordForm.newPassword"
             type="password"
             placeholder="请输入新密码"
             show-password
           />
-        </el-form-item>
+        </a-form-item>
         
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input
+        <a-form-item label="确认密码" prop="confirmPassword">
+          <a-input
             v-model="passwordForm.confirmPassword"
             type="password"
             placeholder="请再次输入新密码"
             show-password
           />
-        </el-form-item>
+        </a-form-item>
         
-        <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handlePasswordChange">
+        <a-form-item>
+          <a-button type="primary" :loading="loading" @click="handlePasswordChange">
             保存修改
-          </el-button>
-          <el-button @click="resetForm">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
+          </a-button>
+          <a-button @click="resetForm">重置</a-button>
+        </a-form-item>
+      </a-form>
+    </a-card>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from '../../utils/elementToAntd'
+import { message as AntMessage } from 'ant-design-vue'
 import { useUserStore } from '../../stores/user'
 import { changePassword } from '../../api/auth'
 import defaultAvatar from '../../assets/default-avatar.png'
@@ -216,11 +216,11 @@ const beforeAvatarUpload = (file) => {
   const isLt2M = file.size / 1024 / 1024 < 2
 
   if (!isJPG && !isPNG) {
-    ElMessage.error('头像图片只能是 JPG 或 PNG 格式!')
+    AntMessage.error('头像图片只能是 JPG 或 PNG 格式!')
     return false
   }
   if (!isLt2M) {
-    ElMessage.error('头像图片大小不能超过 2MB!')
+    AntMessage.error('头像图片大小不能超过 2MB!')
     return false
   }
   return true
@@ -230,9 +230,9 @@ const beforeAvatarUpload = (file) => {
 const handleAvatarSuccess = (res) => {
   if (res.code === 200 && res.data) {
     profileForm.avatar = res.data.url
-    ElMessage.success('头像上传成功')
+    AntMessage.success('头像上传成功')
   } else {
-    ElMessage.error(res.message || '头像上传失败')
+    AntMessage.error(res.message || '头像上传失败')
   }
 }
 
@@ -253,11 +253,11 @@ const handleProfileUpdate = async () => {
       avatar: profileForm.avatar
     })
     
-    ElMessage.success('个人资料更新成功')
+    AntMessage.success('个人资料更新成功')
     isEditingProfile.value = false
   } catch (error) {
     console.error('更新个人资料失败:', error)
-    ElMessage.error(error.message || '更新个人资料失败')
+    AntMessage.error(error.message || '更新个人资料失败')
   } finally {
     profileLoading.value = false
   }
@@ -279,36 +279,25 @@ const profileRules = {
 // 密码表单验证规则
 const passwordRules = {
   oldPassword: [
-    { required: true, message: '请输入原密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能小于6个字符', trigger: 'blur' }
+    { required: true, message: '请输入原密码', trigger: 'blur' }
   ],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能小于6个字符', trigger: 'blur' }
+    { min: 6, message: '新密码不能少于6个字符', trigger: 'blur' }
   ],
   confirmPassword: [
-    { required: true, message: '请再次输入新密码', trigger: 'blur' },
-    {
-      validator: (rule, value, callback) => {
-        if (value !== passwordForm.newPassword) {
-          callback(new Error('两次输入的密码不一致'))
-        } else {
-          callback()
-        }
-      },
-      trigger: 'blur'
-    }
+    { required: true, message: '请确认新密码', trigger: 'blur' },
+    { validator: (rule, value, callback) => {
+      if (value !== passwordForm.newPassword) {
+        callback(new Error('两次输入的密码不一致'))
+      } else {
+        callback()
+      }
+    }, trigger: 'blur' }
   ]
 }
 
-// 重置表单
-const resetForm = () => {
-  if (passwordFormRef.value) {
-    passwordFormRef.value.resetFields()
-  }
-}
-
-// 修改密码
+// 更新密码
 const handlePasswordChange = async () => {
   if (!passwordFormRef.value) return
   
@@ -317,106 +306,96 @@ const handlePasswordChange = async () => {
     
     loading.value = true
     
+    // 调用修改密码的API
     await changePassword({
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword
     })
     
-    ElMessage.success('密码修改成功')
+    AntMessage.success('密码修改成功')
     resetForm()
   } catch (error) {
-    console.error('密码修改失败:', error)
-    if (error.message) {
-      ElMessage.error(error.message)
-    } else {
-      ElMessage.error('密码修改失败，请重试')
-    }
+    console.error('修改密码失败:', error)
+    AntMessage.error(error.message || '修改密码失败')
   } finally {
     loading.value = false
   }
 }
 
-// 页面加载时初始化表单
+// 重置密码表单
+const resetForm = () => {
+  passwordFormRef.value.resetFields()
+}
+
 onMounted(() => {
   initProfileForm()
 })
 </script>
 
-<style scoped lang="scss">
+<style scoped>
 .profile-container {
-  padding: 24px;
-  
-  .page-header {
-    margin-bottom: 24px;
-    
-    .page-title {
-      margin: 0;
-      font-size: 24px;
-      color: var(--text-primary);
-    }
-  }
-  
-  .profile-card, .password-card {
-    margin-bottom: 24px;
-    
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-  }
-  
-  .profile-info {
-    display: flex;
-    
-    .avatar-container {
-      margin-right: 40px;
-    }
-    
-    .info-list {
-      flex: 1;
-      
-      .info-item {
-        margin-bottom: 16px;
-        display: flex;
-        
-        .label {
-          font-weight: 500;
-          color: var(--text-secondary);
-          margin-right: 8px;
-          width: 100px;
-        }
-        
-        .value {
-          color: var(--text-primary);
-          flex: 1;
-        }
-      }
-    }
-  }
-  
-  .avatar-upload {
-    display: flex;
-    align-items: center;
-    
-    .upload-btn {
-      margin-left: 20px;
-    }
-  }
-  
-  @media (max-width: 768px) {
-    .profile-info {
-      flex-direction: column;
-      
-      .avatar-container {
-        margin-right: 0;
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: center;
-      }
-    }
-  }
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.profile-card,
+.password-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.avatar-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.value {
+  color: #666;
+}
+
+.profile-edit {
+  margin-top: 20px;
+}
+
+.avatar-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-btn {
+  margin-left: 10px;
 }
 </style> 

@@ -1,6 +1,6 @@
 <template>
   <div class="page-loading">
-    <el-spinner size="large" />  
+    <a-spin size="large" />  
   </div>
 </template>
 
@@ -15,4 +15,4 @@
   align-items: center;
   height: 100vh;
 }
-</style>http://localhost:5173/login?redirect=/dashboard
+</style>

@@ -2,6 +2,8 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
+// import Element Plus
+// import 'element-plus/dist/index.css'
 import App from './App.vue'
 import router from './router'
 import '@/styles/tailwind.css'
@@ -77,6 +79,7 @@ if (!isBlogPage) {
 
 // 使用 Ant Design Vue
 app.use(Antd)
+// app.use(ElementPlus)
 
 // 使用路由
 app.use(router)

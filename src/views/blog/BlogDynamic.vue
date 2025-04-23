@@ -9,8 +9,8 @@
     <!-- 调试信息 -->
     <div v-if="dynamicList.length === 0 && !loading" class="empty-state">
       <p>暂无动态内容</p>
-      <el-button @click="refreshList" type="primary" size="small">刷新</el-button>
-      <el-button @click="useMockData" type="success" size="small">使用测试数据</el-button>
+      <a-button @click="refreshList" type="primary" size="small">刷新</a-button>
+      <a-button @click="useMockData" type="success" size="small">使用测试数据</a-button>
     </div>
 
     <!-- 动态列表 -->
@@ -23,7 +23,7 @@
             <span class="dynamic-time">{{ formatDate(item.createTime) }}</span>
             <span v-if="item.type" class="dynamic-type">{{ item.type }}</span>
             <span v-if="item.views" class="dynamic-views">
-              <el-icon><i-ep-view /></el-icon> {{ item.views }}
+              <a-icon type="eye" /> {{ item.views }}
             </span>
           </div>
         </div>
@@ -35,7 +35,7 @@
 
           <!-- 图片展示 -->
           <div v-if="item.images && item.images.length" class="image-gallery">
-            <el-image
+            <a-image
               v-for="(img, imgIndex) in item.images"
               :key="imgIndex"
               :src="img.url"
@@ -68,14 +68,14 @@
         <!-- 动态底部 -->
         <div class="dynamic-footer">
           <div class="dynamic-actions">
-            <el-button type="text" @click="handleLike(item)">
-              <el-icon><i-ep-star /></el-icon>
+            <a-button type="text" @click="handleLike(item)">
+              <a-icon type="star" />
               <span>{{ item.likes || 0 }}</span>
-            </el-button>
-            <el-button type="text" @click="handleComment(item)">
-              <el-icon><i-ep-chat-dot-round /></el-icon>
+            </a-button>
+            <a-button type="text" @click="handleComment(item)">
+              <a-icon type="message" />
               <span>{{ item.comments || 0 }}</span>
-            </el-button>
+            </a-button>
           </div>
         </div>
       </div>
@@ -83,14 +83,14 @@
 
     <!-- 加载更多 -->
     <div class="load-more">
-      <el-button 
+      <a-button 
         type="primary" 
         :loading="loading" 
         @click="loadMore"
         v-if="hasMore"
       >
         加载更多
-      </el-button>
+      </a-button>
       <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
     </div>
   </div>
@@ -99,7 +99,7 @@
 <script setup>
 import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
-import { ElMessage } from '../../utils/elementToAntd'
+import { message as AntMessage } from 'ant-design-vue'
 // 导入API函数而不是仅导入createBlogApiUrl
 import { 
   getBlogDynamics, 
@@ -185,7 +185,7 @@ const fetchDynamicList = async (isRefresh = false) => {
       // 使用模拟数据进行测试
       list = getMockDynamics();
       total = list.length;
-      ElMessage.warning('使用模拟数据进行测试');
+      AntMessage.warning('使用模拟数据进行测试');
     }
     
     console.log('解析后的数据:', {list, total});
@@ -213,7 +213,7 @@ const fetchDynamicList = async (isRefresh = false) => {
     hasMore.value = dynamicList.value.length < total
   } catch (error) {
     console.error('获取博客动态列表失败详情:', error)
-    ElMessage.error('获取动态列表失败，使用模拟数据进行测试')
+    AntMessage.error('获取动态列表失败，使用模拟数据进行测试')
     
     // 使用模拟数据
     const mockList = getMockDynamics();
@@ -298,7 +298,7 @@ const handleLike = async (item) => {
     const result = await likeDynamic(item.id)
     item.likes = result.likes || (item.likes + 1) // 更新点赞数
   } catch (error) {
-    ElMessage.error('点赞失败')
+    AntMessage.error('点赞失败')
     console.error('点赞失败:', error)
   } finally {
     item.isLiking = false
@@ -317,7 +317,7 @@ const fetchComments = async (item) => {
     item.commentList = result.list || []
     item.commentsLoaded = true
   } catch (error) {
-    ElMessage.error('获取评论失败')
+    AntMessage.error('获取评论失败')
     console.error('获取评论失败:', error)
   } finally {
     item.isLoadingComments = false
@@ -337,7 +337,7 @@ const handleComment = (item) => {
 // 提交评论
 const submitComment = async (item) => {
   if (!commentContent.value.trim()) {
-    ElMessage.warning('评论内容不能为空')
+    AntMessage.warning('评论内容不能为空')
     return
   }
   
@@ -356,35 +356,28 @@ const submitComment = async (item) => {
     if (result.success) {
       fetchComments(item) // 重新获取评论列表
       commentContent.value = '' // 清空评论内容
-      ElMessage.success('评论成功')
+      AntMessage.success('评论成功')
     }
   } catch (error) {
-    ElMessage.error('提交评论失败')
-    console.error('提交评论失败:', error)
+    AntMessage.error('评论失败')
+    console.error('评论失败:', error)
   } finally {
     item.isSubmittingComment = false
   }
 }
 
-// 使用模拟数据
+// 使用模拟数据进行测试
 const useMockData = () => {
-  dynamicList.value = getMockDynamics();
-  hasMore.value = false;
-  ElMessage.success('已加载测试数据');
+  dynamicList.value = getMockDynamics()
+  hasMore.value = false
 }
 
-// 初始化
 onMounted(() => {
-  // 只有在访问动态页面时才加载数据
-  if (window.location.pathname.includes('/blog/blogdynamic')) {
-    fetchDynamicList()
-  }
+  fetchDynamicList()
 })
 
-// 当组件被keep-alive激活时
 onActivated(() => {
-  // 页面激活时检查是否需要刷新
-  if (window.location.pathname.includes('/blog/blogdynamic') && fetchedPages.value.size === 0) {
+  if (dynamicList.value.length === 0) {
     fetchDynamicList()
   }
 })
@@ -392,141 +385,109 @@ onActivated(() => {
 
 <style scoped>
 .blog-dynamic {
-  max-width: 800px;
-  margin: 0 auto;
   padding: 20px;
 }
 
 .page-header {
-  text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 .page-title {
-  font-size: 2.5em;
-  margin-bottom: 10px;
-  color: var(--el-text-color-primary);
+  font-size: 24px;
+  font-weight: bold;
 }
 
 .page-description {
-  font-size: 1.1em;
-  color: var(--el-text-color-secondary);
-}
-
-.dynamic-list {
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-.dynamic-item {
-  background: var(--el-bg-color);
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-}
-
-.dynamic-header {
-  margin-bottom: 15px;
-}
-
-.dynamic-meta {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  color: var(--el-text-color-secondary);
-}
-
-.dynamic-time {
-  font-size: 0.9em;
-}
-
-.dynamic-type {
-  font-size: 0.9em;
-  padding: 2px 8px;
-  background: var(--el-color-primary-light-9);
-  border-radius: 4px;
-  color: var(--el-color-primary);
-}
-
-.dynamic-content {
-  margin-bottom: 15px;
-}
-
-.markdown-content {
-  margin-bottom: 15px;
-}
-
-.image-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 10px;
-  margin: 15px 0;
-}
-
-.gallery-image {
-  width: 100%;
-  height: 200px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.audio-player,
-.video-player {
-  margin: 15px 0;
-}
-
-.audio-element,
-.video-element {
-  width: 100%;
-  border-radius: 4px;
-}
-
-.dynamic-footer {
-  border-top: 1px solid var(--el-border-color-light);
-  padding-top: 15px;
-}
-
-.dynamic-actions {
-  display: flex;
-  gap: 15px;
-}
-
-.load-more {
-  text-align: center;
-  margin-top: 30px;
-}
-
-.no-more {
-  color: var(--el-text-color-secondary);
-  font-size: 0.9em;
-}
-
-.dynamic-title {
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.5em;
-  color: var(--el-color-primary);
-}
-
-.dynamic-views {
-  font-size: 0.9em;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 14px;
+  color: #888;
 }
 
 .empty-state {
   text-align: center;
-  padding: 40px 0;
-  color: var(--el-text-color-secondary);
+  margin-top: 50px;
 }
 
-.empty-state p {
-  margin-bottom: 20px;
+.dynamic-list {
+  margin-top: 20px;
 }
 
-.empty-state .el-button {
-  margin: 0 5px;
+.dynamic-item {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+.dynamic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dynamic-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.dynamic-meta {
+  font-size: 12px;
+  color: #999;
+}
+
+.dynamic-content {
+  margin-top: 10px;
+}
+
+.markdown-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.image-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.gallery-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.audio-player {
+  margin-top: 10px;
+}
+
+.video-player {
+  margin-top: 10px;
+}
+
+.video-element {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.dynamic-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dynamic-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.load-more {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.no-more {
+  color: #999;
+  font-size: 14px;
 }
 </style>

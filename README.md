@@ -8,8 +8,9 @@
 - Vite
 - Vue Router
 - Pinia
-- Element Plus
+- Ant Design Vue
 - SCSS
+- Tailwind CSS
 - TypeScript
 
 ## 功能特性
@@ -19,6 +20,9 @@
 - 标签管理
 - 评论管理
 - 主题切换
+- 组件预加载：通过`preloadComponents`函数预加载重要组件，提升应用性能。
+- 全局错误处理：在生产环境中进行错误处理，确保用户体验。
+- 性能监控：在生产环境中监控页面加载和资源加载性能。
 
 ## 开发环境
 - Node.js >= 16
