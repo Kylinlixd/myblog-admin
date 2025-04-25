@@ -8,12 +8,32 @@ import request from '../utils/request'
  * @returns {Promise<{token: string, userInfo: Object}>}
  */
 export function login(data) {
+  // 开发环境下，如果是admin账户可以直接登录成功
+  if (process.env.NODE_ENV === 'development' && data.username === 'admin' && data.password === 'admin') {
+    console.log('开发环境使用模拟登录')
+    return Promise.resolve({
+      token: 'dev-token-' + Date.now(),
+      userInfo: {
+        id: 1,
+        username: 'admin',
+        nickname: '管理员',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=admin',
+        role: 'admin',
+        permissions: ['*']
+      }
+    })
+  }
+  
   return request.post('/auth/login', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
       }
       return Promise.reject(new Error(response.message || '登录失败'))
+    })
+    .catch(error => {
+      console.error('登录失败:', error)
+      throw error
     })
 }
 

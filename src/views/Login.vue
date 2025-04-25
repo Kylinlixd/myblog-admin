@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <!-- 添加漂浮的多边形碎片，但让它们不影响登录框 -->
-    <div class="floating-shape" v-for="n in 21" :key="n" :style="shapeStyles[n-1]"></div>
+    <div class="floating-shape" v-for="n in 10" :key="n" :style="shapeStyles[n-1]"></div>
     
     <div class="login-box">
       <div class="login-header">
@@ -15,6 +15,10 @@
         :model="loginData"
         @finish="handleLogin"
       >
+        <div v-if="loginError" class="error-message">
+          <a-alert :message="loginError" type="error" show-icon />
+        </div>
+        
         <div class="form-item">
           <div class="input-wrapper">
             <a-form-item
@@ -76,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useAppStore } from '../stores/app'
@@ -91,14 +95,21 @@ const userStore = useUserStore()
 const appStore = useAppStore()
 const loginForm = ref(null)
 const loading = ref(false)
+const loginError = ref('')
 
 const loginData = reactive({
   username: '',
   password: ''
 })
 
-// 预生成所有浮动形状的样式，避免在重新渲染时重新生成
-const shapeStyles = Array(21).fill(null).map(() => generateRandomStyle())
+// 优化预生成样式逻辑，减少形状数量提高性能
+const shapeStyles = computed(() => {
+  const styles = []
+  for (let i = 0; i < 10; i++) {
+    styles.push(generateRandomStyle())
+  }
+  return styles
+})
 
 // 生成随机样式函数
 function generateRandomStyle() {
@@ -106,28 +117,28 @@ function generateRandomStyle() {
   const top = Math.random() * 100 + '%'
   const left = Math.random() * 100 + '%'
   
-  // 随机大小
-  const width = 30 + Math.random() * 120 + 'px'
-  const height = 30 + Math.random() * 120 + 'px'
+  // 随机大小 - 减小形状以减轻渲染负担
+  const width = 30 + Math.random() * 80 + 'px'
+  const height = 30 + Math.random() * 80 + 'px'
   
   // 随机旋转角度
   const rotate = Math.random() * 360 + 'deg'
-  const skewX = -20 + Math.random() * 40 + 'deg'
-  const skewY = -20 + Math.random() * 40 + 'deg'
+  const skewX = -10 + Math.random() * 20 + 'deg'
+  const skewY = -10 + Math.random() * 20 + 'deg'
   
-  // 随机动画参数
-  const duration = 15 + Math.random() * 15 + 's'
-  const moveX = -100 + Math.random() * 200 + 'px'
-  const moveY = -100 + Math.random() * 200 + 'px'
+  // 随机动画参数 - 增加持续时间减少CPU使用
+  const duration = 20 + Math.random() * 20 + 's'
+  const moveX = -50 + Math.random() * 100 + 'px'
+  const moveY = -50 + Math.random() * 100 + 'px'
   
   // 随机倾斜和3D旋转
   const transform = `rotate(${rotate}) skewX(${skewX}) skewY(${skewY})`
   
   // 随机透明度
-  const opacity = 0.1 + Math.random() * 0.5
+  const opacity = 0.05 + Math.random() * 0.2
   
   // 随机z-index，保证层叠效果
-  const zIndex = Math.floor(Math.random() * 10)
+  const zIndex = Math.floor(Math.random() * 5)
 
   return {
     top,
@@ -146,6 +157,8 @@ function generateRandomStyle() {
 
 const handleLogin = async () => {
   loading.value = true
+  loginError.value = ''
+  
   try {
     const success = await userStore.login(loginData.username, loginData.password)
     
@@ -162,11 +175,11 @@ const handleLogin = async () => {
         router.push(redirect)
       }, 1000)
     } else {
-      message.error('用户名或密码错误')
+      loginError.value = '用户名或密码错误'
     }
   } catch (error) {
     console.error('登录失败:', error)
-    message.error('登录失败，请稍后重试')
+    loginError.value = '登录失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -176,6 +189,12 @@ onMounted(() => {
   // 检查是否已经登录
   if (userStore.isLoggedIn) {
     router.push('/dashboard')
+  }
+  
+  // 设置初始值
+  if (process.env.NODE_ENV === 'development') {
+    loginData.username = 'admin'
+    loginData.password = 'admin'
   }
 })
 </script>
@@ -215,13 +234,9 @@ onMounted(() => {
     border: 1px solid rgba(255, 255, 255, 0.4);
     box-shadow: 
       0 4px 15px rgba(0, 0, 0, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-      0 0 30px rgba(255, 255, 255, 0.05),
-      0 0 8px rgba(255, 255, 255, 0.3) inset;
+      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     backdrop-filter: blur(2px);
-    animation: float-move var(--duration) ease-in-out infinite alternate,
-               float-rotate calc(var(--duration) * 1.5) linear infinite;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+    animation: float-move var(--duration) ease-in-out infinite alternate;
     transform-style: preserve-3d;
     perspective: 500px;
     clip-path: polygon(
@@ -232,19 +247,6 @@ onMounted(() => {
     );
     will-change: transform;
     z-index: -5;
-
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(45deg, 
-                  rgba(255, 255, 255, 0.3) 0%, 
-                  rgba(255, 255, 255, 0) 60%);
-      opacity: 0.7;
-    }
   }
 
   // 手动设置每个多边形的clip-path值，形成不规则形状
@@ -258,17 +260,10 @@ onMounted(() => {
   .floating-shape:nth-child(8) { --clip1: 5%; --clip2: 12%; --clip3: 85%; --clip4: 15%; --clip5: 92%; --clip6: 85%; --clip7: 20%; --clip8: 95%; }
   .floating-shape:nth-child(9) { --clip1: 15%; --clip2: 5%; --clip3: 92%; --clip4: 18%; --clip5: 85%; --clip6: 90%; --clip7: 8%; --clip8: 85%; }
   .floating-shape:nth-child(10) { --clip1: 8%; --clip2: 15%; --clip3: 88%; --clip4: 5%; --clip5: 95%; --clip6: 88%; --clip7: 15%; --clip8: 92%; }
-  .floating-shape:nth-child(11) { --clip1: 12%; --clip2: 8%; --clip3: 95%; --clip4: 12%; --clip5: 82%; --clip6: 95%; --clip7: 5%; --clip8: 88%; }
-  .floating-shape:nth-child(12) { --clip1: 5%; --clip2: 18%; --clip3: 85%; --clip4: 8%; --clip5: 90%; --clip6: 85%; --clip7: 18%; --clip8: 80%; }
-  .floating-shape:nth-child(13) { --clip1: 18%; --clip2: 5%; --clip3: 92%; --clip4: 15%; --clip5: 88%; --clip6: 90%; --clip7: 12%; --clip8: 92%; }
-  .floating-shape:nth-child(14) { --clip1: 8%; --clip2: 12%; --clip3: 88%; --clip4: 22%; --clip5: 95%; --clip6: 82%; --clip7: 5%; --clip8: 85%; }
-  .floating-shape:nth-child(15) { --clip1: 15%; --clip2: 8%; --clip3: 95%; --clip4: 5%; --clip5: 85%; --clip6: 95%; --clip7: 18%; --clip8: 90%; }
-  .floating-shape:nth-child(16) { --clip1: 10%; --clip2: 15%; --clip3: 90%; --clip4: 18%; --clip5: 92%; --clip6: 80%; --clip7: 8%; --clip8: 95%; }
-  .floating-shape:nth-child(17) { --clip1: 5%; --clip2: 18%; --clip3: 85%; --clip4: 12%; --clip5: 80%; --clip6: 88%; --clip7: 15%; --clip8: 75%; }
-  .floating-shape:nth-child(18) { --clip1: 18%; --clip2: 5%; --clip3: 92%; --clip4: 15%; --clip5: 88%; --clip6: 92%; --clip7: 10%; --clip8: 95%; }
-  .floating-shape:nth-child(19) { --clip1: 8%; --clip2: 12%; --clip3: 88%; --clip4: 8%; --clip5: 95%; --clip6: 85%; --clip7: 18%; --clip8: 90%; }
-  .floating-shape:nth-child(20) { --clip1: 12%; --clip2: 18%; --clip3: 95%; --clip4: 22%; --clip5: 82%; --clip6: 95%; --clip7: 5%; --clip8: 82%; }
-  .floating-shape:nth-child(21) { --clip1: 15%; --clip2: 5%; --clip3: 90%; --clip4: 15%; --clip5: 85%; --clip6: 88%; --clip7: 12%; --clip8: 95%; }
+}
+
+.error-message {
+  margin-bottom: 16px;
 }
 
 .login-box {
@@ -362,14 +357,8 @@ onMounted(() => {
   0% {
     background-position: 0% 50%;
   }
-  25% {
-    background-position: 50% 100%;
-  }
   50% {
     background-position: 100% 50%;
-  }
-  75% {
-    background-position: 50% 0%;
   }
   100% {
     background-position: 0% 50%;
@@ -378,37 +367,10 @@ onMounted(() => {
 
 @keyframes float-move {
   0% {
-    transform: translate3d(0, 0, 0) rotateX(5deg) rotateY(5deg);
-  }
-  25% {
-    transform: translate3d(calc(var(--move-x) * 0.3), calc(var(--move-y) * 0.7), 20px) rotateX(-10deg) rotateY(8deg);
-  }
-  50% {
-    transform: translate3d(calc(var(--move-x) * 0.7), calc(var(--move-y) * 0.3), 10px) rotateX(12deg) rotateY(-5deg);
-  }
-  75% {
-    transform: translate3d(calc(var(--move-x) * 0.5), calc(var(--move-y) * 0.9), 30px) rotateX(-8deg) rotateY(12deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
   }
   100% {
-    transform: translate3d(var(--move-x), var(--move-y), 15px) rotateX(10deg) rotateY(-10deg);
-  }
-}
-
-@keyframes float-rotate {
-  from {
-    transform: rotate(0deg) rotateZ(0deg);
-  }
-  to {
-    transform: rotate(var(--rotate)) rotateZ(45deg);
-  }
-}
-
-@keyframes float {
-  from {
-    transform: translateY(0) rotate(var(--rotate, 0deg));
-  }
-  to {
-    transform: translateY(20px) rotate(var(--rotate, 0deg));
+    transform: translate3d(var(--move-x), var(--move-y), 0) rotate(var(--rotate));
   }
 }
 

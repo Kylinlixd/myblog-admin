@@ -3,10 +3,15 @@ import { message } from 'ant-design-vue'
 import router from '../router'
 import { useAppStore } from '../stores/app'
 
+// 区分环境配置
+const isProd = process.env.NODE_ENV === 'production'
+const baseURL = isProd ? '/api' : '/api'
+const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
+
 // 创建 axios 实例
 const service = axios.create({
-  baseURL: '/api', // 直接设置为/api，不依赖环境变量
-  timeout: 15000, // 15秒超时
+  baseURL,
+  timeout: requestTimeout,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -21,26 +26,39 @@ const pendingRequests = {
 // 增加请求计数
 const increasePendingCount = () => {
   pendingRequests.count++
-  console.log(`[Request] 增加请求计数: ${pendingRequests.count}`)
+  
+  // 非生产环境才打印日志
+  if (!isProd) {
+    console.log(`[Request] 增加请求计数: ${pendingRequests.count}`)
+  }
   
   // 设置全局超时
   if (pendingRequests.count === 1) {
     // 第一个请求开始时设置超时
     pendingRequests.timeoutId = setTimeout(() => {
       if (pendingRequests.count > 0) {
-        console.log('[Request] 全局请求超时')
-        message.error('请求超时，请检查网络连接')
-        const appStore = useAppStore()
-        appStore.setLoadingError('请求超时，请检查网络连接')
+        if (!isProd) {
+          console.log('[Request] 全局请求超时')
+        }
+        // 避免在登录页显示错误
+        if (!window.location.pathname.includes('/login')) {
+          message.error('请求超时，请检查网络连接')
+          const appStore = useAppStore()
+          appStore.setLoadingError('请求超时，请检查网络连接')
+        }
       }
-    }, 20000) // 20秒全局超时
+    }, requestTimeout + 5000) // 比单个请求超时多5秒
   }
 }
 
 // 减少请求计数
 const decreasePendingCount = () => {
   pendingRequests.count = Math.max(0, pendingRequests.count - 1)
-  console.log(`[Request] 减少请求计数: ${pendingRequests.count}`)
+  
+  // 非生产环境才打印日志
+  if (!isProd) {
+    console.log(`[Request] 减少请求计数: ${pendingRequests.count}`)
+  }
   
   // 所有请求完成时清除超时
   if (pendingRequests.count === 0 && pendingRequests.timeoutId) {
@@ -51,7 +69,7 @@ const decreasePendingCount = () => {
 
 // 重试配置
 const retryConfig = {
-  retryTimes: 3,
+  retryTimes: isProd ? 2 : 1, // 生产环境增加重试次数
   retryDelay: 1000
 }
 
@@ -73,30 +91,44 @@ const request = {
   get(url, params, config = {}) {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
-    console.log(`[Request] GET 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
-    return service.get(finalUrl, { params, ...config })
+    if (!isProd) {
+      console.log(`[Request] GET 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    }
+    return retryRequest(() => service.get(finalUrl, { params, ...config }))
   },
   
   post(url, data, config = {}) {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
-    console.log(`[Request] POST 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
-    return service.post(finalUrl, data, config)
+    if (!isProd) {
+      console.log(`[Request] POST 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    }
+    return retryRequest(() => service.post(finalUrl, data, config))
   },
   
   put(url, data, config = {}) {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
-    console.log(`[Request] PUT 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
-    return service.put(finalUrl, data, config)
+    if (!isProd) {
+      console.log(`[Request] PUT 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    }
+    return retryRequest(() => service.put(finalUrl, data, config))
   },
   
   delete(url, config = {}) {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
-    console.log(`[Request] DELETE 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
-    return service.delete(finalUrl, config)
+    if (!isProd) {
+      console.log(`[Request] DELETE 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+    }
+    return retryRequest(() => service.delete(finalUrl, config))
   }
+}
+
+// 判断是否在登录相关页面
+const isAuthPage = () => {
+  const path = window.location.pathname
+  return path.includes('/login') || path.includes('/register')
 }
 
 // 请求拦截器
@@ -112,7 +144,9 @@ service.interceptors.request.use(
     }
     
     // 添加调试日志
-    console.log(`[Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
+    if (!isProd) {
+      console.log(`[Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
+    }
     
     return config
   },
@@ -137,9 +171,10 @@ service.interceptors.response.use(
       
       if (status === 401) {
         // 未授权，可能是token过期或无效
-        // 如果是访问博客前台，不需要登录，就不要强制跳转到登录页面
+        // 如果是访问博客前台或认证页面，不需要强制跳转到登录页面
         const isVisitingBlog = window.location.pathname.startsWith('/blog')
-        if (!isVisitingBlog) {
+        
+        if (!isVisitingBlog && !isAuthPage()) {
           message.error('登录已过期，请重新登录')
           // 清除token
           localStorage.removeItem('token')
@@ -147,18 +182,31 @@ service.interceptors.response.use(
           router.push('/login')
         }
       } else if (status === 403) {
-        message.error('您没有权限进行此操作')
+        if (!isAuthPage()) {
+          message.error('您没有权限进行此操作')
+        }
       } else if (status === 404) {
-        message.error('请求的资源不存在')
+        if (!isAuthPage()) {
+          message.error('请求的资源不存在')
+        }
       } else if (status >= 500) {
-        message.error('服务器错误，请稍后重试')
+        if (!isAuthPage()) {
+          message.error('服务器错误，请稍后重试')
+        }
       } else {
-        message.error(error.response.data?.message || '请求失败')
+        if (!isAuthPage()) {
+          message.error(error.response.data?.message || '请求失败')
+        }
       }
     } else if (error.request) {
-      message.error('无法连接到服务器，请检查网络连接')
+      // 网络连接错误，避免在认证页面显示
+      if (!isAuthPage()) {
+        message.error('无法连接到服务器，请检查网络连接')
+      }
     } else {
-      message.error('请求发送失败')
+      if (!isAuthPage()) {
+        message.error('请求发送失败')
+      }
     }
     
     return Promise.reject(error)
