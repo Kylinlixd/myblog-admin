@@ -12,33 +12,6 @@ import { message } from 'ant-design-vue'
 import { useThemeStore } from './stores/theme'
 import { useUserStore } from './stores/user'
 
-// 预加载常用组件
-const preloadComponents = () => {
-  // 获取主要路由组件并预加载
-  const routes = router.getRoutes()
-  const importantRoutes = routes.filter(route => 
-    route.meta && (route.meta.preload || route.name === 'Dashboard' || route.name === 'BlogHome')
-  )
-  
-  // 延迟预加载重要组件，让主应用先渲染完成
-  setTimeout(() => {
-    console.log('开始预加载重要组件')
-    importantRoutes.forEach(route => {
-      // 排除blog相关组件以避免不必要的API请求
-      if (route.path.includes('/blog')) {
-        return; // 跳过博客相关组件的预加载
-      }
-      
-      if (route.components && route.components.default && typeof route.components.default === 'function') {
-        // 异步预加载
-        route.components.default().catch(err => {
-          console.warn('预加载组件失败:', route.name, err)
-        })
-      }
-    })
-  }, 2000) // 延迟2秒，确保主应用已完成初始渲染
-}
-
 // 确定环境
 const isProd = process.env.NODE_ENV === 'production'
 
@@ -97,34 +70,11 @@ if (isProd) {
 const pinia = createPinia()
 app.use(pinia)
 
-// 初始化用户状态
-const userStore = useUserStore()
-// 检查当前路径是否是博客前台页面，避免在博客页面发送不必要的API请求
-const isBlogPage = window.location.pathname.startsWith('/blog')
-if (!isBlogPage) {
-  userStore.initialize().then(() => {
-    if (!isProd) {
-      console.log('用户状态初始化完成')
-    }
-  }).catch(error => {
-    console.error('用户状态初始化失败:', error)
-  })
-} else {
-  if (!isProd) {
-    console.log('博客前台页面，跳过用户状态初始化')
-  }
-}
-
 // 使用 Ant Design Vue
 app.use(Antd)
-// app.use(ElementPlus)
 
 // 使用路由
 app.use(router)
-
-// 初始化主题
-const themeStore = useThemeStore()
-themeStore.initTheme()
 
 // 全局错误处理
 app.config.errorHandler = (err, vm, info) => {
@@ -155,6 +105,31 @@ app.config.errorHandler = (err, vm, info) => {
   }
 }
 
+// 挂载应用
+app.mount('#app')
+
+// 挂载后初始化用户状态
+const userStore = useUserStore()
+// 检查当前路径是否是博客前台页面，避免在博客页面发送不必要的API请求
+const isBlogPage = window.location.pathname.startsWith('/blog')
+if (!isBlogPage) {
+  userStore.initialize().then(() => {
+    if (!isProd) {
+      console.log('用户状态初始化完成')
+    }
+  }).catch(error => {
+    console.error('用户状态初始化失败:', error)
+  })
+} else {
+  if (!isProd) {
+    console.log('博客前台页面，跳过用户状态初始化')
+  }
+}
+
+// 初始化主题
+const themeStore = useThemeStore()
+themeStore.initTheme()
+
 // 性能监控
 if (isProd) {
   // 页面加载性能
@@ -182,23 +157,32 @@ if (isProd) {
   })
 }
 
-// 预加载组件，在app挂载前进行
-preloadComponents()
-
-// 注册 Service Worker
-/* 暂时注释掉Service Worker，解决前台页面刷新问题
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(registration => {
-        console.log('ServiceWorker registration successful')
-      })
-      .catch(err => {
-        console.log('ServiceWorker registration failed: ', err)
-      })
-  })
+// 预加载常用组件
+const preloadComponents = () => {
+  // 获取主要路由组件并预加载
+  const routes = router.getRoutes()
+  const importantRoutes = routes.filter(route => 
+    route.meta && (route.meta.preload || route.name === 'Dashboard' || route.name === 'BlogHome')
+  )
+  
+  // 延迟预加载重要组件，让主应用先渲染完成
+  setTimeout(() => {
+    console.log('开始预加载重要组件')
+    importantRoutes.forEach(route => {
+      // 排除blog相关组件以避免不必要的API请求
+      if (route.path.includes('/blog')) {
+        return; // 跳过博客相关组件的预加载
+      }
+      
+      if (route.components && route.components.default && typeof route.components.default === 'function') {
+        // 异步预加载
+        route.components.default().catch(err => {
+          console.warn('预加载组件失败:', route.name, err)
+        })
+      }
+    })
+  }, 2000) // 延迟2秒，确保主应用已完成初始渲染
 }
-*/
 
-// 挂载应用
-app.mount('#app')
+// 应用挂载后预加载组件
+preloadComponents()

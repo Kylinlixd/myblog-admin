@@ -1,54 +1,72 @@
 <template>
-  <div class="tag-list-page">
-    <div class="header-actions">
-      <a-button type="primary" @click="handleCreate">
-        <template #icon><plus-outlined /></template>新建标签
-      </a-button>
-    </div>
+  <div class="tag-list">
+    <a-page-header
+      title="标签管理"
+      subtitle="管理博客标签"
+    >
+      <template #extra>
+        <a-button type="primary" @click="handleCreate">
+          <plus-outlined /> 新建标签
+        </a-button>
+      </template>
+    </a-page-header>
     
-    <div class="tags-container">
+    <a-card class="data-card">
       <a-table
+        :loading="loading"
         :columns="columns"
         :data-source="tagList"
-        :pagination="false"
-        :loading="loading"
+        :pagination="paginationConfig"
         row-key="id"
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'action'">
+          <!-- 标签名称列 -->
+          <template v-if="column.dataIndex === 'name'">
+            <a-tag color="blue">{{ record.name }}</a-tag>
+          </template>
+          
+          <!-- 文章数量列 -->
+          <template v-if="column.dataIndex === 'postCount'">
+            <a-badge :count="record.postCount || 0" :number-style="{ backgroundColor: '#52c41a' }" />
+          </template>
+          
+          <!-- 操作列 -->
+          <template v-if="column.dataIndex === 'action'">
             <a-space>
-              <a-button type="primary" @click="handleEdit(record)">
+              <a-button type="primary" size="small" @click="handleEdit(record)">
                 <template #icon><edit-outlined /></template>编辑
               </a-button>
-              <a-button type="primary" danger @click="handleDelete(record)">
-                <template #icon><delete-outlined /></template>删除
-              </a-button>
+              <a-popconfirm
+                title="确定要删除该标签吗？"
+                ok-text="确定"
+                cancel-text="取消"
+                @confirm="handleDelete(record)"
+              >
+                <a-button type="primary" danger size="small">
+                  <template #icon><delete-outlined /></template>删除
+                </a-button>
+              </a-popconfirm>
             </a-space>
+          </template>
+
+          <!-- 创建时间列 -->
+          <template v-if="column.dataIndex === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
           </template>
         </template>
       </a-table>
-      
-      <div class="pagination-container">
-        <a-pagination
-          v-model:current="currentPage"
-          :total="total"
-          :page-size="pageSize"
-          show-size-changer
-          @change="handlePageChange"
-          @showSizeChange="handleSizeChange"
-        />
-      </div>
-    </div>
+    </a-card>
     
+    <!-- 标签编辑对话框 -->
     <a-modal
       v-model:visible="dialogVisible"
-      :title="dialogTitle"
-      @cancel="handleCancel"
-      @ok="submitForm"
+      :title="dialogType === 'create' ? '新建标签' : '编辑标签'"
+      @ok="handleSubmit"
       :confirm-loading="formLoading"
+      @cancel="dialogVisible = false"
     >
       <a-form
-        ref="tagFormRef"
+        ref="formRef"
         :model="tagForm"
         :rules="rules"
         :label-col="{ span: 6 }"
@@ -61,8 +79,8 @@
         <a-form-item label="描述" name="description">
           <a-textarea
             v-model:value="tagForm.description"
+            :rows="3"
             placeholder="请输入标签描述"
-            :rows="4"
           />
         </a-form-item>
         
@@ -75,179 +93,216 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { message, Modal } from 'ant-design-vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { message } from 'ant-design-vue'
+import { getTagList, createTag, updateTag, deleteTag } from '@/api/tag'
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
-import request from '@/utils/request'
 
+// 表格列配置
 const columns = [
-  {
-    title: 'ID',
-    dataIndex: 'id',
-    key: 'id'
-  },
   {
     title: '标签名称',
     dataIndex: 'name',
-    key: 'name'
+    key: 'name',
+    width: '25%',
   },
   {
     title: '描述',
     dataIndex: 'description',
-    key: 'description'
+    key: 'description',
+    width: '30%',
+    ellipsis: true,
+  },
+  {
+    title: '排序',
+    dataIndex: 'sort',
+    key: 'sort',
+    width: '10%',
+  },
+  {
+    title: '文章数量',
+    dataIndex: 'postCount',
+    key: 'postCount',
+    width: '15%',
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    width: '15%',
   },
   {
     title: '操作',
-    key: 'action'
+    dataIndex: 'action',
+    key: 'action',
+    width: '15%',
   }
 ]
 
-const loading = ref(false)
+// 数据列表
 const tagList = ref([])
+const loading = ref(false)
+const formLoading = ref(false)
+const formRef = ref(null)
+
+// 分页相关
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
-const dialogVisible = ref(false)
-const dialogTitle = ref('新建标签')
-const formLoading = ref(false)
-const isEdit = ref(false)
-const tagFormRef = ref(null)
+// 计算分页配置
+const paginationConfig = computed(() => ({
+  current: currentPage.value,
+  pageSize: pageSize.value,
+  total: total.value,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total) => `共 ${total} 条`,
+  onChange: (page, pageSize) => {
+    currentPage.value = page
+    fetchTags()
+  },
+  onShowSizeChange: (current, size) => {
+    pageSize.value = size
+    currentPage.value = 1
+    fetchTags()
+  }
+}))
 
+// 编辑对话框
+const dialogVisible = ref(false)
+const dialogType = ref('create')
 const tagForm = reactive({
-  id: null,
+  id: '',
   name: '',
   description: '',
   sort: 0
 })
 
+// 表单规则
 const rules = {
   name: [
     { required: true, message: '请输入标签名称', trigger: 'blur' },
     { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
   ],
-  sort: [
-    { required: true, message: '请输入排序值', trigger: 'change' }
+  description: [
+    { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
   ]
 }
 
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
 // 获取标签列表
-const getTagList = async () => {
+const fetchTags = async () => {
   loading.value = true
   try {
-    const res = await request.get('/api/tags', {
-      params: {
-        page: currentPage.value,
-        limit: pageSize.value
-      }
+    const result = await getTagList({
+      page: currentPage.value,
+      pageSize: pageSize.value
     })
-    tagList.value = res.data.items
-    total.value = res.data.total
+    
+    if (Array.isArray(result)) {
+      // 如果返回的是数组，直接使用
+      tagList.value = result
+      total.value = result.length
+    } else if (result && result.items) {
+      // 如果返回的是分页对象
+      tagList.value = result.items
+      total.value = result.total
+    } else {
+      tagList.value = []
+      total.value = 0
+    }
   } catch (error) {
     console.error('获取标签列表失败:', error)
+    message.error('获取标签列表失败')
+    tagList.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
 }
 
-// 处理页码变化
-const handlePageChange = (page, pageSize) => {
-  currentPage.value = page
-  getTagList()
-}
-
-// 处理每页数量变化
-const handleSizeChange = (current, size) => {
-  pageSize.value = size
-  getTagList()
-}
-
-// 处理创建标签
+// 打开新建标签对话框
 const handleCreate = () => {
-  isEdit.value = false
-  dialogTitle.value = '新建标签'
-  tagForm.id = null
+  dialogType.value = 'create'
+  tagForm.id = ''
   tagForm.name = ''
   tagForm.description = ''
   tagForm.sort = 0
   dialogVisible.value = true
 }
 
-// 处理编辑标签
-const handleEdit = (row) => {
-  isEdit.value = true
-  dialogTitle.value = '编辑标签'
-  tagForm.id = row.id
-  tagForm.name = row.name
-  tagForm.description = row.description
-  tagForm.sort = row.sort || 0
+// 打开编辑标签对话框
+const handleEdit = (record) => {
+  dialogType.value = 'edit'
+  tagForm.id = record.id
+  tagForm.name = record.name
+  tagForm.description = record.description
+  tagForm.sort = record.sort || 0
   dialogVisible.value = true
 }
 
-// 处理删除标签
-const handleDelete = (row) => {
-  Modal.confirm({
-    title: '确认删除',
-    content: `确定要删除标签"${row.name}"吗？`,
-    okText: '确定',
-    okType: 'danger',
-    cancelText: '取消',
-    onOk: async () => {
-      try {
-        await request.delete(`/api/tags/${row.id}`)
-        message.success('删除成功')
-        getTagList()
-      } catch (error) {
-        console.error('删除失败:', error)
-      }
-    }
-  })
-}
-
-// 提交表单
-const submitForm = async () => {
-  formLoading.value = true
+// 处理表单提交
+const handleSubmit = async () => {
   try {
-    const validateResult = await tagFormRef.value.validate()
-    
-    if (isEdit.value) {
-      await request.put(`/api/tags/${tagForm.id}`, tagForm)
-      message.success('更新成功')
-    } else {
-      await request.post('/api/tags', tagForm)
-      message.success('创建成功')
+    if (formRef.value) {
+      await formRef.value.validate()
     }
     
+    formLoading.value = true
+    
+    if (dialogType.value === 'create') {
+      await createTag(tagForm)
+      message.success('标签创建成功')
+    } else {
+      await updateTag(tagForm.id, tagForm)
+      message.success('标签更新成功')
+    }
+    
+    // 刷新标签列表
+    fetchTags()
     dialogVisible.value = false
-    getTagList()
   } catch (error) {
-    console.error('提交失败:', error)
+    console.error('保存标签失败:', error)
+    message.error(error.message || '操作失败，请重试')
   } finally {
     formLoading.value = false
   }
 }
 
-// 取消
-const handleCancel = () => {
-  dialogVisible.value = false
+// 删除标签
+const handleDelete = async (record) => {
+  try {
+    loading.value = true
+    await deleteTag(record.id)
+    message.success('标签删除成功')
+    fetchTags()
+  } catch (error) {
+    console.error('删除标签失败:', error)
+    message.error('删除失败，请重试')
+  } finally {
+    loading.value = false
+  }
 }
 
+// 组件挂载时获取标签列表
 onMounted(() => {
-  getTagList()
+  fetchTags()
 })
 </script>
 
 <style scoped>
-.tag-list-page {
+.tag-list {
   padding: 20px;
 }
 
-.header-actions {
-  margin-bottom: 20px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  text-align: right;
+.data-card {
+  margin-top: 16px;
 }
 </style> 

@@ -63,11 +63,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, onUnmounted } from 'vue'
+import { ref, onMounted, reactive, onUnmounted, h, resolveComponent } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynamic'
+import { getCategoryList } from '../../api/category'
+import { getTagList } from '../../api/tag'
 
 const router = useRouter()
 const loading = ref(false)
@@ -86,32 +88,116 @@ const columns = [
     width: 80
   },
   {
-    title: '标题',
-    dataIndex: 'title',
-    key: 'title'
+    title: '内容',
+    dataIndex: 'content',
+    key: 'content',
+    ellipsis: true
   },
   {
-    title: '封面图',
-    dataIndex: 'coverImage',
-    key: 'coverImage',
-    width: 120
+    title: '类型',
+    dataIndex: 'type',
+    key: 'type',
+    width: 100,
+    filters: [
+      { text: '文本', value: 'text' },
+      { text: '图文', value: 'image' },
+      { text: '音频', value: 'audio' },
+      { text: '视频', value: 'video' }
+    ],
+    onFilter: (value, record) => record.type === value,
+    customRender: ({ text }) => {
+      const typeMap = {
+        text: '文本',
+        image: '图文',
+        audio: '音频',
+        video: '视频'
+      }
+      return typeMap[text] || text
+    }
+  },
+  {
+    title: '分类',
+    dataIndex: 'categoryId',
+    key: 'categoryId',
+    width: 120,
+    customRender: ({ record }) => {
+      const category = categories.value.find(c => c.id === record.categoryId);
+      return category ? category.name : '未分类';
+    }
+  },
+  {
+    title: '标签',
+    dataIndex: 'tags',
+    key: 'tags',
+    width: 200,
+    customRender: ({ record }) => {
+      if (!record.tags || record.tags.length === 0) {
+        return '无标签';
+      }
+      return h('div', { class: 'tag-list' }, 
+        record.tags.map(tag => h(resolveComponent('a-tag'), { 
+          color: 'blue', 
+          key: tag.id 
+        }, () => tag.name))
+      );
+    }
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 100,
+    filters: [
+      { text: '草稿', value: 'draft' },
+      { text: '已发布', value: 'published' }
+    ],
+    onFilter: (value, record) => record.status === value,
+    customRender: ({ text }) => {
+      const statusMap = {
+        draft: { text: '草稿', color: 'orange' },
+        published: { text: '已发布', color: 'green' }
+      }
+      const status = statusMap[text] || { text, color: 'default' }
+      return h(resolveComponent('a-tag'), { color: status.color }, () => status.text);
+    }
   },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: 180
-  },
-  {
-    title: '更新时间',
-    dataIndex: 'updatedAt',
-    key: 'updatedAt',
-    width: 180
+    width: 170,
+    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    customRender: ({ text }) => {
+      return formatDate(text)
+    }
   },
   {
     title: '操作',
     key: 'action',
-    width: 200
+    width: 180,
+    customRender: ({ record }) => {
+      return h('div', { class: 'action-buttons' }, [
+        h(resolveComponent('a-button'), { 
+          type: 'link', 
+          onClick: () => handleEdit(record.id) 
+        }, () => '编辑'),
+        h(resolveComponent('a-button'), { 
+          type: 'link', 
+          onClick: () => handlePreview(record.id) 
+        }, () => '预览'),
+        h(resolveComponent('a-popconfirm'), { 
+          title: '确定要删除这条动态吗？',
+          'ok-text': '确定',
+          'cancel-text': '取消',
+          onConfirm: () => handleDelete(record.id)
+        }, {
+          default: () => h(resolveComponent('a-button'), { 
+            type: 'link', 
+            danger: true 
+          }, () => '删除')
+        })
+      ]);
+    }
   }
 ]
 
@@ -135,6 +221,32 @@ const columnsForMobile = [
     width: 100
   }
 ]
+
+// 添加分类和标签数据
+const categories = ref([])
+const tags = ref([])
+
+// 获取分类列表
+const fetchCategories = async () => {
+  try {
+    const data = await getCategoryList()
+    categories.value = data || []
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    message.error('获取分类列表失败')
+  }
+}
+
+// 获取标签列表
+const fetchTags = async () => {
+  try {
+    const data = await getTagList()
+    tags.value = data || []
+  } catch (error) {
+    console.error('获取标签列表失败:', error)
+    message.error('获取标签列表失败')
+  }
+}
 
 // 获取动态列表
 const fetchDynamics = async () => {
@@ -251,8 +363,11 @@ const checkResponsive = () => {
   responsive.value = window.innerWidth < 768
 }
 
+// 在组件挂载时获取分类和标签数据
 onMounted(() => {
   fetchDynamics()
+  fetchCategories()
+  fetchTags()
   
   // 检测响应式
   checkResponsive()
@@ -262,6 +377,32 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkResponsive)
 })
+
+// 添加handleEdit和handlePreview方法
+// 编辑动态
+const handleEdit = (id) => {
+  router.push(`/dashboard/dynamics/edit/${id}`)
+}
+
+// 预览动态
+const handlePreview = (id) => {
+  router.push(`/dashboard/dynamics/preview/${id}`)
+}
+
+// 删除动态
+const handleDelete = async (id) => {
+  try {
+    loading.value = true
+    await deleteAdminDynamic(id)
+    message.success('删除成功')
+    fetchDynamics() // 重新加载列表
+  } catch (error) {
+    console.error('删除动态失败:', error)
+    message.error('删除动态失败')
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <style scoped>

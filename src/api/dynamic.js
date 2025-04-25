@@ -61,11 +61,27 @@ export const updateDynamic = async (id, data) => {
   try {
     console.log(`更新动态 ID:${id}, 数据:`, data);
     
+    // 数据格式化，确保数据完整性
+    const formattedData = {
+      type: data.type || 'text',
+      content: data.content || '',
+      status: data.status || 'draft',
+      mediaUrls: Array.isArray(data.mediaUrls) ? data.mediaUrls : [],
+      // 添加分类和标签
+      categoryId: data.categoryId || null,
+      tags: Array.isArray(data.tags) ? data.tags : []
+    };
+    
+    // 根据类型进行数据验证
+    if (formattedData.type !== 'text' && (!formattedData.mediaUrls || formattedData.mediaUrls.length === 0)) {
+      throw new Error(`${formattedData.type}类型的动态必须包含媒体文件`);
+    }
+    
     // 获取token
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.put(`/dynamics/${id}`, data, { headers });
+    const response = await request.put(`/dynamics/${id}`, formattedData, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -73,7 +89,12 @@ export const updateDynamic = async (id, data) => {
     };
   } catch (error) {
     console.error('更新动态失败:', error);
-    throw error;
+    // 添加更详细的错误信息
+    return {
+      code: error.response?.status || 500,
+      message: error.message || '更新动态失败',
+      error: error.response?.data || error.message
+    };
   }
 }
 
@@ -132,11 +153,40 @@ export const createDynamic = async (data) => {
   try {
     console.log('创建动态数据:', data);
     
+    // 数据格式化，确保数据完整性
+    const formattedData = {
+      type: data.type || 'text',
+      content: data.content || '',
+      status: data.status || 'draft',
+      mediaUrls: Array.isArray(data.mediaUrls) ? data.mediaUrls : [],
+      // 添加分类和标签
+      categoryId: data.categoryId || null,
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      // 添加其他必要字段
+      author: data.author || undefined,
+      createdAt: data.createdAt || new Date().toISOString()
+    };
+    
+    // 根据类型进行数据验证
+    if (formattedData.type === 'image' && (!formattedData.mediaUrls || formattedData.mediaUrls.length === 0)) {
+      throw new Error('图片类型的动态必须包含至少一张图片');
+    }
+    
+    if (formattedData.type === 'audio' && (!formattedData.mediaUrls || formattedData.mediaUrls.length === 0)) {
+      throw new Error('音频类型的动态必须包含至少一个音频文件');
+    }
+    
+    if (formattedData.type === 'video' && (!formattedData.mediaUrls || formattedData.mediaUrls.length === 0)) {
+      throw new Error('视频类型的动态必须包含至少一个视频文件');
+    }
+    
+    console.log('格式化后的动态数据:', formattedData);
+    
     // 获取token
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.post('/dynamics', data, { headers });
+    const response = await request.post('/dynamics', formattedData, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -144,6 +194,11 @@ export const createDynamic = async (data) => {
     };
   } catch (error) {
     console.error('创建动态失败:', error);
-    throw error;
+    // 添加更详细的错误信息
+    return {
+      code: error.response?.status || 500,
+      message: error.message || '创建动态失败，请检查数据完整性',
+      error: error.response?.data || error.message
+    };
   }
 }

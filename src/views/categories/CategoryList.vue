@@ -1,133 +1,173 @@
 <template>
   <div class="category-list">
-    <PageHeader title="分类管理" icon="FolderOutlined">
-      <template #actions>
+    <a-page-header
+      title="分类管理"
+      subtitle="管理博客分类"
+    >
+      <template #extra>
         <a-button type="primary" @click="handleCreate">
-          <template #icon><plus-outlined /></template>新建分类
+          <plus-outlined /> 新建分类
         </a-button>
       </template>
-    </PageHeader>
+    </a-page-header>
     
-    <!-- 分类数据表格 -->
-    <DataTable
-      :loading="loading"
-      :columns="columns"
-    >
-      <tr v-for="category in categories" :key="category.id">
-        <td class="name-cell">
-          <span class="category-name">{{ category.name }}</span>
-        </td>
-        <td class="description-cell">{{ category.description }}</td>
-        <td>{{ category.createdAt }}</td>
-        <td>
-          <div class="action-buttons">
-            <a-button type="primary" @click="handleEdit(category)">
-              <template #icon><edit-outlined /></template>编辑
-            </a-button>
-            <a-button type="primary" @click="handleAddChild(category)">
-              <template #icon><plus-outlined /></template>添加子分类
-            </a-button>
-            <a-button type="primary" danger @click="handleDelete(category)">
-              <template #icon><delete-outlined /></template>删除
-            </a-button>
-          </div>
-        </td>
-      </tr>
-      <template v-for="category in categories" :key="`children-${category.id}`">
-        <tr v-for="child in category.children" :key="child.id" class="child-row">
-          <td class="name-cell">
-            <span class="category-name child">{{ child.name }}</span>
-          </td>
-          <td class="description-cell">{{ child.description }}</td>
-          <td>{{ child.createTime }}</td>
-          <td>
-            <div class="action-buttons">
-              <a-button type="primary" @click="handleEdit(child)">
+    <a-card class="data-card">
+      <a-table
+        :loading="loading"
+        :columns="columns"
+        :data-source="categories"
+        :pagination="false"
+        row-key="id"
+        :expand-row-by-click="true"
+      >
+        <template #bodyCell="{ column, record }">
+          <!-- 分类名称列 -->
+          <template v-if="column.dataIndex === 'name'">
+            <span>{{ record.name }}</span>
+            <a-tag v-if="record.parentId" color="blue">子分类</a-tag>
+          </template>
+          
+          <!-- 操作列 -->
+          <template v-if="column.dataIndex === 'action'">
+            <a-space>
+              <a-button type="primary" size="small" @click.stop="handleEdit(record)">
                 <template #icon><edit-outlined /></template>编辑
               </a-button>
-              <a-button type="primary" danger @click="handleDelete(child)">
-                <template #icon><delete-outlined /></template>删除
+              <a-button 
+                v-if="!record.parentId" 
+                type="primary" 
+                size="small" 
+                @click.stop="handleAddChild(record)"
+              >
+                <template #icon><plus-outlined /></template>添加子分类
               </a-button>
-            </div>
-          </td>
-        </tr>
-      </template>
-    </DataTable>
+              <a-popconfirm
+                :title="record.children && record.children.length ? 
+                  '该分类包含子分类，删除将同时删除所有子分类，确定继续吗？' : 
+                  '确定要删除该分类吗？'"
+                ok-text="确定"
+                cancel-text="取消"
+                @confirm="handleDelete(record)"
+              >
+                <a-button type="primary" danger size="small" @click.stop>
+                  <template #icon><delete-outlined /></template>删除
+                </a-button>
+              </a-popconfirm>
+            </a-space>
+          </template>
+
+          <!-- 创建时间列 -->
+          <template v-if="column.dataIndex === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
+          </template>
+        </template>
+      </a-table>
+    </a-card>
     
     <!-- 分类编辑对话框 -->
-    <DataFormDialog
-      v-model="dialogVisible"
+    <a-modal
+      v-model:visible="dialogVisible"
       :title="dialogType === 'create' ? '新建分类' : '编辑分类'"
-      :model="categoryForm"
-      :rules="rules"
-      :loading="formLoading"
-      @submit="handleSubmit"
+      @ok="handleSubmit"
+      :confirm-loading="formLoading"
+      @cancel="dialogVisible = false"
     >
-      <a-form-item label="上级分类" name="parentId">
-        <a-select
-          v-model:value="categoryForm.parentId"
-          placeholder="请选择上级分类"
-          allowClear
-        >
-          <a-select-option
-            v-for="item in categoryOptions"
-            :key="item.id"
-            :value="item.id"
+      <a-form
+        ref="formRef"
+        :model="categoryForm"
+        :rules="rules"
+        :label-col="{ span: 6 }"
+        :wrapper-col="{ span: 16 }"
+      >
+        <a-form-item label="上级分类" name="parentId">
+          <a-select
+            v-model:value="categoryForm.parentId"
+            placeholder="请选择上级分类"
+            allowClear
           >
-            {{ item.name }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      
-      <a-form-item label="分类名称" name="name">
-        <a-input v-model:value="categoryForm.name" placeholder="请输入分类名称" />
-      </a-form-item>
-      
-      <a-form-item label="描述" name="description">
-        <a-textarea
-          v-model:value="categoryForm.description"
-          :rows="3"
-          placeholder="请输入分类描述"
-        />
-      </a-form-item>
-      
-      <a-form-item label="排序" name="sort">
-        <a-input-number v-model:value="categoryForm.sort" :min="0" :max="999" />
-      </a-form-item>
-    </DataFormDialog>
+            <a-select-option
+              v-for="item in categoryOptions"
+              :key="item.id"
+              :value="item.id"
+            >
+              {{ item.name }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        
+        <a-form-item label="分类名称" name="name">
+          <a-input v-model:value="categoryForm.name" placeholder="请输入分类名称" />
+        </a-form-item>
+        
+        <a-form-item label="描述" name="description">
+          <a-textarea
+            v-model:value="categoryForm.description"
+            :rows="3"
+            placeholder="请输入分类描述"
+          />
+        </a-form-item>
+        
+        <a-form-item label="排序" name="sort">
+          <a-input-number v-model:value="categoryForm.sort" :min="0" :max="999" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { message, Modal } from 'ant-design-vue'
-import { getCategoryList, createCategory, updateCategory, deleteCategory } from '../../api/category'
-import { PlusOutlined, EditOutlined, DeleteOutlined, FolderOutlined } from '@ant-design/icons-vue'
-
-// 导入通用组件
-import DataTable from '../../components/common/DataTable.vue'
-import PageHeader from '../../components/common/PageHeader.vue'
-import DataFormDialog from '../../components/common/DataFormDialog.vue'
+import { message } from 'ant-design-vue'
+import { getCategoryList, createCategory, updateCategory, deleteCategory } from '@/api/category'
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
 // 表格列配置
 const columns = [
-  { label: '分类名称', width: '200px' },
-  { label: '描述', width: '300px' },
-  { label: '创建时间', width: '180px' },
-  { label: '操作', width: '250px' }
+  {
+    title: '分类名称',
+    dataIndex: 'name',
+    key: 'name',
+    width: '30%',
+  },
+  {
+    title: '描述',
+    dataIndex: 'description',
+    key: 'description',
+    width: '35%',
+    ellipsis: true,
+  },
+  {
+    title: '排序',
+    dataIndex: 'sort',
+    key: 'sort',
+    width: '10%',
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createdAt',
+    key: 'createdAt',
+    width: '15%',
+  },
+  {
+    title: '操作',
+    dataIndex: 'action',
+    key: 'action',
+    width: '20%',
+  }
 ]
 
 // 数据列表
 const categories = ref([])
 const loading = ref(false)
 const formLoading = ref(false)
+const formRef = ref(null)
 
 // 编辑对话框
 const dialogVisible = ref(false)
 const dialogType = ref('create')
 const categoryForm = reactive({
   id: '',
-  parentId: '',
+  parentId: undefined,
   name: '',
   description: '',
   sort: 0
@@ -147,23 +187,22 @@ const rules = {
 // 分类选项（用于选择器）
 const categoryOptions = ref([])
 
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
 // 获取分类列表
-const getCategories = async () => {
+const fetchCategories = async () => {
   loading.value = true
   try {
-    const response = await getCategoryList()
-    if (response.code === 200) {
-      categories.value = response.data || []
-      
-      // 更新分类选项（排除当前编辑的分类及其子分类）
-      categoryOptions.value = categories.value.filter(item => {
-        if (categoryForm.id && item.id === categoryForm.id) return false
-        if (categoryForm.id && item.parentId === categoryForm.id) return false
-        return true
-      })
-    } else {
-      message.error(response.message || '获取分类列表失败')
-    }
+    const result = await getCategoryList()
+    categories.value = result || []
+    
+    // 处理分类选项
+    updateCategoryOptions()
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
@@ -172,133 +211,111 @@ const getCategories = async () => {
   }
 }
 
+// 更新分类选项
+const updateCategoryOptions = () => {
+  // 过滤当前编辑的分类及其子分类，避免循环引用
+  categoryOptions.value = categories.value.filter(item => {
+    if (dialogType.value === 'edit' && item.id === categoryForm.id) return false
+    if (dialogType.value === 'edit' && item.parentId === categoryForm.id) return false
+    return true
+  })
+}
+
 // 打开新建分类对话框
 const handleCreate = () => {
   dialogType.value = 'create'
-  Object.keys(categoryForm).forEach(key => {
-    categoryForm[key] = key === 'sort' ? 0 : ''
-  })
+  categoryForm.id = ''
+  categoryForm.parentId = undefined
+  categoryForm.name = ''
+  categoryForm.description = ''
+  categoryForm.sort = 0
   dialogVisible.value = true
+  updateCategoryOptions()
 }
 
 // 打开编辑分类对话框
-const handleEdit = (row) => {
+const handleEdit = (record) => {
   dialogType.value = 'edit'
-  Object.keys(categoryForm).forEach(key => {
-    categoryForm[key] = row[key]
-  })
+  categoryForm.id = record.id
+  categoryForm.parentId = record.parentId
+  categoryForm.name = record.name
+  categoryForm.description = record.description
+  categoryForm.sort = record.sort || 0
   dialogVisible.value = true
+  updateCategoryOptions()
 }
 
 // 打开添加子分类对话框
 const handleAddChild = (parent) => {
   dialogType.value = 'create'
-  Object.keys(categoryForm).forEach(key => {
-    categoryForm[key] = key === 'sort' ? 0 : ''
-  })
+  categoryForm.id = ''
   categoryForm.parentId = parent.id
+  categoryForm.name = ''
+  categoryForm.description = ''
+  categoryForm.sort = 0
   dialogVisible.value = true
+  updateCategoryOptions()
 }
 
-// 提交表单
+// 处理表单提交
 const handleSubmit = async () => {
-  formLoading.value = true
   try {
-    if (dialogType.value === 'create') {
-      const response = await createCategory(categoryForm)
-      if (response.code === 200) {
-        message.success('创建成功')
-        dialogVisible.value = false
-        getCategories()
-      } else {
-        message.error(response.message || '创建失败')
-      }
-    } else {
-      const response = await updateCategory(categoryForm.id, categoryForm)
-      if (response.code === 200) {
-        message.success('更新成功')
-        dialogVisible.value = false
-        getCategories()
-      } else {
-        message.error(response.message || '更新失败')
-      }
+    if (formRef.value) {
+      await formRef.value.validate()
     }
+    
+    formLoading.value = true
+    
+    if (dialogType.value === 'create') {
+      await createCategory(categoryForm)
+      message.success('分类创建成功')
+    } else {
+      await updateCategory(categoryForm.id, categoryForm)
+      message.success('分类更新成功')
+    }
+    
+    // 刷新分类列表
+    fetchCategories()
+    dialogVisible.value = false
   } catch (error) {
-    console.error('提交分类失败:', error)
-    message.error('操作失败，请稍后重试')
+    console.error('保存分类失败:', error)
+    message.error(error.message || '操作失败，请重试')
   } finally {
     formLoading.value = false
   }
 }
 
 // 删除分类
-const handleDelete = (row) => {
-  Modal.confirm({
-    title: '提示',
-    content: row.children && row.children.length ? 
-      '该分类包含子分类，删除将同时删除所有子分类，确定继续吗？' : 
-      '确定要删除该分类吗？',
-    okText: '确定',
-    okType: 'danger',
-    cancelText: '取消',
-    onOk: async () => {
-      try {
-        const response = await deleteCategory(row.id)
-        if (response.code === 200) {
-          message.success('删除成功')
-          getCategories()
-        } else {
-          message.error(response.message || '删除失败')
-        }
-      } catch (error) {
-        console.error('删除分类失败:', error)
-        message.error('删除失败')
-      }
-    }
-  })
+const handleDelete = async (record) => {
+  try {
+    loading.value = true
+    await deleteCategory(record.id)
+    message.success('分类删除成功')
+    fetchCategories()
+  } catch (error) {
+    console.error('删除分类失败:', error)
+    message.error('删除失败，请重试')
+  } finally {
+    loading.value = false
+  }
 }
 
+// 组件挂载时获取分类列表
 onMounted(() => {
-  getCategories()
+  fetchCategories()
 })
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .category-list {
   padding: 20px;
 }
 
-.name-cell {
-  .category-name {
-    font-weight: 500;
-    
-    &.child {
-      position: relative;
-      padding-left: 20px;
-      
-      &::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 50%;
-        width: 12px;
-        height: 12px;
-        margin-top: -6px;
-        border-left: 1px solid #909399;
-        border-bottom: 1px solid #909399;
-      }
-    }
-  }
+.data-card {
+  margin-top: 16px;
 }
 
-.description-cell {
-  color: #606266;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.child-row {
-  background-color: rgba(0, 0, 0, 0.02);
+:deep(.ant-table-row-expand-icon) {
+  display: none;
 }
 </style> 

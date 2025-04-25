@@ -23,6 +23,27 @@
       :wrapper-col="{ span: 18 }"
       class="edit-form"
     >
+      <a-form-item label="分类" name="categoryId">
+        <a-select
+          v-model:value="form.categoryId"
+          placeholder="请选择分类"
+          :loading="categoriesLoading"
+          :options="categories.map(item => ({ value: item.id, label: item.name }))"
+        >
+        </a-select>
+      </a-form-item>
+
+      <a-form-item label="标签" name="tags">
+        <a-select
+          v-model:value="form.tags"
+          mode="multiple"
+          placeholder="请选择标签"
+          :loading="tagsLoading"
+          :options="tags.map(item => ({ value: item.id, label: item.name }))"
+        >
+        </a-select>
+      </a-form-item>
+
       <a-form-item label="内容类型" name="type">
         <a-radio-group v-model:value="form.type">
           <a-radio value="text">纯文本</a-radio>
@@ -161,6 +182,8 @@ import {
 } from '@ant-design/icons-vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadImage, uploadAudio, uploadVideo, checkFileSize, checkFileType } from '../../utils/upload'
+import { getCategoryList } from '../../api/category'
+import { getTagList } from '../../api/tag'
 
 const route = useRoute()
 const router = useRouter()
@@ -174,7 +197,9 @@ const form = ref({
   type: 'text',
   content: '',
   mediaUrls: [],
-  status: 'draft'
+  status: 'draft',
+  categoryId: undefined,
+  tags: []
 })
 
 // 文件列表 - 上传组件使用
@@ -185,6 +210,12 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('image')
+
+// 分类和标签数据
+const categories = ref([])
+const tags = ref([])
+const categoriesLoading = ref(false)
+const tagsLoading = ref(false)
 
 // 表单验证规则
 const rules = {
@@ -204,6 +235,34 @@ const rules = {
   ]
 }
 
+// 获取分类列表
+const fetchCategories = async () => {
+  categoriesLoading.value = true
+  try {
+    const data = await getCategoryList()
+    categories.value = data || []
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    message.error('获取分类列表失败')
+  } finally {
+    categoriesLoading.value = false
+  }
+}
+
+// 获取标签列表
+const fetchTags = async () => {
+  tagsLoading.value = true
+  try {
+    const data = await getTagList()
+    tags.value = data || []
+  } catch (error) {
+    console.error('获取标签列表失败:', error)
+    message.error('获取标签列表失败')
+  } finally {
+    tagsLoading.value = false
+  }
+}
+
 // 获取动态详情
 const fetchDynamicDetail = async () => {
   if (!isEdit.value) return
@@ -218,6 +277,8 @@ const fetchDynamicDetail = async () => {
       form.value.content = data.content
       form.value.status = data.status
       form.value.mediaUrls = data.mediaUrls || []
+      form.value.categoryId = data.categoryId
+      form.value.tags = data.tags?.map(tag => tag.id) || []
       
       // 更新文件列表用于上传组件显示
       updateFileList()
@@ -250,34 +311,57 @@ const updateFileList = () => {
 // 保存动态
 const handleSave = async () => {
   try {
-    await formRef.value.validate()
+    // 表单验证
+    await formRef.value.validate();
     
-    const payload = {
-      type: form.value.type,
-      content: form.value.content,
-      mediaUrls: form.value.mediaUrls,
-      status: form.value.status
+    // 验证媒体文件
+    if (form.value.type !== 'text' && (!form.value.mediaUrls || form.value.mediaUrls.length === 0)) {
+      message.error(`请上传${form.value.type === 'image' ? '图片' : form.value.type === 'audio' ? '音频' : '视频'}`);
+      return;
     }
     
+    // 准备提交的数据，确保格式正确
+    const dynamicData = {
+      type: form.value.type,
+      content: form.value.content.trim(),
+      status: form.value.status,
+      mediaUrls: Array.isArray(form.value.mediaUrls) ? form.value.mediaUrls : [],
+      categoryId: form.value.categoryId,
+      tags: form.value.tags
+    };
+    
+    // 打印将要提交的数据，用于调试
+    console.log('即将提交的动态数据:', dynamicData);
+    
+    // 根据是否编辑模式选择API
+    let response;
     if (isEdit.value) {
-      const response = await updateDynamic(route.params.id, payload)
-      if (response.code === 200) {
-        message.success('更新成功')
-        router.push('/dashboard/dynamics')
-      } else {
-        message.error(response.message || '更新失败')
-      }
+      response = await updateDynamic(route.params.id, dynamicData);
     } else {
-      const response = await createDynamic(payload)
-      if (response.code === 200) {
-        message.success('创建成功')
-        router.push('/dashboard/dynamics')
-      } else {
-        message.error(response.message || '创建失败')
-      }
+      response = await createDynamic(dynamicData);
+    }
+    
+    // 处理响应
+    if (response.code === 200) {
+      message.success(isEdit.value ? '动态更新成功' : '动态创建成功');
+      router.push('/dashboard/dynamics');
+    } else {
+      // 显示API返回的具体错误信息
+      message.error(response.message || (isEdit.value ? '更新失败' : '创建失败'));
+      console.error('动态保存失败:', response.error || response.message);
     }
   } catch (error) {
-    console.error('保存动态失败:', error)
+    console.error('表单验证或保存过程中出错:', error);
+    
+    // 显示更友好的错误信息
+    if (error.errorFields) {
+      // 表单验证错误
+      const firstError = error.errorFields[0];
+      message.error(firstError.errors[0] || '表单数据不完整，请检查');
+    } else {
+      // API或其他错误
+      message.error(error.message || '保存失败，请稍后重试');
+    }
   }
 }
 
@@ -396,6 +480,8 @@ const beforeVideoUpload = (file) => {
 
 onMounted(() => {
   fetchDynamicDetail()
+  fetchCategories()
+  fetchTags()
 })
 </script>
 

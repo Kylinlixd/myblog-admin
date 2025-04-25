@@ -10,7 +10,6 @@
       </div>
       
       <a-form
-        ref="loginForm"
         class="login-form"
         :model="loginData"
         @finish="handleLogin"
@@ -31,7 +30,7 @@
                 size="large"
               >
                 <template #prefix>
-                  <user-outlined />
+                  <UserOutlined />
                 </template>
               </a-input>
             </a-form-item>
@@ -50,7 +49,7 @@
                 size="large"
               >
                 <template #prefix>
-                  <lock-outlined />
+                  <LockOutlined />
                 </template>
               </a-input-password>
             </a-form-item>
@@ -79,124 +78,139 @@
   </div>
 </template>
 
-<script setup>
+<script>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { useAppStore } from '../stores/app'
 import { message } from 'ant-design-vue'
 // 分别导入图标组件
-import { UserOutlined } from '@ant-design/icons-vue'
-import { LockOutlined } from '@ant-design/icons-vue'
+import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
 
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
-const appStore = useAppStore()
-const loginForm = ref(null)
-const loading = ref(false)
-const loginError = ref('')
+export default {
+  name: 'LoginView',
+  components: {
+    UserOutlined,
+    LockOutlined
+  },
+  setup() {
+    const router = useRouter()
+    const route = useRoute()
+    const userStore = useUserStore()
+    const appStore = useAppStore()
+    const loading = ref(false)
+    const loginError = ref('')
 
-const loginData = reactive({
-  username: '',
-  password: ''
-})
+    const loginData = reactive({
+      username: '',
+      password: ''
+    })
 
-// 优化预生成样式逻辑，减少形状数量提高性能
-const shapeStyles = computed(() => {
-  const styles = []
-  for (let i = 0; i < 10; i++) {
-    styles.push(generateRandomStyle())
-  }
-  return styles
-})
+    // 优化预生成样式逻辑，减少形状数量提高性能
+    const shapeStyles = computed(() => {
+      const styles = []
+      for (let i = 0; i < 10; i++) {
+        styles.push(generateRandomStyle())
+      }
+      return styles
+    })
 
-// 生成随机样式函数
-function generateRandomStyle() {
-  // 随机位置
-  const top = Math.random() * 100 + '%'
-  const left = Math.random() * 100 + '%'
-  
-  // 随机大小 - 减小形状以减轻渲染负担
-  const width = 30 + Math.random() * 80 + 'px'
-  const height = 30 + Math.random() * 80 + 'px'
-  
-  // 随机旋转角度
-  const rotate = Math.random() * 360 + 'deg'
-  const skewX = -10 + Math.random() * 20 + 'deg'
-  const skewY = -10 + Math.random() * 20 + 'deg'
-  
-  // 随机动画参数 - 增加持续时间减少CPU使用
-  const duration = 20 + Math.random() * 20 + 's'
-  const moveX = -50 + Math.random() * 100 + 'px'
-  const moveY = -50 + Math.random() * 100 + 'px'
-  
-  // 随机倾斜和3D旋转
-  const transform = `rotate(${rotate}) skewX(${skewX}) skewY(${skewY})`
-  
-  // 随机透明度
-  const opacity = 0.05 + Math.random() * 0.2
-  
-  // 随机z-index，保证层叠效果
-  const zIndex = Math.floor(Math.random() * 5)
-
-  return {
-    top,
-    left,
-    width,
-    height,
-    transform,
-    opacity,
-    '--duration': duration,
-    '--move-x': moveX,
-    '--move-y': moveY,
-    '--rotate': rotate,
-    'z-index': zIndex
-  }
-}
-
-const handleLogin = async () => {
-  loading.value = true
-  loginError.value = ''
-  
-  try {
-    const success = await userStore.login(loginData.username, loginData.password)
-    
-    if (success) {
-      message.success('登录成功')
-      // 获取重定向地址，如果没有则跳转到仪表盘
-      const redirect = route.query.redirect || '/dashboard'
+    // 生成随机样式函数
+    function generateRandomStyle() {
+      // 随机位置
+      const top = Math.random() * 100 + '%'
+      const left = Math.random() * 100 + '%'
       
-      // 设置全局加载状态
-      appStore.startLoading('正在准备您的工作台...')
+      // 随机大小 - 减小形状以减轻渲染负担
+      const width = 30 + Math.random() * 80 + 'px'
+      const height = 30 + Math.random() * 80 + 'px'
       
-      // 显示加载状态足够长的时间，确保用户能看到
-      setTimeout(() => {
-        router.push(redirect)
-      }, 1000)
-    } else {
-      loginError.value = '用户名或密码错误'
+      // 随机旋转角度
+      const rotate = Math.random() * 360 + 'deg'
+      const skewX = -10 + Math.random() * 20 + 'deg'
+      const skewY = -10 + Math.random() * 20 + 'deg'
+      
+      // 随机动画参数 - 增加持续时间减少CPU使用
+      const duration = 20 + Math.random() * 20 + 's'
+      const moveX = -50 + Math.random() * 100 + 'px'
+      const moveY = -50 + Math.random() * 100 + 'px'
+      
+      // 随机倾斜和3D旋转
+      const transform = `rotate(${rotate}) skewX(${skewX}) skewY(${skewY})`
+      
+      // 随机透明度
+      const opacity = 0.05 + Math.random() * 0.2
+      
+      // 随机z-index，保证层叠效果
+      const zIndex = Math.floor(Math.random() * 5)
+
+      return {
+        top,
+        left,
+        width,
+        height,
+        transform,
+        opacity,
+        '--duration': duration,
+        '--move-x': moveX,
+        '--move-y': moveY,
+        '--rotate': rotate,
+        'z-index': zIndex
+      }
     }
-  } catch (error) {
-    console.error('登录失败:', error)
-    loginError.value = '登录失败，请稍后重试'
-  } finally {
-    loading.value = false
+
+    const handleLogin = async () => {
+      loading.value = true
+      loginError.value = ''
+      
+      try {
+        const success = await userStore.login(loginData.username, loginData.password)
+        
+        if (success) {
+          message.success('登录成功')
+          // 获取重定向地址，如果没有则跳转到仪表盘
+          const redirect = route.query.redirect || '/dashboard'
+          
+          // 设置全局加载状态
+          appStore.startLoading('正在准备您的工作台...')
+          
+          // 显示加载状态足够长的时间，确保用户能看到
+          setTimeout(() => {
+            router.push(redirect)
+          }, 1000)
+        } else {
+          loginError.value = '用户名或密码错误'
+        }
+      } catch (error) {
+        console.error('登录失败:', error)
+        loginError.value = '登录失败，请稍后重试'
+      } finally {
+        loading.value = false
+      }
+    }
+
+    onMounted(() => {
+      // 检查是否已经登录
+      if (userStore.isLoggedIn) {
+        router.push('/dashboard')
+      }
+      
+      // 设置初始值
+      if (process.env.NODE_ENV === 'development') {
+        loginData.username = 'admin'
+        loginData.password = 'admin'
+      }
+    })
+
+    return {
+      loginData,
+      loading,
+      loginError,
+      handleLogin,
+      shapeStyles
+    }
   }
 }
-
-onMounted(() => {
-  // 检查是否已经登录
-  if (userStore.isLoggedIn) {
-    router.push('/dashboard')
-  }
-  
-  // 设置初始值
-  if (process.env.NODE_ENV === 'development') {
-    loginData.username = 'admin'
-    loginData.password = 'admin'
-  }
-})
 </script>
 
 <style lang="scss" scoped>
