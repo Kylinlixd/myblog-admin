@@ -479,6 +479,11 @@ const beforeVideoUpload = (file) => {
 }
 
 onMounted(() => {
+  console.log('DynamicEdit组件挂载')
+  console.log('当前路由:', route.fullPath)
+  console.log('路由参数:', route.params)
+  console.log('编辑模式:', isEdit.value)
+  
   fetchDynamicDetail()
   fetchCategories()
   fetchTags()

@@ -1,75 +1,161 @@
 <template>
   <div class="dynamic-list">
-    <div class="page-header">
-      <h2>动态列表</h2>
-      <a-button type="primary" @click="navigateToCreate">
-        <template #icon><plus-outlined /></template>
-        新建动态
-      </a-button>
-    </div>
+    <a-page-header
+      title="动态管理"
+      subtitle="管理博客动态内容"
+    >
+      <template #extra>
+        <a-button type="primary" @click="navigateToCreate">
+          <plus-outlined /> 新建动态
+        </a-button>
+      </template>
+    </a-page-header>
     
-    <a-card class="list-card">
+    <a-card class="data-card">
       <a-table
         :loading="loading"
-        :dataSource="dynamicList"
         :columns="responsive ? columnsForMobile : columns"
-        :pagination="false"
-        :scroll="responsive ? { x: 600 } : {}"
+        :data-source="dynamicList"
+        :pagination="paginationConfig"
+        :scroll="responsive ? { x: 800 } : {}"
+        row-key="id"
         bordered
       >
         <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'coverImage'">
-            <a-image
-              v-if="record.coverImage"
-              :src="record.coverImage"
-              :width="80"
-              :height="45"
-              :preview="false"
-            />
-            <span v-else>无封面</span>
+          <!-- 内容列 -->
+          <template v-if="column.dataIndex === 'content'">
+            <div class="content-cell">{{ record.content }}</div>
           </template>
 
-          <template v-if="column.key === 'action'">
+          <!-- 媒体预览列 -->
+          <template v-if="column.dataIndex === 'mediaUrls'">
+            <template v-if="record.type === 'image' && record.mediaUrls && record.mediaUrls.length">
+              <a-image
+                :src="record.mediaUrls[0]"
+                :width="60"
+                :height="60"
+                fit="cover"
+                :preview="{
+                  src: record.mediaUrls[0],
+                  mask: '预览',
+                }"
+              />
+              <a-badge v-if="record.mediaUrls.length > 1" :count="record.mediaUrls.length" />
+            </template>
+            
+            <template v-else-if="record.type === 'audio' && record.mediaUrls && record.mediaUrls.length">
+              <a-button type="link" size="small" @click="previewMedia('audio', record.mediaUrls[0])">
+                <sound-outlined /> 音频
+              </a-button>
+            </template>
+            
+            <template v-else-if="record.type === 'video' && record.mediaUrls && record.mediaUrls.length">
+              <a-button type="link" size="small" @click="previewMedia('video', record.mediaUrls[0])">
+                <video-camera-outlined /> 视频
+              </a-button>
+            </template>
+            
+            <template v-else>
+              <span>无媒体文件</span>
+            </template>
+          </template>
+          
+          <!-- 分类列 -->
+          <template v-if="column.dataIndex === 'categoryId'">
+            <template v-if="record.categoryId">
+              <a-tag color="cyan">
+                {{ getCategoryName(record.categoryId) }}
+              </a-tag>
+            </template>
+            <template v-else>
+              <span class="text-muted">未分类</span>
+            </template>
+          </template>
+          
+          <!-- 标签列 -->
+          <template v-if="column.dataIndex === 'tags'">
+            <template v-if="record.tags && record.tags.length">
+              <a-space wrap :size="[4, 4]">
+                <a-tag 
+                  v-for="tag in record.tags" 
+                  :key="tag.id" 
+                  color="blue"
+                >
+                  {{ tag.name }}
+                </a-tag>
+              </a-space>
+            </template>
+            <template v-else>
+              <span class="text-muted">无标签</span>
+            </template>
+          </template>
+          
+          <!-- 状态列 -->
+          <template v-if="column.dataIndex === 'status'">
+            <a-tag :color="record.status === 'published' ? 'green' : 'orange'">
+              {{ record.status === 'published' ? '已发布' : '草稿' }}
+            </a-tag>
+          </template>
+          
+          <!-- 创建时间列 -->
+          <template v-if="column.dataIndex === 'createdAt'">
+            {{ formatDate(record.createdAt) }}
+          </template>
+          
+          <!-- 操作列 -->
+          <template v-if="column.dataIndex === 'action'">
             <a-space>
-              <a-button size="small" @click="viewDetail(record)">查看</a-button>
-              <a-button size="small" type="primary" @click="editDynamic(record)">编辑</a-button>
-              <a-button size="small" danger @click="deleteDynamic(record)">删除</a-button>
+              <a-button type="primary" size="small" @click="editDynamic(record)">
+                <template #icon><edit-outlined /></template>编辑
+              </a-button>
+              <a-button type="primary" size="small" @click="viewDetail(record)">
+                <template #icon><eye-outlined /></template>查看
+              </a-button>
+              <a-popconfirm
+                title="确定要删除这条动态吗？"
+                ok-text="确定"
+                cancel-text="取消"
+                @confirm="handleDelete(record.id)"
+              >
+                <a-button type="primary" danger size="small">
+                  <template #icon><delete-outlined /></template>删除
+                </a-button>
+              </a-popconfirm>
             </a-space>
           </template>
         </template>
-
-        <template #emptyText>
-          <div class="empty-state">
-            <a-empty description="暂无动态数据">
-              <a-button type="primary" @click="navigateToCreate">创建新动态</a-button>
-            </a-empty>
-          </div>
-        </template>
       </a-table>
-      
-      <div class="pagination-container">
-        <a-pagination
-          v-model:current="currentPage"
-          v-model:pageSize="pageSize"
-          :total="total"
-          :pageSizeOptions="['10', '20', '50', '100']"
-          :showSizeChanger="true"
-          :showTotal="total => `共 ${total} 条`"
-          @change="handlePageChange"
-        />
-      </div>
     </a-card>
+    
+    <!-- 媒体预览对话框 -->
+    <a-modal
+      v-model:visible="previewVisible"
+      :title="previewTitle"
+      :footer="null"
+      width="800px"
+    >
+      <img v-if="previewType === 'image'" alt="预览" style="width: 100%" :src="previewUrl" />
+      <audio v-if="previewType === 'audio'" controls style="width: 100%" :src="previewUrl"></audio>
+      <video v-if="previewType === 'video'" controls style="width: 100%" :src="previewUrl"></video>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, onUnmounted, h, resolveComponent } from 'vue'
-import { message, Modal } from 'ant-design-vue'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { ref, computed, onMounted, onUnmounted, h, resolveComponent } from 'vue'
+import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
+import { 
+  PlusOutlined, 
+  EditOutlined, 
+  EyeOutlined, 
+  DeleteOutlined, 
+  SoundOutlined,
+  VideoCameraOutlined
+} from '@ant-design/icons-vue'
 import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynamic'
-import { getCategoryList } from '../../api/category'
-import { getTagList } from '../../api/tag'
+import { getCategoryList } from '@/api/category'
+import { getTagList } from '@/api/tag'
 
 const router = useRouter()
 const loading = ref(false)
@@ -78,6 +164,12 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const responsive = ref(false)
+
+// 媒体预览相关
+const previewVisible = ref(false)
+const previewUrl = ref('')
+const previewTitle = ref('')
+const previewType = ref('image')
 
 // 表格列定义
 const columns = [
@@ -91,13 +183,20 @@ const columns = [
     title: '内容',
     dataIndex: 'content',
     key: 'content',
-    ellipsis: true
+    ellipsis: true,
+    width: 200
+  },
+  {
+    title: '媒体文件',
+    dataIndex: 'mediaUrls',
+    key: 'mediaUrls',
+    width: 100
   },
   {
     title: '类型',
     dataIndex: 'type',
     key: 'type',
-    width: 100,
+    width: 80,
     filters: [
       { text: '文本', value: 'text' },
       { text: '图文', value: 'image' },
@@ -107,97 +206,51 @@ const columns = [
     onFilter: (value, record) => record.type === value,
     customRender: ({ text }) => {
       const typeMap = {
-        text: '文本',
-        image: '图文',
-        audio: '音频',
-        video: '视频'
+        text: { text: '文本', color: '' },
+        image: { text: '图文', color: 'blue' },
+        audio: { text: '音频', color: 'purple' },
+        video: { text: '视频', color: 'magenta' }
       }
-      return typeMap[text] || text
+      const type = typeMap[text] || { text, color: '' }
+      return h(resolveComponent('a-tag'), { color: type.color }, () => type.text);
     }
   },
   {
     title: '分类',
     dataIndex: 'categoryId',
     key: 'categoryId',
-    width: 120,
-    customRender: ({ record }) => {
-      const category = categories.value.find(c => c.id === record.categoryId);
-      return category ? category.name : '未分类';
-    }
+    width: 120
   },
   {
     title: '标签',
     dataIndex: 'tags',
     key: 'tags',
-    width: 200,
-    customRender: ({ record }) => {
-      if (!record.tags || record.tags.length === 0) {
-        return '无标签';
-      }
-      return h('div', { class: 'tag-list' }, 
-        record.tags.map(tag => h(resolveComponent('a-tag'), { 
-          color: 'blue', 
-          key: tag.id 
-        }, () => tag.name))
-      );
-    }
+    width: 180
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 100,
+    width: 80,
     filters: [
       { text: '草稿', value: 'draft' },
       { text: '已发布', value: 'published' }
     ],
-    onFilter: (value, record) => record.status === value,
-    customRender: ({ text }) => {
-      const statusMap = {
-        draft: { text: '草稿', color: 'orange' },
-        published: { text: '已发布', color: 'green' }
-      }
-      const status = statusMap[text] || { text, color: 'default' }
-      return h(resolveComponent('a-tag'), { color: status.color }, () => status.text);
-    }
+    onFilter: (value, record) => record.status === value
   },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: 170,
-    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-    customRender: ({ text }) => {
-      return formatDate(text)
-    }
+    width: 160,
+    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   },
   {
     title: '操作',
+    dataIndex: 'action',
     key: 'action',
     width: 180,
-    customRender: ({ record }) => {
-      return h('div', { class: 'action-buttons' }, [
-        h(resolveComponent('a-button'), { 
-          type: 'link', 
-          onClick: () => handleEdit(record.id) 
-        }, () => '编辑'),
-        h(resolveComponent('a-button'), { 
-          type: 'link', 
-          onClick: () => handlePreview(record.id) 
-        }, () => '预览'),
-        h(resolveComponent('a-popconfirm'), { 
-          title: '确定要删除这条动态吗？',
-          'ok-text': '确定',
-          'cancel-text': '取消',
-          onConfirm: () => handleDelete(record.id)
-        }, {
-          default: () => h(resolveComponent('a-button'), { 
-            type: 'link', 
-            danger: true 
-          }, () => '删除')
-        })
-      ]);
-    }
+    fixed: 'right'
   }
 ]
 
@@ -210,21 +263,64 @@ const columnsForMobile = [
     width: 60
   },
   {
-    title: '标题',
-    dataIndex: 'title',
-    key: 'title'
+    title: '内容',
+    dataIndex: 'content',
+    key: 'content',
+    ellipsis: true
   },
   {
     title: '操作',
+    dataIndex: 'action',
     key: 'action',
     fixed: 'right',
-    width: 100
+    width: 120
   }
 ]
+
+// 分页配置
+const paginationConfig = computed(() => ({
+  current: currentPage.value,
+  pageSize: pageSize.value,
+  total: total.value,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50', '100'],
+  showQuickJumper: true,
+  showTotal: (total) => `共 ${total} 条`,
+  onChange: (page, pageSize) => {
+    currentPage.value = page
+    fetchDynamics()
+  },
+  onShowSizeChange: (current, size) => {
+    pageSize.value = size
+    currentPage.value = 1
+    fetchDynamics()
+  }
+}))
 
 // 添加分类和标签数据
 const categories = ref([])
 const tags = ref([])
+
+// 获取分类名称
+const getCategoryName = (categoryId) => {
+  const category = categories.value.find(c => c.id === categoryId)
+  return category ? category.name : '未知分类'
+}
+
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleString()
+}
+
+// 媒体预览
+const previewMedia = (type, url) => {
+  previewType.value = type
+  previewUrl.value = url
+  previewTitle.value = type === 'audio' ? '音频预览' : '视频预览'
+  previewVisible.value = true
+}
 
 // 获取分类列表
 const fetchCategories = async () => {
@@ -251,55 +347,36 @@ const fetchTags = async () => {
 // 获取动态列表
 const fetchDynamics = async () => {
   loading.value = true
-  console.log('准备获取动态列表...')
   try {
-    console.log('调用getDynamicList API，参数:', {
-      page: currentPage.value,
-      pageSize: pageSize.value
-    })
     const res = await getDynamicList({
       page: currentPage.value,
       pageSize: pageSize.value
     })
-    console.log('动态列表API响应:', res)
     
-    // 增加更详细的响应检查和日志
     if (res && res.code === 200) {
-      console.log('处理响应数据:', res.data)
-      
       // 检查响应数据的结构
       if (res.data && typeof res.data === 'object') {
         if (Array.isArray(res.data)) {
           // 如果直接返回数组
           dynamicList.value = res.data || []
           total.value = res.data.length || 0
-          console.log('响应是数组类型，长度:', dynamicList.value.length)
         } else if (res.data.items) {
           // 如果返回带分页的对象结构
           dynamicList.value = res.data.items || []
           total.value = res.data.total || 0
-          console.log('响应是带分页结构，条目数:', dynamicList.value.length, '总数:', total.value)
         } else {
           // 尝试其他可能的结构
           const possibleItems = res.data.list || res.data.data || res.data.records || []
           dynamicList.value = possibleItems
           total.value = res.data.total || res.data.totalCount || res.data.count || possibleItems.length || 0
-          console.log('响应是其他结构，提取数据后条目数:', dynamicList.value.length)
         }
       } else {
-        console.warn('响应数据异常:', res.data)
         dynamicList.value = []
         total.value = 0
       }
     } else {
-      console.warn('API响应状态码非200或响应为空')
       dynamicList.value = []
       total.value = 0
-    }
-    
-    // 即使没有数据也显示空表格
-    if (dynamicList.value.length === 0) {
-      console.log('没有找到动态数据，显示空表格')
     }
   } catch (error) {
     console.error('获取动态列表失败:', error)
@@ -313,13 +390,34 @@ const fetchDynamics = async () => {
 
 // 跳转到创建动态页面
 const navigateToCreate = () => {
-  router.push('/dashboard/dynamics/create')
+  console.log('尝试跳转到创建动态页面')
+  try {
+    // 使用命名路由方式跳转
+    router.push({
+      name: 'CreateDynamic'
+    }).then(() => {
+      console.log('跳转成功: name=CreateDynamic')
+    }).catch(err => {
+      console.error('命名路由跳转失败:', err)
+      
+      // 尝试使用路径跳转
+      router.push('/dashboard/dynamics/create').then(() => {
+        console.log('路径跳转成功')
+      }).catch(err => {
+        console.error('路径跳转也失败:', err)
+        message.error('页面跳转失败，请检查路由配置')
+      })
+    })
+  } catch (error) {
+    console.error('路由跳转异常:', error)
+    message.error('页面跳转失败，请稍后重试')
+  }
 }
 
 // 查看动态详情
 const viewDetail = (record) => {
   // 这里可以打开一个对话框显示详情，或者跳转到详情页
-  window.open(`/blog/blogdynamic?id=${record.id}`, '_blank')
+  router.push(`/dashboard/dynamics/preview/${record.id}`)
 }
 
 // 编辑动态
@@ -328,34 +426,18 @@ const editDynamic = (record) => {
 }
 
 // 删除动态
-const deleteDynamic = (record) => {
-  Modal.confirm({
-    title: '警告',
-    content: '确认删除该动态吗？此操作不可恢复',
-    okText: '确认',
-    okType: 'danger',
-    cancelText: '取消',
-    async onOk() {
-      try {
-        loading.value = true
-        await deleteAdminDynamic(record.id)
-        message.success('删除成功')
-        fetchDynamics() // 重新加载列表
-      } catch (error) {
-        console.error('删除动态失败:', error)
-        message.error('删除动态失败')
-      } finally {
-        loading.value = false
-      }
-    }
-  })
-}
-
-// 处理分页变化
-const handlePageChange = (page, pageSize) => {
-  currentPage.value = page
-  pageSize.value = pageSize
-  fetchDynamics()
+const handleDelete = async (id) => {
+  try {
+    loading.value = true
+    await deleteAdminDynamic(id)
+    message.success('删除成功')
+    fetchDynamics() // 重新加载列表
+  } catch (error) {
+    console.error('删除动态失败:', error)
+    message.error('删除失败，请重试')
+  } finally {
+    loading.value = false
+  }
 }
 
 // 检测设备尺寸
@@ -363,7 +445,7 @@ const checkResponsive = () => {
   responsive.value = window.innerWidth < 768
 }
 
-// 在组件挂载时获取分类和标签数据
+// 在组件挂载时获取数据
 onMounted(() => {
   fetchDynamics()
   fetchCategories()
@@ -377,32 +459,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', checkResponsive)
 })
-
-// 添加handleEdit和handlePreview方法
-// 编辑动态
-const handleEdit = (id) => {
-  router.push(`/dashboard/dynamics/edit/${id}`)
-}
-
-// 预览动态
-const handlePreview = (id) => {
-  router.push(`/dashboard/dynamics/preview/${id}`)
-}
-
-// 删除动态
-const handleDelete = async (id) => {
-  try {
-    loading.value = true
-    await deleteAdminDynamic(id)
-    message.success('删除成功')
-    fetchDynamics() // 重新加载列表
-  } catch (error) {
-    console.error('删除动态失败:', error)
-    message.error('删除动态失败')
-  } finally {
-    loading.value = false
-  }
-}
 </script>
 
 <style scoped>
@@ -410,54 +466,25 @@ const handleDelete = async (id) => {
   padding: 20px;
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+.data-card {
+  margin-top: 16px;
 }
 
-.page-header h2 {
-  margin-bottom: 0;
-  font-weight: 600;
-  font-size: 18px;
-  color: rgba(0, 0, 0, 0.85);
+.content-cell {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.list-card {
-  margin-bottom: 20px;
-}
-
-.pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
+.text-muted {
+  color: #999;
 }
 
 /* 移动端样式 */
 @media screen and (max-width: 768px) {
   .dynamic-list {
     padding: 12px;
-  }
-  
-  .page-header {
-    margin-bottom: 12px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .page-header h2 {
-    font-size: 16px;
-  }
-  
-  .list-card {
-    margin-bottom: 12px;
-  }
-  
-  .pagination-container {
-    margin-top: 12px;
-    justify-content: center;
   }
 }
 </style>
