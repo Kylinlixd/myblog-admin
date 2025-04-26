@@ -260,79 +260,6 @@ const handleMenuClick = ({ key }) => {
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
       }
     }
-    
-    .el-menu {
-      border-right: none;
-      
-      :deep(.el-menu-item),
-      :deep(.el-sub-menu__title) {
-        height: 50px;
-        line-height: 50px;
-        margin: 4px 0;
-        border-radius: 4px;
-        margin-left: 8px;
-        margin-right: 8px;
-        width: calc(100% - 16px);
-        
-        &.is-active {
-          background: linear-gradient(90deg, #409EFF 0%, #36cfc9 100%);
-          color: #ffffff;
-          box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.3);
-          
-          &::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background-color: #ffffff;
-            border-radius: 0 4px 4px 0;
-          }
-        }
-        
-        &:hover {
-          background-color: rgba(64, 158, 255, 0.1);
-        }
-        
-        .el-icon {
-          font-size: 18px;
-          width: 1em;
-          height: 1em;
-          line-height: 1em;
-        }
-      }
-      
-      :deep(.el-sub-menu) {
-        .el-sub-menu__title {
-          color: var(--text-primary);
-        }
-        
-        &.is-active {
-          > .el-sub-menu__title {
-            color: #409EFF;
-          }
-        }
-        
-        .el-menu {
-          background-color: transparent;
-        }
-        
-        .el-menu-item {
-          height: 40px;
-          line-height: 40px;
-          padding-left: 40px !important;
-          
-          &.is-active {
-            background: linear-gradient(90deg, #409EFF 0%, #36cfc9 100%);
-          }
-        }
-      }
-    }
-    
-    .el-menu--collapse {
-      width: 64px;
-    }
   }
   
   .header {
@@ -415,27 +342,6 @@ const handleMenuClick = ({ key }) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.submenu-title {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  
-  .el-icon {
-    margin-right: 8px;
-  }
-}
-
-// 父菜单标题样式修复
-:deep(.el-sub-menu__title) {
-  padding: 0 !important;
-  
-  .submenu-title {
-    padding: 0 20px;
-  }
 }
 
 // 修复dark主题样式
@@ -546,6 +452,27 @@ const handleMenuClick = ({ key }) => {
     margin: 24px;
     min-height: 280px;
     border-radius: 2px;
+  }
+}
+
+// 暗黑模式适配
+:global(.dark) {
+  .layout-container {
+    .header {
+      background-color: #141414;
+      
+      .toggle-sidebar {
+        color: rgba(255, 255, 255, 0.65);
+      }
+      
+      .user-info span {
+        color: rgba(255, 255, 255, 0.65);
+      }
+    }
+    
+    .main {
+      background-color: #141414;
+    }
   }
 }
 

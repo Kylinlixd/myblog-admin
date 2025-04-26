@@ -61,7 +61,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from '../../utils/elementToAntd'
+import { message } from 'ant-design-vue'
 import { getDynamicDetail } from '../../api/dynamic'
 import MarkdownIt from 'markdown-it'
 import dayjs from 'dayjs'
@@ -119,11 +119,11 @@ const fetchDynamicDetail = async () => {
     if (response.code === 200) {
       dynamic.value = response.data
     } else {
-      ElMessage.error(response.message || '获取动态详情失败')
+      message.error(response.message || '获取动态详情失败')
       handleClose()
     }
   } catch (error) {
-    ElMessage.error('获取动态详情失败')
+    message.error('获取动态详情失败')
     console.error('获取动态详情失败:', error)
     handleClose()
   }
@@ -193,7 +193,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--el-text-color-secondary);
+  color: var(--text-color-secondary);
   font-size: 0.9em;
 }
 

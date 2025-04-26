@@ -3,17 +3,18 @@
     v-model:visible="dialogVisible"
     :title="isEdit ? '编辑标签' : '创建标签'"
     width="400px"
-    :before-close="handleClose"
+    @cancel="handleClose"
   >
     <a-form
       ref="formRef"
       :model="form"
       :rules="rules"
-      label-width="80px"
-      @keyup.enter="submitForm"
+      :label-col="{ span: 6 }"
+      :wrapper-col="{ span: 16 }"
+      @keypress.enter="submitForm"
     >
-      <a-form-item label="名称" prop="name">
-        <a-input v-model="form.name" placeholder="请输入标签名称" />
+      <a-form-item label="名称" name="name">
+        <a-input v-model:value="form.name" placeholder="请输入标签名称" />
       </a-form-item>
     </a-form>
     
@@ -29,8 +30,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, watchEffect, defineEmits, defineProps } from 'vue'
-import { message as AntMessage } from 'ant-design-vue'
+import { ref, reactive, watchEffect, defineEmits } from 'vue'
+import { message } from 'ant-design-vue'
 import { createTag, updateTag } from '../../api/tag'
 
 const props = defineProps({
@@ -100,10 +101,10 @@ const submitForm = async () => {
     
     if (isEdit.value) {
       await updateTag(props.tag.id, form)
-      AntMessage.success('标签更新成功')
+      message.success('标签更新成功')
     } else {
       await createTag(form)
-      AntMessage.success('标签创建成功')
+      message.success('标签创建成功')
     }
     
     // 通知父组件成功
@@ -112,7 +113,7 @@ const submitForm = async () => {
     dialogVisible.value = false
   } catch (error) {
     console.error('提交表单失败:', error)
-    AntMessage.error('保存失败，请重试')
+    message.error('保存失败，请重试')
   } finally {
     loading.value = false
   }

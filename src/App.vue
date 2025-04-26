@@ -165,7 +165,7 @@ setTimeout(preloadComponents, 2000)
 }
 
 .loading-container {
-  background-color: var(--el-bg-color);
+  background-color: var(--background-color);
   padding: 20px;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -176,9 +176,9 @@ setTimeout(preloadComponents, 2000)
   margin-bottom: 10px;
   width: 40px;
   height: 40px;
-  border: 3px solid var(--el-border-color-light);
+  border: 3px solid var(--border-color);
   border-radius: 50%;
-  border-top-color: var(--el-color-primary);
+  border-top-color: var(--primary-color);
   animation: spin 1s linear infinite;
   margin: 0 auto;
 }
@@ -189,7 +189,7 @@ setTimeout(preloadComponents, 2000)
 
 .loading-text {
   font-size: 14px;
-  color: var(--el-text-color-secondary);
+  color: var(--text-color-secondary);
   margin-top: 10px;
 }
 

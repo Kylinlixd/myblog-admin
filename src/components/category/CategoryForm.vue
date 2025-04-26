@@ -1,45 +1,45 @@
 <template>
-  <el-dialog
-    v-model="dialogVisible"
+  <a-modal
+    v-model:visible="dialogVisible"
     :title="isEdit ? '编辑分类' : '创建分类'"
     width="500px"
-    :before-close="handleClose"
+    @cancel="handleClose"
   >
-    <el-form
+    <a-form
       ref="formRef"
       :model="form"
       :rules="rules"
-      label-width="80px"
-      @keyup.enter="submitForm"
+      :label-col="{ span: 6 }"
+      :wrapper-col="{ span: 16 }"
+      @keypress.enter="submitForm"
     >
-      <el-form-item label="名称" prop="name">
-        <el-input v-model="form.name" placeholder="请输入分类名称" />
-      </el-form-item>
+      <a-form-item label="名称" name="name">
+        <a-input v-model:value="form.name" placeholder="请输入分类名称" />
+      </a-form-item>
       
-      <el-form-item label="描述" prop="description">
-        <el-input
-          v-model="form.description"
-          type="textarea"
+      <a-form-item label="描述" name="description">
+        <a-textarea
+          v-model:value="form.description"
           :rows="3"
           placeholder="请输入分类描述"
         />
-      </el-form-item>
-    </el-form>
+      </a-form-item>
+    </a-form>
     
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="submitForm">
+        <a-button @click="handleClose">取消</a-button>
+        <a-button type="primary" :loading="loading" @click="submitForm">
           确定
-        </el-button>
+        </a-button>
       </div>
     </template>
-  </el-dialog>
+  </a-modal>
 </template>
 
 <script setup>
-import { ref, reactive, watchEffect, defineEmits, defineProps } from 'vue'
-import { ElMessage } from '../../utils/elementToAntd'
+import { ref, reactive, watchEffect, defineEmits } from 'vue'
+import { message } from 'ant-design-vue'
 import { createCategory, updateCategory } from '../../api/category'
 
 const props = defineProps({
@@ -111,10 +111,10 @@ const submitForm = async () => {
     
     if (isEdit.value) {
       await updateCategory(props.category.id, form)
-      ElMessage.success('分类更新成功')
+      message.success('分类更新成功')
     } else {
       await createCategory(form)
-      ElMessage.success('分类创建成功')
+      message.success('分类创建成功')
     }
     
     // 通知父组件成功
@@ -123,7 +123,7 @@ const submitForm = async () => {
     dialogVisible.value = false
   } catch (error) {
     console.error('提交表单失败:', error)
-    ElMessage.error('保存失败，请重试')
+    message.error('保存失败，请重试')
   } finally {
     loading.value = false
   }

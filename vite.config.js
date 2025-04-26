@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
       hmr: true,
       open: true,
       proxy: {
-        // 后台管理API代理规则 - 修改为不移除/api前缀
+        // 后台管理API代理规则 - 仅保留一个/api前缀
         '/api': {
           target: 'http://127.0.0.1:8000',
           changeOrigin: true,
@@ -52,10 +52,12 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
-            console.log('[后台API] 不移除/api前缀，保持原样:', path);
-            console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + path);
-            // 不移除/api前缀，直接返回原始路径
-            return path;
+            // 修改：移除重复的/api前缀
+            const rewrittenPath = path.replace(/^\/api\/api\//, '/api/');
+            console.log('[后台API] 重写后路径:', rewrittenPath);
+            console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + rewrittenPath);
+            // 返回处理后的路径
+            return rewrittenPath;
           }
         },
         // 博客前台API代理规则

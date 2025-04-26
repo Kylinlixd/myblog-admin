@@ -5,7 +5,7 @@ import { useAppStore } from '../stores/app'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
-const baseURL = isProd ? '/api' : '/api'
+const baseURL = isProd ? '' : ''
 const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
 
 // 创建 axios 实例
@@ -92,7 +92,7 @@ const request = {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] GET 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+      console.log(`[Request] GET 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
     }
     return retryRequest(() => service.get(finalUrl, { params, ...config }))
   },
@@ -101,7 +101,7 @@ const request = {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] POST 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+      console.log(`[Request] POST 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
     }
     return retryRequest(() => service.post(finalUrl, data, config))
   },
@@ -110,7 +110,7 @@ const request = {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] PUT 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+      console.log(`[Request] PUT 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
     }
     return retryRequest(() => service.put(finalUrl, data, config))
   },
@@ -119,7 +119,7 @@ const request = {
     // 避免重复的/api前缀
     const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] DELETE 请求 原始URL: ${url}，最终完整URL: /api${finalUrl}`);
+      console.log(`[Request] DELETE 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
     }
     return retryRequest(() => service.delete(finalUrl, config))
   }

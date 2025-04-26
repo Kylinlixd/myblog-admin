@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, watch } from 'vue'
+import { defineEmits, watch } from 'vue'
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({

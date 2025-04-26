@@ -1,32 +1,31 @@
 <template>
   <div class="dynamic-list-skeleton">
     <div class="skeleton-header">
-      <el-skeleton-item variant="h1" style="width: 200px" />
-      <el-skeleton-item variant="button" style="width: 100px" />
+      <a-skeleton-input :active="true" size="large" style="width: 200px" />
+      <a-button-skeleton style="width: 100px" />
     </div>
     
     <div class="skeleton-filter">
-      <el-skeleton-item variant="text" style="width: 200px" />
-      <el-skeleton-item variant="text" style="width: 200px" />
-      <el-skeleton-item variant="text" style="width: 200px" />
+      <a-skeleton-input :active="true" style="width: 200px" />
+      <a-skeleton-input :active="true" style="width: 200px" />
+      <a-skeleton-input :active="true" style="width: 200px" />
     </div>
     
     <div class="skeleton-table">
-      <el-skeleton-item variant="text" style="width: 100%" />
-      <el-skeleton-item variant="text" style="width: 100%" />
-      <el-skeleton-item variant="text" style="width: 100%" />
-      <el-skeleton-item variant="text" style="width: 100%" />
-      <el-skeleton-item variant="text" style="width: 100%" />
+      <a-skeleton :active="true" :paragraph="{ rows: 5, width: '100%' }" :title="false" />
     </div>
     
     <div class="skeleton-pagination">
-      <el-skeleton-item variant="text" style="width: 200px" />
+      <a-skeleton-input :active="true" style="width: 200px" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ElSkeleton, ElSkeletonItem } from '../../utils/elementToAntd'
+import { Skeleton, SkeletonInput, Button } from 'ant-design-vue'
+
+const ASkeletonInput = SkeletonInput
+const AButtonSkeleton = Button.Skeleton
 </script>
 
 <style scoped>

@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits, watch, nextTick } from 'vue'
+import { ref, defineEmits, watch, nextTick } from 'vue'
 
 const props = defineProps({
   modelValue: {
