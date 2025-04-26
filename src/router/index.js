@@ -6,7 +6,7 @@ import { message } from 'ant-design-vue'
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    redirect: '/blog'
   },
   {
     path: '/dynamics',
