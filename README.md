@@ -1,7 +1,7 @@
 # 博客管理系统
 
 ## 项目介绍
-这是一个基于 Vue 3 + Vite + Element Plus 开发的博客管理系统。
+这是一个基于 Vue 3 + Vite + Ant Design Vue 开发的博客管理系统。
 
 ## 技术栈
 - Vue 3
