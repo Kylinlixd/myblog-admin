@@ -24,7 +24,7 @@ export function login(data) {
     })
   }
   
-  return request.post('/auth/login', data)
+  return request.post('/api/auth/login', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -46,7 +46,7 @@ export function login(data) {
  * @returns {Promise<{token: string, userInfo: Object}>}
  */
 export function register(data) {
-  return request.post('/auth/register', data)
+  return request.post('/api/auth/register', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -60,7 +60,7 @@ export function register(data) {
  * @returns {Promise<Object>} - 用户信息
  */
 export function getUserInfo() {
-  return request.get('/auth/info')
+  return request.get('/api/auth/info')
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -77,7 +77,7 @@ export function getUserInfo() {
  * @returns {Promise<void>}
  */
 export function changePassword(data) {
-  return request.put('/auth/password', data)
+  return request.put('/api/auth/password', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -96,7 +96,7 @@ export function changePassword(data) {
  * @returns {Promise<Object>} - 更新后的用户信息
  */
 export function updateUserProfile(data) {
-  return request.put('/auth/profile', data)
+  return request.put('/api/auth/profile', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
@@ -110,7 +110,7 @@ export function updateUserProfile(data) {
  * @returns {Promise<{token: string}>}
  */
 export function refreshToken() {
-  return request.post('/token/refresh')
+  return request.post('/api/token/refresh')
     .then(response => {
       if (response.code === 200) {
         return response.data
