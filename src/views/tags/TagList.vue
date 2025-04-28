@@ -23,13 +23,7 @@
           <!-- 标签名称列 -->
           <template v-if="column.dataIndex === 'name'">
             <a-tag color="blue">{{ record.name }}</a-tag>
-          </template>
-          
-          <!-- 文章数量列 -->
-          <template v-if="column.dataIndex === 'postCount'">
-            <a-badge :count="record.postCount || 0" :number-style="{ backgroundColor: '#52c41a' }" />
-          </template>
-          
+          </template>         
           <!-- 操作列 -->
           <template v-if="column.dataIndex === 'action'">
             <a-space>
@@ -120,12 +114,6 @@ const columns = [
     width: '10%',
   },
   {
-    title: '文章数量',
-    dataIndex: 'postCount',
-    key: 'postCount',
-    width: '15%',
-  },
-  {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
@@ -199,32 +187,35 @@ const formatDate = (dateString) => {
 
 // 获取标签列表
 const fetchTags = async () => {
-  loading.value = true
+  loading.value = true;
   try {
     const result = await getTagList({
       page: currentPage.value,
       pageSize: pageSize.value
-    })
+    });
     
-    if (Array.isArray(result)) {
+    if (result && result.results) {
+      tagList.value = result.results;
+      total.value = result.count;
+    } else if (Array.isArray(result)) {
       // 如果返回的是数组，直接使用
-      tagList.value = result
-      total.value = result.length
+      tagList.value = result;
+      total.value = result.length;
     } else if (result && result.items) {
       // 如果返回的是分页对象
-      tagList.value = result.items
-      total.value = result.total
+      tagList.value = result.items;
+      total.value = result.total;
     } else {
-      tagList.value = []
-      total.value = 0
+      tagList.value = [];
+      total.value = 0;
     }
   } catch (error) {
-    console.error('获取标签列表失败:', error)
-    message.error('获取标签列表失败')
-    tagList.value = []
-    total.value = 0
+    console.error('获取标签列表失败:', error);
+    message.error('获取标签列表失败');
+    tagList.value = [];
+    total.value = 0;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -305,4 +296,4 @@ onMounted(() => {
 .data-card {
   margin-top: 16px;
 }
-</style> 
+</style>
