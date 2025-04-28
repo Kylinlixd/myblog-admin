@@ -197,6 +197,10 @@ const fetchTags = async () => {
     if (result && result.results) {
       tagList.value = result.results;
       total.value = result.count;
+    } else if (result && result.results) {
+      // 处理 results 字段
+      tagList.value = result.results;
+      total.value = result.results.length;
     } else if (Array.isArray(result)) {
       // 如果返回的是数组，直接使用
       tagList.value = result;
