@@ -5,7 +5,7 @@ import { useAppStore } from '../stores/app'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
-const baseURL = isProd ? '' : ''
+const baseURL = isProd ? '' : '';
 const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
 
 // 创建 axios 实例
@@ -89,39 +89,31 @@ const retryRequest = async (fn, times = retryConfig.retryTimes) => {
 // 请求方法封装
 const request = {
   get(url, params, config = {}) {
-    // 避免重复的/api前缀
-    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] GET 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
+      console.log(`[Request] GET 请求 URL: ${url}`);
     }
-    return retryRequest(() => service.get(finalUrl, { params, ...config }))
+    return retryRequest(() => service.get(url, { params, ...config }))
   },
   
   post(url, data, config = {}) {
-    // 避免重复的/api前缀
-    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] POST 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
+      console.log(`[Request] POST 请求 URL: ${url}`);
     }
-    return retryRequest(() => service.post(finalUrl, data, config))
+    return retryRequest(() => service.post(url, data, config))
   },
   
   put(url, data, config = {}) {
-    // 避免重复的/api前缀
-    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] PUT 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
+      console.log(`[Request] PUT 请求 URL: ${url}`);
     }
-    return retryRequest(() => service.put(finalUrl, data, config))
+    return retryRequest(() => service.put(url, data, config))
   },
   
   delete(url, config = {}) {
-    // 避免重复的/api前缀
-    const finalUrl = url.startsWith('/api') ? url.substring(4) : url;
     if (!isProd) {
-      console.log(`[Request] DELETE 请求 原始URL: ${url}，最终URL: ${finalUrl}`);
+      console.log(`[Request] DELETE 请求 URL: ${url}`);
     }
-    return retryRequest(() => service.delete(finalUrl, config))
+    return retryRequest(() => service.delete(url, config))
   }
 }
 
