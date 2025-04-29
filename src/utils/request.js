@@ -52,7 +52,7 @@ const increasePendingCount = () => {
   
   // 非生产环境才打印日志
   if (!isProd) {
-    console.log(`[Request] 增加请求计数: ${pendingRequests.count}`)
+    // console.log(`[Request] 增加请求计数: ${pendingRequests.count}`)
   }
   
   // 设置全局超时
@@ -61,7 +61,7 @@ const increasePendingCount = () => {
     pendingRequests.timeoutId = setTimeout(() => {
       if (pendingRequests.count > 0) {
         if (!isProd) {
-          console.log('[Request] 全局请求超时')
+          // console.log('[Request] 全局请求超时')
         }
         // 避免在登录页显示错误
         if (!window.location.pathname.includes('/login')) {
@@ -80,7 +80,7 @@ const decreasePendingCount = () => {
   
   // 非生产环境才打印日志
   if (!isProd) {
-    console.log(`[Request] 减少请求计数: ${pendingRequests.count}`)
+    // console.log(`[Request] 减少请求计数: ${pendingRequests.count}`)
   }
   
   // 所有请求完成时清除超时
@@ -92,8 +92,9 @@ const decreasePendingCount = () => {
 
 // 重试配置
 const retryConfig = {
-  retryTimes: isProd ? 2 : 1, // 生产环境增加重试次数
-  retryDelay: 1000
+  retryTimes: isProd ? 3 : 2, // 增加重试次数
+  retryDelay: 2000, // 增加重试延迟
+  retryStatusCodes: [500, 502, 503, 504, 404] // 需要重试的状态码
 }
 
 // 请求重试函数
@@ -101,7 +102,8 @@ const retryRequest = async (fn, times = retryConfig.retryTimes) => {
   try {
     return await fn()
   } catch (error) {
-    if (times > 0 && error.response?.status >= 500) {
+    if (times > 0 && retryConfig.retryStatusCodes.includes(error.response?.status)) {
+      console.log(`请求失败，第 ${retryConfig.retryTimes - times + 1} 次重试...`)
       await new Promise(resolve => setTimeout(resolve, retryConfig.retryDelay))
       return retryRequest(fn, times - 1)
     }
@@ -112,30 +114,30 @@ const retryRequest = async (fn, times = retryConfig.retryTimes) => {
 // 请求方法封装
 const request = {
   get(url, params, config = {}) {
-    if (!isProd) {
-      console.log(`[Request] GET 请求 URL: ${url}`);
-    }
+    // if (!isProd) {
+    //   console.log(`[Request] GET 请求 URL: ${url}`);
+    // }
     return retryRequest(() => service.get(url, { params, ...config }))
   },
   
   post(url, data, config = {}) {
-    if (!isProd) {
-      console.log(`[Request] POST 请求 URL: ${url}`);
-    }
+    // if (!isProd) {
+    //   console.log(`[Request] POST 请求 URL: ${url}`);
+    // }
     return retryRequest(() => service.post(url, data, config))
   },
   
   put(url, data, config = {}) {
-    if (!isProd) {
-      console.log(`[Request] PUT 请求 URL: ${url}`);
-    }
+    // if (!isProd) {
+    //   console.log(`[Request] PUT 请求 URL: ${url}`);
+    // }
     return retryRequest(() => service.put(url, data, config))
   },
   
   delete(url, config = {}) {
-    if (!isProd) {
-      console.log(`[Request] DELETE 请求 URL: ${url}`);
-    }
+    // if (!isProd) {
+    //   console.log(`[Request] DELETE 请求 URL: ${url}`);
+    // }
     return retryRequest(() => service.delete(url, config))
   }
 }
@@ -159,9 +161,9 @@ service.interceptors.request.use(
     }
     
     // 添加调试日志
-    if (!isProd) {
-      console.log(`[Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
-    }
+    // if (!isProd) {
+    //   console.log(`[Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
+    // }
     
     return config
   },
@@ -175,7 +177,11 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   response => {
     decreasePendingCount()
-    return response.data
+    // 检查响应数据格式
+    if (response.data && typeof response.data === 'object') {
+      return response.data
+    }
+    return response
   },
   error => {
     decreasePendingCount()
@@ -186,14 +192,11 @@ service.interceptors.response.use(
       
       if (status === 401) {
         // 未授权，可能是token过期或无效
-        // 如果是访问博客前台或认证页面，不需要强制跳转到登录页面
         const isVisitingBlog = window.location.pathname.startsWith('/blog')
         
         if (!isVisitingBlog && !isAuthPage()) {
           message.error('登录已过期，请重新登录')
-          // 清除token
           localStorage.removeItem('token')
-          // 跳转到登录页
           router.push('/login')
         }
       } else if (status === 403) {
@@ -214,7 +217,6 @@ service.interceptors.response.use(
         }
       }
     } else if (error.request) {
-      // 网络连接错误，避免在认证页面显示
       if (!isAuthPage()) {
         message.error('无法连接到服务器，请检查网络连接')
       }

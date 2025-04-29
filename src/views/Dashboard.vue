@@ -157,7 +157,10 @@ const getStats = async () => {
     }
   } catch (error) {
     console.error('获取统计数据失败:', error)
-    message.error('获取统计数据失败: ' + (error.message || '未知错误'))
+    // 只在第一次失败时显示错误提示
+    if (!stats.value.categoryCount && !stats.value.tagCount && !stats.value.totalViews) {
+      message.error('获取统计数据失败: ' + (error.response?.data?.message || error.message || '未知错误'))
+    }
   }
 }
 
@@ -170,12 +173,20 @@ const getRecentDynamics = async () => {
         sort: 'createdAt:desc'
       }
     })
-    recentDynamics.value = res.data.items.map(dynamic => ({
-      ...dynamic,
-      createdAt: formatDate(dynamic.createdAt)
-    }))
+    if (res.code === 200 && res.data) {
+      recentDynamics.value = res.data.items.map(dynamic => ({
+        ...dynamic,
+        createdAt: formatDate(dynamic.createdAt)
+      }))
+    } else {
+      throw new Error(res.message || '获取最近动态失败')
+    }
   } catch (error) {
     console.error('获取最近动态失败:', error)
+    // 只在列表为空时显示错误提示
+    if (recentDynamics.value.length === 0) {
+      message.error('获取最近动态失败: ' + (error.response?.data?.message || error.message || '未知错误'))
+    }
   }
 }
 
@@ -187,24 +198,20 @@ const loadAllData = async () => {
   // 显示仪表盘加载状态
   appStore.startLoading('加载仪表盘数据...')
   
-  // 设置单个请求超时
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => {
-      reject(new Error('加载仪表盘数据超时'));
-    }, 15000); // 15秒超时
-  });
-  
   try {
-    // 并行加载数据并设置超时
-    await Promise.race([
-      Promise.all([
-        getStats(),
-        getRecentDynamics()
-      ]),
-      timeoutPromise
-    ]);
+    // 使用 Promise.allSettled 并行加载数据
+    const results = await Promise.allSettled([
+      getStats(),
+      getRecentDynamics()
+    ])
     
-    // 数据加载成功后，结束加载状态
+    // 检查结果
+    const hasError = results.some(result => result.status === 'rejected')
+    if (hasError) {
+      console.warn('部分数据加载失败，但继续显示可用数据')
+    }
+    
+    // 数据加载完成后，结束加载状态
     setTimeout(() => {
       loading.value = false
       appStore.endLoading()
@@ -213,14 +220,37 @@ const loadAllData = async () => {
     console.error('加载仪表盘数据失败:', error)
     
     // 设置错误状态
-    appStore.setLoadingError(error.message || '加载仪表盘数据失败')
+    appStore.setLoadingError(error.response?.data?.message || error.message || '加载仪表盘数据失败')
     loading.value = false
     
-    // 显示重试按钮
-    message.error({
-      content: '加载仪表盘数据失败，请重试',
-      duration: 5000
-    })
+    // 只在第一次加载失败时显示错误提示
+    if (recentDynamics.value.length === 0 && 
+        !stats.value.categoryCount && 
+        !stats.value.tagCount && 
+        !stats.value.totalViews) {
+      message.error({
+        content: '加载仪表盘数据失败: ' + (error.response?.data?.message || error.message || '未知错误'),
+        duration: 5000
+      })
+    }
+  }
+}
+
+// 添加自动重试机制
+const retryLoadData = async (maxRetries = 3, delay = 2000) => {
+  let retries = 0;
+  
+  while (retries < maxRetries) {
+    try {
+      await loadAllData();
+      return; // 成功则退出
+    } catch (error) {
+      retries++;
+      if (retries < maxRetries) {
+        console.log(`第 ${retries} 次重试加载数据...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
 }
 
@@ -313,8 +343,8 @@ onMounted(async () => {
   // 标记组件已加载
   console.log('Dashboard component mounted')
   
-  // 加载所有数据
-  await loadAllData()
+  // 使用重试机制加载数据
+  await retryLoadData()
   
   // 初始化性能监控和图表
   initPerformanceMonitoring()

@@ -231,10 +231,10 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
     // 仅在开发环境记录路由切换
-    if (process.env.NODE_ENV === 'development') {
-      console.log('App路由切换:', from.path, '->', to.path)
-      console.log('目标路由元数据:', to.meta)
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('App路由切换:', from.path, '->', to.path)
+    //   console.log('目标路由元数据:', to.meta)
+    // }
     
     // 重置错误状态
     const appStore = useAppStore()
@@ -248,12 +248,12 @@ router.beforeEach(async (to, from, next) => {
     const userStore = useUserStore()
     
     // 调试用户状态
-    if (process.env.NODE_ENV === 'development') {
-      console.log('用户登录状态:', userStore.isLoggedIn)
-      console.log('用户信息:', userStore.userInfo)
-      console.log('路由需要验证:', requiresAuth)
-      console.log('匹配到的路由:', to.matched.map(r => ({path: r.path, name: r.name})))
-    }
+    // if (process.env.NODE_ENV === 'development') {
+    //   console.log('用户登录状态:', userStore.isLoggedIn)
+    //   console.log('用户信息:', userStore.userInfo)
+    //   console.log('路由需要验证:', requiresAuth)
+    //   console.log('匹配到的路由:', to.matched.map(r => ({path: r.path, name: r.name})))
+    // }
     
     // 如果目标路由是登录页面或注册页面，直接放行
     if (to.path === '/login' || to.path === '/register') {
@@ -268,14 +268,14 @@ router.beforeEach(async (to, from, next) => {
     
     // 如果是博客前台页面，无需登录验证，直接放行
     if (isBlogPage) {
-      console.log('博客前台页面，无需验证')
+      // console.log('博客前台页面，无需验证')
       next()
       return
     }
     
     // 如果访问的是需要登录的页面，且用户未登录，则重定向到登录页
     if (requiresAuth && !userStore.isLoggedIn) {
-      console.log('需要登录权限，重定向到登录页面')
+      // console.log('需要登录权限，重定向到登录页面')
       next({ path: '/login', query: { redirect: to.fullPath }, replace: true })
       return
     }
@@ -284,11 +284,11 @@ router.beforeEach(async (to, from, next) => {
     const requiredRoles = to.meta.roles
     if (requiredRoles && requiredRoles.length > 0) {
       const userRoles = userStore.userInfo?.roles || []
-      console.log('检查角色权限:', requiredRoles, '用户角色:', userRoles)
+      // console.log('检查角色权限:', requiredRoles, '用户角色:', userRoles)
       
       const hasRole = requiredRoles.some(role => userRoles.includes(role))
       if (!hasRole) {
-        console.log('用户没有所需角色权限')
+        // console.log('用户没有所需角色权限')
         next({ path: '/dashboard', replace: true })
         message.error('您没有权限访问该页面')
         return

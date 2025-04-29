@@ -20,7 +20,7 @@ const loginInstance = axios.create({
 export function login(data) {
   // 开发环境下，如果是admin账户可以直接登录成功
   if (process.env.NODE_ENV === 'development' && data.username === 'admin' && data.password === 'admin') {
-    console.log('开发环境使用模拟登录')
+    // console.log('开发环境使用模拟登录')
     return Promise.resolve({
       token: 'dev-token-' + Date.now(),
       userInfo: {
@@ -43,7 +43,7 @@ export function login(data) {
       return Promise.reject(new Error(response.data.message || '登录失败'))
     })
     .catch(error => {
-      console.error('登录失败:', error)
+      // console.error('登录失败:', error)
       throw error
     })
 }
@@ -67,12 +67,12 @@ export function register(data) {
     })
     .catch(error => {
       // 添加详细的错误日志
-      console.error('注册失败:', {
-        error: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        requestData: data
-      })
+      // console.error('注册失败:', {
+      //   error: error.message,
+      //   status: error.response?.status,
+      //   data: error.response?.data,
+      //   requestData: data
+      // })
       throw error
     })
 }
