@@ -50,8 +50,38 @@ npm run build
 
 ### 认证相关
 
-#### 1. 用户注册
-- **接口**: `/auth/register`
+#### 1. 用户登录
+- **接口**: `/api/auth/login`
+- **方法**: POST
+- **描述**: 用户登录接口
+- **请求参数**:
+```json
+{
+  "username": "string", // 用户名
+  "password": "string"  // 密码
+}
+```
+- **响应数据**:
+```json
+{
+  "code": 200,
+  "data": {
+    "token": "string",      // JWT token
+    "userInfo": {
+      "id": "number",       // 用户ID
+      "username": "string", // 用户名
+      "nickname": "string", // 昵称
+      "avatar": "string",   // 头像URL
+      "role": "string",     // 角色
+      "permissions": ["string"] // 权限列表
+    }
+  },
+  "message": "string"
+}
+```
+
+#### 2. 用户注册
+- **接口**: `/api/auth/register`
 - **方法**: POST
 - **描述**: 用户注册接口
 - **请求参数**:
@@ -79,36 +109,8 @@ npm run build
 }
 ```
 
-#### 2. 用户登录
-- **接口**: `/auth/login`
-- **方法**: POST
-- **描述**: 用户登录接口
-- **请求参数**:
-```json
-{
-  "username": "string", // 用户名
-  "password": "string"  // 密码
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "token": "string",      // JWT token
-    "userInfo": {
-      "id": "number",       // 用户ID
-      "username": "string", // 用户名
-      "nickname": "string", // 昵称
-      "avatar": "string"    // 头像URL
-    }
-  },
-  "message": "string"
-}
-```
-
 #### 3. 获取用户信息
-- **接口**: `/auth/info`
+- **接口**: `/api/auth/info`
 - **方法**: GET
 - **描述**: 获取当前登录用户信息
 - **请求头**:
@@ -132,7 +134,7 @@ npm run build
 ```
 
 #### 4. 修改密码
-- **接口**: `/auth/password`
+- **接口**: `/api/auth/password`
 - **方法**: PUT
 - **描述**: 修改用户密码
 - **请求头**:
@@ -153,7 +155,7 @@ npm run build
 ```
 
 #### 5. 更新个人资料
-- **接口**: `/auth/profile`
+- **接口**: `/api/auth/profile`
 - **方法**: PUT
 - **描述**: 更新用户个人资料
 - **请求头**:
@@ -185,7 +187,7 @@ npm run build
 ```
 
 #### 6. 刷新token
-- **接口**: `/token/refresh`
+- **接口**: `/api/token/refresh`
 - **方法**: POST
 - **描述**: 刷新token
 - **响应数据**:
@@ -199,13 +201,6 @@ npm run build
 }
 ```
 
-#### 7. 退出登录
-- **接口**: 无
-- **方法**: 无
-- **描述**: 退出登录
-- **操作**: 移除本地存储中的token
-
-
 ### 动态管理
 
 #### 1. 获取动态列表
@@ -217,7 +212,6 @@ npm run build
 - **请求参数**:
   - page: number (页码，默认1)
   - pageSize: number (每页数量，默认10)
-  - keyword: string (搜索关键词)
   - type: string (动态类型：text/image/audio/video)
   - status: string (状态：draft/published)
 - **响应数据**:
@@ -233,69 +227,18 @@ npm run build
         "status": "string",
         "createdAt": "string",
         "updatedAt": "string",
-        "images": [
-          {
-            "url": "string",
-            "width": "number",
-            "height": "number"
-          }
-        ],
-        "audio": {
-          "url": "string",
-          "duration": "number"
-        },
-        "video": {
-          "url": "string",
-          "cover": "string",
-          "duration": "number"
-        }
+        "mediaUrls": ["string"],
+        "categoryId": "number",
+        "tags": ["string"]
       }
     ],
     "total": "number"
   },
-  "message": "success"
+  "message": "string"
 }
 ```
 
-#### 2. 获取动态详情
-- **接口**: `/api/dynamics/{id}`
-- **方法**: GET
-- **描述**: 获取动态详情
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "string",
-    "content": "string",
-    "type": "string",
-    "status": "string",
-    "createdAt": "string",
-    "updatedAt": "string",
-    "images": [
-      {
-        "url": "string",
-        "width": "number",
-        "height": "number"
-      }
-    ],
-    "audio": {
-      "url": "string",
-      "duration": "number"
-    },
-    "video": {
-      "url": "string",
-      "cover": "string",
-      "duration": "number"
-    }
-  },
-  "message": "success"
-}
-```
-
-#### 3. 创建动态
+#### 2. 创建动态
 - **接口**: `/api/dynamics`
 - **方法**: POST
 - **描述**: 创建新动态
@@ -304,25 +247,12 @@ npm run build
 - **请求参数**:
 ```json
 {
-  "content": "string",
-  "type": "string", // text, image, audio, video
-  "status": "string", // draft, published
-  "images": [
-    {
-      "url": "string",
-      "width": "number",
-      "height": "number"
-    }
-  ],
-  "audio": {
-    "url": "string",
-    "duration": "number"
-  },
-  "video": {
-    "url": "string",
-    "cover": "string",
-    "duration": "number"
-  }
+  "type": "string",         // 动态类型：text/image/audio/video
+  "content": "string",      // 动态内容
+  "status": "string",       // 状态：draft/published
+  "mediaUrls": ["string"],  // 媒体文件URL数组
+  "categoryId": "number",   // 分类ID
+  "tags": ["string"]        // 标签数组
 }
 ```
 - **响应数据**:
@@ -330,52 +260,50 @@ npm run build
 {
   "code": 200,
   "data": {
-    "id": "string"
+    "id": "string",
+    "type": "string",
+    "content": "string",
+    "status": "string",
+    "createdAt": "string",
+    "updatedAt": "string"
   },
-  "message": "success"
+  "message": "string"
 }
 ```
 
-#### 4. 更新动态
+#### 3. 更新动态
 - **接口**: `/api/dynamics/{id}`
 - **方法**: PUT
-- **描述**: 更新动态信息
+- **描述**: 更新动态
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
 ```json
 {
-  "content": "string",
-  "type": "string",
-  "status": "string",
-  "images": [
-    {
-      "url": "string",
-      "width": "number",
-      "height": "number"
-    }
-  ],
-  "audio": {
-    "url": "string",
-    "duration": "number"
-  },
-  "video": {
-    "url": "string",
-    "cover": "string",
-    "duration": "number"
-  }
+  "type": "string",         // 动态类型：text/image/audio/video
+  "content": "string",      // 动态内容
+  "status": "string",       // 状态：draft/published
+  "mediaUrls": ["string"],  // 媒体文件URL数组
+  "categoryId": "number",   // 分类ID
+  "tags": ["string"]        // 标签数组
 }
 ```
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "data": {
+    "id": "string",
+    "type": "string",
+    "content": "string",
+    "status": "string",
+    "updatedAt": "string"
+  },
+  "message": "string"
 }
 ```
 
-#### 5. 删除动态
+#### 4. 删除动态
 - **接口**: `/api/dynamics/{id}`
 - **方法**: DELETE
 - **描述**: 删除动态
@@ -385,19 +313,16 @@ npm run build
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "message": "string"
 }
 ```
 
 ### 分类管理
 
 #### 1. 获取分类列表
-- **接口**: `/categories`
+- **接口**: `/api/categories`
 - **方法**: GET
-- **描述**: 获取分类列表
-- **请求头**:
-  - Authorization: Bearer {token}
+- **描述**: 获取所有分类
 - **响应数据**:
 ```json
 {
@@ -407,29 +332,16 @@ npm run build
       "id": "number",
       "name": "string",
       "description": "string",
-      "parentId": "number",
-      "sort": "number",
-      "postCount": "number",
-      "children": [
-        {
-          "id": "number",
-          "name": "string",
-          "description": "string",
-          "parentId": "number",
-          "sort": "number",
-          "postCount": "number"
-        }
-      ],
       "createdAt": "string",
       "updatedAt": "string"
     }
   ],
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 2. 创建分类
-- **接口**: `/categories`
+- **接口**: `/api/categories`
 - **方法**: POST
 - **描述**: 创建新分类
 - **请求头**:
@@ -438,9 +350,7 @@ npm run build
 ```json
 {
   "name": "string",        // 分类名称
-  "description": "string", // 分类描述
-  "parentId": "number",    // 父分类ID，可选
-  "sort": "number"         // 排序，可选
+  "description": "string"  // 分类描述
 }
 ```
 - **响应数据**:
@@ -448,38 +358,44 @@ npm run build
 {
   "code": 200,
   "data": {
-    "id": "number"
+    "id": "number",
+    "name": "string",
+    "description": "string",
+    "createdAt": "string"
   },
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 3. 更新分类
-- **接口**: `/categories/{id}`
+- **接口**: `/api/categories/{id}`
 - **方法**: PUT
-- **描述**: 更新分类信息
+- **描述**: 更新分类
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
 ```json
 {
   "name": "string",        // 分类名称
-  "description": "string", // 分类描述
-  "parentId": "number",    // 父分类ID，可选
-  "sort": "number"         // 排序，可选
+  "description": "string"  // 分类描述
 }
 ```
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "data": {
+    "id": "number",
+    "name": "string",
+    "description": "string",
+    "updatedAt": "string"
+  },
+  "message": "string"
 }
 ```
 
 #### 4. 删除分类
-- **接口**: `/categories/{id}`
+- **接口**: `/api/categories/{id}`
 - **方法**: DELETE
 - **描述**: 删除分类
 - **请求头**:
@@ -488,46 +404,37 @@ npm run build
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "message": "string"
 }
 ```
 
 ### 标签管理
 
 #### 1. 获取标签列表
-- **接口**: `/tags`
+- **接口**: `/api/tags`
 - **方法**: GET
-- **描述**: 获取标签列表，支持分页
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-  - page: number (页码，默认1)
-  - pageSize: number (每页数量，默认10)
+- **描述**: 获取所有标签
 - **响应数据**:
 ```json
 {
   "code": 200,
   "data": {
-    "list": [
+    "count": "number",
+    "results": [
       {
         "id": "number",
         "name": "string",
-        "description": "string",
-        "sort": "number",
-        "postCount": "number",
-        "createTime": "string",
-        "updateTime": "string"
+        "createdAt": "string",
+        "updatedAt": "string"
       }
-    ],
-    "total": "number"
+    ]
   },
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 2. 创建标签
-- **接口**: `/tags`
+- **接口**: `/api/tags`
 - **方法**: POST
 - **描述**: 创建新标签
 - **请求头**:
@@ -535,9 +442,7 @@ npm run build
 - **请求参数**:
 ```json
 {
-  "name": "string",        // 标签名称
-  "description": "string", // 标签描述，可选
-  "sort": "number"         // 排序，可选
+  "name": "string"  // 标签名称
 }
 ```
 - **响应数据**:
@@ -545,37 +450,41 @@ npm run build
 {
   "code": 200,
   "data": {
-    "id": "number"
+    "id": "number",
+    "name": "string",
+    "createdAt": "string"
   },
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 3. 更新标签
-- **接口**: `/tags/{id}`
+- **接口**: `/api/tags/{id}`
 - **方法**: PUT
-- **描述**: 更新标签信息
+- **描述**: 更新标签
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
 ```json
 {
-  "name": "string",        // 标签名称
-  "description": "string", // 标签描述，可选
-  "sort": "number"         // 排序，可选
+  "name": "string"  // 标签名称
 }
 ```
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "data": {
+    "id": "number",
+    "name": "string",
+    "updatedAt": "string"
+  },
+  "message": "string"
 }
 ```
 
 #### 4. 删除标签
-- **接口**: `/tags/{id}`
+- **接口**: `/api/tags/{id}`
 - **方法**: DELETE
 - **描述**: 删除标签
 - **请求头**:
@@ -584,25 +493,23 @@ npm run build
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "message": "string"
 }
 ```
 
 ### 评论管理
 
 #### 1. 获取评论列表
-- **接口**: `/comments`
+- **接口**: `/api/comments`
 - **方法**: GET
-- **描述**: 获取评论列表，支持分页和筛选
+- **描述**: 获取评论列表
 - **请求头**:
   - Authorization: Bearer {token}
 - **请求参数**:
   - page: number (页码，默认1)
   - pageSize: number (每页数量，默认10)
-  - postTitle: string (文章标题)
-  - author: string (评论者)
-  - status: string (状态：pending/approved/rejected)
+  - author: string (评论者，可选)
+  - status: string (评论状态，可选)
 - **响应数据**:
 ```json
 {
@@ -612,53 +519,48 @@ npm run build
       {
         "id": "number",
         "content": "string",
-        "postId": "number",
-        "postTitle": "string",
         "author": "string",
-        "email": "string",
         "status": "string",
-        "createTime": "string",
-        "updateTime": "string"
+        "createdAt": "string",
+        "updatedAt": "string"
       }
     ],
     "total": "number"
   },
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 2. 通过评论
-- **接口**: `/comments/{id}/approve`
+- **接口**: `/api/comments/{id}/approve`
 - **方法**: PUT
-- **描述**: 批准评论
+- **描述**: 通过评论审核
 - **请求头**:
   - Authorization: Bearer {token}
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 3. 拒绝评论
-- **接口**: `/comments/{id}/reject`
+- **接口**: `/api/comments/{id}/reject`
 - **方法**: PUT
-- **描述**: 拒绝评论
+- **描述**: 拒绝评论审核
 - **请求头**:
   - Authorization: Bearer {token}
 - **响应数据**:
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "message": "string"
 }
 ```
 
 #### 4. 删除评论
-- **接口**: `/comments/{id}`
+- **接口**: `/api/comments/{id}`
 - **方法**: DELETE
 - **描述**: 删除评论
 - **请求头**:
@@ -667,8 +569,7 @@ npm run build
 ```json
 {
   "code": 200,
-  "data": null,
-  "message": "success"
+  "message": "string"
 }
 ```
 
