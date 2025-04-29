@@ -8,10 +8,13 @@ export function getTagList() {
   return request.get('/api/tags')
     .then(response => {
       if (response.code === 200) {
-        return response.data
+        return {
+          count: response.data.count,
+          results: response.data.results
+        };
       }
-      return Promise.reject(new Error(response.message || '获取标签列表失败'))
-    })
+      return Promise.reject(new Error(response.message || '获取标签列表失败'));
+    });
 }
 
 /**
@@ -60,4 +63,4 @@ export function deleteTag(id) {
       }
       return Promise.reject(new Error(response.message || '删除标签失败'))
     })
-} 
+}

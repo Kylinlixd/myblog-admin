@@ -11,7 +11,7 @@ import request from '../utils/request';
  */
 export const getDynamicList = async (params) => {
   try {
-    const apiUrl = '/dynamics';
+    const apiUrl = '/api/dynamics';
     console.log('获取动态列表参数:', params);
     
     // 转换参数名称，确保与后端一致
@@ -81,7 +81,7 @@ export const updateDynamic = async (id, data) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.put(`/dynamics/${id}`, formattedData, { headers });
+    const response = await request.put(`/api/dynamics/${id}`, formattedData, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -109,7 +109,7 @@ export const deleteDynamic = async (id) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.delete(`/dynamics/${id}`, { headers });
+    const response = await request.delete(`/api/dynamics/${id}`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -132,7 +132,7 @@ export const getDynamicDetail = async (id) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.get(`/dynamics/${id}`, { headers });
+    const response = await request.get(`/api/dynamics/${id}`, { headers });
     return { 
       code: 200, 
       data: response, 
