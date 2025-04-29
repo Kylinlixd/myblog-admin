@@ -1,4 +1,14 @@
+import axios from 'axios'
 import request from '../utils/request'
+
+// 创建独立的 axios 实例用于登录
+const loginInstance = axios.create({
+  baseURL: process.env.NODE_ENV === 'production' ? '' : '',
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
 
 /**
  * 用户登录
@@ -24,12 +34,13 @@ export function login(data) {
     })
   }
   
-  return request.post('/api/auth/login', data)
+  // 使用独立的 axios 实例发送登录请求
+  return loginInstance.post('/api/auth/login/', data)
     .then(response => {
-      if (response.code === 200) {
-        return response.data
+      if (response.data.code === 200) {
+        return response.data.data
       }
-      return Promise.reject(new Error(response.message || '登录失败'))
+      return Promise.reject(new Error(response.data.message || '登录失败'))
     })
     .catch(error => {
       console.error('登录失败:', error)
@@ -46,12 +57,23 @@ export function login(data) {
  * @returns {Promise<{token: string, userInfo: Object}>}
  */
 export function register(data) {
-  return request.post('/api/auth/register', data)
+  // 确保路径以斜杠结尾，避免重定向
+  return request.post('/api/auth/register/', data)
     .then(response => {
       if (response.code === 200) {
         return response.data
       }
       return Promise.reject(new Error(response.message || '注册失败'))
+    })
+    .catch(error => {
+      // 添加详细的错误日志
+      console.error('注册失败:', {
+        error: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        requestData: data
+      })
+      throw error
     })
 }
 

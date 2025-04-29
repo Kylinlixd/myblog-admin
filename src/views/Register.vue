@@ -44,6 +44,20 @@
         
         <div class="form-item">
           <div class="input-wrapper">
+            <i class="icon-email"></i>
+            <input
+              v-model="registerData.email"
+              type="email"
+              placeholder="邮箱"
+              class="inspira-input"
+              :class="{ 'is-error': errors.email }"
+            />
+          </div>
+          <span class="error-message" v-if="errors.email">{{ errors.email }}</span>
+        </div>
+        
+        <div class="form-item">
+          <div class="input-wrapper">
             <i class="icon-lock"></i>
             <input
               v-model="registerData.password"
@@ -112,6 +126,7 @@ const showPassword = ref(false)
 const registerData = reactive({
   username: '',
   nickname: '',
+  email: '',
   password: '',
   confirmPassword: ''
 })
@@ -119,6 +134,7 @@ const registerData = reactive({
 const errors = reactive({
   username: '',
   nickname: '',
+  email: '',
   password: '',
   confirmPassword: ''
 })
@@ -127,6 +143,7 @@ const validateForm = () => {
   let isValid = true
   errors.username = ''
   errors.nickname = ''
+  errors.email = ''
   errors.password = ''
   errors.confirmPassword = ''
   
@@ -146,6 +163,15 @@ const validateForm = () => {
   } else if (registerData.nickname.length < 2 || registerData.nickname.length > 20) {
     errors.nickname = '长度在 2 到 20 个字符'
     isValid = false
+  }
+  
+  // 验证邮箱
+  if (registerData.email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(registerData.email)) {
+      errors.email = '请输入有效的邮箱地址'
+      isValid = false
+    }
   }
   
   // 验证密码
@@ -185,7 +211,9 @@ const handleRegister = async () => {
     const success = await userStore.register({
       username: registerData.username,
       nickname: registerData.nickname,
-      password: registerData.password
+      email: registerData.email,
+      password: registerData.password,
+      confirm_password: registerData.confirmPassword
     })
     
     if (success) {

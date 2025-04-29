@@ -14,7 +14,30 @@ const service = axios.create({
   timeout: requestTimeout,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  // 禁止自动重定向
+  maxRedirects: 0,
+  // 确保请求方法在重定向时保持不变
+  validateStatus: function (status) {
+    return status >= 200 && status < 300; // 只接受 2xx 状态码
+  },
+  // 添加以下配置
+  maxContentLength: 2000,
+  maxBodyLength: 2000,
+  // 禁止自动重定向
+  maxRedirects: 0,
+  // 确保请求方法在重定向时保持不变
+  validateStatus: function (status) {
+    return status >= 200 && status < 300; // 只接受 2xx 状态码
+  },
+  // 添加请求拦截器
+  transformRequest: [(data) => {
+    // 确保请求体是 JSON 格式
+    if (data) {
+      return JSON.stringify(data);
+    }
+    return data;
+  }]
 })
 
 // 请求计数器和请求超时控制
