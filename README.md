@@ -5,10 +5,11 @@
 
 ## 技术栈
 - Vue 3
+- Ant Design Vue
 - Vite
 - Vue Router
 - Pinia
-- Ant Design Vue
+
 - SCSS
 - Tailwind CSS
 - TypeScript

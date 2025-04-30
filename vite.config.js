@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
       hmr: true,
       open: true,
       proxy: {
-        // 后台管理API代理规则 - 仅保留一个/api前缀
+        // 后台管理API代理规则
         '/api': {
           target: 'http://127.0.0.1:8000',
           changeOrigin: true,
@@ -52,12 +52,19 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
-            // 修改：移除重复的/api前缀
+            // 移除重复的/api前缀
             const rewrittenPath = path.replace(/^\/api\/api\//, '/api/');
             console.log('[后台API] 重写后路径:', rewrittenPath);
             console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + rewrittenPath);
-            // 返回处理后的路径
             return rewrittenPath;
+          },
+          // 添加错误处理
+          onError: (err, req, res) => {
+            console.error('[代理错误]', err);
+            res.writeHead(500, {
+              'Content-Type': 'text/plain',
+            });
+            res.end('代理请求失败，请检查后端服务是否正常运行');
           }
         },
         // 博客前台API代理规则

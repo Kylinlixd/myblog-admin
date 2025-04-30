@@ -215,7 +215,10 @@ const fetchTags = async () => {
     }
   } catch (error) {
     console.error('获取标签列表失败:', error);
-    message.error('获取标签列表失败');
+    // 只在列表为空时显示错误消息
+    if (tagList.value.length === 0) {
+      message.error('获取标签列表失败，请稍后重试');
+    }
     tagList.value = [];
     total.value = 0;
   } finally {
@@ -261,11 +264,16 @@ const handleSubmit = async () => {
     }
     
     // 刷新标签列表
-    fetchTags()
+    await fetchTags()
     dialogVisible.value = false
   } catch (error) {
     console.error('保存标签失败:', error)
-    message.error(error.message || '操作失败，请重试')
+    // 显示更友好的错误信息
+    if (error.response) {
+      message.error(error.response.data?.message || '操作失败，请重试')
+    } else {
+      message.error(error.message || '操作失败，请重试')
+    }
   } finally {
     formLoading.value = false
   }
@@ -277,10 +285,15 @@ const handleDelete = async (record) => {
     loading.value = true
     await deleteTag(record.id)
     message.success('标签删除成功')
-    fetchTags()
+    await fetchTags()
   } catch (error) {
     console.error('删除标签失败:', error)
-    message.error('删除失败，请重试')
+    // 显示更友好的错误信息
+    if (error.response) {
+      message.error(error.response.data?.message || '删除失败，请重试')
+    } else {
+      message.error(error.message || '删除失败，请重试')
+    }
   } finally {
     loading.value = false
   }

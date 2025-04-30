@@ -160,15 +160,20 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     
-    // 添加调试日志
-    // if (!isProd) {
-    //   console.log(`[Request] ${config.method.toUpperCase()} ${config.baseURL}${config.url}`, config.params || {});
-    // }
+    // 记录请求信息
+    if (!isProd) {
+      console.log(`[Request] ${config.method.toUpperCase()} ${config.url}`, {
+        params: config.params,
+        data: config.data,
+        headers: config.headers
+      })
+    }
     
     return config
   },
   error => {
     decreasePendingCount()
+    console.error('请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )
@@ -177,23 +182,35 @@ service.interceptors.request.use(
 service.interceptors.response.use(
   response => {
     decreasePendingCount()
-    // 检查响应数据格式
-    if (response.data && typeof response.data === 'object') {
-      return response.data
+    
+    // 记录响应信息
+    if (!isProd) {
+      console.log(`[Response] ${response.config.method.toUpperCase()} ${response.config.url}`, {
+        status: response.status,
+        data: response.data
+      })
     }
-    return response
+    
+    return response.data
   },
   error => {
     decreasePendingCount()
+    
+    // 记录错误信息
+    console.error('请求错误:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    })
     
     // 处理错误
     if (error.response) {
       const status = error.response.status
       
       if (status === 401) {
-        // 未授权，可能是token过期或无效
         const isVisitingBlog = window.location.pathname.startsWith('/blog')
-        
         if (!isVisitingBlog && !isAuthPage()) {
           message.error('登录已过期，请重新登录')
           localStorage.removeItem('token')
