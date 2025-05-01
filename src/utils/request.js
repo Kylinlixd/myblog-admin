@@ -5,7 +5,7 @@ import { useAppStore } from '../stores/app'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
-const baseURL = isProd ? '' : '';
+const baseURL = isProd ? 'http://your-production-api.com' : 'http://127.0.0.1:8000'
 const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
 
 // 创建 axios 实例
@@ -21,19 +21,13 @@ const service = axios.create({
   validateStatus: function (status) {
     return status >= 200 && status < 300; // 只接受 2xx 状态码
   },
-  // 添加以下配置
-  maxContentLength: 2000,
-  maxBodyLength: 2000,
-  // 禁止自动重定向
-  maxRedirects: 0,
-  // 确保请求方法在重定向时保持不变
-  validateStatus: function (status) {
-    return status >= 200 && status < 300; // 只接受 2xx 状态码
-  },
+  // 增加请求体大小限制
+  maxContentLength: 10 * 1024 * 1024, // 10MB
+  maxBodyLength: 10 * 1024 * 1024, // 10MB
   // 添加请求拦截器
   transformRequest: [(data) => {
     // 确保请求体是 JSON 格式
-    if (data) {
+    if (data && !(data instanceof FormData)) {
       return JSON.stringify(data);
     }
     return data;
