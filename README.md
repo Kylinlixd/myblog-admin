@@ -1,1103 +1,371 @@
-# 博客管理系统
-
-## 项目介绍
-这是一个基于 Vue 3 + Vite + Ant Design Vue 开发的博客管理系统。
+# 车辆信息管理系统开发文档
 
 ## 技术栈
-- Vue 3
-- Ant Design Vue
-- Vite
-- Vue Router
-- Pinia
 
-- SCSS
-- Tailwind CSS
-- TypeScript
+- 后端：Golang（Gin 框架，GORM ORM，JWT 认证）
+- 前端：Angular
+- 数据库：MySQL/PostgreSQL
+- 安全：JWT（JSON Web Token）
 
-## 功能特性
-- 用户认证
-- 文章管理
-- 分类管理
-- 标签管理
-- 评论管理
-- 主题切换
-- 组件预加载：通过`preloadComponents`函数预加载重要组件，提升应用性能。
-- 全局错误处理：在生产环境中进行错误处理，确保用户体验。
-- 性能监控：在生产环境中监控页面加载和资源加载性能。
+## 系统角色
 
-## 开发环境
-- Node.js >= 16
-- npm >= 7
+- **Admin**：系统管理员，拥有所有权限
+- **User**：普通用户，仅能管理自己的车辆信息
+- **Company**：公司用户，可管理本公司下所有用户及车辆
 
-## 安装和运行
-```bash
-# 安装依赖
-npm install
+## API 接口文档
 
-# 启动开发服务器
-npm run dev
+### 1. 认证相关接口
 
-# 构建生产版本
-npm run build
-```
-
-## API 文档
-
-### 基础信息
-- 基础路径: `/api`
-- 请求方式: REST
-- 数据格式: JSON
-- 认证方式: Bearer Token
-
-### 认证相关
-
-#### 1. 用户登录
-- **接口**: `/api/auth/login`
-- **方法**: POST
-- **描述**: 用户登录接口
-- **请求参数**:
-```json
-{
-  "username": "string", // 用户名
-  "password": "string"  // 密码
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "token": "string",      // JWT token
+#### 1.1 用户登录
+- **POST** `/api/auth/login`
+- **请求体**：
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- **响应**：
+  ```json
+  {
+    "token": "jwt_token_string",
     "userInfo": {
-      "id": "number",       // 用户ID
-      "username": "string", // 用户名
-      "nickname": "string", // 昵称
-      "avatar": "string",   // 头像URL
-      "role": "string",     // 角色
-      "permissions": ["string"] // 权限列表
+      "id": 1,
+      "username": "string",
+      "nickname": "string",
+      "avatar": "string",
+      "role": "admin|user|company",
+      "permissions": ["*"]
     }
-  },
-  "message": "string"
-}
-```
+  }
+  ```
 
-#### 2. 用户注册
-- **接口**: `/api/auth/register`
-- **方法**: POST
-- **描述**: 用户注册接口
-- **请求参数**:
-```json
-{
-  "username": "string", // 用户名
-  "password": "string", // 密码
-  "nickname": "string"  // 昵称
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "token": "string",      // JWT token
-    "userInfo": {
-      "id": "number",       // 用户ID
-      "username": "string", // 用户名
-      "nickname": "string", // 昵称
-      "avatar": "string"    // 头像URL
-    }
-  },
-  "message": "string"
-}
-```
+#### 1.2 用户注册
+- **POST** `/api/auth/register`
+- **请求体**：
+  ```json
+  {
+    "username": "string",
+    "password": "string",
+    "nickname": "string"
+  }
+  ```
+- **响应**：
+  ```json
+  {
+    "message": "注册成功"
+  }
+  ```
 
-#### 3. 获取用户信息
-- **接口**: `/api/auth/info`
-- **方法**: GET
-- **描述**: 获取当前登录用户信息
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "number",
-    "username": "string", 
-    "nickname": "string",
-    "email": "string",
-    "bio": "string",
-    "avatar": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 4. 修改密码
-- **接口**: `/api/auth/password`
-- **方法**: PUT
-- **描述**: 修改用户密码
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "oldPassword": "string", // 旧密码
-  "newPassword": "string"  // 新密码
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-#### 5. 更新个人资料
-- **接口**: `/api/auth/profile`
-- **方法**: PUT
-- **描述**: 更新用户个人资料
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "nickname": "string", // 昵称
-  "email": "string",    // 邮箱
-  "bio": "string",      // 个人简介
-  "avatar": "string"    // 头像URL
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "number",
+#### 1.3 获取用户信息
+- **GET** `/api/auth/info`
+- **Header**：`Authorization: Bearer <token>`
+- **响应**：
+  ```json
+  {
+    "id": 1,
     "username": "string",
     "nickname": "string",
+    "avatar": "string",
+    "role": "string",
+    "permissions": ["string"]
+  }
+  ```
+
+#### 1.4 修改密码
+- **PUT** `/api/auth/password`
+- **Header**：`Authorization: Bearer <token>`
+- **请求体**：
+  ```json
+  {
+    "oldPassword": "string",
+    "newPassword": "string"
+  }
+  ```
+- **响应**：
+  ```json
+  {
+    "message": "密码修改成功"
+  }
+  ```
+
+#### 1.5 更新用户资料
+- **PUT** `/api/auth/profile`
+- **Header**：`Authorization: Bearer <token>`
+- **请求体**：
+  ```json
+  {
+    "nickname": "string",
     "email": "string",
     "bio": "string",
-    "avatar": "string",
-    "updatedAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 6. 刷新token
-- **接口**: `/api/token/refresh`
-- **方法**: POST
-- **描述**: 刷新token
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "token": "string"
-  },
-  "message": "string"
-}
-```
-
-### 动态管理
-
-#### 1. 获取动态列表
-- **接口**: `/api/dynamics`
-- **方法**: GET
-- **描述**: 获取动态列表，支持分页和筛选
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-  - page: number (页码，默认1)
-  - pageSize: number (每页数量，默认10)
-  - type: string (动态类型：text/image/audio/video)
-  - status: string (状态：draft/published)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "list": [
-      {
-        "id": "string",
-        "content": "string",
-        "type": "string",
-        "status": "string",
-        "createdAt": "string",
-        "updatedAt": "string",
-        "mediaUrls": ["string"],
-        "categoryId": "number",
-        "tags": ["string"]
-      }
-    ],
-    "total": "number"
-  },
-  "message": "string"
-}
-```
-
-#### 2. 创建动态
-- **接口**: `/api/dynamics`
-- **方法**: POST
-- **描述**: 创建新动态
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "type": "string",         // 动态类型：text/image/audio/video
-  "content": "string",      // 动态内容
-  "status": "string",       // 状态：draft/published
-  "mediaUrls": ["string"],  // 媒体文件URL数组
-  "categoryId": "number",   // 分类ID
-  "tags": ["string"]        // 标签数组
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "string",
-    "type": "string",
-    "content": "string",
-    "status": "string",
-    "createdAt": "string",
-    "updatedAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 3. 更新动态
-- **接口**: `/api/dynamics/{id}`
-- **方法**: PUT
-- **描述**: 更新动态
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "type": "string",         // 动态类型：text/image/audio/video
-  "content": "string",      // 动态内容
-  "status": "string",       // 状态：draft/published
-  "mediaUrls": ["string"],  // 媒体文件URL数组
-  "categoryId": "number",   // 分类ID
-  "tags": ["string"]        // 标签数组
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "string",
-    "type": "string",
-    "content": "string",
-    "status": "string",
-    "updatedAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 4. 删除动态
-- **接口**: `/api/dynamics/{id}`
-- **方法**: DELETE
-- **描述**: 删除动态
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-### 分类管理
-
-#### 1. 获取分类列表
-- **接口**: `/api/categories`
-- **方法**: GET
-- **描述**: 获取所有分类
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": [
-    {
-      "id": "number",
-      "name": "string",
-      "description": "string",
-      "createdAt": "string",
-      "updatedAt": "string"
-    }
-  ],
-  "message": "string"
-}
-```
-
-#### 2. 创建分类
-- **接口**: `/api/categories`
-- **方法**: POST
-- **描述**: 创建新分类
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "name": "string",        // 分类名称
-  "description": "string"  // 分类描述
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "number",
-    "name": "string",
-    "description": "string",
-    "createdAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 3. 更新分类
-- **接口**: `/api/categories/{id}`
-- **方法**: PUT
-- **描述**: 更新分类
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "name": "string",        // 分类名称
-  "description": "string"  // 分类描述
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "number",
-    "name": "string",
-    "description": "string",
-    "updatedAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 4. 删除分类
-- **接口**: `/api/categories/{id}`
-- **方法**: DELETE
-- **描述**: 删除分类
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-### 标签管理
-
-#### 1. 获取标签列表
-- **接口**: `/api/tags`
-- **方法**: GET
-- **描述**: 获取所有标签
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "count": "number",
-    "results": [
-      {
-        "id": "number",
-        "name": "string",
-        "createdAt": "string",
-        "updatedAt": "string"
-      }
-    ]
-  },
-  "message": "string"
-}
-```
-
-#### 2. 创建标签
-- **接口**: `/api/tags`
-- **方法**: POST
-- **描述**: 创建新标签
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "name": "string"  // 标签名称
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "number",
-    "name": "string",
-    "createdAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 3. 更新标签
-- **接口**: `/api/tags/{id}`
-- **方法**: PUT
-- **描述**: 更新标签
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-```json
-{
-  "name": "string"  // 标签名称
-}
-```
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "id": "number",
-    "name": "string",
-    "updatedAt": "string"
-  },
-  "message": "string"
-}
-```
-
-#### 4. 删除标签
-- **接口**: `/api/tags/{id}`
-- **方法**: DELETE
-- **描述**: 删除标签
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-### 评论管理
-
-#### 1. 获取评论列表
-- **接口**: `/api/comments`
-- **方法**: GET
-- **描述**: 获取评论列表
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-  - page: number (页码，默认1)
-  - pageSize: number (每页数量，默认10)
-  - author: string (评论者，可选)
-  - status: string (评论状态，可选)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "list": [
-      {
-        "id": "number",
-        "content": "string",
-        "author": "string",
-        "status": "string",
-        "createdAt": "string",
-        "updatedAt": "string"
-      }
-    ],
-    "total": "number"
-  },
-  "message": "string"
-}
-```
-
-#### 2. 通过评论
-- **接口**: `/api/comments/{id}/approve`
-- **方法**: PUT
-- **描述**: 通过评论审核
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-#### 3. 拒绝评论
-- **接口**: `/api/comments/{id}/reject`
-- **方法**: PUT
-- **描述**: 拒绝评论审核
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-#### 4. 删除评论
-- **接口**: `/api/comments/{id}`
-- **方法**: DELETE
-- **描述**: 删除评论
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "string"
-}
-```
-
-### 文件上传
-
-#### 1. 上传头像
-- **接口**: `/api/upload/avatar`
-- **方法**: POST
-- **描述**: 上传用户头像
-- **请求头**:
-  - Authorization: Bearer {token}
-  - Content-Type: multipart/form-data
-- **请求参数**:
-  - file: File (图片文件，JPG或PNG格式，大小不超过2MB)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "data": {
-    "url": "string"  // 头像URL
-  },
-  "message": "string"
-}
-```
-
-### 仪表盘API
-
-#### 1. 获取统计数据
-- **接口**: `/api/stats`
-- **方法**: GET
-- **描述**: 获取博客统计数据，包括文章、分类、标签数量和总浏览量
-- **请求头**:
-  - Authorization: Bearer {token}
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "获取统计数据成功",
-  "data": {
-    "postCount": 24,       // 文章总数
-    "categoryCount": 6,    // 分类总数
-    "tagCount": 18,        // 标签总数
-    "totalViews": 4328     // 总浏览量
+    "avatar": "string"
   }
-}
-```
-
-#### 2. 获取最近文章
-- **接口**: `/api/posts/recent`
-- **方法**: GET
-- **描述**: 获取最近发布的文章列表
-- **请求头**:
-  - Authorization: Bearer {token}
-- **请求参数**:
-  - limit: number (可选，默认为5，返回的文章数量)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "获取最近文章成功",
-  "data": [
-    {
-      "id": 1,
-      "title": "如何提高博客访问量：10个实用技巧",
-      "createdAt": "2023-09-15 14:30:00",
-      "views": 158
-    },
-    {
-      "id": 2,
-      "title": "前端开发中常见的10个性能优化方法",
-      "createdAt": "2023-09-10 09:15:00",
-      "views": 245
-    },
-    {
-      "id": 3,
-      "title": "Vue3和React18：前端框架的未来发展趋势",
-      "createdAt": "2023-09-05 16:45:00",
-      "views": 362
-    },
-    {
-      "id": 4,
-      "title": "如何构建一个安全可靠的博客系统",
-      "createdAt": "2023-08-28 11:20:00",
-      "views": 183
-    },
-    {
-      "id": 5,
-      "title": "Markdown写作技巧：让你的博客更加专业",
-      "createdAt": "2023-08-20 08:45:00",
-      "views": 217
-    }
-  ]
-}
-```
-
-#### 3. 请求超时处理
-- 所有API请求默认有15秒的超时时间
-- 当请求超时时，前端会显示友好的错误提示
-- 响应格式：
-```json
-{
-  "code": 408,
-  "message": "请求超时，请检查网络连接"
-}
-```
-
-#### 4. 错误处理
-- 当API请求失败时，将返回统一格式的错误响应：
-```json
-{
-  "code": 400,           // HTTP状态码
-  "message": "错误信息",  // 用户友好的错误消息
-  "error": {             // 可选，详细错误信息
-    "type": "ValidationError",
-    "details": ["字段错误详情"]
+  ```
+- **响应**：
+  ```json
+  {
+    "message": "资料更新成功"
   }
-}
-```
+  ```
 
-### 错误码说明
-- 200: 成功
-- 400: 请求参数错误
-- 401: 未授权或token过期
-- 403: 权限不足
-- 404: 资源不存在
-- 500: 服务器内部错误
+### 2. 车辆管理接口
 
-### 注意事项
-1. 所有需要认证的接口都需要在请求头中携带 token
-2. 分页接口的响应数据中 total 表示总记录数
-3. 时间格式统一使用 ISO 8601 格式
-4. 文件上传接口需要设置 Content-Type: multipart/form-data
-
-## 博客前台API
-
-博客前台API主要供博客访问者使用，无需登录即可访问。这些接口用于展示博客文章、分类、标签等内容。
-
-### 1. 获取博客动态列表
-
-- **接口**: `/blog/dynamics`
-- **方法**: GET
-- **描述**: 获取博客动态列表，支持分页
-- **请求参数**:
-  - page: number (页码，默认1)
-  - pageSize: number (每页数量，默认10)
-  - type: string (可选，动态类型：text/image/audio/video)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 10,
-    "list": [
-      {
-        "id": "string",
-        "content": "string",
-        "type": "string",
-        "createdAt": "string",
-        "images": [
-          {
-            "url": "string",
-            "width": "number",
-            "height": "number"
-          }
-        ],
-        "audio": {
-          "url": "string",
-          "duration": "number"
-        },
-        "video": {
-          "url": "string",
-          "cover": "string",
-          "duration": "number"
-        }
-      }
-    ]
+#### 2.1 创建车辆
+- **POST** `/api/vehicles`
+- **Header**：`Authorization: Bearer <token>`
+- **请求体**：
+  ```json
+  {
+    "plate_number": "string",
+    "brand": "string",
+    "model": "string",
+    "color": "string"
   }
-}
-```
-
-### 2. 获取博客动态详情
-
-- **接口**: `/blog/dynamics/{id}`
-- **方法**: GET
-- **描述**: 获取指定ID的博客动态详情
-- **请求参数**:
-  - id: string (动态ID，路径参数)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "id": "string",
-    "content": "string",
-    "type": "string",
-    "createdAt": "string",
-    "images": [
-      {
-        "url": "string",
-        "width": "number",
-        "height": "number"
-      }
-    ],
-    "audio": {
-      "url": "string",
-      "duration": "number"
-    },
-    "video": {
-      "url": "string",
-      "cover": "string",
-      "duration": "number"
-    }
-  }
-}
-```
-
-### 3. 获取博客文章列表
-
-- **接口**: `/blog/posts`
-- **方法**: GET
-- **描述**: 获取博客首页文章列表，支持分页
-- **请求参数**:
-  - page: number (页码，默认1)
-  - pageSize: number (每页数量，默认10)
-  - keyword: string (可选，搜索关键词)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 10,
-    "items": [
-      {
-        "id": 1,
-        "title": "博客文章标题 1",
-        "summary": "这是博客文章 1 的摘要内容，简要介绍了文章的主要内容和观点...",
-        "createTime": "2023-09-20T10:00:00.000Z",
-        "updateTime": "2023-09-20T15:30:00.000Z",
-        "categoryId": 1,
-        "categoryName": "分类1",
-        "viewCount": 356,
-        "tags": [
-          {
-            "id": 1,
-            "name": "标签1"
-          },
-          {
-            "id": 2,
-            "name": "标签2"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-### 4. 获取博客文章详情
-
-- **接口**: `/blog/posts/{id}`
-- **方法**: GET
-- **描述**: 获取指定ID的博客文章详情
-- **请求参数**:
-  - id: number (文章ID，路径参数)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
+  ```
+- **响应**：
+  ```json
+  {
     "id": 1,
-    "title": "博客文章标题 1",
-    "content": "# 文章标题\n\n## 第一部分\n这是文章的第一部分内容，主要介绍了...\n\n## 第二部分\n这是文章的第二部分内容，进一步阐述了...\n\n## 总结\n通过本文，我们了解了...",
-    "summary": "这是博客文章 1 的摘要内容，简要介绍了文章的主要内容和观点...",
-    "createTime": "2023-09-20T10:00:00.000Z",
-    "updateTime": "2023-09-20T15:30:00.000Z",
-    "categoryId": 1,
-    "categoryName": "分类1",
-    "viewCount": 356,
-    "tags": [
+    "plate_number": "string",
+    "brand": "string",
+    "model": "string",
+    "color": "string",
+    "owner_id": 1
+  }
+  ```
+
+#### 2.2 获取车辆列表
+- **GET** `/api/vehicles`
+- **Header**：`Authorization: Bearer <token>`
+- **查询参数**：
+  - `page`: 页码
+  - `pageSize`: 每页数量
+- **响应**：
+  ```json
+  {
+    "total": 100,
+    "list": [
       {
         "id": 1,
-        "name": "标签1"
-      },
-      {
-        "id": 2,
-        "name": "标签2"
-      },
-      {
-        "id": 3,
-        "name": "标签3"
+        "plate_number": "string",
+        "brand": "string",
+        "model": "string",
+        "color": "string",
+        "owner_id": 1
       }
     ]
   }
-}
-```
+  ```
 
-### 5. 获取相邻文章
-
-- **接口**: `/blog/posts/{id}/adjacent`
-- **方法**: GET
-- **描述**: 获取指定文章的上一篇和下一篇文章
-- **请求参数**:
-  - id: number (文章ID，路径参数)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "prev": {
-      "id": 2,
-      "title": "博客文章标题 2"
-    },
-    "next": null
+#### 2.3 获取车辆详情
+- **GET** `/api/vehicles/{id}`
+- **Header**：`Authorization: Bearer <token>`
+- **响应**：
+  ```json
+  {
+    "id": 1,
+    "plate_number": "string",
+    "brand": "string",
+    "model": "string",
+    "color": "string",
+    "owner_id": 1
   }
-}
-```
+  ```
 
-### 6. 获取热门文章
+#### 2.4 更新车辆信息
+- **PUT** `/api/vehicles/{id}`
+- **Header**：`Authorization: Bearer <token>`
+- **请求体**：
+  ```json
+  {
+    "plate_number": "string",
+    "brand": "string",
+    "model": "string",
+    "color": "string"
+  }
+  ```
+- **响应**：
+  ```json
+  {
+    "message": "更新成功"
+  }
+  ```
 
-- **接口**: `/blog/posts/hot`
-- **方法**: GET
-- **描述**: 获取热门文章列表
-- **请求参数**:
-  - limit: number (可选，默认5，返回的文章数量)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": [
-    {
-      "id": 1,
-      "title": "热门文章 1",
-      "viewCount": 1000,
-      "createTime": "2023-09-20T10:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "title": "热门文章 2",
-      "viewCount": 900,
-      "createTime": "2023-09-19T10:00:00.000Z"
-    }
-  ]
-}
-```
+#### 2.5 删除车辆
+- **DELETE** `/api/vehicles/{id}`
+- **Header**：`Authorization: Bearer <token>`
+- **响应**：
+  ```json
+  {
+    "message": "删除成功"
+  }
+  ```
 
-### 7. 获取最新文章
+### 3. 公司管理接口
 
-- **接口**: `/blog/posts/recent`
-- **方法**: GET
-- **描述**: 获取最新文章列表
-- **请求参数**:
-  - limit: number (可选，默认5，返回的文章数量)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": [
-    {
-      "id": 1,
-      "title": "最新文章 1",
-      "createTime": "2023-09-20T10:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "title": "最新文章 2",
-      "createTime": "2023-09-19T10:00:00.000Z"
-    }
-  ]
-}
-```
+#### 3.1 创建公司
+- **POST** `/api/companies`
+- **Header**：`Authorization: Bearer <token>`
+- **请求体**：
+  ```json
+  {
+    "name": "string",
+    "address": "string",
+    "contact": "string",
+    "phone": "string"
+  }
+  ```
+- **响应**：
+  ```json
+  {
+    "id": 1,
+    "name": "string",
+    "address": "string",
+    "contact": "string",
+    "phone": "string"
+  }
+  ```
 
-### 8. 获取分类下的文章
-
-- **接口**: `/blog/categories/{categoryId}/posts`
-- **方法**: GET
-- **描述**: 获取指定分类下的文章列表
-- **请求参数**:
-  - categoryId: number (分类ID，路径参数)
-  - page: number (可选，页码，默认1)
-  - pageSize: number (可选，每页数量，默认10)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 5,
-    "items": [
+#### 3.2 获取公司列表
+- **GET** `/api/companies`
+- **Header**：`Authorization: Bearer <token>`
+- **查询参数**：
+  - `page`: 页码
+  - `pageSize`: 每页数量
+- **响应**：
+  ```json
+  {
+    "total": 100,
+    "list": [
       {
         "id": 1,
-        "title": "分类1的文章 1",
-        "summary": "这是分类1下的文章 1 的摘要内容...",
-        "createTime": "2023-09-20T10:00:00.000Z",
-        "updateTime": "2023-09-20T15:30:00.000Z",
-        "categoryId": 1,
-        "categoryName": "分类1",
-        "viewCount": 356
+        "name": "string",
+        "address": "string",
+        "contact": "string",
+        "phone": "string"
       }
     ]
   }
-}
-```
+  ```
 
-### 9. 获取标签下的文章
-
-- **接口**: `/blog/tags/{tagId}/posts`
-- **方法**: GET
-- **描述**: 获取指定标签下的文章列表
-- **请求参数**:
-  - tagId: number (标签ID，路径参数)
-  - page: number (可选，页码，默认1)
-  - pageSize: number (可选，每页数量，默认10)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "total": 5,
-    "items": [
-      {
-        "id": 1,
-        "title": "标签1的文章 1",
-        "summary": "这是标签1下的文章 1 的摘要内容...",
-        "createTime": "2023-09-20T10:00:00.000Z",
-        "updateTime": "2023-09-20T15:30:00.000Z",
-        "categoryId": 1,
-        "categoryName": "分类1",
-        "viewCount": 356
-      }
-    ]
+#### 3.3 获取公司详情
+- **GET** `/api/companies/{id}`
+- **Header**：`Authorization: Bearer <token>`
+- **响应**：
+  ```json
+  {
+    "id": 1,
+    "name": "string",
+    "address": "string",
+    "contact": "string",
+    "phone": "string"
   }
-}
-```
+  ```
 
-### 10. 获取博客统计信息
-
-- **接口**: `/blog/stats`
-- **方法**: GET
-- **描述**: 获取博客统计信息，包括文章、分类、标签数量和总浏览量
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "postCount": 35,
-    "categoryCount": 5,
-    "tagCount": 18,
-    "totalViews": 12500
+#### 3.4 更新公司信息
+- **PUT** `/api/companies/{id}`
+- **Header**：`Authorization: Bearer <token>`
+- **请求体**：
+  ```json
+  {
+    "name": "string",
+    "address": "string",
+    "contact": "string",
+    "phone": "string"
   }
-}
-```
-
-### 11. 获取关于我的信息
-
-- **接口**: `/blog/about`
-- **方法**: GET
-- **描述**: 获取博主的个人信息和技能等
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "name": "博主名称",
-    "avatar": "https://placeholder.pics/svg/200",
-    "introduction": "# 关于我\n\n这里是关于我的详细介绍，包括我的专业背景、兴趣爱好和技术栈等。\n\n## 专业背景\n- 全栈开发工程师\n- 5年Web开发经验\n\n## 技术栈\n- 前端: Vue.js, React, JavaScript, TypeScript\n- 后端: Node.js, Java, Spring Boot\n- 数据库: MySQL, MongoDB",
-    "email": "example@example.com",
-    "github": "https://github.com/example",
-    "skills": [
-      {
-        "name": "JavaScript",
-        "level": 95
-      },
-      {
-        "name": "Vue.js",
-        "level": 90
-      },
-      {
-        "name": "Node.js",
-        "level": 85
-      },
-      {
-        "name": "Java",
-        "level": 80
-      },
-      {
-        "name": "Database",
-        "level": 75
-      }
-    ]
+  ```
+- **响应**：
+  ```json
+  {
+    "message": "更新成功"
   }
-}
-```
+  ```
 
-### 12. 增加文章浏览量
+#### 3.5 删除公司
+- **DELETE** `/api/companies/{id}`
+- **Header**：`Authorization: Bearer <token>`
+- **响应**：
+  ```json
+  {
+    "message": "删除成功"
+  }
+  ```
 
-- **接口**: `/blog/posts/{id}/view`
-- **方法**: POST
-- **描述**: 增加文章浏览量
-- **请求参数**:
-  - id: number (文章ID，路径参数)
-- **响应数据**:
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": null
-}
-```
+## 权限说明
 
-## 模拟数据
+1. **Admin 权限**：
+   - 可以管理所有用户、车辆和公司信息
+   - 可以创建、修改、删除任何资源
+   - 可以查看系统统计信息
 
-在开发环境中，博客前台API使用模拟数据响应请求，无需真实后端服务即可运行。
-生产环境需要配置实际的后端API地址。要启用/禁用模拟数据，可以设置环境变量：
+2. **User 权限**：
+   - 只能管理自己的车辆信息
+   - 可以查看自己所属公司的信息
+   - 不能创建或删除公司
 
-```
-VITE_USE_MOCK=true  # 启用模拟数据
-VITE_USE_MOCK=false # 禁用模拟数据，使用真实API
-```
+3. **Company 权限**：
+   - 可以管理本公司下的所有用户和车辆
+   - 可以创建、修改、删除本公司下的资源
+   - 可以查看本公司统计信息
 
-默认情况下，开发环境（development）自动启用模拟数据。
+## 安全说明
+
+1. 所有 API 请求都需要在 Header 中携带 JWT Token
+2. Token 格式：`Authorization: Bearer <token>`
+3. Token 过期时间：24小时
+4. 密码使用 bcrypt 加密存储
+5. 敏感操作需要二次验证
+
+## 错误码说明
+
+- 200：成功
+- 400：请求参数错误
+- 401：未授权
+- 403：权限不足
+- 404：资源不存在
+- 500：服务器内部错误
+
+## 开发环境配置
+
+1. 后端环境：
+   ```bash
+   go version >= 1.16
+   mysql >= 5.7
+   ```
+
+2. 前端环境：
+   ```bash
+   node >= 14
+   npm >= 6
+   ```
+
+3. 配置文件：
+   - 后端：`config/config.yaml`
+   - 前端：`src/config/environment.ts`
+
+## 部署说明
+
+1. 后端部署：
+   ```bash
+   go build -o main
+   ./main
+   ```
+
+2. 前端部署：
+   ```bash
+   npm run build
+   ```
+
+3. 数据库初始化：
+   ```bash
+   mysql -u root -p < init.sql
+   ```
+
+## 注意事项
+
+1. 所有接口都需要进行参数验证
+2. 敏感数据需要进行加密处理
+3. 文件上传需要限制大小和类型
+4. 日志需要记录关键操作
+5. 定期备份数据库 
