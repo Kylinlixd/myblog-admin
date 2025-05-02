@@ -54,8 +54,15 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
-            // 移除重复的/api前缀，同时处理多种情况
-            const rewrittenPath = path.replace(/^\/api/, '');
+            
+            // 修复重复的/api前缀问题 - 确保只保留一个/api前缀
+            let rewrittenPath = path;
+            
+            // 如果是重复的 /api/api 路径，替换为单个 /api
+            if (path.startsWith('/api/api/')) {
+              rewrittenPath = path.replace('/api/api/', '/api/');
+            }
+            
             console.log('[后台API] 重写后路径:', rewrittenPath);
             console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + rewrittenPath);
             return rewrittenPath;

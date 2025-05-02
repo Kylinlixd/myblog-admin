@@ -164,6 +164,7 @@ export default {
       loginError.value = ''
       
       try {
+        console.log('开始登录:', loginData.username)
         const success = await userStore.login(loginData.username, loginData.password)
         
         if (success) {
@@ -174,16 +175,23 @@ export default {
           // 设置全局加载状态
           appStore.startLoading('正在准备您的工作台...')
           
-          // 显示加载状态足够长的时间，确保用户能看到
+          // 记录重定向信息
+          console.log('登录成功，即将跳转到:', redirect)
+          
+          // 添加 100ms 延迟，确保状态已更新
           setTimeout(() => {
-            router.push(redirect)
-          }, 1000)
+            router.push(redirect).catch(err => {
+              console.error('路由跳转错误:', err)
+              // 如果重定向失败，尝试直接跳转到仪表盘
+              router.push('/dashboard')
+            })
+          }, 100)
         } else {
           loginError.value = '用户名或密码错误'
         }
       } catch (error) {
         console.error('登录失败:', error)
-        loginError.value = '登录失败，请稍后重试'
+        loginError.value = error.message || '登录失败，请稍后重试'
       } finally {
         loading.value = false
       }

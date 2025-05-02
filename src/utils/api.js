@@ -8,7 +8,7 @@ import { message } from 'ant-design-vue'
 
 // API 前缀配置
 const apiPrefix = {
-  admin: '/api',
+  admin: '', // 移除前缀，由代理处理
   blog: '/blog'
 }
 

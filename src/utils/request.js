@@ -6,7 +6,7 @@ import { useAppStore } from '../stores/app'
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
 // 使用相对路径，让代理处理跨域
-const baseURL = isProd ? '/api' : '/api'
+const baseURL = isProd ? '' : ''
 const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
 
 // 创建 axios 实例

@@ -28,7 +28,7 @@ export function login(data) {
   }
   
   // 使用 API 工具类发送登录请求
-  return api.admin.post('/auth/login', data)
+  return api.admin.post('/api/auth/login/', data)
 }
 
 /**
@@ -40,7 +40,7 @@ export function login(data) {
  * @returns {Promise<{token: string, userInfo: Object}>}
  */
 export function register(data) {
-  return api.admin.post('/auth/register', data)
+  return api.admin.post('/api/auth/register', data)
 }
 
 /**
@@ -48,7 +48,7 @@ export function register(data) {
  * @returns {Promise<Object>} - 用户信息
  */
 export function getUserInfo() {
-  return api.admin.get('/auth/info')
+  return api.admin.get('/api/auth/info/')
 }
 
 /**
@@ -59,7 +59,7 @@ export function getUserInfo() {
  * @returns {Promise<void>}
  */
 export function changePassword(data) {
-  return api.admin.put('/auth/password', data)
+  return api.admin.put('/api/auth/password/', data)
 }
 
 /**
@@ -72,7 +72,7 @@ export function changePassword(data) {
  * @returns {Promise<Object>} - 更新后的用户信息
  */
 export function updateUserProfile(data) {
-  return api.admin.put('/auth/profile', data)
+  return api.admin.put('/api/auth/profile/', data)
 }
 
 /**
@@ -80,7 +80,7 @@ export function updateUserProfile(data) {
  * @returns {Promise<{token: string}>}
  */
 export function refreshToken() {
-  return api.admin.post('/token/refresh')
+  return api.admin.post('/api/token/refresh/')
 }
 
 /**

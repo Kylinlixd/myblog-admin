@@ -206,6 +206,15 @@ const routes = [
     ]
   },
   {
+    path: '/debug',
+    name: 'Debug',
+    component: () => import('../views/Debug.vue'),
+    meta: { 
+      title: '调试页面',
+      requiresAuth: false  // 设置为false使得未登录状态也可访问
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue'),

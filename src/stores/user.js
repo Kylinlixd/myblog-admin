@@ -46,11 +46,27 @@ export const useUserStore = defineStore('user', {
     async login(username, password) {
       try {
         const response = await login({ username, password })
+        console.log('登录响应:', response)
+        
+        // 检查响应结构
+        if (response.code !== 200) {
+          console.error('登录失败: 响应状态码不是200', response)
+          return false
+        }
+        
+        // 从正确的位置提取 token 和 userInfo
+        // 响应格式应该是 { code: 200, data: { token, userInfo }, message: 'xxx' }
+        const { token, userInfo } = response.data || {}
+        
+        if (!token || !userInfo) {
+          console.error('登录失败: 响应中没有token或userInfo', response)
+          return false
+        }
         
         // 设置用户信息和token
-        this.token = response.token
-        this.userInfo = response.userInfo
-        localStorage.setItem('token', response.token)
+        this.token = token
+        this.userInfo = userInfo
+        localStorage.setItem('token', token)
         this.initialized = true
         
         return true
@@ -65,10 +81,18 @@ export const useUserStore = defineStore('user', {
       try {
         const response = await register(userData)
         
+        // 从正确的位置提取 token 和 userInfo
+        const { token, userInfo } = response.data || {}
+        
+        if (!token || !userInfo) {
+          console.error('注册失败: 响应中没有token或userInfo', response)
+          return false
+        }
+        
         // 注册成功后自动登录
-        this.token = response.token
-        this.userInfo = response.userInfo
-        localStorage.setItem('token', response.token)
+        this.token = token
+        this.userInfo = userInfo
+        localStorage.setItem('token', token)
         
         return true
       } catch (error) {
@@ -83,7 +107,16 @@ export const useUserStore = defineStore('user', {
           return null
         }
         
-        const userInfo = await getUserInfo()
+        const response = await getUserInfo()
+        
+        // 从正确的位置提取 userInfo
+        const userInfo = response.data || response
+        
+        if (!userInfo) {
+          console.error('获取用户信息失败: 响应中没有用户信息', response)
+          return null
+        }
+        
         this.userInfo = userInfo
         return userInfo
       } catch (error) {
