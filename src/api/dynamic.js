@@ -81,7 +81,7 @@ export const updateDynamic = async (id, data) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.put(`/api/dynamics/${id}`, formattedData, { headers });
+    const response = await request.put(`/api/dynamics/${id}/`, formattedData, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -109,7 +109,7 @@ export const deleteDynamic = async (id) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.delete(`/api/dynamics/${id}`, { headers });
+    const response = await request.delete(`/api/dynamics/${id}/`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -132,7 +132,7 @@ export const getDynamicDetail = async (id) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.get(`/api/dynamics/${id}`, { headers });
+    const response = await request.get(`/api/dynamics/${id}/`, { headers });
     return { 
       code: 200, 
       data: response, 
@@ -186,7 +186,7 @@ export const createDynamic = async (data) => {
     const token = localStorage.getItem('token');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     
-    const response = await request.post('/dynamics', formattedData, { headers });
+    const response = await request.post('/dynamics/', formattedData, { headers });
     return { 
       code: 200, 
       data: response, 

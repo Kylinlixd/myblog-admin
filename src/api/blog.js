@@ -95,7 +95,7 @@ blogAxios.interceptors.response.use(
  * @returns {Promise} 分类列表
  */
 export function getBlogCategoryList() {
-  return blogAxios.get(createBlogApiUrl('categories'))
+  return blogAxios.get(createBlogApiUrl('categories/'))
     .catch(error => {
       console.error('获取博客分类列表失败:', error)
       throw error
@@ -111,7 +111,7 @@ export function getBlogDynamics(params) {
   console.log('[Blog API] 获取动态列表, 参数:', params);
   console.log('[Blog API] 请求URL:', createBlogApiUrl('dynamics'));
   
-  return blogAxios.get(createBlogApiUrl('dynamics'), { params })
+  return blogAxios.get(createBlogApiUrl('dynamics/'), { params })
     .then(response => {
       console.log('[Blog API] 获取动态列表响应:', response);
       
@@ -145,7 +145,7 @@ export function getBlogDynamics(params) {
  * @returns {Promise} 动态详情
  */
 export function getBlogDynamicDetail(id) {
-  return blogAxios.get(createBlogApiUrl(`dynamics/${id}`))
+  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/`))
     .catch(error => {
       console.error('获取博客动态详情失败:', error)
       throw error
