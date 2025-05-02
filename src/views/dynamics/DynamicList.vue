@@ -346,47 +346,58 @@ const fetchTags = async () => {
 
 // 获取动态列表
 const fetchDynamics = async () => {
-  loading.value = true
+  loading.value = true;
+  console.log('开始获取动态列表, 页码:', currentPage.value, '每页数量:', pageSize.value);
+  
   try {
     const res = await getDynamicList({
       page: currentPage.value,
       pageSize: pageSize.value
-    })
+    });
+    
+    console.log('动态API响应:', res);
     
     if (res && res.code === 200) {
-      // 检查响应数据的结构
+      // 检查响应数据结构
+      // 新的API响应结构是 {code:200, message:'success', data:{total:0, items:[]}}
       if (res.data && typeof res.data === 'object') {
-        if (Array.isArray(res.data)) {
-          // 如果直接返回数组
-          dynamicList.value = res.data || []
-          total.value = res.data.length || 0
-        } else if (res.data.items) {
-          // 如果返回带分页的对象结构
-          dynamicList.value = res.data.items || []
-          total.value = res.data.total || 0
+        if (res.data.items !== undefined) {
+          // 标准返回格式
+          dynamicList.value = res.data.items || [];
+          total.value = res.data.total || 0;
+          console.log('已获取动态列表, 总数:', total.value);
+        } else if (Array.isArray(res.data)) {
+          // 数组格式返回
+          dynamicList.value = res.data || [];
+          total.value = res.data.length || 0;
+          console.log('已获取动态列表(数组格式), 总数:', total.value);
         } else {
-          // 尝试其他可能的结构
-          const possibleItems = res.data.list || res.data.data || res.data.records || []
-          dynamicList.value = possibleItems
-          total.value = res.data.total || res.data.totalCount || res.data.count || possibleItems.length || 0
+          // 其他可能的格式
+          const possibleItems = res.data.list || res.data.data || res.data.records || [];
+          dynamicList.value = possibleItems;
+          total.value = res.data.total || res.data.totalCount || res.data.count || possibleItems.length || 0;
+          console.log('已获取动态列表(其他格式), 总数:', total.value);
         }
       } else {
-        dynamicList.value = []
-        total.value = 0
+        console.warn('API返回数据格式异常:', res);
+        dynamicList.value = [];
+        total.value = 0;
       }
     } else {
-      dynamicList.value = []
-      total.value = 0
+      console.warn('API响应不成功:', res);
+      dynamicList.value = [];
+      total.value = 0;
     }
   } catch (error) {
-    console.error('获取动态列表失败:', error)
-    message.error('获取动态列表失败')
-    dynamicList.value = []
-    total.value = 0
+    console.error('获取动态列表失败:', error);
+    message.error('获取动态列表失败');
+    console.warn('检查后端服务是否开启');
+    dynamicList.value = [];
+    total.value = 0;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 跳转到创建动态页面
 const navigateToCreate = () => {

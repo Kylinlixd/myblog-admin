@@ -1,4 +1,5 @@
 import request from '../utils/request';
+import api from '../utils/api';
 
 /**
  * 获取动态列表
@@ -11,7 +12,7 @@ import request from '../utils/request';
  */
 export const getDynamicList = async (params) => {
   try {
-    const apiUrl = '/api/dynamics';
+    const apiUrl = '/api/dynamics/';
     console.log('获取动态列表参数:', params);
     
     // 转换参数名称，确保与后端一致
@@ -23,20 +24,9 @@ export const getDynamicList = async (params) => {
     };
     
     console.log('转换后的API参数:', apiParams);
-    console.log('API完整URL:', request.defaults?.baseURL || import.meta.env.VITE_API_BASE_URL || '', apiUrl);
     
-    // 获取token
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    console.log('认证头:', headers);
-    
-    // 确保使用的是完整路径 - 修改为后台API的直接路径（不要加/api前缀，因为request.js已经有了）
-    const response = await request.get(apiUrl, { 
-      params: apiParams,
-      headers
-    });
-    
+    // 使用API工具类发送请求
+    const response = await api.admin.get(apiUrl, apiParams);
     console.log('动态列表API响应原始数据:', response);
     
     // 构造标准响应
@@ -77,11 +67,8 @@ export const updateDynamic = async (id, data) => {
       throw new Error(`${formattedData.type}类型的动态必须包含媒体文件`);
     }
     
-    // 获取token
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    const response = await request.put(`/api/dynamics/${id}/`, formattedData, { headers });
+    // 使用API工具类发送请求
+    const response = await api.admin.put(`/api/dynamics/${id}/`, formattedData);
     return { 
       code: 200, 
       data: response, 
@@ -105,11 +92,8 @@ export const updateDynamic = async (id, data) => {
  */
 export const deleteDynamic = async (id) => {
   try {
-    // 获取token
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    const response = await request.delete(`/api/dynamics/${id}/`, { headers });
+    // 使用API工具类发送请求
+    const response = await api.admin.delete(`/api/dynamics/${id}/`);
     return { 
       code: 200, 
       data: response, 
@@ -128,11 +112,8 @@ export const deleteDynamic = async (id) => {
  */
 export const getDynamicDetail = async (id) => {
   try {
-    // 获取token
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    const response = await request.get(`/api/dynamics/${id}/`, { headers });
+    // 使用API工具类发送请求
+    const response = await api.admin.get(`/api/dynamics/${id}/`);
     return { 
       code: 200, 
       data: response, 
@@ -182,11 +163,8 @@ export const createDynamic = async (data) => {
     
     console.log('格式化后的动态数据:', formattedData);
     
-    // 获取token
-    const token = localStorage.getItem('token');
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    
-    const response = await request.post('/dynamics/', formattedData, { headers });
+    // 使用API工具类发送请求
+    const response = await api.admin.post('/api/dynamics/', formattedData);
     return { 
       code: 200, 
       data: response, 
