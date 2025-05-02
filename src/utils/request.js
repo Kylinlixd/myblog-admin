@@ -5,7 +5,8 @@ import { useAppStore } from '../stores/app'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
-const baseURL = isProd ? 'http://your-production-api.com' : 'http://127.0.0.1:8000'
+// 使用相对路径，让代理处理跨域
+const baseURL = isProd ? '/api' : '/api'
 const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
 
 // 创建 axios 实例
@@ -13,8 +14,12 @@ const service = axios.create({
   baseURL,
   timeout: requestTimeout,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
   },
+  // 允许携带cookies
+  withCredentials: true,
   // 禁止自动重定向
   maxRedirects: 0,
   // 确保请求方法在重定向时保持不变
@@ -142,6 +147,22 @@ const isAuthPage = () => {
   return path.includes('/login') || path.includes('/register')
 }
 
+// 预请求检测处理
+const handlePreflightCheck = () => {
+  // 添加一个空的OPTIONS请求监听器，让开发者工具不显示OPTIONS请求
+  const origOpen = XMLHttpRequest.prototype.open
+  XMLHttpRequest.prototype.open = function(method, url) {
+    this._method = method
+    this._url = url
+    return origOpen.apply(this, arguments)
+  }
+}
+
+// 在开发环境中处理预检请求
+if (!isProd) {
+  handlePreflightCheck()
+}
+
 // 请求拦截器
 service.interceptors.request.use(
   config => {
@@ -185,7 +206,27 @@ service.interceptors.response.use(
       })
     }
     
-    return response.data
+    // 处理不同响应格式
+    const responseData = response.data
+    
+    // 判断是否是标准格式响应
+    if (responseData && typeof responseData === 'object') {
+      if (responseData.code !== undefined) {
+        // 标准格式: { code, data, message }
+        if (responseData.code !== 200) {
+          if (!isAuthPage()) {
+            message.error(responseData.message || '请求失败')
+          }
+          return Promise.reject(new Error(responseData.message || '请求失败'))
+        }
+        return responseData
+      }
+      // 非标准但有数据的情况，直接返回
+      return responseData
+    }
+    
+    // 其他情况，返回原始响应
+    return responseData
   },
   error => {
     decreasePendingCount()
@@ -224,7 +265,10 @@ service.interceptors.response.use(
         }
       } else {
         if (!isAuthPage()) {
-          message.error(error.response.data?.message || '请求失败')
+          // 尝试获取详细错误信息
+          const errorMsg = error.response.data?.message || 
+                          (typeof error.response.data === 'string' ? error.response.data : '请求失败')
+          message.error(errorMsg)
         }
       }
     } else if (error.request) {

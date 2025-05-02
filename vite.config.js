@@ -43,17 +43,19 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       hmr: true,
       open: true,
+      cors: true,
       proxy: {
         // 后台管理API代理规则
         '/api': {
           target: 'http://127.0.0.1:8000',
           changeOrigin: true,
           secure: false,
+          ws: true,
           rewrite: (path) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
-            // 移除重复的/api前缀
-            const rewrittenPath = path.replace(/^\/api\/api\//, '/api/');
+            // 移除重复的/api前缀，同时处理多种情况
+            const rewrittenPath = path.replace(/^\/api/, '');
             console.log('[后台API] 重写后路径:', rewrittenPath);
             console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + rewrittenPath);
             return rewrittenPath;
@@ -62,9 +64,18 @@ export default defineConfig(({ mode }) => {
           onError: (err, req, res) => {
             console.error('[代理错误]', err);
             res.writeHead(500, {
-              'Content-Type': 'text/plain',
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
             });
-            res.end('代理请求失败，请检查后端服务是否正常运行');
+            res.end(JSON.stringify({
+              code: 500,
+              message: '代理请求失败，请检查后端服务是否正常运行'
+            }));
+          },
+          // 自定义请求头
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Proxy-By': 'Vite'
           }
         },
         // 博客前台API代理规则
@@ -72,6 +83,7 @@ export default defineConfig(({ mode }) => {
           target: 'http://127.0.0.1:8000',
           changeOrigin: true,
           secure: false,
+          ws: true,
           bypass: function(req, res, proxyOptions) {
             // 获取请求信息
             const url = req.url;
@@ -88,14 +100,6 @@ export default defineConfig(({ mode }) => {
               return '/'; // 使用根路径，确保强制刷新时能正确加载
             }
             
-            // 拦截一般API请求
-            if (/^\/blog(\/)?$/.test(url) && method === 'GET' && !isHtmlRequest) {
-              console.log('[博客API] 拦截一般API请求:', url);
-              res.statusCode = 200;
-              res.end('{"success":true}');
-              return true;
-            }
-            
             // 所有其他请求正常代理
             console.log('[博客请求] 正常代理:', url);
             return false;
@@ -103,15 +107,11 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             // 记录重写前的路径
             console.log('[博客重写] 原始路径:', path);
-            
-            // 统一blog路径格式
-            if (path === '/blog') {
-              console.log('[博客重写] 将/blog改为/blog/');
-              return '/blog/';
-            }
-            
-            // 其他路径保持不变
             return path;
+          },
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-Proxy-By': 'Vite'
           }
         }
       }
