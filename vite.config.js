@@ -51,6 +51,29 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
+          // 增加代理超时设置
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, res) => {
+              console.error('[代理服务器错误]', err);
+              // 确保响应对象存在并且可写入
+              if (res.writableEnded === false) {
+                res.writeHead(500, {
+                  'Content-Type': 'application/json',
+                  'Access-Control-Allow-Origin': '*',
+                });
+                res.end(JSON.stringify({
+                  code: 500,
+                  message: '代理请求失败，请检查后端服务是否正常运行',
+                  error: err.message
+                }));
+              }
+            });
+            // 增加超时设置
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              console.log(`[代理请求] ${req.method} ${req.url} -> ${proxyReq.path}`);
+              proxyReq.setSocketKeepAlive(true);
+            });
+          },
           rewrite: (path) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
@@ -70,14 +93,17 @@ export default defineConfig(({ mode }) => {
           // 添加错误处理
           onError: (err, req, res) => {
             console.error('[代理错误]', err);
-            res.writeHead(500, {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-            });
-            res.end(JSON.stringify({
-              code: 500,
-              message: '代理请求失败，请检查后端服务是否正常运行'
-            }));
+            if (!res.headersSent) {
+              res.writeHead(500, {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+              });
+              res.end(JSON.stringify({
+                code: 500,
+                message: '代理请求失败，请检查后端服务是否正常运行',
+                error: err.message
+              }));
+            }
           },
           // 自定义请求头
           headers: {

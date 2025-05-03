@@ -31,38 +31,84 @@ const handleApiError = (error, showError = true) => {
     const status = error.response.status
     const data = error.response.data
     
+    // 尝试提取错误消息
+    let errorMessage = '请求失败'
+    
     // 处理后端返回的错误信息
-    if (data && data.message) {
-      message.error(data.message)
-    } else {
-      // 根据 HTTP 状态码显示通用错误提示
-      switch (status) {
-        case 400:
-          message.error('请求参数错误')
-          break
-        case 401:
-          message.error('未授权，请重新登录')
-          break
-        case 403:
-          message.error('无权限执行此操作')
-          break
-        case 404:
-          message.error('请求的资源不存在')
-          break
-        case 500:
-          message.error('服务器内部错误')
-          break
-        default:
-          message.error(`请求失败: ${status}`)
+    if (data) {
+      if (typeof data === 'string') {
+        errorMessage = data
+      } else if (data.message) {
+        errorMessage = typeof data.message === 'string' 
+          ? data.message 
+          : JSON.stringify(data.message)
+      } else if (data.error) {
+        errorMessage = data.error
+      } else if (data.detail) {
+        errorMessage = data.detail
       }
     }
+    
+    // 显示错误提示
+    message.error(errorMessage)
+    
+    // 控制台记录详细的错误信息
+    console.error(`HTTP错误 [${status}]:`, {
+      url: error.config?.url,
+      status,
+      data,
+      message: errorMessage
+    })
   } else if (error.request) {
     message.error('网络错误，无法连接到服务器')
+    console.error('请求已发送但没有收到响应:', error.request)
   } else {
     message.error(error.message || '未知错误')
+    console.error('请求错误:', error.message)
   }
   
   return Promise.reject(error)
+}
+
+// 最大重试次数
+const MAX_RETRY_ATTEMPTS = 2
+// 重试延迟（毫秒）
+const RETRY_DELAY = 1000
+
+/**
+ * 带重试机制的请求包装器
+ * @param {Function} requestFn - 原始请求函数
+ * @param {Object} options - 请求配置
+ * @returns {Promise} - 请求结果
+ */
+const withRetry = async (requestFn, options = {}) => {
+  const { retryAttempts = MAX_RETRY_ATTEMPTS, showError = true } = options
+  let attempts = 0
+  
+  while (attempts <= retryAttempts) {
+    try {
+      const result = await requestFn()
+      return result
+    } catch (error) {
+      attempts++
+      
+      // 如果状态码为5xx或网络错误，尝试重试
+      const shouldRetry = (
+        (error.response && error.response.status >= 500 && error.response.status < 600) ||
+        !error.response
+      )
+      
+      if (shouldRetry && attempts <= retryAttempts) {
+        console.log(`请求失败，将在${RETRY_DELAY}ms后第${attempts}次重试...`)
+        // 等待一段时间后重试
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
+        continue
+      }
+      
+      // 已达到最大重试次数或不需要重试，处理错误
+      return handleApiError(error, showError)
+    }
+  }
 }
 
 /**
@@ -85,8 +131,10 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
       const fullUrl = `${prefix}${url}`
       logApiCall(moduleName, 'GET', fullUrl, params)
       
-      return request.get(fullUrl, params, config)
-        .catch(error => handleApiError(error, showError))
+      return withRetry(
+        () => request.get(fullUrl, params, config),
+        { showError }
+      )
     },
     
     /**
@@ -101,8 +149,10 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
       const fullUrl = `${prefix}${url}`
       logApiCall(moduleName, 'POST', fullUrl, data)
       
-      return request.post(fullUrl, data, config)
-        .catch(error => handleApiError(error, showError))
+      return withRetry(
+        () => request.post(fullUrl, data, config),
+        { showError }
+      )
     },
     
     /**
@@ -117,8 +167,10 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
       const fullUrl = `${prefix}${url}`
       logApiCall(moduleName, 'PUT', fullUrl, data)
       
-      return request.put(fullUrl, data, config)
-        .catch(error => handleApiError(error, showError))
+      return withRetry(
+        () => request.put(fullUrl, data, config),
+        { showError }
+      )
     },
     
     /**
@@ -132,8 +184,10 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
       const fullUrl = `${prefix}${url}`
       logApiCall(moduleName, 'DELETE', fullUrl)
       
-      return request.delete(fullUrl, config)
-        .catch(error => handleApiError(error, showError))
+      return withRetry(
+        () => request.delete(fullUrl, config),
+        { showError }
+      )
     }
   }
 }

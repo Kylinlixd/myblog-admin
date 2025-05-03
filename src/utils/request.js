@@ -2,6 +2,7 @@ import axios from 'axios'
 import { message } from 'ant-design-vue'
 import router from '../router'
 import { useAppStore } from '../stores/app'
+import { useUserStore } from '../stores/user'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
@@ -214,6 +215,8 @@ service.interceptors.response.use(
       if (responseData.code !== undefined) {
         // 标准格式: { code, data, message }
         if (responseData.code !== 200) {
+          // 增加错误日志
+          console.error(`[API错误] 错误码: ${responseData.code}, 消息: ${responseData.message || '未知错误'}`)
           if (!isAuthPage()) {
             message.error(responseData.message || '请求失败')
           }
@@ -231,11 +234,13 @@ service.interceptors.response.use(
   error => {
     decreasePendingCount()
     
-    // 记录错误信息
-    console.error('请求错误:', {
+    // 详细记录错误信息
+    console.error('请求错误详情:', {
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
+      statusText: error.response?.statusText,
+      headers: error.config?.headers,
       data: error.response?.data,
       message: error.message
     })
@@ -248,36 +253,60 @@ service.interceptors.response.use(
         const isVisitingBlog = window.location.pathname.startsWith('/blog')
         if (!isVisitingBlog && !isAuthPage()) {
           message.error('登录已过期，请重新登录')
-          localStorage.removeItem('token')
-          router.push('/login')
+          
+          // 无需清空token，交由用户store处理
+          const userStore = useUserStore();
+          userStore.clearUserData();
+          
+          // 跳转到登录页
+          router.replace({
+            path: '/login',
+            query: { redirect: router.currentRoute.value.fullPath }
+          })
         }
-      } else if (status === 403) {
-        if (!isAuthPage()) {
-          message.error('您没有权限进行此操作')
-        }
-      } else if (status === 404) {
-        if (!isAuthPage()) {
-          message.error('请求的资源不存在')
-        }
-      } else if (status >= 500) {
-        if (!isAuthPage()) {
-          message.error('服务器错误，请稍后重试')
-        }
+      } else if (status === 500) {
+        // 增加500错误的特殊处理
+        console.error('服务器内部错误 (500):', error.response.data)
+        message.error('服务器内部错误，请联系管理员')
       } else {
+        // 其他HTTP错误
+        let errorMessage = '请求失败'
+        
+        // 尝试从响应中解析错误消息
+        if (error.response.data) {
+          if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message
+          } else if (error.response.data.error) {
+            errorMessage = error.response.data.error
+          }
+        }
+        
+        // 避免在登录页显示错误
         if (!isAuthPage()) {
-          // 尝试获取详细错误信息
-          const errorMsg = error.response.data?.message || 
-                          (typeof error.response.data === 'string' ? error.response.data : '请求失败')
-          message.error(errorMsg)
+          message.error(errorMessage)
         }
       }
     } else if (error.request) {
+      // 请求已经发出，但没有收到响应
+      console.error('网络错误 - 请求已发出但无响应:', error.request)
+      
+      // 避免在登录页显示错误
       if (!isAuthPage()) {
-        message.error('无法连接到服务器，请检查网络连接')
+        message.error('网络错误，无法连接到服务器')
       }
+      
+      // 设置全局错误状态
+      const appStore = useAppStore()
+      appStore.setLoadingError('网络错误，无法连接到服务器, 请检查您的网络连接或服务器状态')
     } else {
+      // 请求设置时出错
+      console.error('请求配置错误:', error.message)
+      
+      // 避免在登录页显示错误
       if (!isAuthPage()) {
-        message.error('请求发送失败')
+        message.error(error.message || '请求发送失败')
       }
     }
     
