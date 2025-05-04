@@ -148,6 +148,20 @@ const isAuthPage = () => {
   return path.includes('/login') || path.includes('/register')
 }
 
+// 获取API后端目标URL（开发工具用）
+const getAPITargetURL = (url) => {
+  // 获取URL路径部分
+  const path = url.split('?')[0];
+  // 根据前缀确定目标后端
+  if (path.startsWith('/api/')) {
+    return `http://127.0.0.1:8000${path}`;
+  } else if (path.startsWith('/blog/')) {
+    return `http://127.0.0.1:8000${path}`;
+  } else {
+    return `${window.location.origin}${path}`;
+  }
+}
+
 // 预请求检测处理
 const handlePreflightCheck = () => {
   // 添加一个空的OPTIONS请求监听器，让开发者工具不显示OPTIONS请求
@@ -183,6 +197,16 @@ service.interceptors.request.use(
         data: config.data,
         headers: config.headers
       })
+      
+      // 记录本地URL和后端目标URL
+      const baseOrigin = window.location.origin; // 当前站点的源
+      const localFullUrl = config.url.startsWith('http') 
+        ? config.url 
+        : `${baseOrigin}${config.url}`;
+      const backendURL = getAPITargetURL(config.url);
+      
+      console.log(`[Request] 本地URL: ${localFullUrl}`);
+      console.log(`[Request] 目标后端: ${backendURL}`);
     }
     
     return config
@@ -291,6 +315,19 @@ service.interceptors.response.use(
     } else if (error.request) {
       // 请求已经发出，但没有收到响应
       console.error('网络错误 - 请求已发出但无响应:', error.request)
+      
+      // 提供更详细的错误日志，帮助开发者排查
+      console.error('[错误详情]', {
+        url: error.config?.url,
+        method: error.config?.method,
+        timeout: error.config?.timeout,
+        headers: error.config?.headers
+      })
+      
+      console.log('[提示] 请检查：')
+      console.log('1. 后端服务是否在 http://127.0.0.1:8000 上运行')
+      console.log('2. 网络连接是否正常')
+      console.log('3. 如果需要使用模拟数据进行开发，请前往 /debug 页面启用模拟数据模式')
       
       // 避免在登录页显示错误
       if (!isAuthPage()) {

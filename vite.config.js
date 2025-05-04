@@ -70,7 +70,9 @@ export default defineConfig(({ mode }) => {
             });
             // 增加超时设置
             proxy.on('proxyReq', (proxyReq, req, _res) => {
-              console.log(`[代理请求] ${req.method} ${req.url} -> ${proxyReq.path}`);
+              // 完整记录目标请求URL
+              const targetUrl = `http://127.0.0.1:8000${proxyReq.path}`;
+              console.log(`[代理请求] ${req.method} ${req.url} -> ${targetUrl}`);
               proxyReq.setSocketKeepAlive(true);
             });
           },
@@ -87,7 +89,8 @@ export default defineConfig(({ mode }) => {
             }
             
             console.log('[后台API] 重写后路径:', rewrittenPath);
-            console.log('[后台API] 最终请求URL:', 'http://127.0.0.1:8000' + rewrittenPath);
+            const finalUrl = `http://127.0.0.1:8000${rewrittenPath}`;
+            console.log('[后台API] 最终请求URL:', finalUrl);
             return rewrittenPath;
           },
           // 添加错误处理
@@ -117,6 +120,31 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
+          // 增加代理超时和日志设置
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, res) => {
+              console.error('[博客代理错误]', err);
+              // 确保响应对象存在并且可写入
+              if (res.writableEnded === false) {
+                res.writeHead(500, {
+                  'Content-Type': 'application/json',
+                  'Access-Control-Allow-Origin': '*',
+                });
+                res.end(JSON.stringify({
+                  code: 500,
+                  message: '博客API代理请求失败，请检查后端服务是否正常运行',
+                  error: err.message
+                }));
+              }
+            });
+            
+            // 记录完整的博客API请求
+            proxy.on('proxyReq', (proxyReq, req, _res) => {
+              const targetUrl = `http://127.0.0.1:8000${proxyReq.path}`;
+              console.log(`[博客代理请求] ${req.method} ${req.url} -> ${targetUrl}`);
+              proxyReq.setSocketKeepAlive(true);
+            });
+          },
           bypass: function(req, res, proxyOptions) {
             // 获取请求信息
             const url = req.url;
@@ -140,6 +168,8 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => {
             // 记录重写前的路径
             console.log('[博客重写] 原始路径:', path);
+            const finalUrl = `http://127.0.0.1:8000${path}`;
+            console.log('[博客重写] 最终请求URL:', finalUrl);
             return path;
           },
           headers: {

@@ -16,11 +16,39 @@
         </div>
         
         <div class="status-item">
+          <div class="status-label">API根路径:</div>
+          <div :class="['status-value', apiRootStatus.success ? 'success' : 'error']">
+            {{ apiRootStatus.message }}
+          </div>
+          <a-button size="small" @click="checkApiRoot" :loading="apiRootStatus.loading">
+            检查API根
+          </a-button>
+        </div>
+        
+        <div class="status-item">
           <div class="status-label">模拟数据模式:</div>
           <div :class="['status-value', mockMode ? 'warning' : 'success']">
             {{ mockMode ? '已启用' : '已禁用' }}
           </div>
           <a-switch v-model:checked="mockMode" @change="toggleMockMode" />
+        </div>
+        
+        <div class="notice" v-if="!apiStatus.success">
+          <a-alert 
+            type="warning" 
+            message="后端服务无法访问"
+            description="如果后端服务未启动或无法访问，您可以临时启用模拟数据模式进行开发。请注意，模拟数据模式下的数据不会保存到后端。"
+            show-icon
+          />
+        </div>
+        
+        <div class="notice" v-if="mockMode">
+          <a-alert
+            type="info"
+            message="已启用模拟数据模式"
+            description="当前使用的是前端模拟数据，而不是真实后端API。对数据的操作仅保存在浏览器本地存储中，刷新页面后可能丢失。"
+            show-icon
+          />
         </div>
       </div>
     </div>
@@ -43,6 +71,10 @@
         <div class="info-item">
           <div class="info-label">博客API前缀:</div>
           <div class="info-value">{{ envInfo.blogApiPrefix }}</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">数据模式:</div>
+          <div class="info-value">{{ mockMode ? '使用模拟数据' : '使用真实API' }}</div>
         </div>
       </div>
     </div>
@@ -155,6 +187,13 @@ const dnsStatus = reactive({
   loading: false
 })
 
+// API根路径状态
+const apiRootStatus = reactive({
+  success: false,
+  message: '未测试',
+  loading: false
+})
+
 // 测试请求
 const testRequest = reactive({
   method: 'GET',
@@ -207,10 +246,11 @@ const testApiConnection = async () => {
 const toggleMockMode = async (enabled) => {
   try {
     await toggleMockDataMode(enabled)
-    message.success(`已${enabled ? '启用' : '禁用'}模拟数据模式`)
+    message.success(`已${enabled ? '启用模拟数据模式' : '切换为真实API模式'}`)
+    console.log(`[数据模式] ${enabled ? '已启用模拟数据' : '已切换为真实API'}`)
   } catch (error) {
     console.error('切换模拟数据模式失败:', error)
-    message.error('切换模拟数据模式失败')
+    message.error('切换数据模式失败')
     mockMode.value = !enabled // 恢复原状态
   }
 }
@@ -233,6 +273,49 @@ const checkDns = async () => {
     console.error('DNS检查错误:', error)
   } finally {
     dnsStatus.loading = false
+  }
+}
+
+// 检查API根路径
+const checkApiRoot = async () => {
+  apiRootStatus.loading = true
+  apiRootStatus.message = '检查中...'
+  
+  try {
+    // 使用GET请求API根路径
+    const response = await axios.get('/api/', { 
+      timeout: 5000,
+      params: { format: 'json' } 
+    })
+    
+    // 检查响应是否包含预期的API端点
+    const hasEndpoints = response.data && 
+      (response.data.dynamics || response.data.users);
+    
+    if (hasEndpoints) {
+      apiRootStatus.success = true;
+      apiRootStatus.message = `可用 (${Object.keys(response.data).length}个端点)`;
+      console.log('[API根] 可用的端点:', response.data);
+    } else {
+      apiRootStatus.success = false;
+      apiRootStatus.message = '结构异常';
+      console.error('[API根] 响应结构不符合预期:', response.data);
+    }
+  } catch (error) {
+    apiRootStatus.success = false;
+    
+    if (error.response) {
+      apiRootStatus.message = `错误 (${error.response.status})`;
+      console.error('[API根] 请求错误:', error.response.data);
+    } else if (error.request) {
+      apiRootStatus.message = '无响应';
+      console.error('[API根] 无响应:', error.message);
+    } else {
+      apiRootStatus.message = '请求失败';
+      console.error('[API根] 请求失败:', error.message);
+    }
+  } finally {
+    apiRootStatus.loading = false
   }
 }
 
@@ -375,6 +458,7 @@ const runFullDiagnostic = async () => {
 onMounted(() => {
   testApiConnection()
   checkDns()
+  checkApiRoot()
 })
 </script>
 
@@ -396,6 +480,11 @@ h1 {
   padding: 20px;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.notice {
+  margin-top: 16px;
+  width: 100%;
 }
 
 h2 {

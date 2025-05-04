@@ -14,7 +14,19 @@ const apiPrefix = {
 
 // 调试日志
 const logApiCall = (module, method, url, params) => {
+  // 根据前缀确定目标后端
+  let backendUrl = '';
+  if (url.startsWith('/api/') || url.startsWith('/blog/')) {
+    backendUrl = `http://127.0.0.1:8000${url}`;
+  }
+  
+  // 显示API调用信息
   console.log(`[API 调用] ${module}.${method} ${url}`, params || '')
+  
+  // 显示目标后端URL
+  if (backendUrl) {
+    console.log(`[API 目标] ${backendUrl}`)
+  }
 }
 
 // 错误处理
@@ -61,10 +73,23 @@ const handleApiError = (error, showError = true) => {
     })
   } else if (error.request) {
     message.error('网络错误，无法连接到服务器')
-    console.error('请求已发送但没有收到响应:', error.request)
+    console.error('[网络错误] 请求已发送但没有收到响应:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      message: '后端服务可能未运行或网络连接问题',
+      detail: error.message
+    })
+    
+    // 在控制台中显示更多调试信息
+    console.log('[调试] 如果您正在开发环境，请确保后端服务正在运行')
+    console.log('[调试] 后端服务端口: 8000，前端代理配置在 vite.config.js 中')
+    console.log('[调试] 如需临时使用模拟数据，可在调试工具中启用模拟数据模式')
   } else {
     message.error(error.message || '未知错误')
-    console.error('请求错误:', error.message)
+    console.error('[请求错误]:', {
+      message: error.message,
+      config: error.config
+    })
   }
   
   return Promise.reject(error)

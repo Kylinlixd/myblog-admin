@@ -14,7 +14,7 @@ const isDevelopment = () => {
  */
 const shouldUseMockData = () => {
   const useMockData = localStorage.getItem('useMockData') === 'true'
-  return isDevelopment() || useMockData
+  return useMockData
 }
 
 /**
@@ -60,7 +60,7 @@ const getMockUserInfo = (username = 'admin', role = 'admin') => {
 export function login(data) {
   // 开发环境下，模拟登录响应
   if (shouldUseMockData()) {
-    console.log('[开发环境] 使用模拟登录数据')
+    console.log('[模拟数据] 使用模拟登录数据')
     
     // admin/admin 或 test/test 均可登录成功
     if ((data.username === 'admin' && data.password === 'admin') || 
@@ -100,15 +100,8 @@ export function login(data) {
   // 使用 API 工具类发送登录请求
   return api.admin.post('/api/auth/login/', data)
     .catch(error => {
-      // 如果API请求失败，检查是否应该回退到模拟数据
-      if (isDevelopment() && error.message && error.message.includes('网络错误')) {
-        console.warn('[API错误] 登录请求失败，回退到模拟数据模式')
-        // 自动开启模拟数据模式
-        localStorage.setItem('useMockData', 'true')
-        // 重新调用自身，这次会使用模拟数据
-        return login(data)
-      }
-      
+      // 不自动回退到模拟数据，直接抛出错误
+      console.error('[API错误] 登录请求失败:', error)
       throw error
     })
 }
@@ -124,7 +117,7 @@ export function login(data) {
 export function register(data) {
   // 开发环境下，模拟注册
   if (shouldUseMockData()) {
-    console.log('[开发环境] 使用模拟注册数据')
+    console.log('[模拟数据] 使用模拟注册数据')
     
     const userInfo = {
       id: 100,
@@ -149,15 +142,8 @@ export function register(data) {
   
   return api.admin.post('/api/auth/register', data)
     .catch(error => {
-      // 如果API请求失败，检查是否应该回退到模拟数据
-      if (isDevelopment() && error.message && error.message.includes('网络错误')) {
-        console.warn('[API错误] 注册请求失败，回退到模拟数据模式')
-        // 自动开启模拟数据模式
-        localStorage.setItem('useMockData', 'true')
-        // 重新调用自身，这次会使用模拟数据
-        return register(data)
-      }
-      
+      // 不自动回退到模拟数据，直接抛出错误
+      console.error('[API错误] 注册请求失败:', error)
       throw error
     })
 }
@@ -169,7 +155,7 @@ export function register(data) {
 export function getUserInfo() {
   // 开发环境下，使用本地存储的用户信息
   if (shouldUseMockData()) {
-    console.log('[开发环境] 使用本地存储的用户信息')
+    console.log('[模拟数据] 使用本地存储的用户信息')
     
     // 从localStorage获取用户信息
     const userInfoStr = localStorage.getItem('userInfo')
@@ -213,15 +199,8 @@ export function getUserInfo() {
   
   return api.admin.get('/api/auth/info/')
     .catch(error => {
-      // 如果API请求失败，检查是否应该回退到模拟数据
-      if (isDevelopment() && error.message && error.message.includes('网络错误')) {
-        console.warn('[API错误] 获取用户信息失败，回退到模拟数据模式')
-        // 自动开启模拟数据模式
-        localStorage.setItem('useMockData', 'true')
-        // 重新调用自身，这次会使用模拟数据
-        return getUserInfo()
-      }
-      
+      // 不自动回退到模拟数据，直接抛出错误
+      console.error('[API错误] 获取用户信息失败:', error)
       throw error
     })
 }
@@ -236,7 +215,7 @@ export function getUserInfo() {
 export function changePassword(data) {
   // 开发环境下，模拟密码修改
   if (shouldUseMockData()) {
-    console.log('[开发环境] 模拟密码修改')
+    console.log('[模拟数据] 模拟密码修改')
     
     // 简单验证
     if (!data.oldPassword || !data.newPassword) {
@@ -275,7 +254,7 @@ export function changePassword(data) {
 export function updateUserProfile(data) {
   // 开发环境下，模拟更新资料
   if (shouldUseMockData()) {
-    console.log('[开发环境] 模拟更新用户资料')
+    console.log('[模拟数据] 模拟更新用户资料')
     
     // 从localStorage获取用户信息
     const userInfoStr = localStorage.getItem('userInfo')
@@ -315,7 +294,7 @@ export function updateUserProfile(data) {
 export function refreshToken() {
   // 开发环境下，模拟刷新token
   if (shouldUseMockData()) {
-    console.log('[开发环境] 模拟刷新token')
+    console.log('[模拟数据] 模拟刷新token')
     
     const token = generateTestToken()
     localStorage.setItem('token', token)
@@ -341,7 +320,7 @@ export function logout() {
   
   // 如果是模拟数据模式，直接返回成功
   if (shouldUseMockData()) {
-    console.log('[开发环境] 模拟退出登录')
+    console.log('[模拟数据] 模拟退出登录')
     
     return Promise.resolve({
       code: 200,
@@ -369,7 +348,7 @@ export function logout() {
  */
 export function toggleMockDataMode(enabled) {
   localStorage.setItem('useMockData', enabled ? 'true' : 'false')
-  console.log(`[开发模式] ${enabled ? '启用' : '禁用'}模拟数据模式`)
+  console.log(`[数据模式] ${enabled ? '启用' : '禁用'}模拟数据模式`)
   
   // 如果禁用模拟数据且没有真实登录，清空登录状态
   if (!enabled && isDevelopment()) {
