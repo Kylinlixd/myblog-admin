@@ -5,6 +5,7 @@
 
 import request from './request'
 import { message } from 'ant-design-vue'
+import axios from 'axios'
 
 // API 前缀配置
 const apiPrefix = {
@@ -32,6 +33,40 @@ const logApiCall = (module, method, url, params) => {
 // 错误处理
 const handleApiError = (error, showError = true) => {
   console.error('[API 错误]', error)
+  
+  // 如果是令牌无效错误，尝试刷新令牌
+  if (error.response && 
+      error.response.status === 401 && 
+      error.response.data &&
+      (error.response.data.code === 'token_not_valid' || 
+       error.response.data.detail?.includes('令牌无效') ||
+       error.response.data.detail?.includes('token_not_valid'))) {
+    
+    console.log('[认证] 检测到令牌无效，尝试刷新令牌');
+    return refreshToken().then(() => {
+      // 重新获取新令牌
+      const newToken = localStorage.getItem('token');
+      // 更新原始请求的令牌
+      if (error.config) {
+        if (newToken) {
+          error.config.headers.Authorization = newToken.startsWith('Bearer ') 
+            ? newToken 
+            : `Bearer ${newToken}`;
+        }
+        // 重试原始请求
+        return request({
+          ...error.config,
+          baseURL: '' // 避免重复添加baseURL
+        });
+      }
+      return Promise.reject(error);
+    }).catch(refreshError => {
+      console.error('[认证] 令牌刷新失败:', refreshError);
+      // 跳转到登录页面
+      message.error('登录已过期，请重新登录');
+      return Promise.reject(error);
+    });
+  }
   
   // 如果不显示错误提示，直接返回错误
   if (!showError) {
@@ -289,6 +324,51 @@ const formatRequestParams = (params) => {
 const formatRequestData = (data) => {
   // 针对特定后端需求格式化数据
   return data;
+}
+
+/**
+ * 刷新令牌
+ * @returns {Promise} - 刷新结果
+ */
+const refreshToken = () => {
+  console.log('[认证] 开始刷新令牌');
+  
+  // 获取刷新令牌
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    console.error('[认证] 无刷新令牌，无法刷新');
+    return Promise.reject(new Error('无刷新令牌'));
+  }
+  
+  // 准备刷新令牌的请求
+  const refreshUrl = '/api/token/refresh/';
+  const refreshData = { refresh: refreshToken };
+  
+  // 发送刷新请求
+  return axios.post(refreshUrl, refreshData, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    if (response.data && response.data.access) {
+      // 保存新的访问令牌
+      localStorage.setItem('token', response.data.access);
+      console.log('[认证] 令牌刷新成功');
+      return Promise.resolve();
+    } else {
+      console.error('[认证] 刷新响应格式异常:', response.data);
+      return Promise.reject(new Error('令牌刷新响应格式异常'));
+    }
+  })
+  .catch(error => {
+    console.error('[认证] 刷新请求失败:', error);
+    // 清除所有令牌，强制重新登录
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    return Promise.reject(error);
+  });
 }
 
 // 创建预定义的 API 模块

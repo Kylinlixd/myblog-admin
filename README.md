@@ -466,3 +466,29 @@
 **如何切换模拟数据模式：**
 1. 在调试页面中使用"模拟数据切换"按钮
 2. 或者手动修改localStorage中的`useMockData`值 
+
+### 2. JWT令牌无效问题
+
+**问题描述：**
+使用JWT令牌访问后端API时，收到"令牌对任何类型的令牌无效"的错误，错误代码为"token_not_valid"。
+
+**错误信息：**
+```
+获取最近动态失败: detail: 此令牌对任何类型的令牌无效；code: token_not_valid；messages: {'token_class': ErrorDetail(string='AccessToken', code='token_not_valid'), 'token_type': ErrorDetail(string='access', code='token_not_valid'), 'message': ErrorDetail(string='Token is invalid', code='token_not_valid')}
+```
+
+**解决方案：**
+1. 增强了令牌处理逻辑，确保正确添加Bearer前缀
+2. 实现了令牌刷新机制，自动处理过期令牌
+3. 添加了令牌调试工具，帮助诊断JWT相关问题
+4. 在调试页面中提供了令牌检查、解码和刷新功能
+
+**使用说明：**
+1. 遇到令牌问题时，可以在调试页面中检查令牌状态
+2. 如果令牌已过期，可以使用刷新功能获取新令牌
+3. 如果刷新失败，可以清除令牌并重新登录
+
+**技术实现：**
+- 增加了令牌格式检查和标准化处理
+- 实现了基于refreshToken的令牌刷新机制
+- 增强了401错误处理流程 

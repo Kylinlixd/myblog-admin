@@ -52,9 +52,11 @@ onBeforeMount(() => {
   // 初始页面加载时显示加载状态
   appStore.startLoading('正在初始化应用...')
   
-  // 临时解决方案：由于后端接口返回500错误，默认启用模拟数据模式
-  localStorage.setItem('useMockData', 'true')
-  console.log('[App] 临时解决方案：由于后端接口问题，已默认启用模拟数据模式')
+  // 让用户选择是否使用模拟数据，而不是强制启用
+  if (localStorage.getItem('useMockData') === null) {
+    localStorage.setItem('useMockData', 'false')
+    console.log('[App] 已设置默认不使用模拟数据')
+  }
   
   // 不在这里注册路由守卫，避免和router/index.js中的守卫重复
   

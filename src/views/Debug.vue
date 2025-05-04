@@ -74,8 +74,34 @@
         </div>
         <div class="info-item">
           <div class="info-label">数据模式:</div>
-          <div class="info-value">{{ mockMode ? '使用模拟数据' : '使用真实API' }}</div>
+          <div :class="['info-value', mockMode ? 'warning' : 'success']">
+            <span v-if="mockMode">
+              <a-tag color="orange">模拟数据</a-tag> 使用前端模拟数据
+            </span>
+            <span v-else>
+              <a-tag color="green">真实API</a-tag> 连接后端API
+            </span>
+          </div>
         </div>
+      </div>
+      
+      <div class="mode-monitor">
+        <a-alert v-if="mockMode" type="warning" show-icon>
+          <template #message>
+            <span>当前使用模拟数据模式</span>
+          </template>
+          <template #description>
+            所有API请求都使用前端模拟数据，不会发送到后端。修改的数据仅保存在浏览器本地存储中。
+          </template>
+        </a-alert>
+        <a-alert v-else type="info" show-icon>
+          <template #message>
+            <span>当前使用真实API模式</span>
+          </template>
+          <template #description>
+            所有API请求都发送到后端服务。如果遇到认证问题，请检查令牌状态或切换到模拟数据模式。
+          </template>
+        </a-alert>
       </div>
     </div>
     
@@ -268,6 +294,69 @@
         </div>
       </div>
     </div>
+    
+    <!-- 添加令牌调试工具 -->
+    <div class="debug-section">
+      <h2>令牌调试</h2>
+      <div class="token-container">
+        <div class="token-status">
+          <div class="status-item">
+            <div class="status-label">认证令牌:</div>
+            <div :class="['status-value', tokenStatus.hasToken ? 'success' : 'error']">
+              {{ tokenStatus.hasToken ? '已存在' : '未找到' }}
+            </div>
+            <a-button size="small" @click="checkToken">
+              检查令牌
+            </a-button>
+            <a-button size="small" type="primary" @click="showTokenModal" :disabled="!tokenStatus.hasToken">
+              查看令牌
+            </a-button>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-label">刷新令牌:</div>
+            <div :class="['status-value', tokenStatus.hasRefreshToken ? 'success' : 'error']">
+              {{ tokenStatus.hasRefreshToken ? '已存在' : '未找到' }}
+            </div>
+          </div>
+          
+          <div class="status-item">
+            <div class="status-label">令牌有效期:</div>
+            <div :class="['status-value', tokenStatus.isExpired ? 'error' : (tokenStatus.hasToken ? 'success' : 'warning')]">
+              {{ tokenStatus.expiryText }}
+            </div>
+          </div>
+        </div>
+        
+        <div class="token-actions">
+          <a-button type="primary" @click="refreshToken" :disabled="!tokenStatus.hasRefreshToken">
+            刷新令牌
+          </a-button>
+          <a-button danger @click="clearTokens">
+            清除所有令牌
+          </a-button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 令牌查看模态窗 -->
+    <a-modal v-model:visible="tokenModal.visible" title="令牌详情" width="700px">
+      <div class="token-details">
+        <h3>访问令牌</h3>
+        <pre class="token-data">{{ tokenModal.accessToken }}</pre>
+        
+        <h3>解码令牌内容</h3>
+        <pre class="token-data">{{ tokenModal.decodedToken }}</pre>
+        
+        <h3>刷新令牌</h3>
+        <pre class="token-data">{{ tokenModal.refreshToken || '未找到刷新令牌' }}</pre>
+      </div>
+      
+      <template #footer>
+        <a-button @click="tokenModal.visible = false">关闭</a-button>
+        <a-button type="primary" @click="copyToken">复制访问令牌</a-button>
+      </template>
+    </a-modal>
   </div>
 </template>
 
@@ -362,6 +451,22 @@ const httpTest = reactive({
   headersDiff: []
 })
 
+// 令牌状态
+const tokenStatus = reactive({
+  hasToken: false,
+  hasRefreshToken: false,
+  isExpired: false,
+  expiryText: '未到期'
+})
+
+// 令牌查看模态窗
+const tokenModal = reactive({
+  visible: false,
+  accessToken: '',
+  decodedToken: '',
+  refreshToken: ''
+})
+
 // 测试与后端API的连接
 const testApiConnection = async () => {
   apiStatus.loading = true
@@ -401,6 +506,18 @@ const toggleMockMode = async (enabled) => {
     await toggleMockDataMode(enabled)
     message.success(`已${enabled ? '启用模拟数据模式' : '切换为真实API模式'}`)
     console.log(`[数据模式] ${enabled ? '已启用模拟数据' : '已切换为真实API'}`)
+    
+    // 确保localStorage设置正确
+    localStorage.setItem('useMockData', enabled ? 'true' : 'false')
+    
+    // 更新状态
+    mockMode.value = enabled
+    
+    // 需要重新加载页面以应用更改
+    message.info('正在重新加载页面以应用更改...')
+    setTimeout(() => {
+      window.location.reload()
+    }, 1000)
   } catch (error) {
     console.error('切换模拟数据模式失败:', error)
     message.error('切换数据模式失败')
@@ -819,11 +936,175 @@ const testHttpResponse = async () => {
   }
 }
 
+// 检查令牌
+const checkToken = async () => {
+  tokenStatus.hasToken = !!localStorage.getItem('token');
+  tokenStatus.hasRefreshToken = !!localStorage.getItem('refreshToken');
+  
+  // 检查令牌有效期
+  const token = localStorage.getItem('token');
+  if (token) {
+    try {
+      const payload = decodeJwt(token);
+      if (payload && payload.exp) {
+        const expiry = new Date(payload.exp * 1000);
+        const now = new Date();
+        const diff = expiry - now;
+        
+        // 检查是否过期
+        tokenStatus.isExpired = diff <= 0;
+        
+        if (tokenStatus.isExpired) {
+          tokenStatus.expiryText = '已过期';
+        } else {
+          // 计算剩余时间
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          if (days > 0) {
+            tokenStatus.expiryText = `${days}天${hours}小时后过期`;
+          } else if (hours > 0) {
+            tokenStatus.expiryText = `${hours}小时${minutes}分钟后过期`;
+          } else {
+            tokenStatus.expiryText = `${minutes}分钟后过期`;
+          }
+        }
+      } else {
+        tokenStatus.expiryText = '无法解析过期时间';
+      }
+    } catch (e) {
+      console.error('令牌解析错误:', e);
+      tokenStatus.expiryText = '令牌格式错误';
+    }
+  } else {
+    tokenStatus.expiryText = '无令牌';
+  }
+}
+
+// 显示令牌模态窗
+const showTokenModal = () => {
+  tokenModal.visible = true;
+  const token = localStorage.getItem('token') || '';
+  tokenModal.accessToken = token;
+  
+  try {
+    // 解码JWT
+    const payload = decodeJwt(token);
+    tokenModal.decodedToken = JSON.stringify(payload, null, 2);
+  } catch (e) {
+    console.error('令牌解析错误:', e);
+    tokenModal.decodedToken = '无法解析令牌：格式错误';
+  }
+  
+  tokenModal.refreshToken = localStorage.getItem('refreshToken') || '';
+}
+
+// 解析JWT令牌
+const decodeJwt = (token) => {
+  if (!token) return null;
+  
+  // 移除可能的Bearer前缀
+  if (token.startsWith('Bearer ')) {
+    token = token.substring(7);
+  }
+  
+  // 拆分JWT的三个部分
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    throw new Error('无效的JWT格式');
+  }
+  
+  // 解码有效载荷部分
+  try {
+    const payload = parts[1];
+    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    return JSON.parse(decoded);
+  } catch (e) {
+    console.error('JWT解码错误:', e);
+    throw new Error('JWT解码失败');
+  }
+}
+
+// 复制令牌
+const copyToken = () => {
+  try {
+    const el = document.createElement('textarea');
+    el.value = tokenModal.accessToken;
+    el.setAttribute('readonly', '');
+    el.style.position = 'absolute';
+    el.style.left = '-9999px';
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    message.success('令牌已复制到剪贴板');
+  } catch (e) {
+    console.error('复制失败:', e);
+    message.error('复制失败');
+  }
+}
+
+// 刷新令牌
+const refreshToken = async () => {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    message.error('没有刷新令牌');
+    return;
+  }
+  
+  message.loading('正在刷新令牌...', 0);
+  
+  try {
+    const response = await axios.post('/api/token/refresh/', { refresh: refreshToken }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (response.data && response.data.access) {
+      // 保存新的访问令牌
+      localStorage.setItem('token', response.data.access);
+      message.success('令牌刷新成功');
+      
+      // 更新令牌状态
+      checkToken();
+    } else {
+      message.error('刷新响应格式异常');
+    }
+  } catch (error) {
+    console.error('刷新令牌失败:', error);
+    message.error('刷新令牌失败: ' + (error.response?.data?.detail || error.message));
+    
+    // 如果刷新失败，可能需要清除令牌
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      checkToken();
+    }
+  } finally {
+    message.destroy();
+  }
+}
+
+// 清除所有令牌
+const clearTokens = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  tokenStatus.hasToken = false;
+  tokenStatus.hasRefreshToken = false;
+  tokenStatus.isExpired = false;
+  tokenStatus.expiryText = '未到期';
+  message.success('所有令牌已清除');
+}
+
 // 组件挂载时运行基本检查
 onMounted(() => {
   testApiConnection()
   checkDns()
   checkApiRoot()
+  checkToken()
 })
 </script>
 
@@ -1071,5 +1352,40 @@ h3 {
   border-radius: 4px;
   background-color: #fffbe6;
   border: 1px solid #ffe58f;
+}
+
+.token-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.token-status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.token-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.token-details {
+  padding: 16px;
+}
+
+.token-data {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  overflow: auto;
+  max-height: 300px;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.mode-monitor {
+  margin-top: 16px;
 }
 </style> 

@@ -13,8 +13,36 @@ const isDevelopment = () => {
  * @returns {boolean}
  */
 const shouldUseMockData = () => {
-  const useMockData = localStorage.getItem('useMockData') === 'true'
-  return useMockData
+  // 强制确保localStorage中的值是正确的布尔字符串
+  const currentSetting = localStorage.getItem('useMockData')
+  const useMock = currentSetting === 'true'
+  
+  // 如果设置有问题，重置为false
+  if (currentSetting !== 'true' && currentSetting !== 'false') {
+    console.warn('[模拟数据] 检测到不正确的模拟数据设置，已重置为使用真实API')
+    localStorage.setItem('useMockData', 'false')
+    return false
+  }
+  
+  if (process.env.NODE_ENV === 'development') {
+    // 记录当前模式用于调试
+    if (useMock) {
+      console.log('[模拟数据] 已启用模拟数据模式')
+    } else {
+      console.log('[模拟数据] 使用真实API模式')
+      
+      // 检查令牌状态并给出提示，但不修改用户设置
+      const hasValidToken = localStorage.getItem('token') != null
+      if (!hasValidToken) {
+        console.warn('[认证] 未检测到有效令牌，使用真实API可能会遇到认证问题')
+      }
+    }
+    
+    return useMock
+  }
+  
+  // 生产环境始终使用真实数据
+  return false
 }
 
 /**
@@ -99,6 +127,29 @@ export function login(data) {
   
   // 使用 API 工具类发送登录请求
   return api.admin.post('/api/auth/login/', data)
+    .then(response => {
+      if (response?.data) {
+        const userData = response.data;
+        
+        // 保存令牌
+        if (userData.token) {
+          localStorage.setItem('token', userData.token);
+        }
+        
+        // 保存刷新令牌（如果存在）
+        if (userData.refresh_token) {
+          localStorage.setItem('refreshToken', userData.refresh_token);
+        }
+        
+        // 保存用户信息
+        if (userData.userInfo) {
+          localStorage.setItem('userInfo', JSON.stringify(userData.userInfo));
+        }
+        
+        console.log('[登录] 成功登录，已保存用户凭据');
+      }
+      return response;
+    })
     .catch(error => {
       // 不自动回退到模拟数据，直接抛出错误
       console.error('[API错误] 登录请求失败:', error)
@@ -306,7 +357,37 @@ export function refreshToken() {
     })
   }
   
-  return api.admin.post('/api/token/refresh/')
+  // 获取刷新令牌
+  const refreshTokenValue = localStorage.getItem('refreshToken')
+  if (!refreshTokenValue) {
+    console.error('[认证] 无刷新令牌，无法刷新')
+    return Promise.reject(new Error('无刷新令牌'))
+  }
+  
+  return api.admin.post('/api/token/refresh/', { refresh: refreshTokenValue })
+    .then(response => {
+      if (response.data && response.data.access) {
+        // 更新访问令牌
+        localStorage.setItem('token', `Bearer ${response.data.access}`)
+        console.log('[认证] 令牌刷新成功')
+        
+        return {
+          code: 200,
+          data: { token: response.data.access },
+          message: 'token刷新成功'
+        }
+      } else {
+        throw new Error('令牌刷新响应格式异常')
+      }
+    })
+    .catch(error => {
+      console.error('[认证] 刷新令牌失败:', error)
+      // 清除令牌
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+      
+      throw error
+    })
 }
 
 /**
@@ -347,15 +428,19 @@ export function logout() {
  * @param {boolean} enabled - 是否启用模拟数据
  */
 export function toggleMockDataMode(enabled) {
+  // 保存模式设置
   localStorage.setItem('useMockData', enabled ? 'true' : 'false')
   console.log(`[数据模式] ${enabled ? '启用' : '禁用'}模拟数据模式`)
   
-  // 如果禁用模拟数据且没有真实登录，清空登录状态
-  if (!enabled && isDevelopment()) {
+  // 处理模拟数据的登录状态
+  if (!enabled) {
+    // 如果禁用模拟数据，清除所有模拟登录状态
     const token = localStorage.getItem('token')
     // 如果token是开发环境生成的，则清除
     if (token && token.startsWith('dev-token-')) {
+      console.log('[数据模式] 清除模拟登录状态')
       localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
       localStorage.removeItem('userInfo')
     }
   }

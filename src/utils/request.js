@@ -187,7 +187,13 @@ service.interceptors.request.use(
     // 获取token并添加到请求头
     const token = localStorage.getItem('token')
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      // 确保token格式正确，只添加Bearer前缀如果没有的话
+      if (token.startsWith('Bearer ')) {
+        config.headers.Authorization = token
+      } else {
+        config.headers.Authorization = `Bearer ${token}`
+      }
+      console.log('[Token] 使用认证令牌:', config.headers.Authorization)
     }
     
     // 记录请求信息
