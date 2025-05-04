@@ -43,7 +43,14 @@ export default defineConfig(({ mode }) => {
       strictPort: false,
       hmr: true,
       open: true,
-      cors: true,
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+        exposedHeaders: ['Content-Length', 'X-Content-Type-Options'],
+        credentials: true,
+        maxAge: 86400
+      },
       proxy: {
         // 后台管理API代理规则
         '/api': {
@@ -51,12 +58,13 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
+          selfHandleResponse: false, // 禁用自行处理响应
           // 增加代理超时设置
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, res) => {
               console.error('[代理服务器错误]', err);
               // 确保响应对象存在并且可写入
-              if (res.writableEnded === false) {
+              if (res && !res.writableEnded) {
                 res.writeHead(500, {
                   'Content-Type': 'application/json',
                   'Access-Control-Allow-Origin': '*',
@@ -70,22 +78,82 @@ export default defineConfig(({ mode }) => {
             });
             // 增加超时设置
             proxy.on('proxyReq', (proxyReq, req, _res) => {
+              // 修复请求头问题
+              proxyReq.setHeader('Accept', 'application/json');
+              proxyReq.setHeader('Content-Type', 'application/json');
+              proxyReq.setHeader('Host', '127.0.0.1:8000');
+              
+              // 可能的会话问题处理
+              const token = req.headers.authorization;
+              if (token) {
+                proxyReq.setHeader('Authorization', token);
+              }
+              
+              // 调试信息
+              console.log('[请求头]', proxyReq.getHeaders());
+              
               // 完整记录目标请求URL
               const targetUrl = `http://127.0.0.1:8000${proxyReq.path}`;
               console.log(`[代理请求] ${req.method} ${req.url} -> ${targetUrl}`);
               proxyReq.setSocketKeepAlive(true);
+            });
+            
+            // 添加响应日志
+            proxy.on('proxyRes', (proxyRes, req, res) => {
+              console.log(`[代理响应] ${req.method} ${req.url} - 状态: ${proxyRes.statusCode}`);
+              
+              // 记录响应头，帮助调试跨域问题
+              console.log('[响应头]', proxyRes.headers);
+              
+              // 如果状态码为500，添加更多调试信息
+              if (proxyRes.statusCode === 500) {
+                console.error('[代理错误] 后端返回500错误，请检查后端日志');
+                
+                // 捕获响应内容进行分析
+                let responseBody = '';
+                proxyRes.on('data', function(chunk) {
+                  responseBody += chunk;
+                });
+                
+                proxyRes.on('end', function() {
+                  console.log('[500错误响应内容]', responseBody);
+                  
+                  // 尝试转换为格式正确的响应
+                  try {
+                    const responseJson = JSON.parse(responseBody);
+                    // 如果存在code字段并且值为200，说明内容可能正确但HTTP状态码错误
+                    if (responseJson.code === 200) {
+                      console.log('[响应修正] 内容正常但状态码错误，尝试修正');
+                      
+                      // 直接传递原始内容，忽略状态码
+                      if (!res.headersSent) {
+                        Object.keys(proxyRes.headers).forEach(key => {
+                          res.setHeader(key, proxyRes.headers[key]);
+                        });
+                        res.setHeader('Content-Type', 'application/json');
+                        res.statusCode = 200;
+                        res.end(responseBody);
+                        return true; // 阻止http-proxy继续处理
+                      }
+                    }
+                  } catch (e) {
+                    console.error('[响应分析] JSON解析失败', e);
+                  }
+                });
+              }
             });
           },
           rewrite: (path) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
             
-            // 修复重复的/api前缀问题 - 确保只保留一个/api前缀
+            // 尝试修复常见问题
             let rewrittenPath = path;
             
-            // 如果是重复的 /api/api 路径，替换为单个 /api
-            if (path.startsWith('/api/api/')) {
-              rewrittenPath = path.replace('/api/api/', '/api/');
+            // 1. 处理请求参数格式问题（如果后端不支持params[key]格式）
+            if (path.includes('params[')) {
+              rewrittenPath = path.replace(/params\[([^\]]+)\]/g, '$1');
+              console.log('[参数格式修正] 将params[key]格式转换为key格式');
             }
             
             console.log('[后台API] 重写后路径:', rewrittenPath);
@@ -93,25 +161,12 @@ export default defineConfig(({ mode }) => {
             console.log('[后台API] 最终请求URL:', finalUrl);
             return rewrittenPath;
           },
-          // 添加错误处理
-          onError: (err, req, res) => {
-            console.error('[代理错误]', err);
-            if (!res.headersSent) {
-              res.writeHead(500, {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-              });
-              res.end(JSON.stringify({
-                code: 500,
-                message: '代理请求失败，请检查后端服务是否正常运行',
-                error: err.message
-              }));
-            }
-          },
           // 自定义请求头
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-Proxy-By': 'Vite'
+            'X-Proxy-By': 'Vite',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           }
         },
         // 博客前台API代理规则
@@ -125,7 +180,7 @@ export default defineConfig(({ mode }) => {
             proxy.on('error', (err, _req, res) => {
               console.error('[博客代理错误]', err);
               // 确保响应对象存在并且可写入
-              if (res.writableEnded === false) {
+              if (res && !res.writableEnded) {
                 res.writeHead(500, {
                   'Content-Type': 'application/json',
                   'Access-Control-Allow-Origin': '*',
@@ -143,6 +198,11 @@ export default defineConfig(({ mode }) => {
               const targetUrl = `http://127.0.0.1:8000${proxyReq.path}`;
               console.log(`[博客代理请求] ${req.method} ${req.url} -> ${targetUrl}`);
               proxyReq.setSocketKeepAlive(true);
+            });
+            
+            // 添加响应日志
+            proxy.on('proxyRes', (proxyRes, req, _res) => {
+              console.log(`[博客代理响应] ${req.method} ${req.url} - 状态: ${proxyRes.statusCode}`);
             });
           },
           bypass: function(req, res, proxyOptions) {

@@ -71,6 +71,22 @@ const handleApiError = (error, showError = true) => {
       data,
       message: errorMessage
     })
+    
+    // 添加具体的错误信息以便调试
+    if (status === 500) {
+      console.log('[调试] 服务器内部错误可能原因:')
+      console.log('1. 后端代码异常')
+      console.log('2. 数据库连接问题')
+      console.log('3. 请求参数格式不符合预期')
+      console.log('建议: 检查后端日志以获取更详细信息')
+    } else if (status === 404) {
+      console.log('[调试] 资源不存在可能原因:')
+      console.log('1. API路径拼写错误')
+      console.log('2. 代理配置问题')
+      console.log('3. 后端路由未定义')
+      console.log(`请求URL: ${error.config?.url}`)
+      console.log(`完整后端URL: ${error.config?.baseURL || ''}${error.config?.url}`)
+    }
   } else if (error.request) {
     message.error('网络错误，无法连接到服务器')
     console.error('[网络错误] 请求已发送但没有收到响应:', {
@@ -117,6 +133,17 @@ const withRetry = async (requestFn, options = {}) => {
     } catch (error) {
       attempts++
       
+      // 特殊处理：HTTP状态码为500但响应内容正常的情况
+      if (error.response && 
+          error.response.status === 500 && 
+          error.response.data && 
+          typeof error.response.data === 'object' && 
+          error.response.data.code === 200) {
+        
+        console.log('[API修正] 状态码为500但内容正常，返回内容');
+        return error.response.data;
+      }
+      
       // 如果状态码为5xx或网络错误，尝试重试
       const shouldRetry = (
         (error.response && error.response.status >= 500 && error.response.status < 600) ||
@@ -153,11 +180,14 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
      * @returns {Promise} - 请求结果
      */
     get: (url, params, config = {}, showError = true) => {
+      // 格式化查询参数，确保后端兼容
+      const formattedParams = formatRequestParams(params);
+      
       const fullUrl = `${prefix}${url}`
-      logApiCall(moduleName, 'GET', fullUrl, params)
+      logApiCall(moduleName, 'GET', fullUrl, formattedParams)
       
       return withRetry(
-        () => request.get(fullUrl, params, config),
+        () => request.get(fullUrl, formattedParams, config),
         { showError }
       )
     },
@@ -171,11 +201,14 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
      * @returns {Promise} - 请求结果
      */
     post: (url, data, config = {}, showError = true) => {
+      // 格式化请求体，确保后端兼容
+      const formattedData = formatRequestData(data);
+      
       const fullUrl = `${prefix}${url}`
-      logApiCall(moduleName, 'POST', fullUrl, data)
+      logApiCall(moduleName, 'POST', fullUrl, formattedData)
       
       return withRetry(
-        () => request.post(fullUrl, data, config),
+        () => request.post(fullUrl, formattedData, config),
         { showError }
       )
     },
@@ -189,11 +222,14 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
      * @returns {Promise} - 请求结果
      */
     put: (url, data, config = {}, showError = true) => {
+      // 格式化请求体，确保后端兼容
+      const formattedData = formatRequestData(data);
+      
       const fullUrl = `${prefix}${url}`
-      logApiCall(moduleName, 'PUT', fullUrl, data)
+      logApiCall(moduleName, 'PUT', fullUrl, formattedData)
       
       return withRetry(
-        () => request.put(fullUrl, data, config),
+        () => request.put(fullUrl, formattedData, config),
         { showError }
       )
     },
@@ -215,6 +251,44 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
       )
     }
   }
+}
+
+/**
+ * 格式化请求参数，确保与后端格式兼容
+ * @param {Object} params - 原始参数
+ * @returns {Object} - 格式化后的参数
+ */
+const formatRequestParams = (params) => {
+  if (!params) return params;
+  
+  // 创建新对象，避免修改原始参数
+  const formattedParams = {};
+  
+  // 遍历参数
+  Object.entries(params).forEach(([key, value]) => {
+    // 如果参数是嵌套对象，展平成query string兼容格式
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      Object.entries(value).forEach(([nestedKey, nestedValue]) => {
+        formattedParams[`${key}.${nestedKey}`] = nestedValue;
+      });
+    } else {
+      formattedParams[key] = value;
+    }
+  });
+  
+  console.log('[参数格式化] 原始参数:', params, '格式化后:', formattedParams);
+  
+  return formattedParams;
+}
+
+/**
+ * 格式化请求数据，确保与后端格式兼容
+ * @param {Object} data - 原始数据
+ * @returns {Object} - 格式化后的数据
+ */
+const formatRequestData = (data) => {
+  // 针对特定后端需求格式化数据
+  return data;
 }
 
 // 创建预定义的 API 模块

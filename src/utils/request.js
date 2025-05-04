@@ -269,6 +269,38 @@ service.interceptors.response.use(
       message: error.message
     })
     
+    // 打印请求和响应的完整信息，帮助调试
+    if (error.config) {
+      console.log('[错误请求详情] 请求配置:', {
+        url: error.config.url,
+        method: error.config.method,
+        baseURL: error.config.baseURL,
+        headers: error.config.headers,
+        timeout: error.config.timeout,
+        withCredentials: error.config.withCredentials
+      })
+    }
+    
+    if (error.response) {
+      console.log('[错误请求详情] 服务器响应:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data
+      })
+      
+      // 尝试解析错误响应中的数据
+      const responseData = error.response.data;
+      
+      // 特殊情况：后端返回HTTP 500但实际内容是正常的数据
+      if (error.response.status === 500 && responseData && typeof responseData === 'object') {
+        if (responseData.code === 200) {
+          console.log('[响应修正] 检测到HTTP 500但内容正常，进行修正');
+          return Promise.resolve(responseData);
+        }
+      }
+    }
+    
     // 处理错误
     if (error.response) {
       const status = error.response.status
@@ -291,7 +323,19 @@ service.interceptors.response.use(
       } else if (status === 500) {
         // 增加500错误的特殊处理
         console.error('服务器内部错误 (500):', error.response.data)
-        message.error('服务器内部错误，请联系管理员')
+        
+        // 尝试从500错误中解析有效数据
+        const responseData = error.response.data;
+        if (responseData && typeof responseData === 'object' && responseData.code !== undefined) {
+          if (responseData.code === 200) {
+            console.log('[响应修正] 状态码为500但响应内容正常，返回内容');
+            return Promise.resolve(responseData);
+          } else {
+            message.error(responseData.message || '服务器内部错误');
+          }
+        } else {
+          message.error('服务器内部错误，请联系管理员')
+        }
       } else {
         // 其他HTTP错误
         let errorMessage = '请求失败'

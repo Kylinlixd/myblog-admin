@@ -80,6 +80,39 @@
     </div>
     
     <div class="debug-section">
+      <h2>API代理对比测试</h2>
+      <p class="section-desc">
+        此工具可以对比直接请求后端和通过代理请求的结果差异，帮助排查代理配置问题。
+      </p>
+      
+      <div class="form-row">
+        <a-input v-model:value="compareTest.apiPath" placeholder="API路径 (例如: /api/stats/)" style="flex: 1" />
+        <a-button type="primary" @click="runProxyTest" :loading="compareTest.loading">对比测试</a-button>
+      </div>
+      
+      <div class="compare-results" v-if="compareTest.hasResults">
+        <div class="compare-item">
+          <h3>直接请求后端 <a-tag :color="compareTest.direct.success ? 'success' : 'error'">{{ compareTest.direct.status }}</a-tag></h3>
+          <div class="compare-url">URL: {{ compareTest.direct.url }}</div>
+          <pre class="result-data">{{ compareTest.direct.result }}</pre>
+        </div>
+        
+        <div class="compare-item">
+          <h3>通过代理请求 <a-tag :color="compareTest.proxy.success ? 'success' : 'error'">{{ compareTest.proxy.status }}</a-tag></h3>
+          <div class="compare-url">URL: {{ compareTest.proxy.url }}</div>
+          <pre class="result-data">{{ compareTest.proxy.result }}</pre>
+        </div>
+        
+        <div class="compare-analysis" v-if="compareTest.analysis">
+          <h3>分析结果</h3>
+          <div :class="['diagnostic-item', compareTest.analysisType]">
+            {{ compareTest.analysis }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="debug-section">
       <h2>API请求测试</h2>
       
       <div class="api-test-form">
@@ -152,6 +185,89 @@
         </div>
       </div>
     </div>
+    
+    <!-- 添加HTTP状态检测工具 -->
+    <div class="debug-section">
+      <h2>HTTP状态码与响应内容检测</h2>
+      <p class="section-desc">
+        用于检测后端返回的HTTP状态码与响应内容是否一致，解决状态码为500但内容正常的问题。
+      </p>
+      
+      <div class="form-row">
+        <a-input v-model:value="httpTest.url" placeholder="API路径 (例如: /api/stats/)" style="flex: 1" />
+        <a-button type="primary" @click="testHttpResponse" :loading="httpTest.loading">检测响应</a-button>
+      </div>
+      
+      <div class="result-container" v-if="httpTest.hasResult">
+        <h3>响应分析</h3>
+        <div class="http-analysis">
+          <div class="http-status">
+            <span class="label">HTTP状态码:</span>
+            <span :class="['value', httpTest.httpStatus < 400 ? 'success' : 'error']">
+              {{ httpTest.httpStatus }} {{ httpTest.httpStatusText }}
+            </span>
+          </div>
+          
+          <div class="content-status" v-if="httpTest.contentStatus">
+            <span class="label">响应内容状态:</span>
+            <span :class="['value', httpTest.contentStatus === 200 ? 'success' : 'error']">
+              {{ httpTest.contentStatus }} {{ httpTest.contentStatusText }}
+            </span>
+          </div>
+          
+          <div class="status-mismatch" v-if="httpTest.mismatch">
+            <a-alert 
+              type="warning" 
+              message="状态码与内容不一致" 
+              description="检测到HTTP状态码与响应内容中的code值不一致，这可能导致前端误判请求失败。"
+              show-icon
+            />
+          </div>
+          
+          <div class="headers-analysis">
+            <h4>请求头对比</h4>
+            <div class="headers-section">
+              <div class="headers-half">
+                <h5>直接请求请求头</h5>
+                <pre class="headers-data">{{ httpTest.directHeaders }}</pre>
+              </div>
+              <div class="headers-half">
+                <h5>代理请求请求头</h5>
+                <pre class="headers-data">{{ httpTest.proxyHeaders }}</pre>
+              </div>
+            </div>
+            <div class="headers-diff" v-if="httpTest.headersDiff.length > 0">
+              <h5>请求头差异</h5>
+              <div v-for="(diff, index) in httpTest.headersDiff" :key="index"
+                   class="diff-item">
+                {{ diff }}
+              </div>
+            </div>
+          </div>
+          
+          <h4>响应内容</h4>
+          <pre class="result-data">{{ httpTest.responseData }}</pre>
+          
+          <div class="action-section" v-if="httpTest.mismatch || httpTest.headersDiff.length > 0">
+            <h4>解决方案</h4>
+            <div v-if="httpTest.headersDiff.length > 0">
+              <p><strong>请求头问题：</strong>可能是由于请求头不一致导致的。后端可能需要处理以下请求头差异。</p>
+              <ul>
+                <li v-for="(diff, index) in httpTest.headersDiff" :key="`solution-${index}`">
+                  {{ diff }}
+                </li>
+              </ul>
+            </div>
+            <p v-if="httpTest.mismatch">
+              <strong>状态码问题：</strong>需要后端确保HTTP状态码与响应内容中的code一致。
+            </p>
+            <p>
+              <strong>临时解决方案：</strong>已默认启用模拟数据模式，以便在后端问题解决前能够进行开发。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -205,9 +321,46 @@ const testRequest = reactive({
   loading: false
 })
 
+// 代理对比测试
+const compareTest = reactive({
+  apiPath: '/api/stats/',
+  loading: false,
+  hasResults: false,
+  direct: {
+    url: '',
+    result: '',
+    status: '',
+    success: false
+  },
+  proxy: {
+    url: '',
+    result: '',
+    status: '',
+    success: false
+  },
+  analysis: '',
+  analysisType: 'info'
+})
+
 // 诊断结果
 const diagnosticResults = ref([])
 const diagnosticRunning = ref(false)
+
+// HTTP状态检测
+const httpTest = reactive({
+  url: '',
+  loading: false,
+  hasResult: false,
+  httpStatus: 0,
+  httpStatusText: '',
+  contentStatus: 0,
+  contentStatusText: '',
+  responseData: '',
+  mismatch: false,
+  directHeaders: '',
+  proxyHeaders: '',
+  headersDiff: []
+})
 
 // 测试与后端API的连接
 const testApiConnection = async () => {
@@ -454,6 +607,218 @@ const runFullDiagnostic = async () => {
   diagnosticRunning.value = false
 }
 
+// 运行代理对比测试
+const runProxyTest = async () => {
+  compareTest.loading = true;
+  compareTest.hasResults = false;
+  compareTest.analysis = '';
+  
+  try {
+    // 设置请求路径
+    const apiPath = compareTest.apiPath.trim();
+    if (!apiPath) {
+      message.error('请输入API路径');
+      compareTest.loading = false;
+      return;
+    }
+    
+    // 确保路径正确
+    const directPath = apiPath.startsWith('/api/') 
+      ? apiPath.substring(4) // 移除/api前缀以便直接请求后端
+      : apiPath;
+    
+    // 构建URL
+    const directUrl = `http://127.0.0.1:8000/api${directPath.startsWith('/') ? directPath : '/' + directPath}`;
+    const proxyUrl = apiPath.startsWith('/') ? apiPath : '/' + apiPath;
+    
+    compareTest.direct.url = directUrl;
+    compareTest.proxy.url = proxyUrl;
+    
+    // 并行请求两个端点
+    const [directResponse, proxyResponse] = await Promise.allSettled([
+      axios.get(directUrl, { timeout: 5000 }),
+      axios.get(proxyUrl, { timeout: 5000 })
+    ]);
+    
+    // 处理直接请求结果
+    if (directResponse.status === 'fulfilled') {
+      compareTest.direct.success = true;
+      compareTest.direct.status = `${directResponse.value.status} OK`;
+      compareTest.direct.result = JSON.stringify(directResponse.value.data, null, 2);
+    } else {
+      compareTest.direct.success = false;
+      compareTest.direct.status = directResponse.reason.response 
+        ? `${directResponse.reason.response.status} ${directResponse.reason.response.statusText}`
+        : '请求失败';
+      compareTest.direct.result = directResponse.reason.response 
+        ? JSON.stringify(directResponse.reason.response.data, null, 2)
+        : directResponse.reason.message;
+    }
+    
+    // 处理代理请求结果
+    if (proxyResponse.status === 'fulfilled') {
+      compareTest.proxy.success = true;
+      compareTest.proxy.status = `${proxyResponse.value.status} OK`;
+      compareTest.proxy.result = JSON.stringify(proxyResponse.value.data, null, 2);
+    } else {
+      compareTest.proxy.success = false;
+      compareTest.proxy.status = proxyResponse.reason.response 
+        ? `${proxyResponse.reason.response.status} ${proxyResponse.reason.response.statusText}`
+        : '请求失败';
+      compareTest.proxy.result = proxyResponse.reason.response 
+        ? JSON.stringify(proxyResponse.reason.response.data, null, 2)
+        : proxyResponse.reason.message;
+    }
+    
+    // 分析结果
+    analyzeResults();
+    
+  } catch (error) {
+    console.error('执行代理对比测试时出错:', error);
+    message.error('测试执行失败');
+  } finally {
+    compareTest.loading = false;
+    compareTest.hasResults = true;
+  }
+};
+
+// 分析代理测试结果
+const analyzeResults = () => {
+  if (compareTest.direct.success && compareTest.proxy.success) {
+    compareTest.analysis = '两种方式请求都成功，代理配置正常。';
+    compareTest.analysisType = 'success';
+  } else if (compareTest.direct.success && !compareTest.proxy.success) {
+    compareTest.analysis = '直接请求成功但代理请求失败，这表明代理配置有问题。检查vite.config.js中的代理设置。';
+    compareTest.analysisType = 'error';
+  } else if (!compareTest.direct.success && compareTest.proxy.success) {
+    compareTest.analysis = '奇怪的情况：代理请求成功但直接请求失败。这可能是CORS问题或直接请求URL构建不正确。';
+    compareTest.analysisType = 'warning';
+  } else {
+    compareTest.analysis = '两种方式请求都失败。请确认后端服务正在运行，并检查API路径是否正确。';
+    compareTest.analysisType = 'error';
+  }
+};
+
+// 检测HTTP状态码与响应内容
+const testHttpResponse = async () => {
+  httpTest.loading = true
+  httpTest.hasResult = false
+  httpTest.mismatch = false
+  httpTest.headersDiff = []
+  
+  try {
+    // 构建请求URL
+    let testUrl = httpTest.url.trim();
+    // 确保以/开头
+    if (!testUrl.startsWith('/')) {
+      testUrl = '/' + testUrl;
+    }
+    
+    // 准备两种请求方式
+    const directUrl = `http://127.0.0.1:8000${testUrl}`;
+    const proxyUrl = testUrl;
+    
+    // 构建请求选项
+    const token = localStorage.getItem('token');
+    const directOptions = { 
+      timeout: 5000,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    const proxyOptions = { 
+      timeout: 5000,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    // 添加授权令牌
+    if (token) {
+      directOptions.headers.Authorization = `Bearer ${token}`;
+      proxyOptions.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // 进行请求
+    let directResponse, proxyResponse;
+    try {
+      directResponse = await axios.get(directUrl, directOptions);
+      httpTest.directHeaders = JSON.stringify(directOptions.headers, null, 2);
+    } catch (error) {
+      httpTest.directHeaders = JSON.stringify(error.config?.headers || directOptions.headers, null, 2);
+    }
+    
+    try {
+      proxyResponse = await axios.get(proxyUrl, proxyOptions);
+      httpTest.proxyHeaders = JSON.stringify(proxyOptions.headers, null, 2);
+    } catch (error) {
+      // 记录请求头信息
+      httpTest.proxyHeaders = JSON.stringify(error.config?.headers || proxyOptions.headers, null, 2);
+      
+      // 处理正常响应
+      if (error.response) {
+        proxyResponse = error.response;
+      }
+    }
+    
+    // 分析请求头差异
+    const directHeadersObj = directOptions.headers;
+    const proxyHeadersObj = proxyOptions.headers;
+    const allHeaderKeys = [...new Set([...Object.keys(directHeadersObj), ...Object.keys(proxyHeadersObj)])];
+    
+    allHeaderKeys.forEach(key => {
+      const directValue = directHeadersObj[key];
+      const proxyValue = proxyHeadersObj[key];
+      
+      if (directValue !== proxyValue) {
+        if (!directValue) {
+          httpTest.headersDiff.push(`${key}: 在直接请求中不存在，代理请求值为 "${proxyValue}"`);
+        } else if (!proxyValue) {
+          httpTest.headersDiff.push(`${key}: 在代理请求中不存在，直接请求值为 "${directValue}"`);
+        } else {
+          httpTest.headersDiff.push(`${key}: 直接请求值为 "${directValue}"，代理请求值为 "${proxyValue}"`);
+        }
+      }
+    });
+    
+    // 如果有代理响应，分析状态码和内容
+    if (proxyResponse) {
+      httpTest.httpStatus = proxyResponse.status;
+      httpTest.httpStatusText = proxyResponse.statusText;
+      
+      if (proxyResponse.data && typeof proxyResponse.data === 'object' && proxyResponse.data.code !== undefined) {
+        httpTest.contentStatus = proxyResponse.data.code;
+        httpTest.contentStatusText = proxyResponse.data.message || '';
+        
+        if (httpTest.httpStatus !== httpTest.contentStatus) {
+          httpTest.mismatch = true;
+        }
+      }
+      
+      httpTest.responseData = JSON.stringify(proxyResponse.data, null, 2);
+    }
+    
+    httpTest.hasResult = true;
+  } catch (error) {
+    message.error('测试过程中出错: ' + (error.message || '未知错误'));
+    httpTest.hasResult = false;
+    httpTest.httpStatus = 0;
+    httpTest.httpStatusText = '';
+    httpTest.contentStatus = 0;
+    httpTest.contentStatusText = '';
+    httpTest.responseData = '';
+    httpTest.mismatch = false;
+    httpTest.directHeaders = '';
+    httpTest.proxyHeaders = '';
+    httpTest.headersDiff = [];
+  } finally {
+    httpTest.loading = false;
+  }
+}
+
 // 组件挂载时运行基本检查
 onMounted(() => {
   testApiConnection()
@@ -482,6 +847,12 @@ h1 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.section-desc {
+  color: #666;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
 .notice {
   margin-top: 16px;
   width: 100%;
@@ -492,6 +863,13 @@ h2 {
   margin-bottom: 16px;
   font-size: 18px;
   color: #333;
+}
+
+h3 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #444;
 }
 
 .status-container, .network-status {
@@ -594,5 +972,104 @@ h2 {
 .diagnostic-item.error {
   background-color: #fff2f0;
   border: 1px solid #ffccc7;
+}
+
+.diagnostic-item.info {
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+}
+
+.compare-results {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.compare-item {
+  background-color: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.compare-url {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.compare-analysis {
+  grid-column: span 2;
+  margin-top: 8px;
+}
+
+.http-analysis {
+  margin-top: 20px;
+}
+
+.http-status {
+  margin-bottom: 8px;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.value {
+  margin-left: 8px;
+}
+
+.value.success {
+  color: #52c41a;
+}
+
+.value.error {
+  color: #f5222d;
+}
+
+.status-mismatch {
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.action-section {
+  margin-top: 16px;
+}
+
+.headers-analysis {
+  margin-top: 20px;
+}
+
+.headers-section {
+  display: flex;
+  gap: 16px;
+}
+
+.headers-half {
+  flex: 1;
+}
+
+.headers-data {
+  background-color: #f5f5f5;
+  padding: 12px;
+  border-radius: 4px;
+  overflow: auto;
+  max-height: 300px;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+.headers-diff {
+  margin-top: 8px;
+}
+
+.diff-item {
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background-color: #fffbe6;
+  border: 1px solid #ffe58f;
 }
 </style> 
