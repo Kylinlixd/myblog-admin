@@ -193,6 +193,23 @@ service.interceptors.request.use(
       } else {
         config.headers.Authorization = `Bearer ${token}`
       }
+      
+      // 检查是否为刷新令牌
+      try {
+        if (token.includes('token_type":"refresh"')) {
+          console.error('[Token] 错误：尝试使用刷新令牌作为访问令牌!')
+          // 尝试从localStorage获取正确的访问令牌
+          const accessToken = localStorage.getItem('accessToken')
+          if (accessToken) {
+            config.headers.Authorization = accessToken.startsWith('Bearer ')
+              ? accessToken
+              : `Bearer ${accessToken}`
+          }
+        }
+      } catch (e) {
+        // 令牌解析错误，继续使用原始令牌
+      }
+      
       console.log('[Token] 使用认证令牌:', config.headers.Authorization)
     }
     

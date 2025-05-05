@@ -40,9 +40,46 @@ const handleApiError = (error, showError = true) => {
       error.response.data &&
       (error.response.data.code === 'token_not_valid' || 
        error.response.data.detail?.includes('令牌无效') ||
-       error.response.data.detail?.includes('token_not_valid'))) {
+       error.response.data.detail?.includes('token_not_valid') ||
+       error.response.data.detail?.includes('此令牌对任何类型的令牌无效'))) {
     
     console.log('[认证] 检测到令牌无效，尝试刷新令牌');
+    
+    // 检查是否使用了刷新令牌作为访问令牌
+    const token = localStorage.getItem('token');
+    if (token && token.includes('token_type":"refresh"')) {
+      console.error('[认证] 错误：使用了刷新令牌作为访问令牌，尝试修复');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      // 如果有刷新令牌，尝试获取新的访问令牌
+      if (refreshToken) {
+        return refreshToken().then(() => {
+          // 使用新令牌重试原始请求
+          const newToken = localStorage.getItem('token');
+          if (error.config && newToken) {
+            error.config.headers.Authorization = newToken.startsWith('Bearer ') 
+              ? newToken 
+              : `Bearer ${newToken}`;
+            return request({
+              ...error.config,
+              baseURL: '' // 避免重复添加baseURL
+            });
+          }
+          return Promise.reject(error);
+        }).catch(refreshError => {
+          console.error('[认证] 令牌刷新失败，重定向到登录页:', refreshError);
+          message.error('登录已过期，请重新登录');
+          // 清除所有令牌
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userInfo');
+          // 跳转到登录页
+          window.location.href = '/login';
+          return Promise.reject(error);
+        });
+      }
+    }
+    
     return refreshToken().then(() => {
       // 重新获取新令牌
       const newToken = localStorage.getItem('token');
@@ -64,6 +101,12 @@ const handleApiError = (error, showError = true) => {
       console.error('[认证] 令牌刷新失败:', refreshError);
       // 跳转到登录页面
       message.error('登录已过期，请重新登录');
+      // 清除所有令牌
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userInfo');
+      // 跳转到登录页
+      window.location.href = '/login';
       return Promise.reject(error);
     });
   }
@@ -353,9 +396,10 @@ const refreshToken = () => {
   })
   .then(response => {
     if (response.data && response.data.access) {
-      // 保存新的访问令牌
-      localStorage.setItem('token', response.data.access);
-      console.log('[认证] 令牌刷新成功');
+      // 保存新的访问令牌，确保添加Bearer前缀
+      const accessToken = `Bearer ${response.data.access}`;
+      localStorage.setItem('token', accessToken);
+      console.log('[认证] 令牌刷新成功，新令牌:', accessToken.substring(0, 15) + '...');
       return Promise.resolve();
     } else {
       console.error('[认证] 刷新响应格式异常:', response.data);
@@ -367,7 +411,9 @@ const refreshToken = () => {
     // 清除所有令牌，强制重新登录
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
-    return Promise.reject(error);
+    // 添加用户友好的错误信息
+    const errorMsg = error.response?.data?.detail || error.message || '令牌刷新失败';
+    return Promise.reject(new Error(errorMsg));
   });
 }
 

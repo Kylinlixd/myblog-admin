@@ -131,14 +131,22 @@ export function login(data) {
       if (response?.data) {
         const userData = response.data;
         
-        // 保存令牌
-        if (userData.token) {
-          localStorage.setItem('token', userData.token);
+        // 保存令牌，确保使用访问令牌而非刷新令牌
+        if (userData.access) {
+          localStorage.setItem('token', `Bearer ${userData.access}`);
+          console.log('[登录] 成功保存访问令牌');
+        } else if (userData.token) {
+          localStorage.setItem('token', `Bearer ${userData.token}`);
+          console.log('[登录] 成功保存令牌');
         }
         
         // 保存刷新令牌（如果存在）
-        if (userData.refresh_token) {
+        if (userData.refresh) {
+          localStorage.setItem('refreshToken', userData.refresh);
+          console.log('[登录] 成功保存刷新令牌');
+        } else if (userData.refresh_token) {
           localStorage.setItem('refreshToken', userData.refresh_token);
+          console.log('[登录] 成功保存刷新令牌');
         }
         
         // 保存用户信息
