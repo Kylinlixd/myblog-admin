@@ -9,6 +9,8 @@ export const useAppStore = defineStore('app', () => {
   const errorTimeout = ref(null)
   const loadingTimeout = ref(null) // 加载超时计时器
   const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
+  const isNavigating = ref(false) // 添加导航状态跟踪
+  const lastNavigationTime = ref(0) // 记录最后导航时间戳
   
   // 设置加载状态
   function setLoading(status, text = '加载中...') {
@@ -131,12 +133,37 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('sidebarCollapsed', status)
   }
   
+  // 开始导航
+  function startNavigation() {
+    isNavigating.value = true
+    lastNavigationTime.value = Date.now()
+    console.log('[AppStore] 开始路由导航')
+  }
+  
+  // 结束导航
+  function endNavigation() {
+    isNavigating.value = false
+    console.log('[AppStore] 结束路由导航，耗时:', Date.now() - lastNavigationTime.value, 'ms')
+  }
+  
+  // 检查是否可以导航 (防止频繁点击导致的导航问题)
+  function canNavigate() {
+    // 如果正在导航中且时间间隔小于300ms，阻止导航
+    if (isNavigating.value && (Date.now() - lastNavigationTime.value < 300)) {
+      console.log('[AppStore] 导航过于频繁，忽略此次导航请求')
+      return false
+    }
+    return true
+  }
+  
   return {
     isLoading,
     loadingText,
     hasError,
     errorMessage,
     sidebarCollapsed,
+    isNavigating,
+    lastNavigationTime,
     setLoading,
     startLoading,
     endLoading,
@@ -144,6 +171,9 @@ export const useAppStore = defineStore('app', () => {
     retryLoading,
     resetLoadingState,
     toggleSidebar,
-    setSidebarCollapsed
+    setSidebarCollapsed,
+    startNavigation,
+    endNavigation,
+    canNavigate
   }
 })

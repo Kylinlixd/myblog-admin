@@ -366,6 +366,19 @@ router.onError((error) => {
   const appStore = useAppStore()
   appStore.hasError = true
   appStore.errorMessage = error.message || '路由加载失败'
+  
+  // 改进错误恢复处理
+  const currentRoute = router.currentRoute.value
+  // 检查错误是否为组件加载错误
+  if (error.toString().includes('Failed to load') || 
+      error.toString().includes('Loading chunk') || 
+      error.toString().includes('Loading CSS chunk')) {
+    console.warn('检测到组件加载错误，尝试刷新页面恢复')
+    // 可以考虑尝试重新加载当前页面
+    setTimeout(() => {
+      router.replace(currentRoute.fullPath)
+    }, 500)
+  }
 })
 
 export default router

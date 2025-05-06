@@ -81,7 +81,7 @@
       <a-layout-content class="main">
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
-            <component :is="Component" />
+            <component :is="Component" :key="route.fullPath" />
           </transition>
         </router-view>
       </a-layout-content>
@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, onUnmounted } from 'vue'
+import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MonitorOutlined, FileOutlined, FolderOutlined, TagsOutlined, CommentOutlined, MenuUnfoldOutlined, MenuFoldOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '../stores/user'
@@ -219,9 +219,23 @@ const handleOpen = (key, keyPath) => {
 }
 
 // 处理菜单点击事件
-const handleMenuClick = ({ key }) => {
+const handleMenuClick = async ({ key }) => {
   console.log('菜单点击:', key)
-  router.push(key)
+  
+  // 如果点击的是当前路由，则不执行跳转，防止不必要的组件刷新
+  if (key === route.path) {
+    console.log('已在当前路径，不执行跳转')
+    return
+  }
+  
+  try {
+    // 使用nextTick确保DOM更新完成后再进行导航
+    await nextTick()
+    // 使用navigateTo方法而不是直接调用router.push，确保在移动设备上可以收起侧边栏
+    navigateTo(key)
+  } catch (error) {
+    console.error('路由导航错误:', error)
+  }
 }
 </script>
 
