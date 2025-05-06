@@ -405,6 +405,7 @@ export function refreshToken() {
 export function logout() {
   // 确保立即移除token和用户信息
   localStorage.removeItem('token')
+  localStorage.removeItem('refreshToken')
   localStorage.removeItem('userInfo')
   
   // 如果是模拟数据模式，直接返回成功

@@ -188,29 +188,31 @@ service.interceptors.request.use(
     const token = localStorage.getItem('token')
     if (token) {
       // 确保token格式正确，只添加Bearer前缀如果没有的话
-      if (token.startsWith('Bearer ')) {
-        config.headers.Authorization = token
-      } else {
-        config.headers.Authorization = `Bearer ${token}`
+      let authToken = token;
+      if (!token.startsWith('Bearer ')) {
+        authToken = `Bearer ${token}`;
       }
       
-      // 检查是否为刷新令牌
-      try {
-        if (token.includes('token_type":"refresh"')) {
-          console.error('[Token] 错误：尝试使用刷新令牌作为访问令牌!')
-          // 尝试从localStorage获取正确的访问令牌
-          const accessToken = localStorage.getItem('accessToken')
-          if (accessToken) {
-            config.headers.Authorization = accessToken.startsWith('Bearer ')
-              ? accessToken
-              : `Bearer ${accessToken}`
-          }
-        }
-      } catch (e) {
-        // 令牌解析错误，继续使用原始令牌
-      }
+      config.headers.Authorization = authToken;
       
-      console.log('[Token] 使用认证令牌:', config.headers.Authorization)
+      // 检查令牌类型并记录日志
+      console.log('[Token] 请求携带令牌类型:', token.includes('refresh') ? 'refresh token' : 'access token');
+      console.log(`[Token] ${config.method.toUpperCase()} ${config.url} 使用认证令牌:`, 
+                 authToken.substring(0, Math.min(30, authToken.length)) + '...');
+    } else {
+      console.log('[Token] 请求未携带令牌:', config.url);
+    }
+    
+    // URL检查，特别处理常见的不需要令牌的路径
+    const isAuthPath = config.url && (
+      config.url.includes('/auth/') || 
+      config.url.includes('/login') || 
+      config.url.includes('/token/refresh')
+    );
+    
+    // 对认证路径不显示警告
+    if (!token && !isAuthPath) {
+      console.warn('[Token] 警告: 访问需要认证的API未携带令牌:', config.url);
     }
     
     // 记录请求信息
@@ -218,7 +220,12 @@ service.interceptors.request.use(
       console.log(`[Request] ${config.method.toUpperCase()} ${config.url}`, {
         params: config.params,
         data: config.data,
-        headers: config.headers
+        headers: {
+          ...config.headers,
+          Authorization: config.headers.Authorization ? 
+            config.headers.Authorization.substring(0, 15) + '...' : 
+            undefined
+        }
       })
       
       // 记录本地URL和后端目标URL
@@ -337,11 +344,18 @@ service.interceptors.response.use(
           const userStore = useUserStore();
           userStore.clearUserData();
           
-          // 跳转到登录页
-          router.replace({
+          // 获取当前页面路径，用于重定向
+          const currentPath = router.currentRoute.value.fullPath;
+          console.log('[认证] 重定向到登录页，当前路径:', currentPath);
+          
+          // 使用router.push而不是replace，确保用户可以返回
+          router.push({
             path: '/login',
-            query: { redirect: router.currentRoute.value.fullPath }
-          })
+            query: { redirect: currentPath }
+          });
+          
+          // 一定要返回 Promise.reject，终止后续处理
+          return Promise.reject(new Error('登录已过期，请重新登录'));
         }
       } else if (status === 500) {
         // 增加500错误的特殊处理

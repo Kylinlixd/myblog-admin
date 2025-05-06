@@ -147,14 +147,17 @@ export default defineConfig(({ mode }) => {
             // 记录请求路径
             console.log('\n[后台API] 原始请求路径:', path);
             
-            // 尝试修复常见问题
+            // 保留原始路径，不修改params[key]格式
+            // 这可能是后端框架所需的请求格式
             let rewrittenPath = path;
             
-            // 1. 处理请求参数格式问题（如果后端不支持params[key]格式）
+            /*
+            // 注释掉之前的格式转换，保留原始格式
             if (path.includes('params[')) {
               rewrittenPath = path.replace(/params\[([^\]]+)\]/g, '$1');
               console.log('[参数格式修正] 将params[key]格式转换为key格式');
             }
+            */
             
             console.log('[后台API] 重写后路径:', rewrittenPath);
             const finalUrl = `http://127.0.0.1:8000${rewrittenPath}`;

@@ -1,11 +1,13 @@
 import { defineStore } from 'pinia'
 import { login, register, getUserInfo, logout, changePassword, updateUserProfile } from '../api/auth'
+import router from '../router'
 
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: null,
     token: localStorage.getItem('token') || '',
+    refreshToken: localStorage.getItem('refreshToken') || '',
     initialized: false
   }),
   
@@ -36,6 +38,8 @@ export const useUserStore = defineStore('user', {
         } catch (error) {
           console.error('初始化用户信息失败:', error)
           this.clearUserData()
+          // 重定向到登录页面
+          router.push('/login')
         }
       }
       
@@ -54,20 +58,53 @@ export const useUserStore = defineStore('user', {
           return false
         }
         
-        // 从正确的位置提取 token 和 userInfo
-        // 响应格式应该是 { code: 200, data: { token, userInfo }, message: 'xxx' }
-        const { token, userInfo } = response.data || {}
+        // 从正确的位置提取数据
+        // 响应格式可能是 { code: 200, data: { token, userInfo }, message: 'xxx' }
+        // 或者 { code: 200, data: { access, refresh, userInfo }, message: 'xxx' }
+        const responseData = response.data || {}
         
-        if (!token || !userInfo) {
-          console.error('登录失败: 响应中没有token或userInfo', response)
+        // 处理不同的令牌格式
+        let token = responseData.token || responseData.access || ''
+        let refreshToken = responseData.refresh_token || responseData.refresh || ''
+        
+        // 确保令牌格式正确，添加Bearer前缀
+        if (token && !token.startsWith('Bearer ')) {
+          token = `Bearer ${token}`
+        }
+        
+        // 检查是否有令牌
+        if (!token) {
+          console.error('登录失败: 响应中没有有效的访问令牌', responseData)
           return false
         }
         
-        // 设置用户信息和token
+        // 获取用户信息
+        const userInfo = responseData.userInfo || responseData.user || {}
+        
+        if (Object.keys(userInfo).length === 0) {
+          console.warn('警告: 登录响应中没有用户信息，将尝试获取')
+        }
+        
+        // 设置状态
         this.token = token
+        if (refreshToken) {
+          this.refreshToken = refreshToken
+          localStorage.setItem('refreshToken', refreshToken)
+        }
+        
         this.userInfo = userInfo
         localStorage.setItem('token', token)
         this.initialized = true
+        
+        // 如果没有用户信息，尝试获取
+        if (Object.keys(userInfo).length === 0) {
+          try {
+            await this.getUserInfo()
+          } catch (error) {
+            console.error('登录后获取用户信息失败:', error)
+            // 这里不需要清除用户数据，因为令牌可能有效
+          }
+        }
         
         return true
       } catch (error) {
@@ -82,15 +119,32 @@ export const useUserStore = defineStore('user', {
         const response = await register(userData)
         
         // 从正确的位置提取 token 和 userInfo
-        const { token, userInfo } = response.data || {}
+        const responseData = response.data || {}
         
-        if (!token || !userInfo) {
-          console.error('注册失败: 响应中没有token或userInfo', response)
+        // 处理不同的令牌格式
+        let token = responseData.token || responseData.access || ''
+        let refreshToken = responseData.refresh_token || responseData.refresh || ''
+        
+        // 确保令牌格式正确，添加Bearer前缀
+        if (token && !token.startsWith('Bearer ')) {
+          token = `Bearer ${token}`
+        }
+        
+        if (!token) {
+          console.error('注册失败: 响应中没有有效的访问令牌', responseData)
           return false
         }
         
+        // 获取用户信息
+        const userInfo = responseData.userInfo || responseData.user || {}
+        
         // 注册成功后自动登录
         this.token = token
+        if (refreshToken) {
+          this.refreshToken = refreshToken
+          localStorage.setItem('refreshToken', refreshToken)
+        }
+        
         this.userInfo = userInfo
         localStorage.setItem('token', token)
         
@@ -141,8 +195,11 @@ export const useUserStore = defineStore('user', {
     
     clearUserData() {
       this.token = ''
+      this.refreshToken = ''
       this.userInfo = null
       localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('userInfo')
     },
     
     async changePassword(oldPassword, newPassword) {

@@ -6,6 +6,7 @@
 import request from './request'
 import { message } from 'ant-design-vue'
 import axios from 'axios'
+import router from '../router'
 
 // API 前缀配置
 const apiPrefix = {
@@ -49,10 +50,10 @@ const handleApiError = (error, showError = true) => {
     const token = localStorage.getItem('token');
     if (token && token.includes('token_type":"refresh"')) {
       console.error('[认证] 错误：使用了刷新令牌作为访问令牌，尝试修复');
-      const refreshToken = localStorage.getItem('refreshToken');
+      const refreshTokenValue = localStorage.getItem('refreshToken');
       
       // 如果有刷新令牌，尝试获取新的访问令牌
-      if (refreshToken) {
+      if (refreshTokenValue) {
         return refreshToken().then(() => {
           // 使用新令牌重试原始请求
           const newToken = localStorage.getItem('token');
@@ -73,8 +74,8 @@ const handleApiError = (error, showError = true) => {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('userInfo');
-          // 跳转到登录页
-          window.location.href = '/login';
+          // 使用Vue Router跳转到登录页
+          router.push('/login');
           return Promise.reject(error);
         });
       }
@@ -99,14 +100,14 @@ const handleApiError = (error, showError = true) => {
       return Promise.reject(error);
     }).catch(refreshError => {
       console.error('[认证] 令牌刷新失败:', refreshError);
-      // 跳转到登录页面
+      // 显示错误消息
       message.error('登录已过期，请重新登录');
       // 清除所有令牌
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userInfo');
-      // 跳转到登录页
-      window.location.href = '/login';
+      // 使用Vue Router跳转到登录页
+      router.push('/login');
       return Promise.reject(error);
     });
   }
@@ -344,14 +345,9 @@ const formatRequestParams = (params) => {
   
   // 遍历参数
   Object.entries(params).forEach(([key, value]) => {
-    // 如果参数是嵌套对象，展平成query string兼容格式
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.entries(value).forEach(([nestedKey, nestedValue]) => {
-        formattedParams[`${key}.${nestedKey}`] = nestedValue;
-      });
-    } else {
-      formattedParams[key] = value;
-    }
+    // 处理params[key]格式 - 保留原始格式，不展平
+    // 这可能是某些后端框架所需的格式
+    formattedParams[key] = value;
   });
   
   console.log('[参数格式化] 原始参数:', params, '格式化后:', formattedParams);
@@ -377,15 +373,17 @@ const refreshToken = () => {
   console.log('[认证] 开始刷新令牌');
   
   // 获取刷新令牌
-  const refreshToken = localStorage.getItem('refreshToken');
-  if (!refreshToken) {
+  const refreshTokenValue = localStorage.getItem('refreshToken');
+  if (!refreshTokenValue) {
     console.error('[认证] 无刷新令牌，无法刷新');
     return Promise.reject(new Error('无刷新令牌'));
   }
   
   // 准备刷新令牌的请求
   const refreshUrl = '/api/token/refresh/';
-  const refreshData = { refresh: refreshToken };
+  const refreshData = { refresh: refreshTokenValue };
+  
+  console.log('[认证] 发送刷新令牌请求:', refreshUrl);
   
   // 发送刷新请求
   return axios.post(refreshUrl, refreshData, {
@@ -395,22 +393,40 @@ const refreshToken = () => {
     }
   })
   .then(response => {
+    console.log('[认证] 收到刷新令牌响应:', response.status);
+    
+    // 检查响应是否包含access令牌
     if (response.data && response.data.access) {
       // 保存新的访问令牌，确保添加Bearer前缀
       const accessToken = `Bearer ${response.data.access}`;
       localStorage.setItem('token', accessToken);
+      
+      // 如果响应中包含了新的刷新令牌，也保存它
+      if (response.data.refresh) {
+        localStorage.setItem('refreshToken', response.data.refresh);
+        console.log('[认证] 已更新刷新令牌');
+      }
+      
       console.log('[认证] 令牌刷新成功，新令牌:', accessToken.substring(0, 15) + '...');
       return Promise.resolve();
     } else {
-      console.error('[认证] 刷新响应格式异常:', response.data);
-      return Promise.reject(new Error('令牌刷新响应格式异常'));
+      console.error('[认证] 刷新响应格式异常，缺少access字段:', response.data);
+      return Promise.reject(new Error('令牌刷新响应格式异常，缺少access字段'));
     }
   })
   .catch(error => {
     console.error('[认证] 刷新请求失败:', error);
+    
+    // 记录具体错误信息
+    if (error.response) {
+      console.error('[认证] 状态码:', error.response.status);
+      console.error('[认证] 响应内容:', error.response.data);
+    }
+    
     // 清除所有令牌，强制重新登录
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
+    
     // 添加用户友好的错误信息
     const errorMsg = error.response?.data?.detail || error.message || '令牌刷新失败';
     return Promise.reject(new Error(errorMsg));
