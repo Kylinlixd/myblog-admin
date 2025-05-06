@@ -147,10 +147,33 @@ const onCollapse = (collapsed) => {
 // 统一的导航方法
 const navigateTo = (path) => {
   console.log('导航到路径:', path)
-  router.push(path)
-  // 在移动设备上点击菜单后自动折叠侧边栏
-  if (isMobile.value && !isCollapse.value) {
-    appStore.toggleSidebar(true)
+  
+  // 检查是否可以导航 (防止频繁导航)
+  if (!appStore.canNavigate()) {
+    console.log('导航被阻止，太频繁')
+    return
+  }
+  
+  try {
+    // 标记导航开始
+    appStore.startNavigation()
+    
+    router.push(path).then(() => {
+      console.log('导航成功:', path)
+      // 导航成功后结束导航状态
+      appStore.endNavigation()
+      
+      // 在移动设备上点击菜单后自动折叠侧边栏
+      if (isMobile.value && !isCollapse.value) {
+        appStore.toggleSidebar(true)
+      }
+    }).catch(err => {
+      console.error('导航错误:', err)
+      appStore.endNavigation()
+    })
+  } catch (error) {
+    console.error('导航异常:', error)
+    appStore.endNavigation()
   }
 }
 
@@ -228,13 +251,27 @@ const handleMenuClick = async ({ key }) => {
     return
   }
   
+  // 检查是否正在导航中，防止频繁点击
+  if (!appStore.canNavigate()) {
+    console.log('导航频率过高，跳过此次导航')
+    return
+  }
+  
   try {
     // 使用nextTick确保DOM更新完成后再进行导航
     await nextTick()
+    
+    // 标记菜单点击时间，用于性能跟踪
+    console.time('菜单导航耗时')
+    
     // 使用navigateTo方法而不是直接调用router.push，确保在移动设备上可以收起侧边栏
     navigateTo(key)
+    
+    // 在控制台中完成时间测量
+    console.timeEnd('菜单导航耗时')
   } catch (error) {
     console.error('路由导航错误:', error)
+    appStore.endNavigation() // 确保出错时也会重置导航状态
   }
 }
 </script>

@@ -239,15 +239,19 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-    // 仅在开发环境记录路由切换
-    // if (process.env.NODE_ENV === 'development') {
-    //   console.log('App路由切换:', from.path, '->', to.path)
-    //   console.log('目标路由元数据:', to.meta)
-    // }
-    
     // 重置错误状态
     const appStore = useAppStore()
     appStore.hasError = false
+    
+    // 防止重复或频繁导航，导致组件更新错误
+    if (to.path === from.path) {
+        console.log('路由相同，阻止重复导航:', to.path)
+        next(false)
+        return
+    }
+    
+    // 标记开始导航
+    appStore.startNavigation()
     
     // 判断是否为博客前台页面
     const isBlogPage = to.path.startsWith('/blog')
@@ -255,14 +259,6 @@ router.beforeEach(async (to, from, next) => {
     // 检查权限
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
     const userStore = useUserStore()
-    
-    // 调试用户状态
-    // if (process.env.NODE_ENV === 'development') {
-    //   console.log('用户登录状态:', userStore.isLoggedIn)
-    //   console.log('用户信息:', userStore.userInfo)
-    //   console.log('路由需要验证:', requiresAuth)
-    //   console.log('匹配到的路由:', to.matched.map(r => ({path: r.path, name: r.name})))
-    // }
     
     // 如果目标路由是登录页面或注册页面，直接放行
     if (to.path === '/login' || to.path === '/register') {
@@ -346,6 +342,9 @@ function redirectToLogin(to, next) {
 // 路由加载完成后处理
 router.afterEach((to) => {
   const appStore = useAppStore()
+  
+  // 结束导航状态
+  appStore.endNavigation()
   
   // 设置文档标题
   if (to.meta && to.meta.title) {
