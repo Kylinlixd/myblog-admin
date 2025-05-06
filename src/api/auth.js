@@ -86,50 +86,11 @@ const getMockUserInfo = (username = 'admin', role = 'admin') => {
  * @returns {Promise<{token: string, userInfo: Object}>}
  */
 export function login(data) {
-  // 开发环境下，模拟登录响应
-  if (shouldUseMockData()) {
-    console.log('[模拟数据] 使用模拟登录数据')
-    
-    // admin/admin 或 test/test 均可登录成功
-    if ((data.username === 'admin' && data.password === 'admin') || 
-        (data.username === 'test' && data.password === 'test')) {
-      
-      const role = data.username === 'admin' ? 'admin' : 'user'
-      const userInfo = getMockUserInfo(data.username, role)
-      const token = `Bearer ${generateTestToken()}`
-      
-      // 保存到localStorage以模拟会话
-      localStorage.setItem('token', token)
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
-      
-      console.log('[模拟数据] 生成了模拟令牌:', token);
-      
-      return Promise.resolve({
-        code: 200,
-        data: {
-          token,
-          userInfo
-        },
-        message: '登录成功'
-      })
-    } else {
-      // 模拟登录失败
-      return Promise.reject({
-        response: {
-          status: 400,
-          data: {
-            code: 400,
-            message: '用户名或密码错误',
-            data: null
-          }
-        }
-      })
-    }
-  }
-  
   // 使用 API 工具类发送登录请求
   return api.admin.post('/api/auth/login/', data)
     .then(response => {
+      console.log('[登录] 登录响应:', response);
+      
       if (response?.data) {
         const userData = response.data;
         
@@ -171,7 +132,6 @@ export function login(data) {
       return response;
     })
     .catch(error => {
-      // 不自动回退到模拟数据，直接抛出错误
       console.error('[API错误] 登录请求失败:', error)
       throw error
     })

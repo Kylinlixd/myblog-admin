@@ -111,12 +111,9 @@ const filterForm = reactive({
 const getComments = async () => {
   loading.value = true
   
-  // 检查模拟数据模式
-  const useMockData = localStorage.getItem('useMockData') === 'true';
-  
   // 先验证是否有有效令牌
   const token = localStorage.getItem('token')
-  if (!token && !useMockData) {
+  if (!token) {
     message.error('未登录或会话已过期，请重新登录')
     loading.value = false
     setTimeout(() => {
@@ -126,7 +123,7 @@ const getComments = async () => {
   }
   
   try {
-    console.log('开始获取评论列表，令牌:', token ? '存在' : '不存在', '模拟数据模式:', useMockData);
+    console.log('开始获取评论列表，令牌:', token ? '存在' : '不存在');
     const response = await getCommentList({
       page: currentPage.value,
       pageSize: pageSize.value,
@@ -135,13 +132,41 @@ const getComments = async () => {
     
     console.log('获取评论列表响应:', response);
     
-    if (response && response.list) {
-      comments.value = response.list || []
-      total.value = response.total || 0
-      console.log('获取评论列表成功:', comments.value.length, '条记录');
+    if (response) {
+      // 如果response是一个数组，适配为标准格式
+      if (Array.isArray(response)) {
+        comments.value = response;
+        total.value = response.length;
+      } 
+      // 如果有list字段，使用标准格式
+      else if (response.list) {
+        comments.value = response.list;
+        total.value = response.total || response.list.length;
+      } 
+      // 其他情况尝试检查是否有items等字段
+      else if (response.items) {
+        comments.value = response.items;
+        total.value = response.total || response.count || response.items.length;
+      }
+      // 如果都不是，尝试直接使用响应
+      else if (typeof response === 'object') {
+        console.warn('响应格式不标准，尝试直接使用');
+        comments.value = [response];
+        total.value = 1;
+      }
+      else {
+        console.error('未知的响应格式:', response);
+        message.error('获取评论列表失败: 响应格式异常');
+        comments.value = [];
+        total.value = 0;
+      }
+      
+      console.log('评论列表数据处理完成, 共', comments.value.length, '条记录');
     } else {
-      console.error('评论数据格式异常:', response)
-      message.error('获取评论列表失败: 数据格式异常')
+      console.error('评论数据为空:', response)
+      message.error('获取评论列表失败: 响应为空')
+      comments.value = [];
+      total.value = 0;
     }
   } catch (error) {
     console.error('获取评论列表失败:', error)
@@ -157,13 +182,7 @@ const getComments = async () => {
         router.push('/login')
       }, 1500)
     } else {
-      // 在开发环境中，如果出错且不是模拟数据模式，建议启用模拟数据
-      if (process.env.NODE_ENV === 'development' && !useMockData) {
-        message.warn('获取数据失败，建议启用模拟数据模式');
-        console.log('提示: 可以通过登录页面的选项启用模拟数据模式');
-      } else {
-        message.error('获取评论列表失败: ' + (error.message || '未知错误'))
-      }
+      message.error('获取评论列表失败: ' + (error.message || '未知错误'))
     }
   } finally {
     loading.value = false

@@ -19,40 +19,39 @@ export function getCommentList(params) {
   
   console.log('[评论API] 开始获取评论列表，当前令牌状态:', token ? '有效' : '无效');
   
-  // 检查模拟数据模式
-  const useMockData = localStorage.getItem('useMockData') === 'true';
-  if (useMockData) {
-    console.log('[评论API] 使用模拟数据返回评论列表');
-    // 生成模拟数据
-    const mockData = {
-      list: Array(10).fill().map((_, i) => ({
-        id: i + 1,
-        author: `测试用户${i+1}`,
-        content: `这是一条测试评论内容 ${i+1}`,
-        email: `user${i+1}@example.com`,
-        status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)],
-        createTime: new Date().toISOString().split('T')[0]
-      })),
-      total: 100
-    };
-    
-    // 模拟延迟
-    return new Promise(resolve => {
-      setTimeout(() => {
-        console.log('[评论API] 返回模拟评论数据');
-        resolve(mockData);
-      }, 300);
-    });
-  }
-  
   return request.get('/api/comments/', params)
     .then(response => {
-      if (response.code === 200) {
-        console.log('[评论API] 获取评论列表成功');
-        return response.data
+      console.log('[评论API] 获取评论列表响应:', response);
+      
+      // 对响应进行更灵活的处理
+      if (response) {
+        // 检查是否有标准的code/data/message格式
+        if (response.code === 200 && response.data) {
+          console.log('[评论API] 标准格式响应，获取评论列表成功');
+          return response.data;
+        }
+        
+        // 检查直接返回数据的情况
+        if (response.list !== undefined) {
+          console.log('[评论API] 直接返回列表数据，获取评论列表成功');
+          return response;
+        }
+        
+        // 尝试从其他格式中解析
+        if (Array.isArray(response)) {
+          console.log('[评论API] 响应为数组，转换为标准格式');
+          return {
+            list: response,
+            total: response.length
+          };
+        }
+        
+        console.error('[评论API] 无法解析的响应格式:', response);
+        return Promise.reject(new Error('获取评论列表失败: 响应格式异常'));
       }
-      console.error('[评论API] 获取评论列表异常:', response.message);
-      return Promise.reject(new Error(response.message || '获取评论列表失败'))
+      
+      console.error('[评论API] 获取评论列表异常: 响应为空');
+      return Promise.reject(new Error('获取评论列表失败: 响应为空'));
     })
     .catch(error => {
       console.error('[评论API] 获取评论列表错误:', error);
@@ -72,11 +71,17 @@ export function getCommentList(params) {
 export function approveComment(id) {
   return request.put(`/api/comments/${id}/approve/`)
     .then(response => {
-      if (response.code === 200) {
-        return response.data
+      console.log('[评论API] 通过评论响应:', response);
+      // 处理不同的响应格式
+      if (response && (response.code === 200 || response.status === 'success')) {
+        return response.data || response;
       }
-      return Promise.reject(new Error(response.message || '操作失败'))
+      return Promise.reject(new Error(response?.message || '操作失败'));
     })
+    .catch(error => {
+      console.error('[评论API] 通过评论失败:', error);
+      return Promise.reject(error);
+    });
 }
 
 /**
@@ -87,11 +92,17 @@ export function approveComment(id) {
 export function rejectComment(id) {
   return request.put(`/api/comments/${id}/reject/`)
     .then(response => {
-      if (response.code === 200) {
-        return response.data
+      console.log('[评论API] 拒绝评论响应:', response);
+      // 处理不同的响应格式
+      if (response && (response.code === 200 || response.status === 'success')) {
+        return response.data || response;
       }
-      return Promise.reject(new Error(response.message || '操作失败'))
+      return Promise.reject(new Error(response?.message || '操作失败'));
     })
+    .catch(error => {
+      console.error('[评论API] 拒绝评论失败:', error);
+      return Promise.reject(error);
+    });
 }
 
 /**
@@ -102,9 +113,15 @@ export function rejectComment(id) {
 export function deleteComment(id) {
   return request.delete(`/api/comments/${id}/`)
     .then(response => {
-      if (response.code === 200) {
-        return response.data
+      console.log('[评论API] 删除评论响应:', response);
+      // 处理不同的响应格式
+      if (response && (response.code === 200 || response.status === 'success')) {
+        return response.data || response;
       }
-      return Promise.reject(new Error(response.message || '删除失败'))
+      return Promise.reject(new Error(response?.message || '删除失败'));
     })
+    .catch(error => {
+      console.error('[评论API] 删除评论失败:', error);
+      return Promise.reject(error);
+    });
 } 

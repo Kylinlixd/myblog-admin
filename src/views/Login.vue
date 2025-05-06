@@ -178,13 +178,6 @@ export default {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         
-        // 强制标记模拟数据模式（开发环境）
-        const isDev = process.env.NODE_ENV === 'development';
-        if (isDev && useMockData.value) {
-          localStorage.setItem('useMockData', 'true');
-          console.log('[登录] 强制启用模拟数据模式');
-        }
-        
         const success = await userStore.login(loginData.username, loginData.password)
         
         if (success) {

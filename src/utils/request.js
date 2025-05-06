@@ -208,85 +208,13 @@ service.interceptors.request.use(
       // 检查令牌类型并记录日志
       console.log('[Token] 当前令牌:', authToken);
       console.log('[Token] 请求携带令牌类型:', token.includes('refresh') ? 'refresh token' : 'access token');
-      console.log(`[Token] ${config.method.toUpperCase()} ${config.url} 使用认证令牌:`, 
-                 authToken.substring(0, Math.min(30, authToken.length)) + '...');
+      console.log(`[Token] ${config.method.toUpperCase()} ${config.url} 使用认证令牌`);
     } else {
       console.log('[Token] 请求未携带令牌:', config.url);
       
-      // 开发环境和模拟数据模式检查
-      const useMockData = localStorage.getItem('useMockData') === 'true';
-      const isDev = process.env.NODE_ENV === 'development';
-      
-      // 如果在开发环境并使用模拟数据，允许无令牌继续请求
-      if (isDev && useMockData) {
-        console.log('[Token] 开发环境+模拟数据模式：允许无令牌请求');
-        // 继续请求而不报错
-      }
-      // 如果不是认证相关路径，但需要认证，则提前返回错误
-      else if (!isAuthPath && !config.url.startsWith('/blog/')) {
+      // 如果不是认证相关路径，但需要认证，可能需要提示用户登录
+      if (!isAuthPath && !config.url.startsWith('/blog/') && !config.skipAuthCheck) {
         console.error('[Token] 错误: 访问需要认证的API但未找到令牌:', config.url);
-        
-        if (isDev && !useMockData) {
-          console.warn('[Token] 提示: 当前在开发环境，但未启用模拟数据，考虑启用模拟数据模式以避免认证问题');
-        }
-        
-        // 标记请求不要立即触发401错误，而是让它继续发送，等待后端响应
-        if (config.skipAuthCheck === true) {
-          console.log('[Token] 跳过认证检查，允许请求继续进行');
-        } else {
-          // 在开发环境中，如果是获取评论列表等API，使用模拟数据而不是立即返回401
-          if (isDev && (
-              config.url.includes('/api/comments') || 
-              config.url.includes('/api/articles')
-          )) {
-            console.warn('[Token] 后台管理API未携带令牌，将使用模拟数据');
-            const mockData = {
-              code: 200,
-              data: {
-                list: Array(5).fill().map((_, i) => ({
-                  id: i + 1,
-                  author: `测试用户${i+1}`,
-                  content: `这是一条测试评论内容 ${i+1}`,
-                  email: `user${i+1}@example.com`,
-                  status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)],
-                  createTime: new Date().toISOString().split('T')[0]
-                })),
-                total: 5
-              },
-              message: 'success'
-            };
-            return Promise.resolve({
-              data: mockData,
-              status: 200,
-              headers: {},
-              config
-            });
-          } else {
-            console.warn('[Token] 中断请求并返回401错误');
-            return Promise.reject({
-              response: {
-                status: 401,
-                data: {
-                  code: 401,
-                  message: '登录已过期，请重新登录'
-                }
-              },
-              isAuthError: true
-            });
-          }
-        }
-      }
-      
-      // 尝试加载userStore刷新令牌
-      try {
-        // 可以选择在这里尝试刷新令牌
-        console.log('[Token] 尝试从localStorage中获取刷新令牌');
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          console.log('[Token] 找到刷新令牌，但未使用，请考虑实现刷新令牌逻辑');
-        }
-      } catch (error) {
-        console.error('[Token] 尝试恢复令牌失败:', error);
       }
     }
     
@@ -344,10 +272,16 @@ service.interceptors.response.use(
     // 处理不同响应格式
     const responseData = response.data
     
+    // 空响应处理
+    if (!responseData) {
+      console.warn('[响应处理] 响应数据为空');
+      return null;
+    }
+    
     // 判断是否是标准格式响应
-    if (responseData && typeof responseData === 'object') {
+    if (typeof responseData === 'object') {
+      // 标准API响应格式: { code, data, message }
       if (responseData.code !== undefined) {
-        // 标准格式: { code, data, message }
         if (responseData.code !== 200) {
           // 增加错误日志
           console.error(`[API错误] 错误码: ${responseData.code}, 消息: ${responseData.message || '未知错误'}`)
@@ -358,6 +292,17 @@ service.interceptors.response.use(
         }
         return responseData
       }
+      
+      // 检查其他常见格式，如果有明确错误信息
+      if (responseData.success === false || responseData.status === 'error') {
+        const errorMsg = responseData.message || responseData.error || responseData.msg || '请求失败';
+        console.error(`[API错误] 响应表明失败: ${errorMsg}`);
+        if (!isAuthPage()) {
+          message.error(errorMsg);
+        }
+        return Promise.reject(new Error(errorMsg));
+      }
+      
       // 非标准但有数据的情况，直接返回
       return responseData
     }
@@ -408,6 +353,12 @@ service.interceptors.response.use(
           console.log('[响应修正] 检测到HTTP 500但内容正常，进行修正');
           return Promise.resolve(responseData);
         }
+      }
+      
+      // 检查JSON格式是否只有数组
+      if (Array.isArray(responseData)) {
+        console.log('[响应修正] 收到数组响应，尝试处理');
+        return Promise.resolve(responseData);
       }
     }
     
@@ -488,7 +439,6 @@ service.interceptors.response.use(
       console.log('[提示] 请检查：')
       console.log('1. 后端服务是否在 http://127.0.0.1:8000 上运行')
       console.log('2. 网络连接是否正常')
-      console.log('3. 如果需要使用模拟数据进行开发，请前往 /debug 页面启用模拟数据模式')
       
       // 避免在登录页显示错误
       if (!isAuthPage()) {
