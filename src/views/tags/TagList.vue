@@ -194,22 +194,33 @@ const fetchTags = async () => {
       pageSize: pageSize.value
     });
     
+    console.log('标签列表API返回:', result);
+    
     if (result && result.results) {
       tagList.value = result.results;
-      total.value = result.count;
-    } else if (result && result.results) {
-      // 处理 results 字段
-      tagList.value = result.results;
-      total.value = result.results.length;
-    } else if (Array.isArray(result)) {
+      total.value = result.count || result.results.length;
+    } else if (result && Array.isArray(result)) {
       // 如果返回的是数组，直接使用
       tagList.value = result;
       total.value = result.length;
-    } else if (result && result.items) {
-      // 如果返回的是分页对象
-      tagList.value = result.items;
-      total.value = result.total;
+    } else if (result && typeof result === 'object') {
+      // 如果返回的是对象，尝试提取数据
+      if (Array.isArray(result.data)) {
+        tagList.value = result.data;
+        total.value = result.data.length;
+      } else if (result.data && Array.isArray(result.data.results)) {
+        tagList.value = result.data.results;
+        total.value = result.data.count || result.data.results.length;
+      } else if (result.data && result.data.items) {
+        tagList.value = result.data.items;
+        total.value = result.data.total || result.data.items.length;
+      } else {
+        console.error('无法解析的标签列表数据格式:', result);
+        tagList.value = [];
+        total.value = 0;
+      }
     } else {
+      console.error('标签列表返回异常:', result);
       tagList.value = [];
       total.value = 0;
     }

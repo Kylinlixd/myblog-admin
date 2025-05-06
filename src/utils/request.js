@@ -191,36 +191,63 @@ service.interceptors.request.use(
       config.url.includes('/token/refresh')
     );
     
-    // 获取token并添加到请求头
-    const token = localStorage.getItem('token')
+    // 从localStorage获取令牌
+    let token = localStorage.getItem('token')
+    
     if (token) {
-      // 确保token格式正确，只添加Bearer前缀如果没有的话
-      let authToken = token;
-      if (!token.startsWith('Bearer ')) {
-        authToken = `Bearer ${token}`;
-        // 修复localStorage中存储的token
-        localStorage.setItem('token', authToken);
-        console.log('[Token] 修复了令牌格式，添加了Bearer前缀');
+      // 确保token是字符串且格式正确
+      if (typeof token === 'string') {
+        // 检查是否是"[object Object]"这样的字符串
+        if (token === '[object Object]' || token.includes('[object Object]')) {
+          console.error('[令牌错误] 发现无效的对象字符串令牌，尝试从刷新令牌恢复');
+          
+          // 通过刷新令牌获取新令牌
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            // 不直接设置令牌，让响应拦截器处理401错误并刷新令牌
+            console.log('[令牌恢复] 检测到刷新令牌，将在遇到401时尝试刷新');
+          } else {
+            console.error('[令牌错误] 无刷新令牌可用，无法恢复会话');
+          }
+        } else {
+          // 确保Bearer前缀格式正确
+          const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+          config.headers.Authorization = authToken;
+          console.log('[令牌] 设置认证头:', authToken.substring(0, 20) + '...');
+        }
+      } else if (typeof token === 'object') {
+        // 如果意外获取到对象类型的令牌，尝试提取字符串
+        console.error('[令牌错误] 令牌是对象类型而非字符串，尝试修复');
+        
+        try {
+          let fixedToken = null;
+          
+          // 尝试从对象中提取令牌字符串
+          if (token.access) {
+            fixedToken = `Bearer ${String(token.access)}`;
+          } else if (token.token) {
+            fixedToken = `Bearer ${String(token.token)}`;
+          }
+          
+          if (fixedToken) {
+            config.headers.Authorization = fixedToken;
+            // 更新localStorage以修复问题
+            localStorage.setItem('token', fixedToken);
+            console.log('[令牌修复] 成功从对象中提取并设置令牌');
+          }
+        } catch (e) {
+          console.error('[令牌错误] 处理对象令牌失败:', e);
+        }
+      } else {
+        console.error('[令牌错误] 无效的令牌类型:', typeof token);
       }
-      
-      config.headers.Authorization = authToken;
-      
-      // 检查令牌类型并记录日志
-      console.log('[Token] 当前令牌:', authToken);
-      console.log('[Token] 请求携带令牌类型:', token.includes('refresh') ? 'refresh token' : 'access token');
-      console.log(`[Token] ${config.method.toUpperCase()} ${config.url} 使用认证令牌`);
     } else {
-      console.log('[Token] 请求未携带令牌:', config.url);
+      console.log('[令牌] 请求未携带令牌:', config.url);
       
       // 如果不是认证相关路径，但需要认证，可能需要提示用户登录
       if (!isAuthPath && !config.url.startsWith('/blog/') && !config.skipAuthCheck) {
-        console.error('[Token] 错误: 访问需要认证的API但未找到令牌:', config.url);
+        console.error('[令牌] 错误: 访问需要认证的API但未找到令牌:', config.url);
       }
-    }
-    
-    // 对认证路径不显示警告
-    if (!token && !isAuthPath && !config.url.startsWith('/blog/')) {
-      console.warn('[Token] 警告: 访问需要认证的API未携带令牌:', config.url);
     }
     
     // 记录请求信息
@@ -231,7 +258,7 @@ service.interceptors.request.use(
         headers: {
           ...config.headers,
           Authorization: config.headers.Authorization ? 
-            config.headers.Authorization.substring(0, 15) + '...' : 
+            config.headers.Authorization.substring(0, 20) + '...' : 
             undefined
         }
       })
@@ -367,11 +394,75 @@ service.interceptors.response.use(
       const status = error.response.status
       
       if (status === 401) {
+        // 避免在非受保护页面显示过期提示
         const isVisitingBlog = window.location.pathname.startsWith('/blog')
-        if (!isVisitingBlog && !isAuthPage()) {
-          message.error('登录已过期，请重新登录')
+        const isAlreadyOnAuthPage = isAuthPage()
+        
+        if (!isVisitingBlog && !isAlreadyOnAuthPage) {
+          console.log('[认证] 检测到401未授权错误，尝试刷新令牌');
           
-          // 无需清空token，交由用户store处理
+          // 检查是否已经尝试过刷新令牌
+          const hasRefreshAttempted = error.config && error.config._refreshAttempted
+          const hasRefreshToken = localStorage.getItem('refreshToken')
+          
+          // 如果有刷新令牌且没有尝试过刷新，则尝试刷新令牌
+          if (hasRefreshToken && !hasRefreshAttempted) {
+            console.log('[认证] 尝试使用刷新令牌获取新的访问令牌');
+            
+            try {
+              // 导入auth模块，避免循环引用
+              const { refreshToken } = require('../api/auth');
+              
+              // 尝试刷新令牌
+              return refreshToken()
+                .then(result => {
+                  console.log('[认证] 令牌刷新成功，重试原始请求');
+                  
+                  // 使用新令牌重试原始请求
+                  const originalConfig = error.config;
+                  originalConfig._refreshAttempted = true; // 标记已尝试刷新
+                  
+                  // 获取新令牌
+                  const newToken = localStorage.getItem('token');
+                  if (newToken) {
+                    // 更新请求头
+                    originalConfig.headers.Authorization = newToken;
+                    console.log('[认证] 更新请求头使用新的令牌');
+                    
+                    // 重试原始请求
+                    return request(originalConfig);
+                  } else {
+                    throw new Error('刷新令牌后未能获取新的访问令牌');
+                  }
+                })
+                .catch(refreshError => {
+                  console.error('[认证] 令牌刷新失败，重定向到登录页:', refreshError);
+                  
+                  // 清除认证状态
+                  const userStore = useUserStore();
+                  userStore.clearUserData();
+                  
+                  // 显示错误消息
+                  message.error('登录已过期，请重新登录');
+                  
+                  // 获取当前页面路径，用于重定向
+                  const currentPath = router.currentRoute.value.fullPath;
+                  router.push({
+                    path: '/login',
+                    query: { redirect: currentPath }
+                  });
+                  
+                  return Promise.reject(new Error('认证失败，请重新登录'));
+                });
+            } catch (importError) {
+              console.error('[认证] 导入refreshToken函数失败:', importError);
+            }
+          }
+          
+          // 如果没有刷新令牌或已经尝试过刷新，直接跳转到登录页
+          message.error('登录已过期，请重新登录');
+          
+          // 清除用户数据
           const userStore = useUserStore();
           userStore.clearUserData();
           
@@ -384,10 +475,10 @@ service.interceptors.response.use(
             path: '/login',
             query: { redirect: currentPath }
           });
-          
-          // 一定要返回 Promise.reject，终止后续处理
-          return Promise.reject(new Error('登录已过期，请重新登录'));
         }
+        
+        // 返回特定错误
+        return Promise.reject(new Error('登录已过期，请重新登录'));
       } else if (status === 500) {
         // 增加500错误的特殊处理
         console.error('服务器内部错误 (500):', error.response.data)

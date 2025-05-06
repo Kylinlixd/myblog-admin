@@ -100,17 +100,21 @@ export function login(data) {
           localStorage.setItem('token', token);
           console.log('[登录] 成功保存访问令牌:', token.substring(0, 15) + '...');
         } else if (userData.token) {
-          const token = userData.token.startsWith('Bearer ') ? userData.token : `Bearer ${userData.token}`;
+          // 确保token是字符串
+          const tokenStr = String(userData.token);
+          const token = tokenStr.startsWith('Bearer ') ? tokenStr : `Bearer ${tokenStr}`;
           localStorage.setItem('token', token);
           console.log('[登录] 成功保存令牌:', token.substring(0, 15) + '...');
+        } else {
+          console.warn('[登录] 警告: 响应中没有token或access字段');
         }
         
         // 保存刷新令牌（如果存在）
         if (userData.refresh) {
-          localStorage.setItem('refreshToken', userData.refresh);
+          localStorage.setItem('refreshToken', String(userData.refresh));
           console.log('[登录] 成功保存刷新令牌');
         } else if (userData.refresh_token) {
-          localStorage.setItem('refreshToken', userData.refresh_token);
+          localStorage.setItem('refreshToken', String(userData.refresh_token));
           console.log('[登录] 成功保存刷新令牌');
         }
         
@@ -323,51 +327,108 @@ export function updateUserProfile(data) {
  * @returns {Promise<{token: string}>}
  */
 export function refreshToken() {
+  console.log('[认证] 开始刷新令牌');
+  
   // 开发环境下，模拟刷新token
   if (shouldUseMockData()) {
-    console.log('[模拟数据] 模拟刷新token')
+    console.log('[模拟数据] 模拟刷新token');
     
-    const token = generateTestToken()
-    localStorage.setItem('token', token)
+    const token = generateTestToken();
+    const formattedToken = `Bearer ${token}`;
+    localStorage.setItem('token', formattedToken);
     
     return Promise.resolve({
       code: 200,
-      data: { token },
+      data: { token, access: token },
       message: 'token刷新成功'
-    })
+    });
   }
   
   // 获取刷新令牌
-  const refreshTokenValue = localStorage.getItem('refreshToken')
+  const refreshTokenValue = localStorage.getItem('refreshToken');
   if (!refreshTokenValue) {
-    console.error('[认证] 无刷新令牌，无法刷新')
-    return Promise.reject(new Error('无刷新令牌'))
+    console.error('[认证] 无刷新令牌，无法刷新');
+    return Promise.reject(new Error('无刷新令牌'));
   }
   
-  return api.admin.post('/api/token/refresh/', { refresh: refreshTokenValue })
+  console.log('[认证] 使用刷新令牌刷新访问令牌，刷新令牌长度:', refreshTokenValue.length);
+  
+  // 准备刷新令牌的请求体
+  const refreshData = { refresh: refreshTokenValue };
+  
+  // 发送刷新请求
+  return api.admin.post('/api/token/refresh/', refreshData)
     .then(response => {
-      if (response.data && response.data.access) {
-        // 更新访问令牌
-        localStorage.setItem('token', `Bearer ${response.data.access}`)
-        console.log('[认证] 令牌刷新成功')
-        
-        return {
-          code: 200,
-          data: { token: response.data.access },
-          message: 'token刷新成功'
+      console.log('[认证] 收到刷新令牌响应:', response);
+      
+      // 提取访问令牌
+      let accessToken = null;
+      
+      // 检查不同响应格式
+      if (response.access) {
+        // 直接返回格式: { access: "token值" }
+        accessToken = String(response.access);
+        console.log('[认证] 从response.access提取令牌');
+      } else if (response.data && response.data.access) {
+        // 嵌套格式: { data: { access: "token值" } }
+        accessToken = String(response.data.access);
+        console.log('[认证] 从response.data.access提取令牌');
+      } else if (response.data && response.data.token) {
+        // 嵌套token对象: { data: { token: { access: "token值" } } }
+        if (typeof response.data.token === 'object' && response.data.token.access) {
+          accessToken = String(response.data.token.access);
+          console.log('[认证] 从response.data.token.access提取令牌');
+        } else if (typeof response.data.token === 'string') {
+          // token是字符串: { data: { token: "token值" } }
+          accessToken = String(response.data.token);
+          console.log('[认证] 从response.data.token(字符串)提取令牌');
         }
-      } else {
-        throw new Error('令牌刷新响应格式异常')
       }
+      
+      // 如果未能提取到令牌，返回错误
+      if (!accessToken) {
+        console.error('[认证] 刷新令牌响应格式异常，无法提取访问令牌:', response);
+        return Promise.reject(new Error('刷新令牌响应格式异常，无法提取访问令牌'));
+      }
+      
+      // 格式化并保存访问令牌
+      const formattedToken = accessToken.startsWith('Bearer ') 
+        ? accessToken 
+        : `Bearer ${accessToken}`;
+      
+      localStorage.setItem('token', formattedToken);
+      console.log('[认证] 成功保存新的访问令牌:', formattedToken.substring(0, 20) + '...');
+      
+      // 提取并保存新的刷新令牌（如果存在）
+      if (response.data && response.data.refresh) {
+        localStorage.setItem('refreshToken', String(response.data.refresh));
+        console.log('[认证] 已更新刷新令牌');
+      } else if (response.refresh) {
+        localStorage.setItem('refreshToken', String(response.refresh));
+        console.log('[认证] 已更新刷新令牌');
+      }
+      
+      return { token: accessToken };
     })
     .catch(error => {
-      console.error('[认证] 刷新令牌失败:', error)
-      // 清除令牌
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
+      console.error('[认证] 刷新令牌请求失败:', error);
       
-      throw error
-    })
+      // 记录具体错误细节
+      if (error.response) {
+        console.error('[认证] 刷新令牌错误状态码:', error.response.status);
+        console.error('[认证] 刷新令牌错误响应:', error.response.data);
+      }
+      
+      // 清除令牌并返回登录页
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      
+      // 删除用户信息，强制重新登录
+      localStorage.removeItem('userInfo');
+      
+      // 返回特定的错误消息
+      throw new Error('令牌已过期，请重新登录');
+    });
 }
 
 /**

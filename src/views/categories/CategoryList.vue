@@ -199,13 +199,37 @@ const fetchCategories = async () => {
   loading.value = true
   try {
     const result = await getCategoryList()
-    categories.value = result || []
+    console.log('分类列表API返回:', result);
+    
+    if (result && result.results) {
+      // 标准分页格式
+      categories.value = result.results || [];
+    } else if (result && Array.isArray(result)) {
+      // 直接返回数组
+      categories.value = result;
+    } else if (result && typeof result === 'object') {
+      // 如果返回的是对象，尝试提取数据
+      if (Array.isArray(result.data)) {
+        categories.value = result.data;
+      } else if (result.data && Array.isArray(result.data.results)) {
+        categories.value = result.data.results;
+      } else if (result.data && result.data.items) {
+        categories.value = result.data.items;
+      } else {
+        console.error('无法解析的分类列表数据格式:', result);
+        categories.value = [];
+      }
+    } else {
+      console.error('分类列表返回异常:', result);
+      categories.value = [];
+    }
     
     // 处理分类选项
     updateCategoryOptions()
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
+    categories.value = [];
   } finally {
     loading.value = false
   }

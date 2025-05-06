@@ -178,7 +178,6 @@ const handleApiError = (error, showError = true) => {
     // 在控制台中显示更多调试信息
     console.log('[调试] 如果您正在开发环境，请确保后端服务正在运行')
     console.log('[调试] 后端服务端口: 8000，前端代理配置在 vite.config.js 中')
-    console.log('[调试] 如需临时使用模拟数据，可在调试工具中启用模拟数据模式')
   } else {
     message.error(error.message || '未知错误')
     console.error('[请求错误]:', {
@@ -286,6 +285,71 @@ const createApiModule = (moduleName, prefix = apiPrefix.admin) => {
       const fullUrl = `${prefix}${url}`
       logApiCall(moduleName, 'POST', fullUrl, formattedData)
       
+      // 特殊处理登录请求，确保返回的数据正确处理
+      if (url.includes('/auth/login')) {
+        return request.post(fullUrl, formattedData, config)
+          .then(response => {
+            console.log('[API] 登录请求响应:', response);
+            
+            // 确保返回数据格式正确
+            if (response) {
+              // 获取实际数据，可能在 response.data 或 response 本身
+              const resData = response.data || response;
+              
+              // 检查令牌对象情况
+              if (resData.token && typeof resData.token === 'object') {
+                console.log('[API] 检测到令牌是对象格式, 进行处理');
+                const tokenObj = resData.token;
+                
+                // 提取访问令牌和刷新令牌
+                if (tokenObj.access !== undefined) {
+                  // 确保 access 是字符串
+                  if (typeof tokenObj.access !== 'string') {
+                    console.warn('[API] 警告: access 不是字符串，正在转换', typeof tokenObj.access);
+                    tokenObj.access = String(tokenObj.access || '');
+                  }
+                }
+                
+                // 确保 refresh 是字符串
+                if (tokenObj.refresh !== undefined) {
+                  if (typeof tokenObj.refresh !== 'string') {
+                    console.warn('[API] 警告: refresh 不是字符串，正在转换', typeof tokenObj.refresh);
+                    tokenObj.refresh = String(tokenObj.refresh || '');
+                  }
+                }
+              } else {
+                // 处理扁平结构的令牌
+                // 确保token是字符串
+                if (resData.token !== undefined && typeof resData.token !== 'string') {
+                  console.warn('[API] 警告: token不是字符串，尝试转换', typeof resData.token);
+                  resData.token = String(resData.token || '');
+                }
+                
+                // 确保access是字符串
+                if (resData.access !== undefined && typeof resData.access !== 'string') {
+                  console.warn('[API] 警告: access不是字符串，尝试转换', typeof resData.access);
+                  resData.access = String(resData.access || '');
+                }
+                
+                // 确保refresh是字符串
+                if (resData.refresh !== undefined && typeof resData.refresh !== 'string') {
+                  console.warn('[API] 警告: refresh不是字符串，尝试转换', typeof resData.refresh);
+                  resData.refresh = String(resData.refresh || '');
+                }
+              }
+              
+              console.log('[API] 处理后的登录响应:', JSON.stringify(response));
+            }
+            
+            return response;
+          })
+          .catch(error => {
+            console.error('[API] 登录请求错误:', error);
+            return handleApiError(error, showError);
+          });
+      }
+      
+      // 常规请求使用重试机制
       return withRetry(
         () => request.post(fullUrl, formattedData, config),
         { showError }

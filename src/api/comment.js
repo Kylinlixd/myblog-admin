@@ -1,4 +1,5 @@
 import request from '../utils/request'
+import api from '../utils/api'
 
 /**
  * 获取评论列表
@@ -19,7 +20,7 @@ export function getCommentList(params) {
   
   console.log('[评论API] 开始获取评论列表，当前令牌状态:', token ? '有效' : '无效');
   
-  return request.get('/api/comments/', params)
+  return api.admin.get('/api/comments/', params)
     .then(response => {
       console.log('[评论API] 获取评论列表响应:', response);
       
@@ -35,6 +36,15 @@ export function getCommentList(params) {
         if (response.list !== undefined) {
           console.log('[评论API] 直接返回列表数据，获取评论列表成功');
           return response;
+        }
+        
+        // 检查results字段
+        if (response.results !== undefined) {
+          console.log('[评论API] 包含results字段的响应');
+          return {
+            list: response.results,
+            total: response.count || response.results.length
+          };
         }
         
         // 尝试从其他格式中解析
@@ -69,7 +79,7 @@ export function getCommentList(params) {
  * @returns {Promise<void>}
  */
 export function approveComment(id) {
-  return request.put(`/api/comments/${id}/approve/`)
+  return api.admin.put(`/api/comments/${id}/approve/`)
     .then(response => {
       console.log('[评论API] 通过评论响应:', response);
       // 处理不同的响应格式
@@ -90,7 +100,7 @@ export function approveComment(id) {
  * @returns {Promise<void>}
  */
 export function rejectComment(id) {
-  return request.put(`/api/comments/${id}/reject/`)
+  return api.admin.put(`/api/comments/${id}/reject/`)
     .then(response => {
       console.log('[评论API] 拒绝评论响应:', response);
       // 处理不同的响应格式
@@ -111,11 +121,11 @@ export function rejectComment(id) {
  * @returns {Promise<void>}
  */
 export function deleteComment(id) {
-  return request.delete(`/api/comments/${id}/`)
+  return api.admin.delete(`/api/comments/${id}/`)
     .then(response => {
       console.log('[评论API] 删除评论响应:', response);
       // 处理不同的响应格式
-      if (response && (response.code === 200 || response.status === 'success')) {
+      if (response && (response.code === 200 || response.status === 'success' || response.status === 204)) {
         return response.data || response;
       }
       return Promise.reject(new Error(response?.message || '删除失败'));

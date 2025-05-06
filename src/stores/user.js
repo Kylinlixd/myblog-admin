@@ -49,110 +49,188 @@ export const useUserStore = defineStore('user', {
     
     async login(username, password) {
       try {
-        const response = await login({ username, password })
-        console.log('登录响应:', response)
+        // 清除可能存在的旧令牌
+        this.clearUserData();
         
-        // 检查响应结构
-        if (response.code !== 200) {
-          console.error('登录失败: 响应状态码不是200', response)
-          return false
+        // 发送登录请求
+        const response = await login({ username, password });
+        console.log('登录原始响应:', response);
+        
+        // 从响应中提取数据 (考虑不同的响应结构)
+        const responseData = response.data || response;
+        console.log('响应数据结构:', typeof responseData, Object.keys(responseData).join(','));
+        
+        // 直接获取令牌字符串，而不是对象引用
+        let extractedToken = null;
+        let refreshToken = null;
+        
+        // 处理令牌对象格式
+        if (responseData.token && typeof responseData.token === 'object') {
+          console.log('处理令牌对象格式');
+          
+          if (responseData.token.access) {
+            extractedToken = String(responseData.token.access);
+            console.log('提取令牌字符串:', extractedToken.substring(0, 10) + '...');
+          } else if (responseData.token.access_token) {
+            extractedToken = String(responseData.token.access_token);
+            console.log('提取access_token字符串:', extractedToken.substring(0, 10) + '...');
+          }
+          
+          if (responseData.token.refresh) {
+            refreshToken = String(responseData.token.refresh);
+            console.log('提取刷新令牌字符串:', refreshToken.substring(0, 10) + '...');
+          } else if (responseData.token.refresh_token) {
+            refreshToken = String(responseData.token.refresh_token);
+            console.log('提取refresh_token字符串:', refreshToken.substring(0, 10) + '...');
+          }
+        }
+        // 处理直接令牌字段
+        else if (responseData.access) {
+          extractedToken = String(responseData.access);
+          console.log('提取access字段:', extractedToken.substring(0, 10) + '...');
+          
+          if (responseData.refresh) {
+            refreshToken = String(responseData.refresh);
+            console.log('提取refresh字段:', refreshToken.substring(0, 10) + '...');
+          }
+        } else if (responseData.token && typeof responseData.token === 'string') {
+          extractedToken = String(responseData.token);
+          console.log('提取token字符串字段:', extractedToken.substring(0, 10) + '...');
+          
+          if (responseData.refresh_token) {
+            refreshToken = String(responseData.refresh_token);
+            console.log('提取refresh_token字段:', refreshToken.substring(0, 10) + '...');
+          }
         }
         
-        // 从正确的位置提取数据
-        // 响应格式可能是 { code: 200, data: { token, userInfo }, message: 'xxx' }
-        // 或者 { code: 200, data: { access, refresh, userInfo }, message: 'xxx' }
-        const responseData = response.data || {}
-        
-        // 处理不同的令牌格式
-        let token = responseData.token || responseData.access || ''
-        let refreshToken = responseData.refresh_token || responseData.refresh || ''
-        
-        // 确保令牌格式正确，添加Bearer前缀
-        if (token && !token.startsWith('Bearer ')) {
-          token = `Bearer ${token}`
+        // 检查是否成功提取令牌
+        if (!extractedToken) {
+          console.error('无法从响应中提取访问令牌，登录失败');
+          return false;
         }
         
-        // 检查是否有令牌
-        if (!token) {
-          console.error('登录失败: 响应中没有有效的访问令牌', responseData)
-          return false
-        }
+        // 格式化令牌并保存
+        const formattedToken = extractedToken.startsWith('Bearer ') 
+          ? extractedToken 
+          : `Bearer ${extractedToken}`;
         
-        // 获取用户信息
-        const userInfo = responseData.userInfo || responseData.user || {}
+        // 保存令牌到本地存储和状态
+        localStorage.setItem('token', formattedToken);
+        this.token = formattedToken;
+        console.log('保存到localStorage的token:', formattedToken.substring(0, 20) + '...');
         
-        if (Object.keys(userInfo).length === 0) {
-          console.warn('警告: 登录响应中没有用户信息，将尝试获取')
-        }
-        
-        console.log('[user store] 保存令牌前检查');
-        
-        // 先保存到localStorage，再更新状态
-        // 这样可以避免在异步过程中令牌丢失
-        localStorage.setItem('token', token)
-        console.log('[user store] 保存访问令牌:', token)
-        
+        // 保存刷新令牌
         if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken)
-          console.log('[user store] 保存刷新令牌:', refreshToken.substring(0, 10) + '...')
+          localStorage.setItem('refreshToken', refreshToken);
+          this.refreshToken = refreshToken;
+          console.log('保存刷新令牌:', refreshToken.substring(0, 10) + '...');
         }
         
-        // 保存用户信息
-        if (userInfo && Object.keys(userInfo).length > 0) {
-          localStorage.setItem('userInfo', JSON.stringify(userInfo))
-          console.log('[user store] 保存用户信息');
+        // 提取用户信息
+        const userInfo = responseData.user || responseData.userInfo || {};
+        
+        // 保存用户信息 - 确保没有循环引用
+        if (Object.keys(userInfo).length > 0) {
+          this.userInfo = userInfo;
+          try {
+            const userInfoCleaned = JSON.parse(JSON.stringify(userInfo));
+            localStorage.setItem('userInfo', JSON.stringify(userInfoCleaned));
+            console.log('保存用户信息成功');
+          } catch (e) {
+            console.error('保存用户信息失败:', e);
+          }
         }
+        
+        this.initialized = true;
         
         // 验证令牌是否保存成功
         const savedToken = localStorage.getItem('token');
-        if (!savedToken) {
-          console.error('[user store] 令牌保存失败!');
-          // 尝试重新保存
-          console.log('[user store] 尝试重新保存令牌');
-          localStorage.setItem('token', token);
-        } else {
-          console.log('[user store] 令牌保存成功:', savedToken);
-        }
-        
-        // 设置状态
-        this.token = token
-        this.refreshToken = refreshToken || ''
-        this.userInfo = userInfo
-        this.initialized = true
+        console.log('最终保存的令牌:', savedToken ? savedToken.substring(0, 20) + '...' : '无');
         
         // 如果没有用户信息，尝试获取
         if (Object.keys(userInfo).length === 0) {
           try {
-            await this.getUserInfo()
+            console.log('尝试获取额外的用户信息');
+            await this.getUserInfo();
           } catch (error) {
-            console.error('登录后获取用户信息失败:', error)
-            // 这里不需要清除用户数据，因为令牌可能有效
+            console.warn('获取额外用户信息失败:', error.message);
           }
         }
         
-        return true
+        return true;
       } catch (error) {
-        console.error('登录失败:', error)
-        this.clearUserData()
-        return false
+        console.error('登录过程发生错误:', error);
+        this.clearUserData();
+        return false;
       }
     },
     
     async register(userData) {
       try {
         const response = await register(userData)
+        console.log('注册响应:', response)
         
-        // 从正确的位置提取 token 和 userInfo
-        const responseData = response.data || {}
+        // 从响应中提取数据
+        const responseData = response.data || response
+        console.log('处理注册数据:', JSON.stringify(responseData))
         
-        // 处理不同的令牌格式
-        let token = responseData.token || responseData.access || ''
-        let refreshToken = responseData.refresh_token || responseData.refresh || ''
+        // 首先检查是否有完整的令牌对象
+        if (responseData.token && typeof responseData.token === 'object') {
+          console.log('[user store] 检测到令牌是对象格式', responseData.token)
+          const tokenObject = responseData.token
+          
+          // 从对象中提取访问令牌和刷新令牌
+          let accessToken = tokenObject.access || tokenObject.access_token || ''
+          let refreshToken = tokenObject.refresh || tokenObject.refresh_token || ''
+          
+          // 记录值和类型
+          console.log('[user store] 从对象中提取的访问令牌:', 
+            typeof accessToken, accessToken ? accessToken.substring(0, 20) + '...' : '无')
+          console.log('[user store] 从对象中提取的刷新令牌:', 
+            typeof refreshToken, refreshToken ? refreshToken.substring(0, 20) + '...' : '无')
+          
+          if (accessToken) {
+            // 确保令牌是字符串
+            accessToken = String(accessToken)
+            // 添加Bearer前缀
+            const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
+            
+            // 保存令牌
+            localStorage.setItem('token', token)
+            this.token = token
+            console.log('[user store] 保存访问令牌:', token.substring(0, 20) + '...')
+            
+            if (refreshToken) {
+              refreshToken = String(refreshToken)
+              localStorage.setItem('refreshToken', refreshToken)
+              this.refreshToken = refreshToken
+              console.log('[user store] 保存刷新令牌:', refreshToken.substring(0, 10) + '...')
+            }
+            
+            // 处理用户信息
+            const userInfo = responseData.userInfo || responseData.user || {}
+            if (userInfo && Object.keys(userInfo).length > 0) {
+              localStorage.setItem('userInfo', JSON.stringify(userInfo))
+              this.userInfo = userInfo
+              console.log('[user store] 保存用户信息')
+            }
+            
+            this.initialized = true
+            return true
+          }
+        }
+        
+        // 传统格式处理 - 分别提取token和refresh
+        const accessToken = responseData.token || responseData.access || responseData.access_token || ''
+        const refreshToken = responseData.refresh || responseData.refresh_token || ''
+        
+        // 确保令牌是字符串类型
+        const accessTokenStr = typeof accessToken === 'string' ? accessToken : String(accessToken || '')
+        const refreshTokenStr = typeof refreshToken === 'string' ? refreshToken : String(refreshToken || '')
         
         // 确保令牌格式正确，添加Bearer前缀
-        if (token && !token.startsWith('Bearer ')) {
-          token = `Bearer ${token}`
-        }
+        const token = accessTokenStr && !accessTokenStr.startsWith('Bearer ') ? 
+          `Bearer ${accessTokenStr}` : accessTokenStr
         
         if (!token) {
           console.error('注册失败: 响应中没有有效的访问令牌', responseData)
@@ -164,14 +242,20 @@ export const useUserStore = defineStore('user', {
         
         // 注册成功后自动登录
         this.token = token
-        if (refreshToken) {
-          this.refreshToken = refreshToken
-          localStorage.setItem('refreshToken', refreshToken)
+        localStorage.setItem('token', token)
+        
+        if (refreshTokenStr) {
+          localStorage.setItem('refreshToken', refreshTokenStr)
+          this.refreshToken = refreshTokenStr
         }
         
         this.userInfo = userInfo
-        localStorage.setItem('token', token)
+        // 保存用户信息
+        if (userInfo && Object.keys(userInfo).length > 0) {
+          localStorage.setItem('userInfo', JSON.stringify(userInfo))
+        }
         
+        this.initialized = true
         return true
       } catch (error) {
         console.error('注册失败:', error)

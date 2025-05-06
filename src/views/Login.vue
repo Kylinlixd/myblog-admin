@@ -171,70 +171,84 @@ export default {
       loading.value = true
       loginError.value = ''
       
+      // 清除可能存在的旧令牌
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('userInfo')
+      
       try {
         console.log('开始登录:', loginData.username)
         
-        // 清除可能存在的旧令牌
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        
-        const success = await userStore.login(loginData.username, loginData.password)
-        
-        if (success) {
-          message.success('登录成功')
-          // 检查令牌状态
-          const token = localStorage.getItem('token')
-          console.log('登录成功，令牌状态:', token ? '有效' : '无效', token)
+        // 使用try-catch包装登录请求，提供更好的错误处理
+        try {
+          const success = await userStore.login(loginData.username, loginData.password)
           
-          if (!token) {
-            console.error('登录成功但获取不到令牌，可能存在浏览器存储问题');
-            message.warning('登录成功但令牌保存异常，请尝试刷新页面');
-            return;
-          }
-          
-          // 强制从store同步令牌到localStorage
-          // 有时异步操作和状态更新可能导致令牌丢失
-          if (userStore.token) {
-            console.log('[登录] 从 store 同步令牌到 localStorage');
-            localStorage.setItem('token', userStore.token);
+          if (success) {
+            message.success('登录成功')
+            // 检查令牌状态
+            const token = localStorage.getItem('token')
+            console.log('登录成功，令牌状态:', token ? '有效' : '无效', token ? token.substring(0, 20) + '...' : '')
             
-            if (userStore.refreshToken) {
-              localStorage.setItem('refreshToken', userStore.refreshToken);
-            }
-          }
-          
-          // 获取重定向地址，如果没有则跳转到仪表盘
-          const redirect = route.query.redirect || '/dashboard'
-          
-          // 设置全局加载状态
-          appStore.startLoading('正在准备您的工作台...')
-          
-          // 记录重定向信息
-          console.log('登录成功，即将跳转到:', redirect)
-          
-          // 增加延迟时间，确保状态已更新
-          setTimeout(() => {
-            // 再次检查令牌状态
-            const finalToken = localStorage.getItem('token');
-            console.log('跳转前最终令牌状态:', finalToken ? '有效' : '无效');
-            
-            // 再次确保令牌存在
-            if (!finalToken && userStore.token) {
-              localStorage.setItem('token', userStore.token);
-              console.log('[登录] 跳转前再次同步令牌');
+            if (!token) {
+              console.error('登录成功但获取不到令牌，可能存在浏览器存储问题')
+              message.warning('登录成功但令牌保存异常，请尝试刷新页面')
+              return
             }
             
-            router.push(redirect).catch(err => {
-              console.error('路由跳转错误:', err)
-              // 如果重定向失败，尝试直接跳转到仪表盘
-              router.push('/dashboard')
-            })
-          }, 1000) // 增加到1000ms
-        } else {
-          loginError.value = '用户名或密码错误'
+            // 强制从store同步令牌到localStorage
+            if (userStore.token) {
+              console.log('[登录] 从 store 同步令牌到 localStorage')
+              localStorage.setItem('token', userStore.token)
+              
+              if (userStore.refreshToken) {
+                localStorage.setItem('refreshToken', userStore.refreshToken)
+              }
+            }
+            
+            // 获取重定向地址，如果没有则跳转到仪表盘
+            const redirect = route.query.redirect || '/dashboard'
+            
+            // 设置全局加载状态
+            appStore.startLoading('正在准备您的工作台...')
+            
+            // 记录重定向信息
+            console.log('登录成功，即将跳转到:', redirect)
+            
+            // 增加延迟时间，确保状态已更新
+            setTimeout(() => {
+              // 再次检查令牌状态
+              const finalToken = localStorage.getItem('token')
+              console.log('跳转前最终令牌状态:', finalToken ? '有效' : '无效')
+              
+              // 再次确保令牌存在
+              if (!finalToken && userStore.token) {
+                localStorage.setItem('token', userStore.token)
+                console.log('[登录] 跳转前再次同步令牌')
+              }
+              
+              router.push(redirect).catch(err => {
+                console.error('路由跳转错误:', err)
+                // 如果重定向失败，尝试直接跳转到仪表盘
+                router.push('/dashboard')
+              })
+            }, 1000)
+          } else {
+            loginError.value = '用户名或密码错误'
+          }
+        } catch (loginErr) {
+          console.error('登录请求处理失败:', loginErr)
+          
+          // 检查是否是特定类型的错误
+          if (loginErr.message && loginErr.message.includes('startsWith is not a function')) {
+            console.error('令牌格式错误，可能是后端返回了非字符串类型的令牌')
+            loginError.value = '登录失败: 令牌格式错误，请联系管理员'
+          } else {
+            // 其他错误
+            loginError.value = loginErr.message || '登录失败，请稍后重试'
+          }
         }
       } catch (error) {
-        console.error('登录失败:', error)
+        console.error('登录过程发生未捕获错误:', error)
         loginError.value = error.message || '登录失败，请稍后重试'
       } finally {
         loading.value = false
