@@ -96,11 +96,13 @@ export function login(data) {
       
       const role = data.username === 'admin' ? 'admin' : 'user'
       const userInfo = getMockUserInfo(data.username, role)
-      const token = generateTestToken()
+      const token = `Bearer ${generateTestToken()}`
       
       // 保存到localStorage以模拟会话
       localStorage.setItem('token', token)
       localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      
+      console.log('[模拟数据] 生成了模拟令牌:', token);
       
       return Promise.resolve({
         code: 200,
@@ -133,11 +135,13 @@ export function login(data) {
         
         // 保存令牌，确保使用访问令牌而非刷新令牌
         if (userData.access) {
-          localStorage.setItem('token', `Bearer ${userData.access}`);
-          console.log('[登录] 成功保存访问令牌');
+          const token = `Bearer ${userData.access}`;
+          localStorage.setItem('token', token);
+          console.log('[登录] 成功保存访问令牌:', token.substring(0, 15) + '...');
         } else if (userData.token) {
-          localStorage.setItem('token', `Bearer ${userData.token}`);
-          console.log('[登录] 成功保存令牌');
+          const token = userData.token.startsWith('Bearer ') ? userData.token : `Bearer ${userData.token}`;
+          localStorage.setItem('token', token);
+          console.log('[登录] 成功保存令牌:', token.substring(0, 15) + '...');
         }
         
         // 保存刷新令牌（如果存在）
@@ -155,6 +159,14 @@ export function login(data) {
         }
         
         console.log('[登录] 成功登录，已保存用户凭据');
+        
+        // 检查令牌是否正确保存
+        const savedToken = localStorage.getItem('token');
+        if (!savedToken) {
+          console.error('[登录] 警告：令牌未能正确保存到localStorage！');
+        } else {
+          console.log('[登录] 确认令牌已保存到localStorage:', savedToken.substring(0, 15) + '...');
+        }
       }
       return response;
     })

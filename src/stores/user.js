@@ -90,10 +90,22 @@ export const useUserStore = defineStore('user', {
         if (refreshToken) {
           this.refreshToken = refreshToken
           localStorage.setItem('refreshToken', refreshToken)
+          console.log('[user store] 保存刷新令牌:', refreshToken.substring(0, 10) + '...')
         }
         
         this.userInfo = userInfo
+        // 确保立即保存令牌
         localStorage.setItem('token', token)
+        console.log('[user store] 保存访问令牌:', token)
+        
+        // 验证令牌是否保存成功
+        const savedToken = localStorage.getItem('token');
+        if (!savedToken) {
+          console.error('[user store] 令牌保存失败!');
+        } else {
+          console.log('[user store] 令牌保存成功:', savedToken);
+        }
+        
         this.initialized = true
         
         // 如果没有用户信息，尝试获取

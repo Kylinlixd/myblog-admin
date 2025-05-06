@@ -76,6 +76,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { message, Modal } from 'ant-design-vue'
 import { getCommentList, approveComment, rejectComment, deleteComment } from '../../api/comment'
 import { CheckOutlined, CloseOutlined, DeleteOutlined, CommentOutlined } from '@ant-design/icons-vue'
+import { useRouter } from 'vue-router'
 
 // 导入通用组件
 import DataTable from '../../components/common/DataTable.vue'
@@ -109,22 +110,61 @@ const filterForm = reactive({
 // 获取评论列表
 const getComments = async () => {
   loading.value = true
+  
+  // 检查模拟数据模式
+  const useMockData = localStorage.getItem('useMockData') === 'true';
+  
+  // 先验证是否有有效令牌
+  const token = localStorage.getItem('token')
+  if (!token && !useMockData) {
+    message.error('未登录或会话已过期，请重新登录')
+    loading.value = false
+    setTimeout(() => {
+      router.push('/login')
+    }, 1000)
+    return
+  }
+  
   try {
+    console.log('开始获取评论列表，令牌:', token ? '存在' : '不存在', '模拟数据模式:', useMockData);
     const response = await getCommentList({
       page: currentPage.value,
       pageSize: pageSize.value,
       ...filterForm
     })
     
-    if (response.code === 200) {
-      comments.value = response.data.list || []
-      total.value = response.data.total || 0
+    console.log('获取评论列表响应:', response);
+    
+    if (response && response.list) {
+      comments.value = response.list || []
+      total.value = response.total || 0
+      console.log('获取评论列表成功:', comments.value.length, '条记录');
     } else {
-      message.error(response.message || '获取评论列表失败')
+      console.error('评论数据格式异常:', response)
+      message.error('获取评论列表失败: 数据格式异常')
     }
   } catch (error) {
     console.error('获取评论列表失败:', error)
-    message.error('获取评论列表失败')
+    
+    // 检查是否是认证错误
+    if (error.message && (
+      error.message.includes('登录已过期') || 
+      error.message.includes('未登录') ||
+      error.response?.status === 401
+    )) {
+      message.error('登录已过期，请重新登录')
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
+    } else {
+      // 在开发环境中，如果出错且不是模拟数据模式，建议启用模拟数据
+      if (process.env.NODE_ENV === 'development' && !useMockData) {
+        message.warn('获取数据失败，建议启用模拟数据模式');
+        console.log('提示: 可以通过登录页面的选项启用模拟数据模式');
+      } else {
+        message.error('获取评论列表失败: ' + (error.message || '未知错误'))
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -230,6 +270,8 @@ const getStatusText = (status) => {
   }
   return map[status] || status
 }
+
+const router = useRouter()
 
 onMounted(() => {
   getComments()

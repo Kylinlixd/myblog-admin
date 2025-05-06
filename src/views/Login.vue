@@ -73,6 +73,13 @@
           <span>还没有账号？</span>
           <router-link to="/register" class="link">立即注册</router-link>
         </div>
+        
+        <!-- 开发环境下显示模拟数据模式切换 -->
+        <div v-if="isDev" style="margin-top: 20px; display: flex; justify-content: center;">
+          <a-checkbox v-model:checked="useMockData" @change="toggleMockData">
+            使用模拟数据（开发模式）
+          </a-checkbox>
+        </div>
       </a-form>
     </div>
   </div>
@@ -86,6 +93,7 @@ import { useAppStore } from '../stores/app'
 import { message } from 'ant-design-vue'
 // 分别导入图标组件
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+import { toggleMockDataMode } from '../api/auth'
 
 export default {
   name: 'LoginView',
@@ -165,10 +173,43 @@ export default {
       
       try {
         console.log('开始登录:', loginData.username)
+        
+        // 清除可能存在的旧令牌
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        
+        // 强制标记模拟数据模式（开发环境）
+        const isDev = process.env.NODE_ENV === 'development';
+        if (isDev && useMockData.value) {
+          localStorage.setItem('useMockData', 'true');
+          console.log('[登录] 强制启用模拟数据模式');
+        }
+        
         const success = await userStore.login(loginData.username, loginData.password)
         
         if (success) {
           message.success('登录成功')
+          // 检查令牌状态
+          const token = localStorage.getItem('token')
+          console.log('登录成功，令牌状态:', token ? '有效' : '无效', token)
+          
+          if (!token) {
+            console.error('登录成功但获取不到令牌，可能存在浏览器存储问题');
+            message.warning('登录成功但令牌保存异常，请尝试刷新页面');
+            return;
+          }
+          
+          // 强制从store同步令牌到localStorage
+          // 有时异步操作和状态更新可能导致令牌丢失
+          if (userStore.token) {
+            console.log('[登录] 从 store 同步令牌到 localStorage');
+            localStorage.setItem('token', userStore.token);
+            
+            if (userStore.refreshToken) {
+              localStorage.setItem('refreshToken', userStore.refreshToken);
+            }
+          }
+          
           // 获取重定向地址，如果没有则跳转到仪表盘
           const redirect = route.query.redirect || '/dashboard'
           
@@ -178,14 +219,24 @@ export default {
           // 记录重定向信息
           console.log('登录成功，即将跳转到:', redirect)
           
-          // 添加 100ms 延迟，确保状态已更新
+          // 增加延迟时间，确保状态已更新
           setTimeout(() => {
+            // 再次检查令牌状态
+            const finalToken = localStorage.getItem('token');
+            console.log('跳转前最终令牌状态:', finalToken ? '有效' : '无效');
+            
+            // 再次确保令牌存在
+            if (!finalToken && userStore.token) {
+              localStorage.setItem('token', userStore.token);
+              console.log('[登录] 跳转前再次同步令牌');
+            }
+            
             router.push(redirect).catch(err => {
               console.error('路由跳转错误:', err)
               // 如果重定向失败，尝试直接跳转到仪表盘
               router.push('/dashboard')
             })
-          }, 100)
+          }, 1000) // 增加到1000ms
         } else {
           loginError.value = '用户名或密码错误'
         }
@@ -195,6 +246,19 @@ export default {
       } finally {
         loading.value = false
       }
+    }
+
+    // 开发环境判断
+    const isDev = ref(process.env.NODE_ENV === 'development')
+    // 模拟数据模式
+    const useMockData = ref(localStorage.getItem('useMockData') === 'true')
+    
+    // 切换模拟数据模式
+    const toggleMockData = (e) => {
+      const checked = e.target.checked
+      toggleMockDataMode(checked)
+      useMockData.value = checked
+      message.success(`已${checked ? '启用' : '禁用'}模拟数据模式`)
     }
 
     onMounted(() => {
@@ -207,6 +271,14 @@ export default {
       if (process.env.NODE_ENV === 'development') {
         loginData.username = 'admin'
         loginData.password = 'admin'
+        
+        // 默认使用模拟数据，避免认证问题
+        if (localStorage.getItem('useMockData') !== 'true' && 
+            localStorage.getItem('useMockData') !== 'false') {
+          console.log('开发环境：默认启用模拟数据模式');
+          localStorage.setItem('useMockData', 'true');
+          useMockData.value = true;
+        }
       }
     })
 
@@ -215,7 +287,10 @@ export default {
       loading,
       loginError,
       handleLogin,
-      shapeStyles
+      shapeStyles,
+      isDev,
+      useMockData,
+      toggleMockData
     }
   }
 }

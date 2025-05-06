@@ -184,6 +184,13 @@ service.interceptors.request.use(
     // 统计请求次数
     increasePendingCount()
     
+    // 检查是否是认证相关路径
+    const isAuthPath = config.url && (
+      config.url.includes('/auth/') || 
+      config.url.includes('/login') || 
+      config.url.includes('/token/refresh')
+    );
+    
     // 获取token并添加到请求头
     const token = localStorage.getItem('token')
     if (token) {
@@ -191,27 +198,100 @@ service.interceptors.request.use(
       let authToken = token;
       if (!token.startsWith('Bearer ')) {
         authToken = `Bearer ${token}`;
+        // 修复localStorage中存储的token
+        localStorage.setItem('token', authToken);
+        console.log('[Token] 修复了令牌格式，添加了Bearer前缀');
       }
       
       config.headers.Authorization = authToken;
       
       // 检查令牌类型并记录日志
+      console.log('[Token] 当前令牌:', authToken);
       console.log('[Token] 请求携带令牌类型:', token.includes('refresh') ? 'refresh token' : 'access token');
       console.log(`[Token] ${config.method.toUpperCase()} ${config.url} 使用认证令牌:`, 
                  authToken.substring(0, Math.min(30, authToken.length)) + '...');
     } else {
       console.log('[Token] 请求未携带令牌:', config.url);
+      
+      // 开发环境和模拟数据模式检查
+      const useMockData = localStorage.getItem('useMockData') === 'true';
+      const isDev = process.env.NODE_ENV === 'development';
+      
+      // 如果在开发环境并使用模拟数据，允许无令牌继续请求
+      if (isDev && useMockData) {
+        console.log('[Token] 开发环境+模拟数据模式：允许无令牌请求');
+        // 继续请求而不报错
+      }
+      // 如果不是认证相关路径，但需要认证，则提前返回错误
+      else if (!isAuthPath && !config.url.startsWith('/blog/')) {
+        console.error('[Token] 错误: 访问需要认证的API但未找到令牌:', config.url);
+        
+        if (isDev && !useMockData) {
+          console.warn('[Token] 提示: 当前在开发环境，但未启用模拟数据，考虑启用模拟数据模式以避免认证问题');
+        }
+        
+        // 标记请求不要立即触发401错误，而是让它继续发送，等待后端响应
+        if (config.skipAuthCheck === true) {
+          console.log('[Token] 跳过认证检查，允许请求继续进行');
+        } else {
+          // 在开发环境中，如果是获取评论列表等API，使用模拟数据而不是立即返回401
+          if (isDev && (
+              config.url.includes('/api/comments') || 
+              config.url.includes('/api/articles')
+          )) {
+            console.warn('[Token] 后台管理API未携带令牌，将使用模拟数据');
+            const mockData = {
+              code: 200,
+              data: {
+                list: Array(5).fill().map((_, i) => ({
+                  id: i + 1,
+                  author: `测试用户${i+1}`,
+                  content: `这是一条测试评论内容 ${i+1}`,
+                  email: `user${i+1}@example.com`,
+                  status: ['pending', 'approved', 'rejected'][Math.floor(Math.random() * 3)],
+                  createTime: new Date().toISOString().split('T')[0]
+                })),
+                total: 5
+              },
+              message: 'success'
+            };
+            return Promise.resolve({
+              data: mockData,
+              status: 200,
+              headers: {},
+              config
+            });
+          } else {
+            console.warn('[Token] 中断请求并返回401错误');
+            return Promise.reject({
+              response: {
+                status: 401,
+                data: {
+                  code: 401,
+                  message: '登录已过期，请重新登录'
+                }
+              },
+              isAuthError: true
+            });
+          }
+        }
+      }
+      
+      // 尝试加载userStore刷新令牌
+      try {
+        // 可以选择在这里尝试刷新令牌
+        console.log('[Token] 尝试从localStorage中获取刷新令牌');
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (refreshToken) {
+          console.log('[Token] 找到刷新令牌，但未使用，请考虑实现刷新令牌逻辑');
+        }
+      } catch (error) {
+        console.error('[Token] 尝试恢复令牌失败:', error);
+      }
     }
     
-    // URL检查，特别处理常见的不需要令牌的路径
-    const isAuthPath = config.url && (
-      config.url.includes('/auth/') || 
-      config.url.includes('/login') || 
-      config.url.includes('/token/refresh')
-    );
-    
     // 对认证路径不显示警告
-    if (!token && !isAuthPath) {
+    if (!token && !isAuthPath && !config.url.startsWith('/blog/')) {
       console.warn('[Token] 警告: 访问需要认证的API未携带令牌:', config.url);
     }
     
