@@ -516,45 +516,34 @@ const fetchDynamics = async () => {
   try {
     const res = await getDynamicList({
       page: currentPage.value,
-      pageSize: pageSize.value
+      pageSize: pageSize.value,
+      ...searchForm
     });
     
     console.log('动态API响应:', res);
     
-    // 确保 dynamicList 始终是数组
-    dynamicList.value = [];
-    
-    if (res && res.code === 200) {
-      if (res.data && typeof res.data === 'object') {
-        let items = [];
-        
-        if (res.data.items !== undefined) {
-          items = Array.isArray(res.data.items) ? res.data.items : [];
-          total.value = res.data.total || items.length;
-        } else if (Array.isArray(res.data)) {
-          items = res.data;
-          total.value = items.length;
-        } else {
-          const possibleItems = res.data.list || res.data.data || res.data.records || [];
-          items = Array.isArray(possibleItems) ? possibleItems : [];
-          total.value = res.data.total || res.data.totalCount || res.data.count || items.length;
-        }
-        
-        // 确保每个项目都是有效的对象
-        dynamicList.value = items.filter(item => item && typeof item === 'object');
+    if (res && res.code === 200 && res.data) {
+      const { items, total: totalCount } = res.data;
+      
+      // 确保 items 是数组
+      if (Array.isArray(items)) {
+        dynamicList.value = items;
+        total.value = totalCount;
         console.log('已获取动态列表, 总数:', total.value, '有效项目数:', dynamicList.value.length);
       } else {
-        console.warn('API返回数据格式异常:', res);
+        console.warn('API返回的items不是数组:', items);
+        dynamicList.value = [];
         total.value = 0;
       }
     } else {
       console.warn('API响应不成功:', res);
+      dynamicList.value = [];
       total.value = 0;
     }
   } catch (error) {
     console.error('获取动态列表失败:', error);
     message.error('获取动态列表失败');
-    console.warn('检查后端服务是否开启');
+    dynamicList.value = [];
     total.value = 0;
   } finally {
     loading.value = false;

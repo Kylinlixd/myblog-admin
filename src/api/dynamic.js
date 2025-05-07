@@ -29,10 +29,42 @@ export const getDynamicList = async (params) => {
     const response = await api.admin.get(apiUrl, apiParams);
     console.log('动态列表API响应原始数据:', response);
     
+    // 处理不同的响应格式
+    let items = [];
+    let total = 0;
+    
+    if (response && response.code === 200 && response.data) {
+      // 标准格式: {code: 200, data: {items: [], total: 0}}
+      if (response.data.items !== undefined) {
+        items = Array.isArray(response.data.items) ? response.data.items : [];
+        total = response.data.total || items.length;
+      } else if (Array.isArray(response.data)) {
+        // 直接返回数组
+        items = response.data;
+        total = items.length;
+      } else {
+        // 其他可能的格式
+        const possibleItems = response.data.list || response.data.data || response.data.records || [];
+        items = Array.isArray(possibleItems) ? possibleItems : [];
+        total = response.data.total || response.data.totalCount || response.data.count || items.length;
+      }
+    } else if (Array.isArray(response)) {
+      // 直接返回数组
+      items = response;
+      total = response.length;
+    } else if (response && response.items) {
+      // {items: [], total: 0} 格式
+      items = Array.isArray(response.items) ? response.items : [];
+      total = response.total || items.length;
+    }
+    
     // 构造标准响应
     return { 
       code: 200, 
-      data: response, 
+      data: {
+        items,
+        total
+      }, 
       message: 'success'
     };
   } catch (error) {
