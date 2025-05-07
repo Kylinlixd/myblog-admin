@@ -1,69 +1,98 @@
 <template>
   <div class="category-list">
-    <a-page-header
-      title="分类管理"
-      subtitle="管理博客分类"
-    >
-      <template #extra>
-        <a-button type="primary" @click="handleCreate">
-          <plus-outlined /> 新建分类
-        </a-button>
-      </template>
-    </a-page-header>
-    
-    <a-card class="data-card">
-      <a-table
-        :loading="loading"
-        :columns="columns"
-        :data-source="categories"
-        :pagination="false"
-        row-key="id"
-        :expand-row-by-click="true"
-      >
-        <template #bodyCell="{ column, record }">
-          <!-- 分类名称列 -->
-          <template v-if="column.dataIndex === 'name'">
-            <span>{{ record.name }}</span>
-            <a-tag v-if="record.parentId" color="blue">子分类</a-tag>
-          </template>
-          
-          <!-- 操作列 -->
-          <template v-if="column.dataIndex === 'action'">
-            <a-space>
-              <a-button type="primary" size="small" @click.stop="handleEdit(record)">
-                <template #icon><edit-outlined /></template>编辑
-              </a-button>
-              <a-button 
-                v-if="!record.parentId" 
-                type="primary" 
-                size="small" 
-                @click.stop="handleAddChild(record)"
-              >
-                <template #icon><plus-outlined /></template>添加子分类
-              </a-button>
-              <a-popconfirm
-                :title="record.children && record.children.length ? 
-                  '该分类包含子分类，删除将同时删除所有子分类，确定继续吗？' : 
-                  '确定要删除该分类吗？'"
-                ok-text="确定"
-                cancel-text="取消"
-                @confirm="handleDelete(record)"
-              >
-                <a-button type="primary" danger size="small" @click.stop>
-                  <template #icon><delete-outlined /></template>删除
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <!-- 搜索表单 -->
+    <a-form layout="inline" class="search-form">
+      <a-form-item label="名称">
+        <a-input v-model:value="searchForm.name" placeholder="搜索分类名称" allowClear />
+      </a-form-item>
+      <a-form-item label="状态">
+        <a-select
+          v-model:value="searchForm.status"
+          placeholder="选择状态"
+          style="min-width: 100px"
+          allowClear
+        >
+          <a-select-option value="active">启用</a-select-option>
+          <a-select-option value="inactive">禁用</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item>
+        <a-space>
+          <a-button type="primary" @click="handleSearch">
+            <template #icon><SearchOutlined /></template>
+            搜索
+          </a-button>
+          <a-button @click="resetSearch">
+            <template #icon><ReloadOutlined /></template>
+            重置
+          </a-button>
+        </a-space>
+      </a-form-item>
+    </a-form>
 
-          <!-- 创建时间列 -->
-          <template v-if="column.dataIndex === 'createdAt'">
-            {{ formatDate(record.createdAt) }}
-          </template>
+    <!-- 操作按钮 -->
+    <div class="table-operations">
+      <a-space>
+        <a-button type="primary" @click="handleAdd">
+          <template #icon><PlusOutlined /></template>
+          新建分类
+        </a-button>
+        <a-popconfirm
+          title="确定要删除选中的分类吗？"
+          ok-text="确定"
+          cancel-text="取消"
+          @confirm="handleBatchDelete"
+        >
+          <a-button danger :disabled="!selectedRowKeys.length">
+            <template #icon><DeleteOutlined /></template>
+            批量删除
+          </a-button>
+        </a-popconfirm>
+      </a-space>
+    </div>
+
+    <!-- 数据表格 -->
+    <a-table
+      :columns="columns"
+      :data-source="categoryList"
+      :loading="loading"
+      :pagination="pagination"
+      :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+      @change="handleTableChange"
+      :scroll="{ x: 800 }"
+      :expandable="false"
+    >
+      <template #bodyCell="{ column, record }">
+        <!-- 状态列 -->
+        <template v-if="column.dataIndex === 'status'">
+          <a-tag :color="record.status === 'active' ? 'success' : 'default'">
+            {{ record.status === 'active' ? '启用' : '禁用' }}
+          </a-tag>
         </template>
-      </a-table>
-    </a-card>
-    
+
+        <!-- 操作列 -->
+        <template v-else-if="column.dataIndex === 'action'">
+          <a-space>
+            <a-button type="primary" size="small" @click="handleEdit(record)">
+              <template #icon><EditOutlined /></template>
+              编辑
+            </a-button>
+            <a-popconfirm
+              title="确定要删除该分类吗？"
+              ok-text="确定"
+              cancel-text="取消"
+              @confirm="handleDelete(record)"
+            >
+              <a-button type="primary" danger size="small">
+                <template #icon><DeleteOutlined /></template>
+                删除
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
+
     <!-- 分类编辑对话框 -->
     <a-modal
       v-model:visible="dialogVisible"
@@ -79,22 +108,6 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="上级分类" name="parentId">
-          <a-select
-            v-model:value="categoryForm.parentId"
-            placeholder="请选择上级分类"
-            allowClear
-          >
-            <a-select-option
-              v-for="item in categoryOptions"
-              :key="item.id"
-              :value="item.id"
-            >
-              {{ item.name }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        
         <a-form-item label="分类名称" name="name">
           <a-input v-model:value="categoryForm.name" placeholder="请输入分类名称" />
         </a-form-item>
@@ -107,8 +120,11 @@
           />
         </a-form-item>
         
-        <a-form-item label="排序" name="sort">
-          <a-input-number v-model:value="categoryForm.sort" :min="0" :max="999" />
+        <a-form-item label="状态" name="status">
+          <a-select v-model:value="categoryForm.status">
+            <a-select-option value="active">启用</a-select-option>
+            <a-select-option value="inactive">禁用</a-select-option>
+          </a-select>
         </a-form-item>
       </a-form>
     </a-modal>
@@ -117,9 +133,9 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
+import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Input as AInput, Textarea as ATextarea, Select as ASelect } from 'ant-design-vue'
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from '@/api/category'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 
 // 表格列配置
 const columns = [
@@ -157,20 +173,50 @@ const columns = [
 ]
 
 // 数据列表
-const categories = ref([])
+const categoryList = ref([])
 const loading = ref(false)
 const formLoading = ref(false)
 const formRef = ref(null)
+
+// 表格选择相关
+const selectedRowKeys = ref([])
+const onSelectChange = (keys) => {
+  selectedRowKeys.value = keys
+}
+
+// 表格变化处理
+const handleTableChange = (pagination, filters, sorter) => {
+  console.log('表格变化:', { pagination, filters, sorter })
+  // 这里可以处理分页、筛选、排序等变化
+}
+
+// 搜索表单
+const searchForm = reactive({
+  name: '',
+  status: undefined
+})
+
+// 处理搜索
+const handleSearch = () => {
+  console.log('搜索条件:', searchForm)
+  fetchCategories()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.name = ''
+  searchForm.status = undefined
+  fetchCategories()
+}
 
 // 编辑对话框
 const dialogVisible = ref(false)
 const dialogType = ref('create')
 const categoryForm = reactive({
   id: '',
-  parentId: undefined,
   name: '',
   description: '',
-  sort: 0
+  status: 'active'
 })
 
 // 表单规则
@@ -183,9 +229,6 @@ const rules = {
     { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
   ]
 }
-
-// 分类选项（用于选择器）
-const categoryOptions = ref([])
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -203,82 +246,61 @@ const fetchCategories = async () => {
     
     if (result && result.results) {
       // 标准分页格式
-      categories.value = result.results || [];
+      categoryList.value = (result.results || []).map(item => ({
+        ...item,
+        status: item.status || 'inactive' // 确保有默认状态
+      }));
     } else if (result && Array.isArray(result)) {
       // 直接返回数组
-      categories.value = result;
+      categoryList.value = result.map(item => ({
+        ...item,
+        status: item.status || 'inactive'
+      }));
     } else if (result && typeof result === 'object') {
       // 如果返回的是对象，尝试提取数据
+      let items = [];
       if (Array.isArray(result.data)) {
-        categories.value = result.data;
+        items = result.data;
       } else if (result.data && Array.isArray(result.data.results)) {
-        categories.value = result.data.results;
+        items = result.data.results;
       } else if (result.data && result.data.items) {
-        categories.value = result.data.items;
-      } else {
-        console.error('无法解析的分类列表数据格式:', result);
-        categories.value = [];
+        items = result.data.items;
       }
+      categoryList.value = items.map(item => ({
+        ...item,
+        status: item.status || 'inactive'
+      }));
     } else {
       console.error('分类列表返回异常:', result);
-      categories.value = [];
+      categoryList.value = [];
     }
-    
-    // 处理分类选项
-    updateCategoryOptions()
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
-    categories.value = [];
+    categoryList.value = [];
   } finally {
     loading.value = false
   }
 }
 
-// 更新分类选项
-const updateCategoryOptions = () => {
-  // 过滤当前编辑的分类及其子分类，避免循环引用
-  categoryOptions.value = categories.value.filter(item => {
-    if (dialogType.value === 'edit' && item.id === categoryForm.id) return false
-    if (dialogType.value === 'edit' && item.parentId === categoryForm.id) return false
-    return true
-  })
-}
-
 // 打开新建分类对话框
-const handleCreate = () => {
+const handleAdd = () => {
   dialogType.value = 'create'
   categoryForm.id = ''
-  categoryForm.parentId = undefined
   categoryForm.name = ''
   categoryForm.description = ''
-  categoryForm.sort = 0
+  categoryForm.status = 'active'
   dialogVisible.value = true
-  updateCategoryOptions()
 }
 
 // 打开编辑分类对话框
 const handleEdit = (record) => {
   dialogType.value = 'edit'
   categoryForm.id = record.id
-  categoryForm.parentId = record.parentId
   categoryForm.name = record.name
   categoryForm.description = record.description
-  categoryForm.sort = record.sort || 0
+  categoryForm.status = record.status || 'inactive'
   dialogVisible.value = true
-  updateCategoryOptions()
-}
-
-// 打开添加子分类对话框
-const handleAddChild = (parent) => {
-  dialogType.value = 'create'
-  categoryForm.id = ''
-  categoryForm.parentId = parent.id
-  categoryForm.name = ''
-  categoryForm.description = ''
-  categoryForm.sort = 0
-  dialogVisible.value = true
-  updateCategoryOptions()
 }
 
 // 处理表单提交
@@ -290,11 +312,16 @@ const handleSubmit = async () => {
     
     formLoading.value = true
     
+    const submitData = {
+      ...categoryForm,
+      status: categoryForm.status || 'inactive'
+    }
+    
     if (dialogType.value === 'create') {
-      await createCategory(categoryForm)
+      await createCategory(submitData)
       message.success('分类创建成功')
     } else {
-      await updateCategory(categoryForm.id, categoryForm)
+      await updateCategory(submitData.id, submitData)
       message.success('分类更新成功')
     }
     
@@ -324,22 +351,104 @@ const handleDelete = async (record) => {
   }
 }
 
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedRowKeys.value.length) {
+    message.warning('请选择要删除的分类')
+    return
+  }
+
+  try {
+    loading.value = true
+    await Promise.all(selectedRowKeys.value.map(id => deleteCategory(id)))
+    message.success('批量删除成功')
+    selectedRowKeys.value = []
+    fetchCategories()
+  } catch (error) {
+    console.error('批量删除失败:', error)
+    message.error('批量删除失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 组件挂载时获取分类列表
 onMounted(() => {
   fetchCategories()
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .category-list {
-  padding: 20px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .search-form {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: #fafafa;
+    border-radius: 8px;
+
+    :deep(.ant-form-item) {
+      margin-bottom: 16px;
+      margin-right: 16px;
+
+      @media (max-width: 768px) {
+        margin-right: 0;
+        width: 100%;
+      }
+    }
+
+    :deep(.ant-form-item-control-input) {
+      min-width: 200px;
+    }
+  }
+
+  .table-operations {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  :deep(.ant-table) {
+    .ant-table-cell {
+      vertical-align: middle;
+    }
+  }
+
+  :deep(.ant-table-thead > tr > th) {
+    white-space: nowrap;
+  }
+
+  :deep(.ant-table-tbody > tr > td) {
+    padding: 16px 8px;
+  }
+
+  :deep(.ant-space) {
+    flex-wrap: wrap;
+  }
 }
 
-.data-card {
-  margin-top: 16px;
-}
+// 响应式布局
+@media (max-width: 768px) {
+  .category-list {
+    padding: 16px;
 
-:deep(.ant-table-row-expand-icon) {
-  display: none;
+    .search-form {
+      padding: 16px;
+    }
+
+    .table-operations {
+      flex-direction: column;
+      gap: 8px;
+
+      .ant-space {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  }
 }
 </style> 

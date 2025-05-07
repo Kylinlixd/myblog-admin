@@ -1,56 +1,102 @@
 <template>
   <div class="tag-list">
-    <a-page-header
-      title="标签管理"
-      subtitle="管理博客标签"
-    >
-      <template #extra>
-        <a-button type="primary" @click="handleCreate">
-          <plus-outlined /> 新建标签
-        </a-button>
-      </template>
-    </a-page-header>
-    
-    <a-card class="data-card">
-      <a-table
-        :loading="loading"
-        :columns="columns"
-        :data-source="tagList"
-        :pagination="paginationConfig"
-        row-key="id"
-      >
-        <template #bodyCell="{ column, record }">
-          <!-- 标签名称列 -->
-          <template v-if="column.dataIndex === 'name'">
-            <a-tag color="blue">{{ record.name }}</a-tag>
-          </template>         
-          <!-- 操作列 -->
-          <template v-if="column.dataIndex === 'action'">
-            <a-space>
-              <a-button type="primary" size="small" @click="handleEdit(record)">
-                <template #icon><edit-outlined /></template>编辑
-              </a-button>
-              <a-popconfirm
-                title="确定要删除该标签吗？"
-                ok-text="确定"
-                cancel-text="取消"
-                @confirm="handleDelete(record)"
-              >
-                <a-button type="primary" danger size="small">
-                  <template #icon><delete-outlined /></template>删除
-                </a-button>
-              </a-popconfirm>
-            </a-space>
-          </template>
+    <!-- 搜索表单 -->
+    <a-form layout="inline" class="search-form">
+      <a-form-item label="名称">
+        <a-input v-model:value="searchForm.name" placeholder="搜索标签名称" allowClear />
+      </a-form-item>
+      <a-form-item label="状态">
+        <a-select
+          v-model:value="searchForm.status"
+          placeholder="选择状态"
+          style="min-width: 100px"
+          allowClear
+        >
+          <a-select-option value="active">启用</a-select-option>
+          <a-select-option value="inactive">禁用</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item>
+        <a-space>
+          <a-button type="primary" @click="handleSearch">
+            <template #icon><SearchOutlined /></template>
+            搜索
+          </a-button>
+          <a-button @click="resetSearch">
+            <template #icon><ReloadOutlined /></template>
+            重置
+          </a-button>
+        </a-space>
+      </a-form-item>
+    </a-form>
 
-          <!-- 创建时间列 -->
-          <template v-if="column.dataIndex === 'createdAt'">
-            {{ formatDate(record.createdAt) }}
-          </template>
+    <!-- 操作按钮 -->
+    <div class="table-operations">
+      <a-space>
+        <a-button type="primary" @click="handleAdd">
+          <template #icon><PlusOutlined /></template>
+          新建标签
+        </a-button>
+        <a-popconfirm
+          title="确定要删除选中的标签吗？"
+          ok-text="确定"
+          cancel-text="取消"
+          @confirm="handleBatchDelete"
+        >
+          <a-button danger :disabled="!selectedRowKeys.length">
+            <template #icon><DeleteOutlined /></template>
+            批量删除
+          </a-button>
+        </a-popconfirm>
+      </a-space>
+    </div>
+
+    <!-- 数据表格 -->
+    <a-table
+      :columns="columns"
+      :data-source="tagList"
+      :loading="loading"
+      :pagination="pagination"
+      :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+      @change="handleTableChange"
+      :scroll="{ x: 800 }"
+    >
+      <template #bodyCell="{ column, record }">
+        <!-- 状态列 -->
+        <template v-if="column.dataIndex === 'status'">
+          <a-tag :color="record.status === 'active' ? 'success' : 'default'">
+            {{ record.status === 'active' ? '启用' : '禁用' }}
+          </a-tag>
         </template>
-      </a-table>
-    </a-card>
-    
+
+        <!-- 创建时间列 -->
+        <template v-else-if="column.dataIndex === 'createdAt'">
+          {{ formatDate(record.createdAt) }}
+        </template>
+
+        <!-- 操作列 -->
+        <template v-else-if="column.dataIndex === 'action'">
+          <a-space>
+            <a-button type="primary" size="small" @click="handleEdit(record)">
+              <template #icon><EditOutlined /></template>
+              编辑
+            </a-button>
+            <a-popconfirm
+              title="确定要删除该标签吗？"
+              ok-text="确定"
+              cancel-text="取消"
+              @confirm="handleDelete(record)"
+            >
+              <a-button type="primary" danger size="small">
+                <template #icon><DeleteOutlined /></template>
+                删除
+              </a-button>
+            </a-popconfirm>
+          </a-space>
+        </template>
+      </template>
+    </a-table>
+
     <!-- 标签编辑对话框 -->
     <a-modal
       v-model:visible="dialogVisible"
@@ -78,8 +124,11 @@
           />
         </a-form-item>
         
-        <a-form-item label="排序" name="sort">
-          <a-input-number v-model:value="tagForm.sort" :min="0" :max="999" />
+        <a-form-item label="状态" name="status">
+          <a-select v-model:value="tagForm.status">
+            <a-select-option value="active">启用</a-select-option>
+            <a-select-option value="inactive">禁用</a-select-option>
+          </a-select>
         </a-form-item>
       </a-form>
     </a-modal>
@@ -87,10 +136,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
+import { ref, reactive, onMounted } from 'vue'
+import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Input as AInput, Textarea as ATextarea, Select as ASelect } from 'ant-design-vue'
 import { getTagList, createTag, updateTag, deleteTag } from '@/api/tag'
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 
 // 表格列配置
 const columns = [
@@ -108,9 +157,15 @@ const columns = [
     ellipsis: true,
   },
   {
-    title: '排序',
-    dataIndex: 'sort',
-    key: 'sort',
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: '10%',
+  },
+  {
+    title: '使用次数',
+    dataIndex: 'useCount',
+    key: 'useCount',
     width: '10%',
   },
   {
@@ -123,7 +178,7 @@ const columns = [
     title: '操作',
     dataIndex: 'action',
     key: 'action',
-    width: '15%',
+    width: '20%',
   }
 ]
 
@@ -133,29 +188,36 @@ const loading = ref(false)
 const formLoading = ref(false)
 const formRef = ref(null)
 
-// 分页相关
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = ref(0)
+// 表格选择相关
+const selectedRowKeys = ref([])
+const onSelectChange = (keys) => {
+  selectedRowKeys.value = keys
+}
 
-// 计算分页配置
-const paginationConfig = computed(() => ({
-  current: currentPage.value,
-  pageSize: pageSize.value,
-  total: total.value,
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total) => `共 ${total} 条`,
-  onChange: (page, pageSize) => {
-    currentPage.value = page
-    fetchTags()
-  },
-  onShowSizeChange: (current, size) => {
-    pageSize.value = size
-    currentPage.value = 1
-    fetchTags()
-  }
-}))
+// 表格变化处理
+const handleTableChange = (pagination, filters, sorter) => {
+  console.log('表格变化:', { pagination, filters, sorter })
+  // 这里可以处理分页、筛选、排序等变化
+}
+
+// 搜索表单
+const searchForm = reactive({
+  name: '',
+  status: undefined
+})
+
+// 处理搜索
+const handleSearch = () => {
+  console.log('搜索条件:', searchForm)
+  fetchTags()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.name = ''
+  searchForm.status = undefined
+  fetchTags()
+}
 
 // 编辑对话框
 const dialogVisible = ref(false)
@@ -164,14 +226,14 @@ const tagForm = reactive({
   id: '',
   name: '',
   description: '',
-  sort: 0
+  status: 'active'
 })
 
 // 表单规则
 const rules = {
   name: [
     { required: true, message: '请输入标签名称', trigger: 'blur' },
-    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
   ],
   description: [
     { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
@@ -187,63 +249,57 @@ const formatDate = (dateString) => {
 
 // 获取标签列表
 const fetchTags = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const result = await getTagList({
-      page: currentPage.value,
-      pageSize: pageSize.value
-    });
-    
+    const result = await getTagList()
     console.log('标签列表API返回:', result);
     
     if (result && result.results) {
-      tagList.value = result.results;
-      total.value = result.count || result.results.length;
+      // 标准分页格式
+      tagList.value = (result.results || []).map(item => ({
+        ...item,
+        status: item.status || 'inactive' // 确保有默认状态
+      }));
     } else if (result && Array.isArray(result)) {
-      // 如果返回的是数组，直接使用
-      tagList.value = result;
-      total.value = result.length;
+      // 直接返回数组
+      tagList.value = result.map(item => ({
+        ...item,
+        status: item.status || 'inactive'
+      }));
     } else if (result && typeof result === 'object') {
       // 如果返回的是对象，尝试提取数据
+      let items = [];
       if (Array.isArray(result.data)) {
-        tagList.value = result.data;
-        total.value = result.data.length;
+        items = result.data;
       } else if (result.data && Array.isArray(result.data.results)) {
-        tagList.value = result.data.results;
-        total.value = result.data.count || result.data.results.length;
+        items = result.data.results;
       } else if (result.data && result.data.items) {
-        tagList.value = result.data.items;
-        total.value = result.data.total || result.data.items.length;
-      } else {
-        console.error('无法解析的标签列表数据格式:', result);
-        tagList.value = [];
-        total.value = 0;
+        items = result.data.items;
       }
+      tagList.value = items.map(item => ({
+        ...item,
+        status: item.status || 'inactive'
+      }));
     } else {
       console.error('标签列表返回异常:', result);
       tagList.value = [];
-      total.value = 0;
     }
   } catch (error) {
-    console.error('获取标签列表失败:', error);
-    // 只在列表为空时显示错误消息
-    if (tagList.value.length === 0) {
-      message.error('获取标签列表失败，请稍后重试');
-    }
+    console.error('获取标签列表失败:', error)
+    message.error('获取标签列表失败')
     tagList.value = [];
-    total.value = 0;
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
 // 打开新建标签对话框
-const handleCreate = () => {
+const handleAdd = () => {
   dialogType.value = 'create'
   tagForm.id = ''
   tagForm.name = ''
   tagForm.description = ''
-  tagForm.sort = 0
+  tagForm.status = 'active'
   dialogVisible.value = true
 }
 
@@ -253,7 +309,7 @@ const handleEdit = (record) => {
   tagForm.id = record.id
   tagForm.name = record.name
   tagForm.description = record.description
-  tagForm.sort = record.sort || 0
+  tagForm.status = record.status || 'inactive' // 确保编辑时有状态值
   dialogVisible.value = true
 }
 
@@ -266,25 +322,25 @@ const handleSubmit = async () => {
     
     formLoading.value = true
     
+    const submitData = {
+      ...tagForm,
+      status: tagForm.status || 'inactive' // 确保提交时有状态值
+    }
+    
     if (dialogType.value === 'create') {
-      await createTag(tagForm)
+      await createTag(submitData)
       message.success('标签创建成功')
     } else {
-      await updateTag(tagForm.id, tagForm)
+      await updateTag(submitData.id, submitData)
       message.success('标签更新成功')
     }
     
     // 刷新标签列表
-    await fetchTags()
+    fetchTags()
     dialogVisible.value = false
   } catch (error) {
     console.error('保存标签失败:', error)
-    // 显示更友好的错误信息
-    if (error.response) {
-      message.error(error.response.data?.message || '操作失败，请重试')
-    } else {
-      message.error(error.message || '操作失败，请重试')
-    }
+    message.error(error.message || '操作失败，请重试')
   } finally {
     formLoading.value = false
   }
@@ -296,15 +352,31 @@ const handleDelete = async (record) => {
     loading.value = true
     await deleteTag(record.id)
     message.success('标签删除成功')
-    await fetchTags()
+    fetchTags()
   } catch (error) {
     console.error('删除标签失败:', error)
-    // 显示更友好的错误信息
-    if (error.response) {
-      message.error(error.response.data?.message || '删除失败，请重试')
-    } else {
-      message.error(error.message || '删除失败，请重试')
-    }
+    message.error('删除失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (!selectedRowKeys.value.length) {
+    message.warning('请选择要删除的标签')
+    return
+  }
+
+  try {
+    loading.value = true
+    await Promise.all(selectedRowKeys.value.map(id => deleteTag(id)))
+    message.success('批量删除成功')
+    selectedRowKeys.value = []
+    fetchTags()
+  } catch (error) {
+    console.error('批量删除失败:', error)
+    message.error('批量删除失败，请重试')
   } finally {
     loading.value = false
   }
@@ -316,12 +388,77 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .tag-list {
-  padding: 20px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .search-form {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: #fafafa;
+    border-radius: 8px;
+
+    :deep(.ant-form-item) {
+      margin-bottom: 16px;
+      margin-right: 16px;
+
+      @media (max-width: 768px) {
+        margin-right: 0;
+        width: 100%;
+      }
+    }
+
+    :deep(.ant-form-item-control-input) {
+      min-width: 200px;
+    }
+  }
+
+  .table-operations {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  :deep(.ant-table) {
+    .ant-table-cell {
+      vertical-align: middle;
+    }
+  }
+
+  :deep(.ant-table-thead > tr > th) {
+    white-space: nowrap;
+  }
+
+  :deep(.ant-table-tbody > tr > td) {
+    padding: 16px 8px;
+  }
+
+  :deep(.ant-space) {
+    flex-wrap: wrap;
+  }
 }
 
-.data-card {
-  margin-top: 16px;
+// 响应式布局
+@media (max-width: 768px) {
+  .tag-list {
+    padding: 16px;
+
+    .search-form {
+      padding: 16px;
+    }
+
+    .table-operations {
+      flex-direction: column;
+      gap: 8px;
+
+      .ant-space {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  }
 }
 </style>

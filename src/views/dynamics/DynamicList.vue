@@ -11,6 +11,75 @@
       </template>
     </a-page-header>
     
+    <!-- 搜索表单 -->
+    <a-form layout="inline" class="search-form">
+      <a-form-item label="内容">
+        <a-input v-model:value="searchForm.content" placeholder="搜索内容" allowClear />
+      </a-form-item>
+      <a-form-item label="分类">
+        <a-select
+          v-model:value="searchForm.categoryId"
+          placeholder="选择分类"
+          style="min-width: 120px"
+          allowClear
+        >
+          <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
+            {{ category.name }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item label="标签">
+        <a-select
+          v-model:value="searchForm.tagIds"
+          placeholder="选择标签"
+          mode="multiple"
+          style="min-width: 200px"
+          allowClear
+        >
+          <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
+            {{ tag.name }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item label="状态">
+        <a-select
+          v-model:value="searchForm.status"
+          placeholder="选择状态"
+          style="min-width: 100px"
+          allowClear
+        >
+          <a-select-option value="published">已发布</a-select-option>
+          <a-select-option value="draft">草稿</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item>
+        <a-space>
+          <a-button type="primary" @click="handleSearch">
+            <template #icon><SearchOutlined /></template>
+            搜索
+          </a-button>
+          <a-button @click="resetSearch">
+            <template #icon><ReloadOutlined /></template>
+            重置
+          </a-button>
+        </a-space>
+      </a-form-item>
+    </a-form>
+
+    <!-- 操作按钮 -->
+    <div class="table-operations">
+      <a-space>
+        <a-button type="primary" @click="handleAdd">
+          <template #icon><PlusOutlined /></template>
+          新建动态
+        </a-button>
+        <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
+          <template #icon><DeleteOutlined /></template>
+          批量删除
+        </a-button>
+      </a-space>
+    </div>
+
     <a-card class="data-card">
       <a-table
         :loading="loading"
@@ -20,11 +89,30 @@
         :scroll="responsive ? { x: 800 } : {}"
         row-key="id"
         bordered
+        :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
           <!-- 内容列 -->
           <template v-if="column.dataIndex === 'content'">
-            <div class="content-cell">{{ record.content }}</div>
+            <div class="content-cell">
+              <div class="content-text">{{ record.content }}</div>
+              <div v-if="record.mediaUrls?.length" class="media-preview">
+                <a-image-preview-group>
+                  <a-image
+                    v-for="(url, index) in record.mediaUrls"
+                    :key="index"
+                    :src="url"
+                    :width="40"
+                    :height="40"
+                    :preview="{
+                      src: url,
+                      mask: false
+                    }"
+                  />
+                </a-image-preview-group>
+              </div>
+            </div>
           </template>
 
           <!-- 媒体预览列 -->
@@ -62,14 +150,9 @@
           
           <!-- 分类列 -->
           <template v-if="column.dataIndex === 'categoryId'">
-            <template v-if="record.categoryId">
-              <a-tag color="cyan">
-                {{ getCategoryName(record.categoryId) }}
-              </a-tag>
-            </template>
-            <template v-else>
-              <span class="text-muted">未分类</span>
-            </template>
+            <a-tag color="blue">
+              {{ getCategoryName(record.categoryId) }}
+            </a-tag>
           </template>
           
           <!-- 标签列 -->
@@ -92,7 +175,7 @@
           
           <!-- 状态列 -->
           <template v-if="column.dataIndex === 'status'">
-            <a-tag :color="record.status === 'published' ? 'green' : 'orange'">
+            <a-tag :color="record.status === 'published' ? 'success' : 'default'">
               {{ record.status === 'published' ? '已发布' : '草稿' }}
             </a-tag>
           </template>
@@ -105,7 +188,7 @@
           <!-- 操作列 -->
           <template v-if="column.dataIndex === 'action'">
             <a-space>
-              <a-button type="primary" size="small" @click="editDynamic(record)">
+              <a-button type="link" size="small" @click="editDynamic(record)">
                 <template #icon><edit-outlined /></template>编辑
               </a-button>
               <a-button type="primary" size="small" @click="viewDetail(record)">
@@ -151,7 +234,9 @@ import {
   EyeOutlined, 
   DeleteOutlined, 
   SoundOutlined,
-  VideoCameraOutlined
+  VideoCameraOutlined,
+  SearchOutlined,
+  ReloadOutlined
 } from '@ant-design/icons-vue'
 import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
@@ -470,30 +555,96 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .dynamic-list {
-  padding: 20px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .search-form {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: #fafafa;
+    border-radius: 8px;
+
+    :deep(.ant-form-item) {
+      margin-bottom: 16px;
+      margin-right: 16px;
+
+      @media (max-width: 768px) {
+        margin-right: 0;
+        width: 100%;
+      }
+    }
+
+    :deep(.ant-form-item-control-input) {
+      min-width: 200px;
+    }
+  }
+
+  .table-operations {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .content-cell {
+    max-width: 400px;
+    
+    .content-text {
+      margin-bottom: 8px;
+      word-break: break-all;
+    }
+
+    .media-preview {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  }
+
+  :deep(.ant-table) {
+    .ant-table-cell {
+      vertical-align: top;
+    }
+  }
+
+  :deep(.ant-table-thead > tr > th) {
+    white-space: nowrap;
+  }
+
+  :deep(.ant-table-tbody > tr > td) {
+    padding: 16px 8px;
+  }
+
+  :deep(.ant-space) {
+    flex-wrap: wrap;
+  }
 }
 
-.data-card {
-  margin-top: 16px;
-}
-
-.content-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.text-muted {
-  color: #999;
-}
-
-/* 移动端样式 */
-@media screen and (max-width: 768px) {
+// 响应式布局
+@media (max-width: 768px) {
   .dynamic-list {
-    padding: 12px;
+    padding: 16px;
+
+    .search-form {
+      padding: 16px;
+    }
+
+    .table-operations {
+      flex-direction: column;
+      gap: 8px;
+
+      .ant-space {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    .content-cell {
+      max-width: 100%;
+    }
   }
 }
 </style>
