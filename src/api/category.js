@@ -11,10 +11,31 @@ import api from '../utils/api'
 export function getCategoryList(params) {
   return api.admin.get('/api/categories/', params)
     .then(response => {
+      console.log('分类列表原始响应:', response);
+      
       // 检查不同的响应格式
       if (response && response.data) {
         // 处理标准响应格式
-        return response.data;
+        const data = response.data;
+        // 如果 data 是数组，直接使用
+        if (Array.isArray(data)) {
+          return {
+            count: data.length,
+            results: data
+          };
+        }
+        // 如果 data 包含 results，使用它
+        if (data.results) {
+          return {
+            count: data.count || data.results.length,
+            results: data.results
+          };
+        }
+        // 其他情况，将 data 作为单个结果
+        return {
+          count: 1,
+          results: [data]
+        };
       } else if (response && response.results) {
         // 处理直接返回results的格式
         return {

@@ -357,42 +357,40 @@ const fetchDynamics = async () => {
     
     console.log('动态API响应:', res);
     
+    // 确保 dynamicList 始终是数组
+    dynamicList.value = [];
+    
     if (res && res.code === 200) {
-      // 检查响应数据结构
-      // 新的API响应结构是 {code:200, message:'success', data:{total:0, items:[]}}
       if (res.data && typeof res.data === 'object') {
+        let items = [];
+        
         if (res.data.items !== undefined) {
-          // 标准返回格式
-          dynamicList.value = res.data.items || [];
-          total.value = res.data.total || 0;
-          console.log('已获取动态列表, 总数:', total.value);
+          items = Array.isArray(res.data.items) ? res.data.items : [];
+          total.value = res.data.total || items.length;
         } else if (Array.isArray(res.data)) {
-          // 数组格式返回
-          dynamicList.value = res.data || [];
-          total.value = res.data.length || 0;
-          console.log('已获取动态列表(数组格式), 总数:', total.value);
+          items = res.data;
+          total.value = items.length;
         } else {
-          // 其他可能的格式
           const possibleItems = res.data.list || res.data.data || res.data.records || [];
-          dynamicList.value = possibleItems;
-          total.value = res.data.total || res.data.totalCount || res.data.count || possibleItems.length || 0;
-          console.log('已获取动态列表(其他格式), 总数:', total.value);
+          items = Array.isArray(possibleItems) ? possibleItems : [];
+          total.value = res.data.total || res.data.totalCount || res.data.count || items.length;
         }
+        
+        // 确保每个项目都是有效的对象
+        dynamicList.value = items.filter(item => item && typeof item === 'object');
+        console.log('已获取动态列表, 总数:', total.value, '有效项目数:', dynamicList.value.length);
       } else {
         console.warn('API返回数据格式异常:', res);
-        dynamicList.value = [];
         total.value = 0;
       }
     } else {
       console.warn('API响应不成功:', res);
-      dynamicList.value = [];
       total.value = 0;
     }
   } catch (error) {
     console.error('获取动态列表失败:', error);
     message.error('获取动态列表失败');
     console.warn('检查后端服务是否开启');
-    dynamicList.value = [];
     total.value = 0;
   } finally {
     loading.value = false;

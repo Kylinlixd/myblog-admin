@@ -150,16 +150,34 @@ let memoryChartInstance = null
 const getStats = async () => {
   try {
     const res = await request.get('/api/stats/')
+    console.log('仪表盘统计数据响应:', res);
+    
     if (res.code === 200 && res.data) {
-      stats.value = res.data
+      // 从 data.total 中获取各项统计数据
+      const { total } = res.data;
+      stats.value = {
+        categoryCount: total?.categories || 0,
+        tagCount: total?.tags || 0,
+        totalViews: total?.dynamics || 0
+      };
+      
+      // 更新分类和标签数据
+      if (res.data.categories) {
+        appStore.setCategories(res.data.categories);
+      }
+      if (res.data.tags) {
+        appStore.setTags(res.data.tags);
+      }
+      
+      console.log('更新后的统计数据:', stats.value);
     } else {
-      throw new Error(res.message || '获取统计数据失败')
+      throw new Error(res.message || '获取统计数据失败');
     }
   } catch (error) {
-    console.error('获取统计数据失败:', error)
+    console.error('获取统计数据失败:', error);
     // 只在第一次失败时显示错误提示
     if (!stats.value.categoryCount && !stats.value.tagCount && !stats.value.totalViews) {
-      message.error('获取统计数据失败: ' + (error.response?.data?.message || error.message || '未知错误'))
+      message.error('获取统计数据失败: ' + (error.response?.data?.message || error.message || '未知错误'));
     }
   }
 }

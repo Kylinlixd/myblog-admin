@@ -28,7 +28,7 @@
           v-model:value="form.categoryId"
           placeholder="请选择分类"
           :loading="categoriesLoading"
-          :options="categories.map(item => ({ value: item.id, label: item.name }))"
+          :options="categoryOptions"
         >
         </a-select>
       </a-form-item>
@@ -39,7 +39,7 @@
           mode="multiple"
           placeholder="请选择标签"
           :loading="tagsLoading"
-          :options="tags.map(item => ({ value: item.id, label: item.name }))"
+          :options="tagOptions"
         >
         </a-select>
       </a-form-item>
@@ -217,6 +217,22 @@ const tags = ref([])
 const categoriesLoading = ref(false)
 const tagsLoading = ref(false)
 
+// 添加计算属性来处理标签选项
+const tagOptions = computed(() => {
+  return (tags.value || []).map(item => ({
+    value: item.id,
+    label: item.name
+  }))
+})
+
+// 添加计算属性来处理分类选项
+const categoryOptions = computed(() => {
+  return (categories.value || []).map(item => ({
+    value: item.id,
+    label: item.name
+  }))
+})
+
 // 表单验证规则
 const rules = {
   type: [{ required: true, message: '请选择内容类型', trigger: 'change' }],
@@ -235,31 +251,37 @@ const rules = {
   ]
 }
 
-// 获取分类列表
-const fetchCategories = async () => {
-  categoriesLoading.value = true
-  try {
-    const data = await getCategoryList()
-    categories.value = data || []
-  } catch (error) {
-    console.error('获取分类列表失败:', error)
-    message.error('获取分类列表失败')
-  } finally {
-    categoriesLoading.value = false
-  }
-}
-
 // 获取标签列表
 const fetchTags = async () => {
   tagsLoading.value = true
   try {
-    const data = await getTagList()
-    tags.value = data || []
+    const response = await getTagList()
+    // 从响应中获取 results 数组
+    tags.value = response.results || []
+    console.log('获取到的标签列表:', tags.value)
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
+    tags.value = []
   } finally {
     tagsLoading.value = false
+  }
+}
+
+// 获取分类列表
+const fetchCategories = async () => {
+  categoriesLoading.value = true
+  try {
+    const response = await getCategoryList()
+    // 从响应中获取 results 数组
+    categories.value = response.results || []
+    console.log('获取到的分类列表:', categories.value)
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    message.error('获取分类列表失败')
+    categories.value = []
+  } finally {
+    categoriesLoading.value = false
   }
 }
 
