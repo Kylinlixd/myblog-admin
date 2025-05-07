@@ -189,10 +189,12 @@
           <template v-if="column.dataIndex === 'action'">
             <a-space>
               <a-button type="link" size="small" @click="editDynamic(record)">
-                <template #icon><edit-outlined /></template>编辑
+                <template #icon><edit-outlined /></template>
+                编辑
               </a-button>
-              <a-button type="primary" size="small" @click="viewDetail(record)">
-                <template #icon><eye-outlined /></template>查看
+              <a-button type="link" size="small" @click="viewDetail(record)">
+                <template #icon><eye-outlined /></template>
+                查看
               </a-button>
               <a-popconfirm
                 title="确定要删除这条动态吗？"
@@ -200,8 +202,9 @@
                 cancel-text="取消"
                 @confirm="handleDelete(record.id)"
               >
-                <a-button type="primary" danger size="small">
-                  <template #icon><delete-outlined /></template>删除
+                <a-button type="link" danger size="small">
+                  <template #icon><delete-outlined /></template>
+                  删除
                 </a-button>
               </a-popconfirm>
             </a-space>
