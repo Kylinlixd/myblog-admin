@@ -14,17 +14,6 @@
       <div class="loading-text">{{ appStore.loadingText }}</div>
     </div>
   </div>
-  
-  <!-- 开发环境下的路由调试信息 -->
-  <div v-if="isDev" class="route-debug">
-    <div class="debug-header">路由调试信息</div>
-    <div>当前路径: {{ route.path }}</div>
-    <div>完整路径: {{ route.fullPath }}</div>
-    <div>路由名称: {{ route.name }}</div>
-    <div>匹配到的路由: {{ JSON.stringify(route.matched.map(r => r.path)) }}</div>
-    <div>参数: {{ JSON.stringify(route.params) }}</div>
-    <div>查询参数: {{ JSON.stringify(route.query) }}</div>
-  </div>
 </template>
 
 <script setup>
@@ -39,7 +28,6 @@ const themeStore = useThemeStore()
 const appStore = useAppStore()
 const router = useRouter()
 const route = useRoute()
-const isDev = process.env.NODE_ENV === 'development'
 
 // 跟踪需要缓存的视图
 const cachedViews = computed(() => {
@@ -211,28 +199,5 @@ setTimeout(preloadComponents, 2000)
   font-family: 'Your-Primary-Font';
   font-display: swap; // 使用swap策略改善渲染
   src: local('系统字体'); // 使用系统字体作为后备
-}
-
-// 路由调试信息样式
-.route-debug {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  padding: 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  z-index: 9999;
-  max-width: 400px;
-  overflow: auto;
-  max-height: 200px;
-  font-family: monospace;
-}
-
-.debug-header {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #ff9800;
 }
 </style>
