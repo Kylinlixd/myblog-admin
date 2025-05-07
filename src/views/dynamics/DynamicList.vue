@@ -225,7 +225,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, h, resolveComponent } from 'vue'
+import { ref, computed, onMounted, onUnmounted, h, resolveComponent, reactive } from 'vue'
 import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { 
@@ -249,6 +249,66 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const responsive = ref(false)
+
+// 添加表格选择相关变量
+const selectedRowKeys = ref([])
+const onSelectChange = (keys) => {
+  selectedRowKeys.value = keys
+}
+
+// 添加排序相关变量
+const sortField = ref('')
+const sortOrder = ref('')
+
+// 添加搜索表单
+const searchForm = reactive({
+  content: '',
+  categoryId: undefined,
+  tagIds: [],
+  status: undefined
+})
+
+// 处理搜索
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchDynamics()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchForm.content = ''
+  searchForm.categoryId = undefined
+  searchForm.tagIds = []
+  searchForm.status = undefined
+  currentPage.value = 1
+  fetchDynamics()
+}
+
+// 处理批量删除
+const handleBatchDelete = async () => {
+  if (!selectedRowKeys.value.length) {
+    message.warning('请选择要删除的动态')
+    return
+  }
+
+  try {
+    loading.value = true
+    await Promise.all(selectedRowKeys.value.map(id => deleteAdminDynamic(id)))
+    message.success('批量删除成功')
+    selectedRowKeys.value = []
+    fetchDynamics()
+  } catch (error) {
+    console.error('批量删除失败:', error)
+    message.error('批量删除失败，请重试')
+  } finally {
+    loading.value = false
+  }
+}
+
+// 处理新建动态
+const handleAdd = () => {
+  navigateToCreate()
+}
 
 // 媒体预览相关
 const previewVisible = ref(false)
@@ -427,6 +487,25 @@ const fetchTags = async () => {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
   }
+}
+
+// 表格变化处理
+const handleTableChange = (pagination, filters, sorter) => {
+  console.log('表格变化:', { pagination, filters, sorter })
+  // 更新分页信息
+  if (pagination) {
+    currentPage.value = pagination.current
+    pageSize.value = pagination.pageSize
+  }
+  
+  // 更新排序信息
+  if (sorter) {
+    sortField.value = sorter.field
+    sortOrder.value = sorter.order
+  }
+  
+  // 重新获取数据
+  fetchDynamics()
 }
 
 // 获取动态列表
