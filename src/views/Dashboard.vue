@@ -88,20 +88,6 @@
         </div>
       </div>
     </div>
-    
-    <!-- 最近文章列表 -->
-    <div class="recent-dynamics">
-      <h3>最近动态</h3>
-      <div v-for="dynamic in recentDynamics" :key="dynamic.id" class="dynamic-item">
-        <div class="dynamic-content">{{ dynamic.content }}</div>
-        <div class="dynamic-meta">
-          <span class="dynamic-time">{{ formatDate(dynamic.createdAt) }}</span>
-          <a-tag :color="dynamic.status === 'published' ? 'success' : 'default'">
-            {{ dynamic.status === 'published' ? '已发布' : '草稿' }}
-          </a-tag>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -132,9 +118,6 @@ const performanceStats = ref({
   currentMemory: 0,
   peakMemory: 0
 })
-
-// 最近动态
-const recentDynamics = ref([])
 
 // 图表引用
 const loadTimeChart = ref(null)
@@ -182,32 +165,6 @@ const getStats = async () => {
   }
 }
 
-// 获取最近动态
-const getRecentDynamics = async () => {
-  try {
-    const res = await request.get('/api/dynamics/', {
-      params: {
-        limit: 5,
-        sort: 'createdAt:desc'
-      }
-    })
-    if (res.code === 200 && res.data) {
-      recentDynamics.value = res.data.items.map(dynamic => ({
-        ...dynamic,
-        createdAt: formatDate(dynamic.createdAt)
-      }))
-    } else {
-      throw new Error(res.message || '获取最近动态失败')
-    }
-  } catch (error) {
-    console.error('获取最近动态失败:', error)
-    // 只在列表为空时显示错误提示
-    if (recentDynamics.value.length === 0) {
-      message.error('获取最近动态失败: ' + (error.response?.data?.message || error.message || '未知错误'))
-    }
-  }
-}
-
 // 加载所有数据
 const loadAllData = async () => {
   // 设置加载状态
@@ -217,17 +174,8 @@ const loadAllData = async () => {
   appStore.startLoading('加载仪表盘数据...')
   
   try {
-    // 使用 Promise.allSettled 并行加载数据
-    const results = await Promise.allSettled([
-      getStats(),
-      getRecentDynamics()
-    ])
-    
-    // 检查结果
-    const hasError = results.some(result => result.status === 'rejected')
-    if (hasError) {
-      console.warn('部分数据加载失败，但继续显示可用数据')
-    }
+    // 获取统计数据
+    await getStats()
     
     // 数据加载完成后，结束加载状态
     setTimeout(() => {
@@ -242,8 +190,7 @@ const loadAllData = async () => {
     loading.value = false
     
     // 只在第一次加载失败时显示错误提示
-    if (recentDynamics.value.length === 0 && 
-        !stats.value.categoryCount && 
+    if (!stats.value.categoryCount && 
         !stats.value.tagCount && 
         !stats.value.totalViews) {
       message.error({
@@ -274,105 +221,174 @@ const retryLoadData = async (maxRetries = 3, delay = 2000) => {
 
 // 初始化性能监控
 const initPerformanceMonitoring = () => {
-  // 页面加载性能
-  window.addEventListener('load', () => {
-    const timing = window.performance.timing
-    const loadTime = timing.loadEventEnd - timing.navigationStart
-    performanceStats.value.avgLoadTime = loadTime
-    performanceStats.value.maxLoadTime = Math.max(performanceStats.value.maxLoadTime, loadTime)
-  })
+  // 初始化图表
+  initCharts()
   
-  // 资源加载性能
-  const observer = new PerformanceObserver((list) => {
-    list.getEntries().forEach(entry => {
-      if (entry.initiatorType === 'img') {
-        performanceStats.value.avgImageLoadTime = entry.duration
-      }
-    })
-  })
-  observer.observe({ entryTypes: ['resource'] })
-  
-  // 内存使用监控
-  if (performance.memory) {
-    setInterval(() => {
-      performanceStats.value.currentMemory = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024)
-      performanceStats.value.peakMemory = Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024)
-    }, 1000)
-  }
+  // 开始性能监控
+  startPerformanceMonitoring()
 }
 
 // 初始化图表
 const initCharts = () => {
   // 加载时间图表
-  loadTimeChartInstance = new Chart(loadTimeChart.value, {
-    type: 'line',
-    data: {
-      labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
-      datasets: [{
-        label: '页面加载时间',
-        data: [1200, 1900, 1500, 1800, 1600, 1700],
-        borderColor: '#409EFF',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  })
+  if (loadTimeChart.value) {
+    loadTimeChartInstance = new Chart(loadTimeChart.value, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: '页面加载时间',
+          data: [],
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    })
+  }
   
   // 资源加载图表
-  resourceChartInstance = new Chart(resourceChart.value, {
-    type: 'bar',
-    data: {
-      labels: ['图片', 'JS', 'CSS', 'API'],
-      datasets: [{
-        label: '加载时间(ms)',
-        data: [300, 200, 150, 250],
-        backgroundColor: '#67C23A'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  })
+  if (resourceChart.value) {
+    resourceChartInstance = new Chart(resourceChart.value, {
+      type: 'bar',
+      data: {
+        labels: ['图片', 'API'],
+        datasets: [{
+          label: '加载时间',
+          data: [0, 0],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.5)',
+            'rgba(255, 99, 132, 0.5)'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    })
+  }
   
   // 内存使用图表
-  memoryChartInstance = new Chart(memoryChart.value, {
-    type: 'line',
-    data: {
-      labels: ['1分钟前', '30秒前', '现在'],
-      datasets: [{
-        label: '内存使用(MB)',
-        data: [50, 60, 55],
-        borderColor: '#E6A23C',
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  })
+  if (memoryChart.value) {
+    memoryChartInstance = new Chart(memoryChart.value, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: '内存使用',
+          data: [],
+          borderColor: 'rgb(153, 102, 255)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    })
+  }
 }
 
-onMounted(async () => {
-  // 标记组件已加载
-  console.log('Dashboard component mounted')
+// 开始性能监控
+const startPerformanceMonitoring = () => {
+  // 监控页面加载时间
+  if (window.performance) {
+    const timing = window.performance.timing
+    const loadTime = timing.loadEventEnd - timing.navigationStart
+    performanceStats.value.avgLoadTime = loadTime
+    performanceStats.value.maxLoadTime = loadTime
+    
+    // 更新图表
+    if (loadTimeChartInstance) {
+      const now = new Date().toLocaleTimeString()
+      loadTimeChartInstance.data.labels.push(now)
+      loadTimeChartInstance.data.datasets[0].data.push(loadTime)
+      
+      // 保持最近10个数据点
+      if (loadTimeChartInstance.data.labels.length > 10) {
+        loadTimeChartInstance.data.labels.shift()
+        loadTimeChartInstance.data.datasets[0].data.shift()
+      }
+      
+      loadTimeChartInstance.update()
+    }
+  }
   
-  // 使用重试机制加载数据
-  await retryLoadData()
+  // 监控资源加载
+  if (window.performance && window.performance.getEntriesByType) {
+    const resources = window.performance.getEntriesByType('resource')
+    const imageLoadTime = resources
+      .filter(r => r.initiatorType === 'img')
+      .reduce((acc, curr) => acc + curr.duration, 0) / resources.filter(r => r.initiatorType === 'img').length || 0
+    
+    const apiLoadTime = resources
+      .filter(r => r.initiatorType === 'xmlhttprequest' || r.initiatorType === 'fetch')
+      .reduce((acc, curr) => acc + curr.duration, 0) / resources.filter(r => r.initiatorType === 'xmlhttprequest' || r.initiatorType === 'fetch').length || 0
+    
+    performanceStats.value.avgImageLoadTime = Math.round(imageLoadTime)
+    performanceStats.value.avgApiResponseTime = Math.round(apiLoadTime)
+    
+    // 更新图表
+    if (resourceChartInstance) {
+      resourceChartInstance.data.datasets[0].data = [imageLoadTime, apiLoadTime]
+      resourceChartInstance.update()
+    }
+  }
   
-  // 初始化性能监控和图表
-  initPerformanceMonitoring()
-  initCharts()
-})
+  // 监控内存使用
+  if (window.performance && window.performance.memory) {
+    const memory = window.performance.memory
+    const usedMemory = Math.round(memory.usedJSHeapSize / 1024 / 1024)
+    performanceStats.value.currentMemory = usedMemory
+    performanceStats.value.peakMemory = Math.max(performanceStats.value.peakMemory, usedMemory)
+    
+    // 更新图表
+    if (memoryChartInstance) {
+      const now = new Date().toLocaleTimeString()
+      memoryChartInstance.data.labels.push(now)
+      memoryChartInstance.data.datasets[0].data.push(usedMemory)
+      
+      // 保持最近10个数据点
+      if (memoryChartInstance.data.labels.length > 10) {
+        memoryChartInstance.data.labels.shift()
+        memoryChartInstance.data.datasets[0].data.shift()
+      }
+      
+      memoryChartInstance.update()
+    }
+  }
+}
 
-onUnmounted(() => {
-  if (loadTimeChartInstance) loadTimeChartInstance.destroy()
-  if (resourceChartInstance) resourceChartInstance.destroy()
-  if (memoryChartInstance) memoryChartInstance.destroy()
+// 在组件挂载时初始化
+onMounted(() => {
+  // 加载数据
+  loadAllData()
+  
+  // 初始化性能监控
+  initPerformanceMonitoring()
+  
+  // 定期更新性能数据
+  const performanceInterval = setInterval(startPerformanceMonitoring, 5000)
+  
+  // 在组件卸载时清理
+  onUnmounted(() => {
+    clearInterval(performanceInterval)
+    
+    // 销毁图表实例
+    if (loadTimeChartInstance) {
+      loadTimeChartInstance.destroy()
+    }
+    if (resourceChartInstance) {
+      resourceChartInstance.destroy()
+    }
+    if (memoryChartInstance) {
+      memoryChartInstance.destroy()
+    }
+  })
 })
 </script>
 
@@ -393,12 +409,6 @@ onUnmounted(() => {
       padding: 24px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.3s ease;
-      
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15);
-      }
       
       .stat-header {
         display: flex;
@@ -413,17 +423,17 @@ onUnmounted(() => {
         
         h3 {
           margin: 0;
-          font-size: 16px;
+          font-size: 18px;
           color: var(--text-secondary);
         }
       }
       
       .stat-content {
         .stat-number {
-          font-size: 36px;
+          font-size: 32px;
           font-weight: 600;
           color: var(--text-primary);
-          animation: countUp 1s ease-out;
+          animation: countUp 0.5s ease-out;
         }
       }
     }
@@ -489,43 +499,6 @@ onUnmounted(() => {
         }
       }
     }
-  }
-  
-  .recent-dynamics {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: var(--background-color);
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-  }
-  
-  .dynamic-item {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
-  }
-  
-  .dynamic-item:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-  
-  .dynamic-content {
-    margin-bottom: 8px;
-    color: var(--text-primary);
-  }
-  
-  .dynamic-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-  
-  .dynamic-time {
-    color: var(--text-tertiary);
   }
 }
 
