@@ -184,69 +184,50 @@ service.interceptors.request.use(
     // 统计请求次数
     increasePendingCount()
     
-    // 检查是否是认证相关路径
-    const isAuthPath = config.url && (
-      config.url.includes('/auth/') || 
-      config.url.includes('/login') || 
-      config.url.includes('/token/refresh')
-    );
+    // 获取访问令牌
+    const accessToken = localStorage.getItem('accessToken')
+    const isAuthPath = config.url.includes('/auth/')
     
-    // 从localStorage获取令牌
-    let token = localStorage.getItem('token')
-    
-    if (token) {
-      // 确保token是字符串且格式正确
-      if (typeof token === 'string') {
-        // 检查是否是"[object Object]"这样的字符串
-        if (token === '[object Object]' || token.includes('[object Object]')) {
-          console.error('[令牌错误] 发现无效的对象字符串令牌，尝试从刷新令牌恢复');
-          
-          // 通过刷新令牌获取新令牌
-          const refreshToken = localStorage.getItem('refreshToken');
-          if (refreshToken) {
-            // 不直接设置令牌，让响应拦截器处理401错误并刷新令牌
-            console.log('[令牌恢复] 检测到刷新令牌，将在遇到401时尝试刷新');
-          } else {
-            console.error('[令牌错误] 无刷新令牌可用，无法恢复会话');
-          }
-        } else {
-          // 确保Bearer前缀格式正确
-          const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-          config.headers.Authorization = authToken;
-          console.log('[令牌] 设置认证头:', authToken.substring(0, 20) + '...');
-        }
-      } else if (typeof token === 'object') {
+    // 设置请求头
+    if (accessToken) {
+      // 确保令牌格式正确
+      if (typeof accessToken === 'string') {
+        // 如果令牌不是以 Bearer 开头，添加它
+        const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
+        config.headers.Authorization = token
+        console.log('[令牌] 请求已携带令牌:', config.url)
+      } else if (typeof accessToken === 'object') {
         // 如果意外获取到对象类型的令牌，尝试提取字符串
-        console.error('[令牌错误] 令牌是对象类型而非字符串，尝试修复');
+        console.error('[令牌错误] 令牌是对象类型而非字符串，尝试修复')
         
         try {
-          let fixedToken = null;
+          let fixedToken = null
           
           // 尝试从对象中提取令牌字符串
-          if (token.access) {
-            fixedToken = `Bearer ${String(token.access)}`;
-          } else if (token.token) {
-            fixedToken = `Bearer ${String(token.token)}`;
+          if (accessToken.access) {
+            fixedToken = `Bearer ${String(accessToken.access)}`
+          } else if (accessToken.token) {
+            fixedToken = `Bearer ${String(accessToken.token)}`
           }
           
           if (fixedToken) {
-            config.headers.Authorization = fixedToken;
+            config.headers.Authorization = fixedToken
             // 更新localStorage以修复问题
-            localStorage.setItem('token', fixedToken);
-            console.log('[令牌修复] 成功从对象中提取并设置令牌');
+            localStorage.setItem('accessToken', fixedToken)
+            console.log('[令牌修复] 成功从对象中提取并设置令牌')
           }
         } catch (e) {
-          console.error('[令牌错误] 处理对象令牌失败:', e);
+          console.error('[令牌错误] 处理对象令牌失败:', e)
         }
       } else {
-        console.error('[令牌错误] 无效的令牌类型:', typeof token);
+        console.error('[令牌错误] 无效的令牌类型:', typeof accessToken)
       }
     } else {
-      console.log('[令牌] 请求未携带令牌:', config.url);
+      console.log('[令牌] 请求未携带令牌:', config.url)
       
       // 如果不是认证相关路径，但需要认证，可能需要提示用户登录
       if (!isAuthPath && !config.url.startsWith('/blog/') && !config.skipAuthCheck) {
-        console.error('[令牌] 错误: 访问需要认证的API但未找到令牌:', config.url);
+        console.error('[令牌] 错误: 访问需要认证的API但未找到令牌:', config.url)
       }
     }
     
@@ -423,10 +404,10 @@ service.interceptors.response.use(
                   originalConfig._refreshAttempted = true; // 标记已尝试刷新
                   
                   // 获取新令牌
-                  const newToken = localStorage.getItem('token');
+                  const newToken = localStorage.getItem('accessToken');
                   if (newToken) {
                     // 更新请求头
-                    originalConfig.headers.Authorization = newToken;
+                    originalConfig.headers.Authorization = `Bearer ${newToken}`;
                     console.log('[认证] 更新请求头使用新的令牌');
                     
                     // 重试原始请求

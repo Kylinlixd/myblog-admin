@@ -396,7 +396,7 @@ export function refreshToken() {
         ? accessToken 
         : `Bearer ${accessToken}`;
       
-      localStorage.setItem('token', formattedToken);
+      localStorage.setItem('accessToken', formattedToken);
       console.log('[认证] 成功保存新的访问令牌:', formattedToken.substring(0, 20) + '...');
       
       // 提取并保存新的刷新令牌（如果存在）

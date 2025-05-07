@@ -6,13 +6,13 @@ import router from '../router'
 export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: null,
-    token: localStorage.getItem('token') || '',
+    accessToken: localStorage.getItem('accessToken') || '',
     refreshToken: localStorage.getItem('refreshToken') || '',
     initialized: false
   }),
   
   getters: {
-    isLoggedIn: (state) => !!state.token,
+    isLoggedIn: (state) => !!state.accessToken,
     username: (state) => state.userInfo?.username,
     avatar: (state) => state.userInfo?.avatar,
     nickname: (state) => state.userInfo?.nickname || state.userInfo?.username
@@ -32,7 +32,7 @@ export const useUserStore = defineStore('user', {
         return null
       }
       
-      if (this.token) {
+      if (this.accessToken) {
         try {
           await this.getUserInfo()
         } catch (error) {
@@ -115,9 +115,9 @@ export const useUserStore = defineStore('user', {
           : `Bearer ${extractedToken}`;
         
         // 保存令牌到本地存储和状态
-        localStorage.setItem('token', formattedToken);
-        this.token = formattedToken;
-        console.log('保存到localStorage的token:', formattedToken.substring(0, 20) + '...');
+        localStorage.setItem('accessToken', formattedToken);
+        this.accessToken = formattedToken;
+        console.log('保存到localStorage的accessToken:', formattedToken.substring(0, 20) + '...');
         
         // 保存刷新令牌
         if (refreshToken) {
@@ -144,8 +144,8 @@ export const useUserStore = defineStore('user', {
         this.initialized = true;
         
         // 验证令牌是否保存成功
-        const savedToken = localStorage.getItem('token');
-        console.log('最终保存的令牌:', savedToken ? savedToken.substring(0, 20) + '...' : '无');
+        const savedToken = localStorage.getItem('accessToken');
+        console.log('最终保存的accessToken:', savedToken ? savedToken.substring(0, 20) + '...' : '无');
         
         // 如果没有用户信息，尝试获取
         if (Object.keys(userInfo).length === 0) {
@@ -196,8 +196,8 @@ export const useUserStore = defineStore('user', {
             const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
             
             // 保存令牌
-            localStorage.setItem('token', token)
-            this.token = token
+            localStorage.setItem('accessToken', token)
+            this.accessToken = token
             console.log('[user store] 保存访问令牌:', token.substring(0, 20) + '...')
             
             if (refreshToken) {
@@ -241,8 +241,8 @@ export const useUserStore = defineStore('user', {
         const userInfo = responseData.userInfo || responseData.user || {}
         
         // 注册成功后自动登录
-        this.token = token
-        localStorage.setItem('token', token)
+        this.accessToken = token
+        localStorage.setItem('accessToken', token)
         
         if (refreshTokenStr) {
           localStorage.setItem('refreshToken', refreshTokenStr)
@@ -265,7 +265,7 @@ export const useUserStore = defineStore('user', {
     
     async getUserInfo() {
       try {
-        if (!this.token) {
+        if (!this.accessToken) {
           return null
         }
         
@@ -302,10 +302,10 @@ export const useUserStore = defineStore('user', {
     },
     
     clearUserData() {
-      this.token = ''
+      this.accessToken = ''
       this.refreshToken = ''
       this.userInfo = null
-      localStorage.removeItem('token')
+      localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       localStorage.removeItem('userInfo')
     },
