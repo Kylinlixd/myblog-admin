@@ -565,16 +565,28 @@ const fetchDynamics = async () => {
 const navigateToCreate = () => {
   console.log('尝试跳转到创建动态页面')
   try {
-    // 使用命名路由方式跳转
+    // 获取当前 token
+    const token = localStorage.getItem('token')
+    if (!token) {
+      message.error('登录已过期，请重新登录')
+      router.push('/login')
+      return
+    }
+
+    // 使用命名路由方式跳转，并携带 token
     router.push({
-      name: 'CreateDynamic'
+      name: 'CreateDynamic',
+      query: { token }
     }).then(() => {
       console.log('跳转成功: name=CreateDynamic')
     }).catch(err => {
       console.error('命名路由跳转失败:', err)
       
       // 尝试使用路径跳转
-      router.push('/dashboard/dynamics/create').then(() => {
+      router.push({
+        path: '/dashboard/dynamics/create',
+        query: { token }
+      }).then(() => {
         console.log('路径跳转成功')
       }).catch(err => {
         console.error('路径跳转也失败:', err)
