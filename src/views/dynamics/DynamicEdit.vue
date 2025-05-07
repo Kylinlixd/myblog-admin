@@ -342,6 +342,14 @@ const handleSave = async () => {
       return;
     }
     
+    // 获取访问 token
+    const accessToken = localStorage.getItem('accessToken')
+    if (!accessToken) {
+      message.error('登录已过期，请重新登录')
+      router.push('/login')
+      return
+    }
+    
     // 准备提交的数据，确保格式正确
     const dynamicData = {
       type: form.value.type,
@@ -349,7 +357,8 @@ const handleSave = async () => {
       status: form.value.status,
       mediaUrls: Array.isArray(form.value.mediaUrls) ? form.value.mediaUrls : [],
       categoryId: form.value.categoryId,
-      tags: form.value.tags
+      tags: form.value.tags,
+      token: accessToken // 添加 token 到请求数据中
     };
     
     // 打印将要提交的数据，用于调试
