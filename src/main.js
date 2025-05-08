@@ -9,7 +9,6 @@ import router from './router'
 import '@/styles/tailwind.css'
 import './styles/main.scss'
 import { message } from 'ant-design-vue'
-import { useThemeStore } from './stores/theme'
 import { useUserStore } from './stores/user'
 
 // 确定环境
@@ -70,10 +69,10 @@ if (isProd) {
 const pinia = createPinia()
 app.use(pinia)
 
-// 使用 Ant Design Vue
+// 初始化 Ant Design Vue
 app.use(Antd)
 
-// 使用路由
+// 初始化路由
 app.use(router)
 
 // 全局错误处理
@@ -125,10 +124,6 @@ if (!isBlogPage) {
     console.log('博客前台页面，跳过用户状态初始化')
   }
 }
-
-// 初始化主题
-const themeStore = useThemeStore()
-themeStore.initTheme()
 
 // 性能监控
 if (isProd) {

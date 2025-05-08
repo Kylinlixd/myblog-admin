@@ -4,48 +4,41 @@
       v-model:collapsed="isCollapse"
       :trigger="null"
       collapsible
-      :breakpoint="'md'"
-      :width="240"
       class="aside"
-      @collapse="onCollapse"
-      @breakpoint="onBreakpoint"
     >
       <div class="logo">
-        <!-- <img src="../assets/logo.png" alt="Logo" /> -->
-        <span v-if="!isCollapse">博客管理系统</span>
+        <span>博客管理系统</span>
       </div>
       <a-menu
-        :selectedKeys="[activeMenu]"
+        v-model:selectedKeys="selectedKeys"
+        v-model:openKeys="openKeys"
         mode="inline"
         theme="dark"
-        @click="handleMenuClick"
       >
-        <a-menu-item key="/dashboard">
-          <template #icon><MonitorOutlined /></template>
+        <a-menu-item key="dashboard" @click="navigateTo('/dashboard')">
+          <template #icon><monitor-outlined /></template>
           <span>仪表盘</span>
         </a-menu-item>
-        <a-sub-menu key="dynamics">
-          <template #icon><FileOutlined /></template>
+        
+        <a-sub-menu key="dynamics" @titleClick="handleSubmenuClick">
+          <template #icon><file-outlined /></template>
           <template #title>动态管理</template>
-          <a-menu-item key="/dashboard/dynamics">
-            <template #icon><UnorderedListOutlined /></template>
+          <a-menu-item key="dynamics-list" @click="navigateTo('/dashboard/dynamics')">
+            <unordered-list-outlined />
             <span>动态列表</span>
           </a-menu-item>
-          <a-menu-item key="/dashboard/dynamics/create">
-            <template #icon><PlusOutlined /></template>
-            <span>新建动态</span>
+          <a-menu-item key="dynamics-category" @click="navigateTo('/dashboard/dynamics/category')">
+            <folder-outlined />
+            <span>分类管理</span>
+          </a-menu-item>
+          <a-menu-item key="dynamics-tags" @click="navigateTo('/dashboard/dynamics/tags')">
+            <tags-outlined />
+            <span>标签管理</span>
           </a-menu-item>
         </a-sub-menu>
-        <a-menu-item key="/dashboard/categories">
-          <template #icon><FolderOutlined /></template>
-          <span>分类管理</span>
-        </a-menu-item>
-        <a-menu-item key="/dashboard/tags">
-          <template #icon><TagsOutlined /></template>
-          <span>标签管理</span>
-        </a-menu-item>
-        <a-menu-item key="/dashboard/comments">
-          <template #icon><CommentOutlined /></template>
+        
+        <a-menu-item key="comments" @click="navigateTo('/dashboard/comments')">
+          <template #icon><comment-outlined /></template>
           <span>评论管理</span>
         </a-menu-item>
       </a-menu>
@@ -61,7 +54,6 @@
           <breadcrumb />
         </div>
         <div class="header-right">
-          <theme-toggle />
           <a-dropdown>
             <div class="user-info">
               <a-avatar :src="userStore.avatar">{{ userStore.nickname ? userStore.nickname.charAt(0) : '管' }}</a-avatar>
@@ -94,98 +86,43 @@ import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MonitorOutlined, FileOutlined, FolderOutlined, TagsOutlined, CommentOutlined, MenuUnfoldOutlined, MenuFoldOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
 import { useUserStore } from '../stores/user'
-import { useThemeStore } from '../stores/theme'
 import { useAppStore } from '../stores/app'
 import { Modal } from 'ant-design-vue'
-import ThemeToggle from '../components/ThemeToggle.vue'
 import Breadcrumb from '../components/Breadcrumb.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
-const themeStore = useThemeStore()
 const appStore = useAppStore()
-const activeMenu = computed(() => {
-  // 打印当前路径，帮助调试
-  console.log('当前路由路径:', route.path)
-  
-  // 处理子路由高亮
-  if (route.path.startsWith('/dashboard/dynamics/')) {
-    return '/dashboard/dynamics'
-  }
-  
-  // 处理其他路由
-  return route.path
-})
-const isCollapse = computed(() => appStore.sidebarCollapsed)
 
-// 添加响应式相关变量
-const isMobile = ref(false)
+// 侧边栏折叠状态
+const isCollapse = ref(false)
 
-// 检测屏幕宽度是否为移动设备
-const checkMobile = () => {
-  isMobile.value = window.innerWidth < 768
-  if (isMobile.value && !isCollapse.value) {
-    appStore.toggleSidebar(true) // 在移动设备上默认折叠
-  }
-}
-
-// 监听断点变化
-const onBreakpoint = (broken) => {
-  console.log('屏幕断点变化:', broken)
-  isMobile.value = broken
-  if (broken && !isCollapse.value) {
-    appStore.toggleSidebar(true)
-  }
-}
-
-// 处理侧边栏折叠状态变化
-const onCollapse = (collapsed) => {
-  appStore.setSidebarCollapsed(collapsed)
-}
-
-// 统一的导航方法
-const navigateTo = (path) => {
-  console.log('导航到路径:', path)
-  
-  // 检查是否可以导航 (防止频繁导航)
-  if (!appStore.canNavigate()) {
-    console.log('导航被阻止，太频繁')
-    return
-  }
-  
-  try {
-    // 标记导航开始
-    appStore.startNavigation()
-    
-    router.push(path).then(() => {
-      console.log('导航成功:', path)
-      // 导航成功后结束导航状态
-      appStore.endNavigation()
-      
-      // 在移动设备上点击菜单后自动折叠侧边栏
-      if (isMobile.value && !isCollapse.value) {
-        appStore.toggleSidebar(true)
-      }
-    }).catch(err => {
-      console.error('导航错误:', err)
-      appStore.endNavigation()
-    })
-  } catch (error) {
-    console.error('导航异常:', error)
-    appStore.endNavigation()
-  }
-}
+// 菜单选中状态
+const selectedKeys = ref([route.name])
+const openKeys = ref(['dynamics'])
 
 // 切换侧边栏
 const toggleSidebar = () => {
-  appStore.toggleSidebar()
+  isCollapse.value = !isCollapse.value
 }
 
-// 初始化主题和响应式设置
+// 导航到指定路由
+const navigateTo = (path) => {
+  router.push(path)
+}
+
+// 检查是否为移动设备
+const isMobile = ref(false)
+const checkMobile = () => {
+  isMobile.value = window.innerWidth < 768
+  if (isMobile.value) {
+    isCollapse.value = true
+  }
+}
+
+// 初始化响应式设置
 onMounted(() => {
-  themeStore.initTheme()
-  
   // 初始检测设备类型
   checkMobile()
   
@@ -240,190 +177,8 @@ const handleOpen = (key, keyPath) => {
     navigateTo('/dashboard/dynamics')
   }
 }
-
-// 处理菜单点击事件
-const handleMenuClick = async ({ key }) => {
-  console.log('菜单点击:', key)
-  
-  // 如果点击的是当前路由，则不执行跳转，防止不必要的组件刷新
-  if (key === route.path) {
-    console.log('已在当前路径，不执行跳转')
-    return
-  }
-  
-  // 检查是否正在导航中，防止频繁点击
-  if (!appStore.canNavigate()) {
-    console.log('导航频率过高，跳过此次导航')
-    return
-  }
-  
-  try {
-    // 使用nextTick确保DOM更新完成后再进行导航
-    await nextTick()
-    
-    // 标记菜单点击时间，用于性能跟踪
-    console.time('菜单导航耗时')
-    
-    // 使用navigateTo方法而不是直接调用router.push，确保在移动设备上可以收起侧边栏
-    navigateTo(key)
-    
-    // 在控制台中完成时间测量
-    console.timeEnd('菜单导航耗时')
-  } catch (error) {
-    console.error('路由导航错误:', error)
-    appStore.endNavigation() // 确保出错时也会重置导航状态
-  }
-}
 </script>
 
-<style lang="scss" scoped>
-.layout-container {
-  height: 100vh;
-  display: flex;
-  
-  .aside {
-    background-color: var(--background-color);
-    border-right: 1px solid var(--border-color);
-    transition: width 0.3s;
-    overflow: hidden;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
-    
-    .logo {
-      height: 60px;
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      border-bottom: 1px solid var(--border-color);
-      overflow: hidden;
-      white-space: nowrap;
-      background: linear-gradient(135deg, #409EFF 0%, #36cfc9 100%);
-      
-      img {
-        width: 32px;
-        height: 32px;
-        margin-right: 12px;
-      }
-      
-      span {
-        font-size: 18px;
-        font-weight: 600;
-        color: #ffffff;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      }
-    }
-  }
-  
-  .header {
-    height: 60px;
-    background-color: var(--background-color);
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
-    
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      
-      .toggle-sidebar {
-        font-size: 20px;
-        cursor: pointer;
-        color: var(--text-primary);
-        transition: all 0.3s;
-        
-        &:hover {
-          color: #409EFF;
-          transform: scale(1.1);
-        }
-      }
-    }
-    
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      
-      .user-info {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 4px 8px;
-        border-radius: 4px;
-        transition: all 0.3s;
-        
-        &:hover {
-          background-color: rgba(64, 158, 255, 0.1);
-        }
-        
-        span {
-          color: var(--text-primary);
-        }
-      }
-    }
-  }
-  
-  .main {
-    background-color: var(--background-light);
-    padding: 20px;
-    overflow-y: auto;
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, #409EFF 0%, #36cfc9 100%);
-      opacity: 0.1;
-    }
-  }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-// 修复dark主题样式
-:global(.dark) {
-  .layout-container {
-    .header {
-      background-color: #141414;
-      
-      .toggle-sidebar {
-        color: rgba(255, 255, 255, 0.65);
-        
-        &:hover {
-          color: #1890ff;
-        }
-      }
-      
-      .user-info {
-        span {
-          color: rgba(255, 255, 255, 0.65);
-        }
-      }
-    }
-    
-    .main {
-      background-color: #141414;
-    }
-  }
-}
-</style>
-
-// 更新为Ant Design Vue样式
 <style lang="scss" scoped>
 .layout-container {
   height: 100vh;
@@ -506,52 +261,13 @@ const handleMenuClick = async ({ key }) => {
   }
 }
 
-// 暗黑模式适配
-:global(.dark) {
-  .layout-container {
-    .header {
-      background-color: #141414;
-      
-      .toggle-sidebar {
-        color: rgba(255, 255, 255, 0.65);
-      }
-      
-      .user-info span {
-        color: rgba(255, 255, 255, 0.65);
-      }
-    }
-    
-    .main {
-      background-color: #141414;
-    }
-  }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-// 添加移动设备响应式样式
-@media (max-width: 768px) {
-  .layout-container {
-    .header {
-      padding: 0 12px;
-      
-      .header-left {
-        gap: 8px;
-      }
-      
-      .header-right {
-        gap: 8px;
-        
-        .user-info {
-          span {
-            display: none;
-          }
-        }
-      }
-    }
-    
-    .main {
-      padding: 12px;
-      margin: 12px;
-    }
-  }
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style> 

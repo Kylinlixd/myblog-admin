@@ -18,13 +18,11 @@
 
 <script setup>
 import { onMounted, onBeforeMount, nextTick, computed, ref } from 'vue'
-import { useThemeStore } from './stores/theme'
 import { useAppStore } from './stores/app'
 import { useRouter, useRoute } from 'vue-router'
 import { message } from 'ant-design-vue'
 
-// 初始化主题和应用状态
-const themeStore = useThemeStore()
+// 初始化应用状态
 const appStore = useAppStore()
 const router = useRouter()
 const route = useRoute()
@@ -72,29 +70,26 @@ onBeforeMount(() => {
 })
 
 onMounted(async () => {
-  // 并行初始化主题和结束加载状态
-  await Promise.all([
-    themeStore.initTheme(),
-    new Promise(resolve => {
-      // 确保至少显示加载状态500ms以避免闪烁
-      setTimeout(() => {
-        appStore.endLoading()
-        // 监控LCP性能指标
-        const observer = new PerformanceObserver((list) => {
-          for (const entry of list.getEntries()) {
-            if (entry.entryType === 'largest-contentful-paint') {
-              console.log('LCP:', entry.startTime)
-              if (entry.startTime > 2500) {
-                console.warn('LCP时间过长，请优化页面加载性能')
-              }
+  // 结束加载状态
+  await new Promise(resolve => {
+    // 确保至少显示加载状态500ms以避免闪烁
+    setTimeout(() => {
+      appStore.endLoading()
+      // 监控LCP性能指标
+      const observer = new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          if (entry.entryType === 'largest-contentful-paint') {
+            console.log('LCP:', entry.startTime)
+            if (entry.startTime > 2500) {
+              console.warn('LCP时间过长，请优化页面加载性能')
             }
           }
-        })
-        observer.observe({type: 'largest-contentful-paint', buffered: true})
-        resolve()
-      }, 500)
-    })
-  ])
+        }
+      })
+      observer.observe({type: 'largest-contentful-paint', buffered: true})
+      resolve()
+    }, 500)
+  })
 })
 
 // 处理重试操作
