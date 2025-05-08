@@ -6,7 +6,7 @@
     >
       <template #extra>
         <a-button type="primary" @click="navigateToCreate">
-          <plus-outlined /> 新建动态
+          <PlusOutlined /> 新建动态
         </a-button>
       </template>
     </a-page-header>
@@ -55,11 +55,11 @@
       <a-form-item>
         <a-space>
           <a-button type="primary" @click="handleSearch">
-            <template #icon><SearchOutlined /></template>
+            <SearchOutlined />
             搜索
           </a-button>
           <a-button @click="resetSearch">
-            <template #icon><ReloadOutlined /></template>
+            <ReloadOutlined />
             重置
           </a-button>
         </a-space>
@@ -70,11 +70,11 @@
     <div class="table-operations">
       <a-space>
         <a-button type="primary" @click="handleAdd">
-          <template #icon><PlusOutlined /></template>
+          <PlusOutlined />
           新建动态
         </a-button>
         <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
-          <template #icon><DeleteOutlined /></template>
+          <DeleteOutlined />
           批量删除
         </a-button>
       </a-space>
@@ -86,7 +86,7 @@
         :columns="responsive ? columnsForMobile : columns"
         :data-source="dynamicList"
         :pagination="paginationConfig"
-        :scroll="responsive ? { x: 800 } : {}"
+        :scroll="{ x: 'max-content' }"
         row-key="id"
         bordered
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
@@ -133,13 +133,13 @@
             
             <template v-else-if="record.type === 'audio' && record.mediaUrls && record.mediaUrls.length">
               <a-button type="link" size="small" @click="previewMedia('audio', record.mediaUrls[0])">
-                <sound-outlined /> 音频
+                <SoundOutlined /> 音频
               </a-button>
             </template>
             
             <template v-else-if="record.type === 'video' && record.mediaUrls && record.mediaUrls.length">
               <a-button type="link" size="small" @click="previewMedia('video', record.mediaUrls[0])">
-                <video-camera-outlined /> 视频
+                <VideoCameraOutlined /> 视频
               </a-button>
             </template>
             
@@ -188,12 +188,12 @@
           <!-- 操作列 -->
           <template v-if="column.dataIndex === 'action'">
             <a-space>
-              <a-button type="link" size="small" @click="editDynamic(record)">
-                <template #icon><edit-outlined /></template>
+              <a-button type="primary" size="small" @click="editDynamic(record)">
+                <EditOutlined />
                 编辑
               </a-button>
-              <a-button type="link" size="small" @click="viewDetail(record)">
-                <template #icon><eye-outlined /></template>
+              <a-button type="primary" size="small" @click="viewDetail(record)">
+                <EyeOutlined />
                 查看
               </a-button>
               <a-popconfirm
@@ -202,8 +202,8 @@
                 cancel-text="取消"
                 @confirm="handleDelete(record.id)"
               >
-                <a-button type="link" danger size="small">
-                  <template #icon><delete-outlined /></template>
+                <a-button type="primary" danger size="small">
+                  <DeleteOutlined />
                   删除
                 </a-button>
               </a-popconfirm>
@@ -224,12 +224,114 @@
       <audio v-if="previewType === 'audio'" controls style="width: 100%" :src="previewUrl"></audio>
       <video v-if="previewType === 'video'" controls style="width: 100%" :src="previewUrl"></video>
     </a-modal>
+
+    <!-- 动态预览对话框 -->
+    <a-modal
+      v-model:visible="detailVisible"
+      title="动态详情"
+      :footer="null"
+      width="800px"
+    >
+      <div v-if="currentDetail" class="dynamic-detail">
+        <div class="detail-header">
+          <div class="detail-title">
+            <a-tag :color="currentDetail.type === 'text' ? 'blue' : 'green'">
+              {{ currentDetail.type === 'text' ? '文本' : '图文' }}
+            </a-tag>
+            <a-tag :color="currentDetail.status === 'published' ? 'success' : 'default'">
+              {{ currentDetail.status === 'published' ? '已发布' : '草稿' }}
+            </a-tag>
+            <span class="detail-time">{{ formatDate(currentDetail.createdAt) }}</span>
+          </div>
+        </div>
+        
+        <div class="detail-content">
+          <div class="content-text">{{ currentDetail.content }}</div>
+          
+          <!-- 媒体内容 -->
+          <div v-if="currentDetail.mediaUrls?.length" class="media-content">
+            <template v-if="currentDetail.type === 'image'">
+              <a-image-preview-group>
+                <a-image
+                  v-for="(url, index) in currentDetail.mediaUrls"
+                  :key="index"
+                  :src="url"
+                  :width="200"
+                  :height="200"
+                  fit="cover"
+                  :preview="{
+                    src: url,
+                    mask: false
+                  }"
+                />
+              </a-image-preview-group>
+            </template>
+            
+            <template v-else-if="currentDetail.type === 'audio'">
+              <audio
+                v-for="(url, index) in currentDetail.mediaUrls"
+                :key="index"
+                controls
+                style="width: 100%"
+                :src="url"
+              ></audio>
+            </template>
+            
+            <template v-else-if="currentDetail.type === 'video'">
+              <video
+                v-for="(url, index) in currentDetail.mediaUrls"
+                :key="index"
+                controls
+                style="width: 100%"
+                :src="url"
+              ></video>
+            </template>
+          </div>
+        </div>
+        
+        <div class="detail-footer">
+          <div class="detail-meta">
+            <div class="meta-item">
+              <span class="meta-label">分类：</span>
+              <a-tag color="blue">{{ getCategoryName(currentDetail.categoryId) }}</a-tag>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">标签：</span>
+              <a-space wrap :size="[4, 4]">
+                <a-tag
+                  v-for="tag in currentDetail.tags"
+                  :key="tag.id"
+                  color="blue"
+                >
+                  {{ tag.name }}
+                </a-tag>
+              </a-space>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, h, resolveComponent, reactive } from 'vue'
-import { message } from 'ant-design-vue'
+import { 
+  message, 
+  Button as AButton, 
+  Space as ASpace, 
+  Tag as ATag, 
+  Image as AImage, 
+  Badge as ABadge, 
+  Popconfirm as APopconfirm, 
+  Modal as AModal,
+  Form as AForm,
+  Input as AInput,
+  Select as ASelect,
+  Card as ACard,
+  Table as ATable,
+  PageHeader as APageHeader
+} from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { 
   PlusOutlined, 
@@ -319,6 +421,10 @@ const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('image')
 
+// 添加详情预览相关变量
+const detailVisible = ref(false)
+const currentDetail = ref(null)
+
 // 表格列定义
 const columns = [
   {
@@ -351,17 +457,7 @@ const columns = [
       { text: '音频', value: 'audio' },
       { text: '视频', value: 'video' }
     ],
-    onFilter: (value, record) => record.type === value,
-    customRender: ({ text }) => {
-      const typeMap = {
-        text: { text: '文本', color: '' },
-        image: { text: '图文', color: 'blue' },
-        audio: { text: '音频', color: 'purple' },
-        video: { text: '视频', color: 'magenta' }
-      }
-      const type = typeMap[text] || { text, color: '' }
-      return h(resolveComponent('a-tag'), { color: type.color }, () => type.text);
-    }
+    onFilter: (value, record) => record.type === value
   },
   {
     title: '分类',
@@ -521,45 +617,42 @@ const handleTableChange = (pagination, filters, sorter) => {
 
 // 获取动态列表
 const fetchDynamics = async () => {
-  loading.value = true;
-  console.log('开始获取动态列表, 页码:', currentPage.value, '每页数量:', pageSize.value);
-  
   try {
-    const res = await getDynamicList({
+    loading.value = true;
+    const params = {
       page: currentPage.value,
       pageSize: pageSize.value,
-      ...searchForm
-    });
+      type: searchForm.type,
+      status: searchForm.status,
+      content: searchForm.content,
+      categoryId: searchForm.categoryId,
+      tagIds: searchForm.tagIds
+    };
     
-    console.log('动态API响应:', res);
+    console.log('获取动态列表参数:', params);
+    const response = await getDynamicList(params);
+    console.log('获取动态列表响应:', response);
     
-    if (res && res.code === 200 && res.data) {
-      const { items, total: totalCount } = res.data;
-      
-      // 确保 items 是数组
-      if (Array.isArray(items)) {
-        dynamicList.value = items;
-        total.value = totalCount;
-        console.log('已获取动态列表, 总数:', total.value, '有效项目数:', dynamicList.value.length);
-      } else {
-        console.warn('API返回的items不是数组:', items);
-        dynamicList.value = [];
-        total.value = 0;
-      }
+    if (response.code === 200 && response.data) {
+      // 确保dynamicList是数组
+      dynamicList.value = Array.isArray(response.data.items) ? response.data.items : [];
+      // 过滤掉无效的数据
+      dynamicList.value = dynamicList.value.filter(item => item && item.id);
+      total.value = response.data.total || dynamicList.value.length;
     } else {
-      console.warn('API响应不成功:', res);
       dynamicList.value = [];
       total.value = 0;
+      message.error(response.message || '获取动态列表失败');
     }
   } catch (error) {
     console.error('获取动态列表失败:', error);
-    message.error('获取动态列表失败');
     dynamicList.value = [];
     total.value = 0;
+    message.error('获取动态列表失败');
   } finally {
     loading.value = false;
   }
-};
+}
 
 // 跳转到创建动态页面
 const navigateToCreate = () => {
@@ -601,8 +694,8 @@ const navigateToCreate = () => {
 
 // 查看动态详情
 const viewDetail = (record) => {
-  // 这里可以打开一个对话框显示详情，或者跳转到详情页
-  router.push(`/dashboard/dynamics/preview/${record.id}`)
+  currentDetail.value = record
+  detailVisible.value = true
 }
 
 // 编辑动态
@@ -652,6 +745,7 @@ onUnmounted(() => {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
 
   .search-form {
     margin-bottom: 24px;
@@ -698,15 +792,18 @@ onUnmounted(() => {
   :deep(.ant-table) {
     .ant-table-cell {
       vertical-align: top;
+      white-space: nowrap;
     }
-  }
 
-  :deep(.ant-table-thead > tr > th) {
-    white-space: nowrap;
-  }
+    .ant-table-thead > tr > th {
+      white-space: nowrap;
+      background: #fafafa;
+      font-weight: 500;
+    }
 
-  :deep(.ant-table-tbody > tr > td) {
-    padding: 16px 8px;
+    .ant-table-tbody > tr > td {
+      padding: 16px 8px;
+    }
   }
 
   :deep(.ant-space) {
@@ -735,6 +832,66 @@ onUnmounted(() => {
 
     .content-cell {
       max-width: 100%;
+    }
+  }
+}
+
+.dynamic-detail {
+  .detail-header {
+    margin-bottom: 24px;
+    
+    .detail-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .detail-time {
+        color: #999;
+        font-size: 14px;
+      }
+    }
+  }
+  
+  .detail-content {
+    margin-bottom: 24px;
+    
+    .content-text {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    .media-content {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      
+      .ant-image {
+        border-radius: 4px;
+        overflow: hidden;
+      }
+    }
+  }
+  
+  .detail-footer {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 16px;
+    
+    .detail-meta {
+      .meta-item {
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        .meta-label {
+          color: #666;
+          margin-right: 8px;
+        }
+      }
     }
   }
 }

@@ -17,10 +17,13 @@ export const getDynamicList = async (params) => {
     
     // 转换参数名称，确保与后端一致
     const apiParams = {
-      ...params,
-      // 如果后端期望的参数名是limit而不是pageSize，做转换
-      limit: params.pageSize,
-      // 其他可能需要的转换
+      page: params.page,
+      pageSize: params.pageSize,
+      type: params.type,
+      status: params.status,
+      content: params.content,
+      categoryId: params.categoryId,
+      tagIds: params.tagIds
     };
     
     console.log('转换后的API参数:', apiParams);
@@ -57,6 +60,18 @@ export const getDynamicList = async (params) => {
       items = Array.isArray(response.items) ? response.items : [];
       total = response.total || items.length;
     }
+    
+    // 确保每个项目都有必要的字段
+    items = items.map(item => ({
+      id: item.id,
+      type: item.type || 'text',
+      content: item.content || '',
+      mediaUrls: Array.isArray(item.mediaUrls) ? item.mediaUrls : [],
+      status: item.status || 'draft',
+      categoryId: item.categoryId,
+      tags: Array.isArray(item.tags) ? item.tags : [],
+      createdAt: item.createdAt || item.createTime || new Date().toISOString()
+    }));
     
     // 构造标准响应
     return { 
