@@ -6,8 +6,11 @@ import api from '../utils/api';
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码
  * @param {number} params.pageSize - 每页数量
- * @param {string} params.type - 动态类型
- * @param {string} params.status - 状态
+ * @param {string} params.type - 动态类型 (text/image/audio/video)
+ * @param {string} params.status - 状态 (draft/published)
+ * @param {string} params.content - 内容搜索
+ * @param {string} params.categoryId - 分类ID
+ * @param {Array} params.tagIds - 标签ID数组
  * @returns {Promise<Object>} 动态列表数据
  */
 export const getDynamicList = async (params) => {
@@ -17,14 +20,31 @@ export const getDynamicList = async (params) => {
     
     // 转换参数名称，确保与后端一致
     const apiParams = {
-      page: params.page,
-      pageSize: params.pageSize,
+      page: params.page || 1,
+      pageSize: params.pageSize || 10,
       type: params.type,
       status: params.status,
       content: params.content,
       categoryId: params.categoryId,
       tagIds: params.tagIds
     };
+    
+    // 移除空值参数
+    Object.keys(apiParams).forEach(key => {
+      if (apiParams[key] === undefined || apiParams[key] === null || apiParams[key] === '') {
+        delete apiParams[key];
+      }
+    });
+    
+    // 处理标签ID数组
+    if (apiParams.tagIds && Array.isArray(apiParams.tagIds) && apiParams.tagIds.length > 0) {
+      apiParams.tagIds = apiParams.tagIds.join(',');
+    } else {
+      delete apiParams.tagIds;
+    }
+    
+    // 添加排序参数
+    apiParams.sort = 'createdAt:desc';  // 默认按创建时间降序
     
     console.log('转换后的API参数:', apiParams);
     

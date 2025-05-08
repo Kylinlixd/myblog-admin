@@ -52,6 +52,19 @@
           <a-select-option value="draft">草稿</a-select-option>
         </a-select>
       </a-form-item>
+      <a-form-item label="类型">
+        <a-select
+          v-model:value="searchForm.type"
+          placeholder="选择类型"
+          style="min-width: 100px"
+          allowClear
+        >
+          <a-select-option value="text">文本</a-select-option>
+          <a-select-option value="image">图文</a-select-option>
+          <a-select-option value="audio">音频</a-select-option>
+          <a-select-option value="video">视频</a-select-option>
+        </a-select>
+      </a-form-item>
       <a-form-item>
         <a-space>
           <a-button type="primary" @click="handleSearch">
@@ -370,23 +383,91 @@ const searchForm = reactive({
   content: '',
   categoryId: undefined,
   tagIds: [],
-  status: undefined
+  status: undefined,
+  type: undefined
 })
+
+// 获取动态列表
+const fetchDynamics = async () => {
+  try {
+    loading.value = true;
+    
+    // 构造搜索参数
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      type: searchForm.type,
+      status: searchForm.status,
+      content: searchForm.content?.trim(),  // 去除空格
+      categoryId: searchForm.categoryId,
+      tagIds: searchForm.tagIds
+    };
+
+    // 移除空值参数
+    Object.keys(params).forEach(key => {
+      if (params[key] === undefined || params[key] === null || params[key] === '') {
+        delete params[key];
+      }
+    });
+    
+    console.log('获取动态列表参数:', params);
+    const response = await getDynamicList(params);
+    console.log('获取动态列表响应:', response);
+    
+    if (response && response.code === 200 && response.data) {
+      // 确保dynamicList是数组
+      const items = Array.isArray(response.data.items) ? response.data.items : [];
+      // 过滤掉无效的数据
+      dynamicList.value = items.filter(item => item && item.id);
+      total.value = response.data.total || dynamicList.value.length;
+      console.log('更新后的列表数据:', dynamicList.value);
+    } else if (response && Array.isArray(response)) {
+      // 直接返回数组的情况
+      dynamicList.value = response.filter(item => item && item.id);
+      total.value = dynamicList.value.length;
+      console.log('更新后的列表数据(数组格式):', dynamicList.value);
+    } else if (response && response.items) {
+      // {items: [], total: 0} 格式
+      dynamicList.value = Array.isArray(response.items) ? response.items.filter(item => item && item.id) : [];
+      total.value = response.total || dynamicList.value.length;
+      console.log('更新后的列表数据(items格式):', dynamicList.value);
+    } else {
+      console.error('无法识别的响应格式:', response);
+      dynamicList.value = [];
+      total.value = 0;
+      message.error('获取动态列表失败: 响应格式异常');
+    }
+  } catch (error) {
+    console.error('获取动态列表失败:', error);
+    dynamicList.value = [];
+    total.value = 0;
+    message.error('获取动态列表失败');
+  } finally {
+    loading.value = false;
+  }
+}
 
 // 处理搜索
 const handleSearch = () => {
-  currentPage.value = 1
-  fetchDynamics()
+  console.log('搜索表单数据:', searchForm);
+  // 重置页码
+  currentPage.value = 1;
+  // 重新获取数据
+  fetchDynamics();
 }
 
 // 重置搜索
 const resetSearch = () => {
-  searchForm.content = ''
-  searchForm.categoryId = undefined
-  searchForm.tagIds = []
-  searchForm.status = undefined
-  currentPage.value = 1
-  fetchDynamics()
+  // 重置搜索表单
+  searchForm.content = '';
+  searchForm.categoryId = undefined;
+  searchForm.tagIds = [];
+  searchForm.status = undefined;
+  searchForm.type = undefined;
+  // 重置页码
+  currentPage.value = 1;
+  // 重新获取数据
+  fetchDynamics();
 }
 
 // 处理批量删除
@@ -577,81 +658,66 @@ const previewMedia = (type, url) => {
 // 获取分类列表
 const fetchCategories = async () => {
   try {
-    const data = await getCategoryList()
-    categories.value = data || []
+    const response = await getCategoryList()
+    console.log('分类列表响应:', response)
+    
+    if (response && response.results) {
+      categories.value = response.results
+    } else if (Array.isArray(response)) {
+      categories.value = response
+    } else if (response && response.data) {
+      categories.value = Array.isArray(response.data) ? response.data : [response.data]
+    } else {
+      console.error('获取分类列表响应格式异常:', response)
+      categories.value = []
+    }
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
+    categories.value = []
   }
 }
 
 // 获取标签列表
 const fetchTags = async () => {
   try {
-    const data = await getTagList()
-    tags.value = data || []
+    const response = await getTagList()
+    console.log('标签列表响应:', response)
+    
+    if (response && response.results) {
+      tags.value = response.results
+    } else if (Array.isArray(response)) {
+      tags.value = response
+    } else if (response && response.data) {
+      tags.value = Array.isArray(response.data) ? response.data : [response.data]
+    } else {
+      console.error('获取标签列表响应格式异常:', response)
+      tags.value = []
+    }
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
+    tags.value = []
   }
 }
 
 // 表格变化处理
 const handleTableChange = (pagination, filters, sorter) => {
-  console.log('表格变化:', { pagination, filters, sorter })
+  console.log('表格变化:', { pagination, filters, sorter });
   // 更新分页信息
   if (pagination) {
-    currentPage.value = pagination.current
-    pageSize.value = pagination.pageSize
+    currentPage.value = pagination.current;
+    pageSize.value = pagination.pageSize;
   }
   
   // 更新排序信息
   if (sorter) {
-    sortField.value = sorter.field
-    sortOrder.value = sorter.order
+    sortField.value = sorter.field;
+    sortOrder.value = sorter.order;
   }
   
   // 重新获取数据
-  fetchDynamics()
-}
-
-// 获取动态列表
-const fetchDynamics = async () => {
-  try {
-    loading.value = true;
-    const params = {
-      page: currentPage.value,
-      pageSize: pageSize.value,
-      type: searchForm.type,
-      status: searchForm.status,
-      content: searchForm.content,
-      categoryId: searchForm.categoryId,
-      tagIds: searchForm.tagIds
-    };
-    
-    console.log('获取动态列表参数:', params);
-    const response = await getDynamicList(params);
-    console.log('获取动态列表响应:', response);
-    
-    if (response.code === 200 && response.data) {
-      // 确保dynamicList是数组
-      dynamicList.value = Array.isArray(response.data.items) ? response.data.items : [];
-      // 过滤掉无效的数据
-      dynamicList.value = dynamicList.value.filter(item => item && item.id);
-      total.value = response.data.total || dynamicList.value.length;
-    } else {
-      dynamicList.value = [];
-      total.value = 0;
-      message.error(response.message || '获取动态列表失败');
-    }
-  } catch (error) {
-    console.error('获取动态列表失败:', error);
-    dynamicList.value = [];
-    total.value = 0;
-    message.error('获取动态列表失败');
-  } finally {
-    loading.value = false;
-  }
+  fetchDynamics();
 }
 
 // 跳转到创建动态页面
