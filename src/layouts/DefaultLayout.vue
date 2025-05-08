@@ -20,24 +20,22 @@
           <span>仪表盘</span>
         </a-menu-item>
         
-        <a-sub-menu key="dynamics" @titleClick="handleSubmenuClick">
+        <a-menu-item key="Dynamics" @click="navigateTo('/dashboard/dynamics')">
           <template #icon><file-outlined /></template>
-          <template #title>动态管理</template>
-          <a-menu-item key="dynamics-list" @click="navigateTo('/dashboard/dynamics')">
-            <unordered-list-outlined />
-            <span>动态列表</span>
-          </a-menu-item>
-          <a-menu-item key="dynamics-category" @click="navigateTo('/dashboard/dynamics/category')">
-            <folder-outlined />
-            <span>分类管理</span>
-          </a-menu-item>
-          <a-menu-item key="dynamics-tags" @click="navigateTo('/dashboard/dynamics/tags')">
-            <tags-outlined />
-            <span>标签管理</span>
-          </a-menu-item>
-        </a-sub-menu>
+          <span>动态管理</span>
+        </a-menu-item>
+
+        <a-menu-item key="Category" @click="navigateTo('/dashboard/category')">
+          <template #icon><folder-outlined /></template>
+          <span>分类管理</span>
+        </a-menu-item>
+
+        <a-menu-item key="Tags" @click="navigateTo('/dashboard/tags')">
+          <template #icon><tags-outlined /></template>
+          <span>标签管理</span>
+        </a-menu-item>
         
-        <a-menu-item key="comments" @click="navigateTo('/dashboard/comments')">
+        <a-menu-item key="Comments" @click="navigateTo('/dashboard/comments')">
           <template #icon><comment-outlined /></template>
           <span>评论管理</span>
         </a-menu-item>
@@ -182,8 +180,14 @@ const handleOpen = (key, keyPath) => {
 <style lang="scss" scoped>
 .layout-container {
   height: 100vh;
+  display: flex;
   
   .aside {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
     background-color: #001529;
     
     .logo {
@@ -205,6 +209,11 @@ const handleOpen = (key, keyPath) => {
   }
   
   .header {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 200px;
+    z-index: 9;
     background-color: #fff;
     box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
     padding: 0 16px;
@@ -253,11 +262,12 @@ const handleOpen = (key, keyPath) => {
   }
   
   .main {
-    background-color: #f0f2f5;
+    margin-left: 200px;
+    margin-top: 64px;
     padding: 24px;
-    margin: 24px;
-    min-height: 280px;
-    border-radius: 2px;
+    min-height: calc(100vh - 64px);
+    background-color: #f0f2f5;
+    overflow-y: auto;
   }
 }
 

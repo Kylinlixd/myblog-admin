@@ -60,7 +60,6 @@
       :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
       @change="handleTableChange"
       :scroll="{ x: 800 }"
-      :expandable="false"
     >
       <template #bodyCell="{ column, record }">
         <!-- 状态列 -->
@@ -144,31 +143,33 @@ const columns = [
     dataIndex: 'name',
     key: 'name',
     width: '30%',
+    ellipsis: true
   },
   {
     title: '描述',
     dataIndex: 'description',
     key: 'description',
     width: '35%',
-    ellipsis: true,
+    ellipsis: true
   },
   {
     title: '排序',
     dataIndex: 'sort',
     key: 'sort',
-    width: '10%',
+    width: '10%'
   },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: '15%',
+    width: '15%'
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
     width: '20%',
+    fixed: 'right'
   }
 ]
 

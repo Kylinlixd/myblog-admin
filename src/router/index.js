@@ -160,25 +160,23 @@ const routes = [
         }
       },
       {
-        path: 'categories',
-        name: 'Categories',
-        component: () => import('../views/categories/CategoryList.vue'),
-        meta: { 
+        path: 'category',
+        name: 'Category',
+        component: () => import(/* webpackPrefetch: true */ '../views/categories/CategoryList.vue'),
+        meta: {
           title: '分类管理',
           icon: 'Folder',
-          keepAlive: true,
-          permissions: ['category:view']
+          keepAlive: true
         }
       },
       {
         path: 'tags',
         name: 'Tags',
-        component: () => import('../views/tags/TagList.vue'),
-        meta: { 
+        component: () => import(/* webpackPrefetch: true */ '../views/tags/TagList.vue'),
+        meta: {
           title: '标签管理',
           icon: 'Collection',
-          keepAlive: true,
-          permissions: ['tag:view']
+          keepAlive: true
         }
       },
       {
