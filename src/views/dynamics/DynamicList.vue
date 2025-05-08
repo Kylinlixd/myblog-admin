@@ -13,79 +13,79 @@
     
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form">
-      <a-form-item label="内容">
-        <a-input v-model:value="searchForm.content" placeholder="搜索内容" allowClear />
-      </a-form-item>
-      <a-form-item label="分类">
-        <a-select
-          v-model:value="searchForm.categoryId"
-          placeholder="选择分类"
-          style="min-width: 120px"
-          allowClear
-        >
-          <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
-            {{ category.name }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="标签">
-        <a-select
-          v-model:value="searchForm.tagIds"
-          placeholder="选择标签"
-          mode="multiple"
-          style="min-width: 200px"
-          allowClear
-        >
-          <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
-            {{ tag.name }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="状态">
-        <a-select
-          v-model:value="searchForm.status"
-          placeholder="选择状态"
-          style="min-width: 100px"
-          allowClear
-        >
-          <a-select-option value="published">已发布</a-select-option>
-          <a-select-option value="draft">草稿</a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="类型">
-        <a-select
-          v-model:value="searchForm.type"
-          placeholder="选择类型"
-          style="min-width: 100px"
-          allowClear
-        >
-          <a-select-option value="text">文本</a-select-option>
-          <a-select-option value="image">图文</a-select-option>
-          <a-select-option value="audio">音频</a-select-option>
-          <a-select-option value="video">视频</a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item>
-        <a-space>
-          <a-button type="primary" @click="handleSearch">
-            <SearchOutlined />
-            搜索
-          </a-button>
-          <a-button @click="resetSearch">
-            <ReloadOutlined />
-            重置
-          </a-button>
-        </a-space>
-      </a-form-item>
+      <div class="search-form-left">
+        <a-form-item label="内容">
+          <a-input v-model:value="searchForm.content" placeholder="搜索内容" allowClear />
+        </a-form-item>
+        <a-form-item label="分类">
+          <a-select
+            v-model:value="searchForm.categoryId"
+            placeholder="选择分类"
+            style="width: 120px"
+            allowClear
+          >
+            <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
+              {{ category.name }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="标签">
+          <a-select
+            v-model:value="searchForm.tagIds"
+            placeholder="选择标签"
+            mode="multiple"
+            style="width: 200px"
+            allowClear
+          >
+            <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
+              {{ tag.name }}
+            </a-select-option>
+          </a-select>
+        </a-form-item>
+      </div>
+      <div class="search-form-right">
+        <a-form-item label="状态">
+          <a-select
+            v-model:value="searchForm.status"
+            placeholder="选择状态"
+            style="width: 100px"
+            allowClear
+          >
+            <a-select-option value="published">已发布</a-select-option>
+            <a-select-option value="draft">草稿</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="类型">
+          <a-select
+            v-model:value="searchForm.type"
+            placeholder="选择类型"
+            style="width: 100px"
+            allowClear
+          >
+            <a-select-option value="text">文本</a-select-option>
+            <a-select-option value="image">图文</a-select-option>
+            <a-select-option value="audio">音频</a-select-option>
+            <a-select-option value="video">视频</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item>
+          <a-space>
+            <a-button type="primary" @click="handleSearch">
+              <SearchOutlined />
+              搜索
+            </a-button>
+            <a-button @click="resetSearch">
+              <ReloadOutlined />
+              重置
+            </a-button>
+          </a-space>
+        </a-form-item>
+      </div>
     </a-form>
 
     <!-- 操作按钮 -->
     <div class="table-operations">
       <a-space>
-        <a-button type="primary" @click="handleAdd">
-          <PlusOutlined />
-          新建动态
-        </a-button>
         <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
           <DeleteOutlined />
           批量删除
@@ -162,9 +162,9 @@
           </template>
           
           <!-- 分类列 -->
-          <template v-if="column.dataIndex === 'categoryId'">
+          <template v-if="column.dataIndex === 'category'">
             <a-tag color="blue">
-              {{ getCategoryName(record.categoryId) }}
+              {{ record.category ? record.category.name : '未分类' }}
             </a-tag>
           </template>
           
@@ -306,7 +306,7 @@
           <div class="detail-meta">
             <div class="meta-item">
               <span class="meta-label">分类：</span>
-              <a-tag color="blue">{{ getCategoryName(currentDetail.categoryId) }}</a-tag>
+              <a-tag color="blue">{{ getCategoryName(currentDetail.category) }}</a-tag>
             </div>
             <div class="meta-item">
               <span class="meta-label">标签：</span>
@@ -398,7 +398,7 @@ const fetchDynamics = async () => {
       pageSize: pageSize.value,
       type: searchForm.type,
       status: searchForm.status,
-      content: searchForm.content?.trim(),  // 去除空格
+      content: searchForm.content?.trim(),
       categoryId: searchForm.categoryId,
       tagIds: searchForm.tagIds
     };
@@ -415,22 +415,10 @@ const fetchDynamics = async () => {
     console.log('获取动态列表响应:', response);
     
     if (response && response.code === 200 && response.data) {
-      // 确保dynamicList是数组
-      const items = Array.isArray(response.data.items) ? response.data.items : [];
-      // 过滤掉无效的数据
-      dynamicList.value = items.filter(item => item && item.id);
-      total.value = response.data.total || dynamicList.value.length;
-      console.log('更新后的列表数据:', dynamicList.value);
-    } else if (response && Array.isArray(response)) {
-      // 直接返回数组的情况
-      dynamicList.value = response.filter(item => item && item.id);
-      total.value = dynamicList.value.length;
-      console.log('更新后的列表数据(数组格式):', dynamicList.value);
-    } else if (response && response.items) {
-      // {items: [], total: 0} 格式
-      dynamicList.value = Array.isArray(response.items) ? response.items.filter(item => item && item.id) : [];
-      total.value = response.total || dynamicList.value.length;
-      console.log('更新后的列表数据(items格式):', dynamicList.value);
+      // 直接使用后端返回的数据，不做额外处理
+      dynamicList.value = response.data.items || [];
+      total.value = response.data.total || 0;
+      console.log('处理后的列表数据:', dynamicList.value);
     } else {
       console.error('无法识别的响应格式:', response);
       dynamicList.value = [];
@@ -512,26 +500,29 @@ const columns = [
     title: 'ID',
     dataIndex: 'id',
     key: 'id',
-    width: 80
+    width: 60,
+    align: 'center'
   },
   {
     title: '内容',
     dataIndex: 'content',
     key: 'content',
     ellipsis: true,
-    width: 200
+    width: 300
   },
   {
     title: '媒体文件',
     dataIndex: 'mediaUrls',
     key: 'mediaUrls',
-    width: 100
+    width: 120,
+    align: 'center'
   },
   {
     title: '类型',
     dataIndex: 'type',
     key: 'type',
-    width: 80,
+    width: 100,
+    align: 'center',
     filters: [
       { text: '文本', value: 'text' },
       { text: '图文', value: 'image' },
@@ -542,21 +533,23 @@ const columns = [
   },
   {
     title: '分类',
-    dataIndex: 'categoryId',
-    key: 'categoryId',
-    width: 120
+    dataIndex: 'category',
+    key: 'category',
+    width: 120,
+    align: 'center'
   },
   {
     title: '标签',
     dataIndex: 'tags',
     key: 'tags',
-    width: 180
+    width: 200
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 80,
+    width: 100,
+    align: 'center',
     filters: [
       { text: '草稿', value: 'draft' },
       { text: '已发布', value: 'published' }
@@ -568,14 +561,16 @@ const columns = [
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 160,
+    align: 'center',
     sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
-    width: 180,
-    fixed: 'right'
+    width: 200,
+    fixed: 'right',
+    align: 'center'
   }
 ]
 
@@ -585,7 +580,8 @@ const columnsForMobile = [
     title: 'ID',
     dataIndex: 'id',
     key: 'id',
-    width: 60
+    width: 60,
+    align: 'center'
   },
   {
     title: '内容',
@@ -598,7 +594,8 @@ const columnsForMobile = [
     dataIndex: 'action',
     key: 'action',
     fixed: 'right',
-    width: 120
+    width: 120,
+    align: 'center'
   }
 ]
 
@@ -626,10 +623,35 @@ const paginationConfig = computed(() => ({
 const categories = ref([])
 const tags = ref([])
 
+// 获取分类列表
+const fetchCategories = async () => {
+  try {
+    const response = await getCategoryList()
+    console.log('分类列表响应:', response)
+    
+    if (response && response.results) {
+      categories.value = response.results
+    } else if (Array.isArray(response)) {
+      categories.value = response
+    } else if (response && response.data) {
+      categories.value = Array.isArray(response.data) ? response.data : [response.data]
+    } else if (response && response.items) {
+      categories.value = response.items
+    } else {
+      console.error('获取分类列表响应格式异常:', response)
+      categories.value = []
+    }
+    console.log('处理后的分类列表:', categories.value)
+  } catch (error) {
+    console.error('获取分类列表失败:', error)
+    message.error('获取分类列表失败')
+    categories.value = []
+  }
+}
+
 // 获取分类名称
-const getCategoryName = (categoryId) => {
-  const category = categories.value.find(c => c.id === categoryId)
-  return category ? category.name : '未知分类'
+const getCategoryName = (category) => {
+  return category ? category.name : '未分类'
 }
 
 // 格式化日期
@@ -653,29 +675,6 @@ const previewMedia = (type, url) => {
   previewUrl.value = url
   previewTitle.value = type === 'audio' ? '音频预览' : '视频预览'
   previewVisible.value = true
-}
-
-// 获取分类列表
-const fetchCategories = async () => {
-  try {
-    const response = await getCategoryList()
-    console.log('分类列表响应:', response)
-    
-    if (response && response.results) {
-      categories.value = response.results
-    } else if (Array.isArray(response)) {
-      categories.value = response
-    } else if (response && response.data) {
-      categories.value = Array.isArray(response.data) ? response.data : [response.data]
-    } else {
-      console.error('获取分类列表响应格式异常:', response)
-      categories.value = []
-    }
-  } catch (error) {
-    console.error('获取分类列表失败:', error)
-    message.error('获取分类列表失败')
-    categories.value = []
-  }
 }
 
 // 获取标签列表
@@ -809,28 +808,12 @@ onUnmounted(() => {
 .dynamic-list {
   padding: 24px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow-x: auto;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
-  .search-form {
-    margin-bottom: 24px;
-    padding: 24px;
-    background: #fafafa;
-    border-radius: 8px;
-
-    :deep(.ant-form-item) {
-      margin-bottom: 16px;
-      margin-right: 16px;
-
-      @media (max-width: 768px) {
-        margin-right: 0;
-        width: 100%;
-      }
-    }
-
-    :deep(.ant-form-item-control-input) {
-      min-width: 200px;
+  .data-card {
+    :deep(.ant-card-body) {
+      padding: 0;
     }
   }
 
@@ -838,81 +821,131 @@ onUnmounted(() => {
     margin-bottom: 16px;
     display: flex;
     justify-content: flex-end;
+    align-items: center;
+  }
+
+  :deep(.ant-table-wrapper) {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: #fafafa;
+        font-weight: 500;
+        padding: 12px 8px;
+        white-space: nowrap;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 12px 8px;
+        vertical-align: middle;
+      }
+
+      .ant-table-row:hover {
+        .ant-table-cell {
+          background-color: #f5f5f5;
+        }
+      }
+    }
   }
 
   .content-cell {
-    max-width: 400px;
+    max-width: 300px;
     
     .content-text {
       margin-bottom: 8px;
-      word-break: break-all;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .media-preview {
       display: flex;
-      gap: 8px;
+      gap: 4px;
       flex-wrap: wrap;
     }
   }
 
-  :deep(.ant-table) {
-    .ant-table-cell {
-      vertical-align: top;
-      white-space: nowrap;
-    }
-
-    .ant-table-thead > tr > th {
-      white-space: nowrap;
-      background: #fafafa;
-      font-weight: 500;
-    }
-
-    .ant-table-tbody > tr > td {
-      padding: 16px 8px;
-    }
-  }
-
-  :deep(.ant-space) {
-    flex-wrap: wrap;
-  }
-}
-
-// 响应式布局
-@media (max-width: 768px) {
-  .dynamic-list {
+  .search-form {
+    margin-bottom: 24px;
     padding: 16px;
+    background: #fafafa;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
 
+    .search-form-left {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .search-form-right {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    :deep(.ant-form-item) {
+      margin-bottom: 0;
+      margin-right: 0;
+    }
+
+    :deep(.ant-form-item-label) {
+      padding-right: 8px;
+    }
+
+    :deep(.ant-form-item-control-input) {
+      width: 100%;
+    }
+
+    :deep(.ant-select) {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 768px) {
     .search-form {
-      padding: 16px;
-    }
-
-    .table-operations {
       flex-direction: column;
-      gap: 8px;
+      gap: 16px;
 
-      .ant-space {
+      .search-form-left,
+      .search-form-right {
         width: 100%;
-        justify-content: flex-start;
+        flex-direction: column;
       }
-    }
 
-    .content-cell {
-      max-width: 100%;
+      :deep(.ant-form-item) {
+        width: 100%;
+      }
+
+      :deep(.ant-form-item-control-input) {
+        width: 100%;
+      }
+
+      :deep(.ant-select) {
+        width: 100%;
+      }
     }
   }
 }
 
 .dynamic-detail {
   .detail-header {
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
     
     .detail-title {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
       
       .detail-time {
-        color: #999;
+        color: #8c8c8c;
         font-size: 14px;
       }
     }
@@ -922,21 +955,34 @@ onUnmounted(() => {
     margin-bottom: 24px;
     
     .content-text {
-      font-size: 16px;
+      font-size: 15px;
       line-height: 1.6;
       margin-bottom: 16px;
       white-space: pre-wrap;
-      word-break: break-all;
+      word-break: break-word;
+      color: #262626;
     }
     
     .media-content {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
       
       .ant-image {
         border-radius: 4px;
         overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        
+        img {
+          width: 100%;
+          height: 200px;
+          object-fit: cover;
+        }
+      }
+
+      audio, video {
+        width: 100%;
+        border-radius: 4px;
       }
     }
   }
@@ -946,19 +992,29 @@ onUnmounted(() => {
     padding-top: 16px;
     
     .detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      
       .meta-item {
-        margin-bottom: 8px;
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
+        display: flex;
+        align-items: center;
+        gap: 8px;
         
         .meta-label {
-          color: #666;
-          margin-right: 8px;
+          color: #8c8c8c;
+          font-size: 14px;
         }
       }
     }
+  }
+}
+
+:deep(.ant-modal-content) {
+  .ant-modal-body {
+    padding: 24px;
+    max-height: 80vh;
+    overflow-y: auto;
   }
 }
 </style>
