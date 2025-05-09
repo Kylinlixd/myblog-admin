@@ -1,8 +1,9 @@
 <template>
   <a-modal
-    v-model:visible="dialogVisible"
+    v-model:open="dialogVisible"
     :title="title"
-    :width="width"
+    :footer="null"
+    width="600px"
     :destroy-on-close="destroyOnClose"
     @after-close="handleClosed"
   >

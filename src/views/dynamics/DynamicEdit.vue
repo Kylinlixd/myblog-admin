@@ -156,7 +156,7 @@
     </a-form>
     
     <a-modal
-      v-model:visible="previewVisible"
+      v-model:open="previewVisible"
       :title="previewTitle"
       :footer="null"
       width="800px"

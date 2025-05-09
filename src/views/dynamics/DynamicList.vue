@@ -228,7 +228,7 @@
     
     <!-- 媒体预览对话框 -->
     <a-modal
-      v-model:visible="previewVisible"
+      v-model:open="previewVisible"
       :title="previewTitle"
       :footer="null"
       width="800px"
@@ -240,7 +240,7 @@
 
     <!-- 动态预览对话框 -->
     <a-modal
-      v-model:visible="detailVisible"
+      v-model:open="detailVisible"
       title="动态详情"
       :footer="null"
       width="800px"

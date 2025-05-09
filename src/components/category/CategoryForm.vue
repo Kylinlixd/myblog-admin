@@ -1,8 +1,9 @@
 <template>
   <a-modal
-    v-model:visible="dialogVisible"
+    v-model:open="dialogVisible"
     :title="isEdit ? '编辑分类' : '创建分类'"
-    width="500px"
+    :footer="null"
+    width="600px"
     @cancel="handleClose"
   >
     <a-form

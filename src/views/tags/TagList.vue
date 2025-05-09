@@ -99,11 +99,10 @@
 
     <!-- 标签编辑对话框 -->
     <a-modal
-      v-model:visible="dialogVisible"
+      v-model:open="dialogVisible"
       :title="dialogType === 'create' ? '新建标签' : '编辑标签'"
-      @ok="handleSubmit"
-      :confirm-loading="formLoading"
-      @cancel="dialogVisible = false"
+      :footer="null"
+      width="600px"
     >
       <a-form
         ref="formRef"

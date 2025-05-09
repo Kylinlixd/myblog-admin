@@ -340,7 +340,11 @@
     </div>
     
     <!-- 令牌查看模态窗 -->
-    <a-modal v-model:visible="tokenModal.visible" title="令牌详情" width="700px">
+    <a-modal 
+      v-model:open="tokenModal.visible" 
+      title="令牌详情" 
+      width="700px"
+    >
       <div class="token-details">
         <h3>访问令牌</h3>
         <pre class="token-data">{{ tokenModal.accessToken }}</pre>

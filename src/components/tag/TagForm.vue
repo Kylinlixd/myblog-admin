@@ -1,8 +1,9 @@
 <template>
   <a-modal
-    v-model:visible="dialogVisible"
+    v-model:open="dialogVisible"
     :title="isEdit ? '编辑标签' : '创建标签'"
-    width="400px"
+    :footer="null"
+    width="600px"
     @cancel="handleClose"
   >
     <a-form
@@ -17,15 +18,6 @@
         <a-input v-model:value="form.name" placeholder="请输入标签名称" />
       </a-form-item>
     </a-form>
-    
-    <template #footer>
-      <div class="dialog-footer">
-        <a-button @click="handleClose">取消</a-button>
-        <a-button type="primary" :loading="loading" @click="submitForm">
-          确定
-        </a-button>
-      </div>
-    </template>
   </a-modal>
 </template>
 
