@@ -179,6 +179,26 @@ const loading = ref(false)
 const formLoading = ref(false)
 const formRef = ref(null)
 
+// 分页配置
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total) => `共 ${total} 条`,
+  onChange: (page, pageSize) => {
+    pagination.current = page
+    pagination.pageSize = pageSize
+    fetchCategories()
+  },
+  onShowSizeChange: (current, size) => {
+    pagination.current = 1
+    pagination.pageSize = size
+    fetchCategories()
+  }
+})
+
 // 表格选择相关
 const selectedRowKeys = ref([])
 const onSelectChange = (keys) => {
