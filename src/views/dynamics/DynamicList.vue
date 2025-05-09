@@ -164,7 +164,7 @@
           <!-- 分类列 -->
           <template v-if="column.dataIndex === 'category'">
             <a-tag color="blue">
-              {{ record.category ? record.category.name : '未分类' }}
+              {{ record.category?.name || '未分类' }}
             </a-tag>
           </template>
           
@@ -412,13 +412,32 @@ const fetchDynamics = async () => {
     
     console.log('获取动态列表参数:', params);
     const response = await getDynamicList(params);
-    console.log('获取动态列表响应:', response);
+    console.log('获取动态列表原始响应:', response);
     
     if (response && response.code === 200 && response.data) {
-      // 直接使用后端返回的数据，不做额外处理
-      dynamicList.value = response.data.items || [];
+      // 直接使用 response.data.items
+      dynamicList.value = response.data.items.map(item => {
+        // 打印原始数据
+        console.log('原始动态项:', JSON.stringify(item, null, 2));
+        
+        // 确保保留原始数据中的所有字段
+        const processedItem = {
+          ...item,  // 保留所有原始字段
+          mediaUrls: item.media_urls || [],  // 转换 media_urls 为 mediaUrls
+          category: item.category || null    // 确保保留 category 字段
+        };
+        
+        // 打印处理后的数据
+        console.log('处理后的动态项:', JSON.stringify(processedItem, null, 2));
+        return processedItem;
+      });
       total.value = response.data.total || 0;
+      
+      // 添加详细的日志输出
       console.log('处理后的列表数据:', dynamicList.value);
+      console.log('第一条数据的完整信息:', JSON.stringify(dynamicList.value[0], null, 2));
+      console.log('第一条数据的分类信息:', dynamicList.value[0]?.category);
+      console.log('分类名称:', dynamicList.value[0]?.category?.name);
     } else {
       console.error('无法识别的响应格式:', response);
       dynamicList.value = [];
@@ -630,13 +649,14 @@ const fetchCategories = async () => {
     console.log('分类列表响应:', response)
     
     if (response && response.results) {
+      // 处理 {count: number, results: Array} 格式
       categories.value = response.results
+    } else if (response && response.code === 200 && response.data) {
+      categories.value = response.data.items || []
     } else if (Array.isArray(response)) {
       categories.value = response
     } else if (response && response.data) {
       categories.value = Array.isArray(response.data) ? response.data : [response.data]
-    } else if (response && response.items) {
-      categories.value = response.items
     } else {
       console.error('获取分类列表响应格式异常:', response)
       categories.value = []
@@ -651,7 +671,8 @@ const fetchCategories = async () => {
 
 // 获取分类名称
 const getCategoryName = (category) => {
-  return category ? category.name : '未分类'
+  if (!category) return '未分类';
+  return category.name || '未分类';
 }
 
 // 格式化日期
@@ -789,10 +810,13 @@ const checkResponsive = () => {
 }
 
 // 在组件挂载时获取数据
-onMounted(() => {
-  fetchDynamics()
-  fetchCategories()
-  fetchTags()
+onMounted(async () => {
+  // 先获取分类数据
+  await fetchCategories();
+  // 然后获取动态列表
+  await fetchDynamics();
+  // 最后获取标签数据
+  await fetchTags();
   
   // 检测响应式
   checkResponsive()

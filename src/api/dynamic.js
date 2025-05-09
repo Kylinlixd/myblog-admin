@@ -83,14 +83,10 @@ export const getDynamicList = async (params) => {
     
     // 确保每个项目都有必要的字段
     items = items.map(item => ({
-      id: item.id,
-      type: item.type || 'text',
-      content: item.content || '',
+      ...item,  // 保留所有原始字段
       mediaUrls: Array.isArray(item.mediaUrls) ? item.mediaUrls : [],
-      status: item.status || 'draft',
-      categoryId: item.categoryId,
-      tags: Array.isArray(item.tags) ? item.tags : [],
-      createdAt: item.createdAt || item.createTime || new Date().toISOString()
+      category: item.category || null,  // 确保保留 category 字段
+      tags: Array.isArray(item.tags) ? item.tags : []
     }));
     
     // 构造标准响应
