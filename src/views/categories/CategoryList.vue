@@ -60,6 +60,8 @@
       :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
       @change="handleTableChange"
       :scroll="{ x: 800 }"
+      :expandable="false"
+      :indent-size="0"
     >
       <template #bodyCell="{ column, record }">
         <!-- 状态列 -->
@@ -405,6 +407,10 @@ onMounted(() => {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  :deep(.ant-table-row-expand-icon) {
+    display: none !important;
+  }
 
   .search-form {
     margin-bottom: 24px;
