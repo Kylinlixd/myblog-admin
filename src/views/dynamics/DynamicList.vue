@@ -410,36 +410,17 @@ const fetchDynamics = async () => {
       }
     });
     
-    console.log('获取动态列表参数:', params);
     const response = await getDynamicList(params);
-    console.log('获取动态列表原始响应:', response);
     
     if (response && response.code === 200 && response.data) {
       // 直接使用 response.data.items
-      dynamicList.value = response.data.items.map(item => {
-        // 打印原始数据
-        console.log('原始动态项:', JSON.stringify(item, null, 2));
-        
-        // 确保保留原始数据中的所有字段
-        const processedItem = {
-          ...item,  // 保留所有原始字段
-          mediaUrls: item.media_urls || [],  // 转换 media_urls 为 mediaUrls
-          category: item.category || null    // 确保保留 category 字段
-        };
-        
-        // 打印处理后的数据
-        console.log('处理后的动态项:', JSON.stringify(processedItem, null, 2));
-        return processedItem;
-      });
+      dynamicList.value = response.data.items.map(item => ({
+        ...item,  // 保留所有原始字段
+        mediaUrls: item.media_urls || [],  // 转换 media_urls 为 mediaUrls
+        category: item.category || null    // 确保保留 category 字段
+      }));
       total.value = response.data.total || 0;
-      
-      // 添加详细的日志输出
-      console.log('处理后的列表数据:', dynamicList.value);
-      console.log('第一条数据的完整信息:', JSON.stringify(dynamicList.value[0], null, 2));
-      console.log('第一条数据的分类信息:', dynamicList.value[0]?.category);
-      console.log('分类名称:', dynamicList.value[0]?.category?.name);
     } else {
-      console.error('无法识别的响应格式:', response);
       dynamicList.value = [];
       total.value = 0;
       message.error('获取动态列表失败: 响应格式异常');
@@ -456,7 +437,6 @@ const fetchDynamics = async () => {
 
 // 处理搜索
 const handleSearch = () => {
-  console.log('搜索表单数据:', searchForm);
   // 重置页码
   currentPage.value = 1;
   // 重新获取数据
@@ -646,7 +626,6 @@ const tags = ref([])
 const fetchCategories = async () => {
   try {
     const response = await getCategoryList()
-    console.log('分类列表响应:', response)
     
     if (response && response.results) {
       // 处理 {count: number, results: Array} 格式
@@ -658,10 +637,8 @@ const fetchCategories = async () => {
     } else if (response && response.data) {
       categories.value = Array.isArray(response.data) ? response.data : [response.data]
     } else {
-      console.error('获取分类列表响应格式异常:', response)
       categories.value = []
     }
-    console.log('处理后的分类列表:', categories.value)
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
@@ -702,7 +679,6 @@ const previewMedia = (type, url) => {
 const fetchTags = async () => {
   try {
     const response = await getTagList()
-    console.log('标签列表响应:', response)
     
     if (response && response.results) {
       tags.value = response.results
@@ -711,7 +687,6 @@ const fetchTags = async () => {
     } else if (response && response.data) {
       tags.value = Array.isArray(response.data) ? response.data : [response.data]
     } else {
-      console.error('获取标签列表响应格式异常:', response)
       tags.value = []
     }
   } catch (error) {
@@ -723,7 +698,6 @@ const fetchTags = async () => {
 
 // 表格变化处理
 const handleTableChange = (pagination, filters, sorter) => {
-  console.log('表格变化:', { pagination, filters, sorter });
   // 更新分页信息
   if (pagination) {
     currentPage.value = pagination.current;
@@ -742,7 +716,6 @@ const handleTableChange = (pagination, filters, sorter) => {
 
 // 跳转到创建动态页面
 const navigateToCreate = () => {
-  console.log('尝试跳转到创建动态页面')
   try {
     // 获取访问 token
     const accessToken = localStorage.getItem('accessToken')
@@ -756,24 +729,16 @@ const navigateToCreate = () => {
     router.push({
       name: 'CreateDynamic',
       query: { token: accessToken }
-    }).then(() => {
-      console.log('跳转成功: name=CreateDynamic')
     }).catch(err => {
-      console.error('命名路由跳转失败:', err)
-      
       // 尝试使用路径跳转
       router.push({
         path: '/dashboard/dynamics/create',
         query: { token: accessToken }
-      }).then(() => {
-        console.log('路径跳转成功')
       }).catch(err => {
-        console.error('路径跳转也失败:', err)
         message.error('页面跳转失败，请检查路由配置')
       })
     })
   } catch (error) {
-    console.error('路由跳转异常:', error)
     message.error('页面跳转失败，请稍后重试')
   }
 }

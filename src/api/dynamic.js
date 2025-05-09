@@ -16,7 +16,6 @@ import api from '../utils/api';
 export const getDynamicList = async (params) => {
   try {
     const apiUrl = '/api/dynamics/';
-    console.log('获取动态列表参数:', params);
     
     // 转换参数名称，确保与后端一致
     const apiParams = {
@@ -46,11 +45,8 @@ export const getDynamicList = async (params) => {
     // 添加排序参数
     apiParams.sort = 'createdAt:desc';  // 默认按创建时间降序
     
-    console.log('转换后的API参数:', apiParams);
-    
     // 使用API工具类发送请求
     const response = await api.admin.get(apiUrl, apiParams);
-    console.log('动态列表API响应原始数据:', response);
     
     // 处理不同的响应格式
     let items = [];
@@ -112,8 +108,6 @@ export const getDynamicList = async (params) => {
  */
 export const updateDynamic = async (id, data) => {
   try {
-    console.log(`更新动态 ID:${id}, 数据:`, data);
-    
     // 数据格式化，确保数据完整性
     const formattedData = {
       type: data.type || 'text',
@@ -195,8 +189,6 @@ export const getDynamicDetail = async (id) => {
  */
 export const createDynamic = async (data) => {
   try {
-    console.log('创建动态数据:', data);
-    
     // 数据格式化，确保数据完整性
     const formattedData = {
       type: data.type || 'text',
@@ -223,8 +215,6 @@ export const createDynamic = async (data) => {
     if (formattedData.type === 'video' && (!formattedData.mediaUrls || formattedData.mediaUrls.length === 0)) {
       throw new Error('视频类型的动态必须包含至少一个视频文件');
     }
-    
-    console.log('格式化后的动态数据:', formattedData);
     
     // 使用API工具类发送请求
     const response = await api.admin.post('/api/dynamics/', formattedData);
