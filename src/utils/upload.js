@@ -1,6 +1,12 @@
 import { message } from 'ant-design-vue'
 import axios from 'axios'
-import request from './request'
+
+// 创建一个专门用于文件上传的axios实例
+const uploadAxios = axios.create({
+  baseURL: '',
+  timeout: 30000, // 文件上传需要更长的超时时间
+  withCredentials: true
+})
 
 /**
  * 上传文件
@@ -10,16 +16,32 @@ import request from './request'
  */
 export const uploadFile = async (file, type) => {
   try {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('type', type)
+    if (!file || !(file instanceof File)) {
+      throw new Error('无效的文件对象')
+    }
 
-    // 直接使用axios实例，避免request实例的拦截器干扰
-    const response = await axios.post('/api/upload/', formData, {
+    // 创建FormData对象
+    const formData = new FormData()
+    // 直接添加文件对象，不进行任何转换
+    formData.append('file', file)
+    formData.append('file_type', type)
+
+    // 获取认证令牌
+    const accessToken = localStorage.getItem('accessToken')
+    if (!accessToken) {
+      throw new Error('未登录，请先登录')
+    }
+
+    // 确保令牌格式正确
+    const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
+
+    // 使用专门的上传实例，不设置Content-Type
+    const response = await uploadAxios.post('/api/upload/', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Authorization': token
       },
-      withCredentials: true
+      // 确保不进行任何数据转换
+      transformRequest: [(data) => data]
     })
 
     if (response.data.code === 200) {
@@ -27,7 +49,15 @@ export const uploadFile = async (file, type) => {
     }
     throw new Error(response.data.message || '上传失败')
   } catch (error) {
-    message.error(error.message || '上传失败')
+    console.error('Upload error:', error)
+    if (error.response?.status === 401) {
+      message.error('登录已过期，请重新登录')
+      // 可以在这里添加重定向到登录页的逻辑
+    } else if (error.response?.status === 500) {
+      message.error('服务器错误，请稍后重试')
+    } else {
+      message.error(error.message || '上传失败')
+    }
     throw error
   }
 }
