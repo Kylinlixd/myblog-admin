@@ -1,18 +1,16 @@
 import { message } from 'ant-design-vue'
 import axios from 'axios'
 
-// 创建一个专门用于文件上传的axios实例
+// 创建一个完全独立的axios实例，不使用任何全局配置
 const uploadAxios = axios.create({
   baseURL: '',
-  timeout: 30000, // 文件上传需要更长的超时时间
+  timeout: 30000,
   withCredentials: true,
-  // 禁用默认的请求转换
+  // 禁用所有默认转换
   transformRequest: [(data) => data],
-  // 设置默认的请求头
-  headers: {
-    'Accept': 'application/json, text/plain, */*',
-    'X-Requested-With': 'XMLHttpRequest'
-  }
+  transformResponse: [(data) => data],
+  // 不设置任何默认headers
+  headers: {}
 })
 
 /**
@@ -48,15 +46,23 @@ export const uploadFile = async (file, type) => {
       url: '/api/upload/',
       data: formData,
       headers: {
-        'Authorization': token,
-        'Content-Type': 'multipart/form-data'
+        'Authorization': token
       }
     })
 
-    if (response.data.code === 200) {
-      return response.data.data
+    // 检查响应数据
+    if (response.data && response.data.code === 200) {
+      message.success(response.data.message || '上传成功')
+      // 确保返回的数据包含url字段
+      const result = response.data.data
+      if (result) {
+        result.url = result.file_url // 添加url字段以兼容前端
+      }
+      return result
     }
-    throw new Error(response.data.message || '上传失败')
+    
+    // 如果响应不成功，抛出错误
+    throw new Error(response.data?.message || '上传失败')
   } catch (error) {
     console.error('Upload error:', error)
     if (error.response?.status === 401) {

@@ -58,12 +58,10 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
-          selfHandleResponse: false, // 禁用自行处理响应
-          // 增加代理超时设置
+          selfHandleResponse: false,
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, res) => {
               console.error('[代理服务器错误]', err);
-              // 确保响应对象存在并且可写入
               if (res && !res.writableEnded) {
                 res.writeHead(500, {
                   'Content-Type': 'application/json',
@@ -76,25 +74,23 @@ export default defineConfig(({ mode }) => {
                 }));
               }
             });
-            // 增加超时设置
             proxy.on('proxyReq', (proxyReq, req, _res) => {
-              // 修复请求头问题
-              proxyReq.setHeader('Accept', 'application/json');
-              proxyReq.setHeader('Content-Type', 'application/json');
+              // 只设置必要的请求头
               proxyReq.setHeader('Host', '127.0.0.1:8000');
               
-              // 可能的会话问题处理
+              // 保留原始请求的Content-Type
+              if (req.headers['content-type']) {
+                proxyReq.setHeader('Content-Type', req.headers['content-type']);
+              }
+              
+              // 保留认证信息
               const token = req.headers.authorization;
               if (token) {
                 proxyReq.setHeader('Authorization', token);
               }
               
-              // 调试信息
               console.log('[请求头]', proxyReq.getHeaders());
-              
-              // 完整记录目标请求URL
-              const targetUrl = `http://127.0.0.1:8000${proxyReq.path}`;
-              console.log(`[代理请求] ${req.method} ${req.url} -> ${targetUrl}`);
+              console.log(`[代理请求] ${req.method} ${req.url} -> http://127.0.0.1:8000${proxyReq.path}`);
               proxyReq.setSocketKeepAlive(true);
             });
             
@@ -143,33 +139,10 @@ export default defineConfig(({ mode }) => {
               }
             });
           },
-          rewrite: (path) => {
-            // 记录请求路径
-            console.log('\n[后台API] 原始请求路径:', path);
-            
-            // 保留原始路径，不修改params[key]格式
-            // 这可能是后端框架所需的请求格式
-            let rewrittenPath = path;
-            
-            /*
-            // 注释掉之前的格式转换，保留原始格式
-            if (path.includes('params[')) {
-              rewrittenPath = path.replace(/params\[([^\]]+)\]/g, '$1');
-              console.log('[参数格式修正] 将params[key]格式转换为key格式');
-            }
-            */
-            
-            console.log('[后台API] 重写后路径:', rewrittenPath);
-            const finalUrl = `http://127.0.0.1:8000${rewrittenPath}`;
-            console.log('[后台API] 最终请求URL:', finalUrl);
-            return rewrittenPath;
-          },
-          // 自定义请求头
+          rewrite: (path) => path,
           headers: {
             'X-Requested-With': 'XMLHttpRequest',
-            'X-Proxy-By': 'Vite',
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'X-Proxy-By': 'Vite'
           }
         },
         // 博客前台API代理规则

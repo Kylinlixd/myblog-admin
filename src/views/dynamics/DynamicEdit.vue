@@ -448,7 +448,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       return
     }
     
-    if (!result || !result.url) {
+    if (!result || (!result.url && !result.file_url)) {
       const error = new Error('上传结果无效')
       console.error('上传结果无效:', result)
       message.error('上传失败：服务器返回数据无效')
@@ -461,11 +461,14 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       form.value.mediaUrls = []
     }
     
+    // 使用url或file_url
+    const fileUrl = result.url || result.file_url
+    
     // 对于音频和视频，只保留一个文件
     if (form.value.type === 'audio' || form.value.type === 'video') {
-      form.value.mediaUrls = [result.url]
+      form.value.mediaUrls = [fileUrl]
     } else {
-      form.value.mediaUrls.push(result.url)
+      form.value.mediaUrls.push(fileUrl)
     }
     
     // 更新文件列表
