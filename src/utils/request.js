@@ -15,7 +15,6 @@ const service = axios.create({
   baseURL,
   timeout: requestTimeout,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
     'X-Requested-With': 'XMLHttpRequest'
   },
@@ -31,9 +30,17 @@ const service = axios.create({
   maxContentLength: 10 * 1024 * 1024, // 10MB
   maxBodyLength: 10 * 1024 * 1024, // 10MB
   // 添加请求拦截器
-  transformRequest: [(data) => {
+  transformRequest: [(data, headers) => {
+    // 如果是FormData，不进行转换
+    if (data instanceof FormData) {
+      return data;
+    }
+    // 如果没有设置Content-Type，默认使用application/json
+    if (!headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
     // 确保请求体是 JSON 格式
-    if (data && !(data instanceof FormData)) {
+    if (data) {
       return JSON.stringify(data);
     }
     return data;
