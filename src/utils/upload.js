@@ -5,7 +5,14 @@ import axios from 'axios'
 const uploadAxios = axios.create({
   baseURL: '',
   timeout: 30000, // 文件上传需要更长的超时时间
-  withCredentials: true
+  withCredentials: true,
+  // 禁用默认的请求转换
+  transformRequest: [(data) => data],
+  // 设置默认的请求头
+  headers: {
+    'Accept': 'application/json, text/plain, */*',
+    'X-Requested-With': 'XMLHttpRequest'
+  }
 })
 
 /**
@@ -35,13 +42,15 @@ export const uploadFile = async (file, type) => {
     // 确保令牌格式正确
     const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
 
-    // 使用专门的上传实例，不设置Content-Type
-    const response = await uploadAxios.post('/api/upload/', formData, {
+    // 使用专门的上传实例
+    const response = await uploadAxios({
+      method: 'post',
+      url: '/api/upload/',
+      data: formData,
       headers: {
-        'Authorization': token
-      },
-      // 确保不进行任何数据转换
-      transformRequest: [(data) => data]
+        'Authorization': token,
+        'Content-Type': 'multipart/form-data'
+      }
     })
 
     if (response.data.code === 200) {
