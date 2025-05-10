@@ -238,6 +238,11 @@ service.interceptors.request.use(
       }
     }
     
+    // 如果是FormData，确保Content-Type不被覆盖
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
+    
     // 记录请求信息
     if (!isProd) {
       console.log(`[Request] ${config.method.toUpperCase()} ${config.url}`, {

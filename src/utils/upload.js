@@ -14,16 +14,18 @@ export const uploadFile = async (file, type) => {
     formData.append('file', file)
     formData.append('type', type)
 
-    const response = await request.post('/api/upload/', formData, {
+    // 直接使用axios实例，避免request实例的拦截器干扰
+    const response = await axios.post('/api/upload/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-      }
+      },
+      withCredentials: true
     })
 
-    if (response.code === 200) {
-      return response.data
+    if (response.data.code === 200) {
+      return response.data.data
     }
-    throw new Error(response.message || '上传失败')
+    throw new Error(response.data.message || '上传失败')
   } catch (error) {
     message.error(error.message || '上传失败')
     throw error
