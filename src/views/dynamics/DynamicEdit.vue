@@ -426,42 +426,57 @@ const handleCancel = () => {
 // 处理自定义上传
 const handleCustomUpload = async ({ file, onSuccess, onError }) => {
   try {
+    if (!file || !(file instanceof File)) {
+      throw new Error('无效的文件对象')
+    }
+
     let result
-    
-    if (form.value.type === 'image') {
-      result = await uploadImage(file)
-    } else if (form.value.type === 'audio') {
-      result = await uploadAudio(file)
-    } else if (form.value.type === 'video') {
-      result = await uploadVideo(file)
-    }
-    
-    if (result && result.url) {
-      // 添加到mediaUrls
-      if (!form.value.mediaUrls) {
-        form.value.mediaUrls = []
-      }
-      
-      // 对于音频和视频，只保留一个文件
-      if (form.value.type === 'audio' || form.value.type === 'video') {
-        form.value.mediaUrls = [result.url]
+    try {
+      if (form.value.type === 'image') {
+        result = await uploadImage(file)
+      } else if (form.value.type === 'audio') {
+        result = await uploadAudio(file)
+      } else if (form.value.type === 'video') {
+        result = await uploadVideo(file)
       } else {
-        form.value.mediaUrls.push(result.url)
+        throw new Error('不支持的文件类型')
       }
-      
-      // 更新文件列表
-      updateFileList()
-      
-      onSuccess(result)
-      message.success('上传成功')
-    } else {
-      onError()
-      message.error('上传失败')
+    } catch (uploadError) {
+      console.error('文件上传失败:', uploadError)
+      message.error(uploadError.message || '文件上传失败')
+      onError(uploadError)
+      return
     }
+    
+    if (!result || !result.url) {
+      const error = new Error('上传结果无效')
+      console.error('上传结果无效:', result)
+      message.error('上传失败：服务器返回数据无效')
+      onError(error)
+      return
+    }
+
+    // 添加到mediaUrls
+    if (!form.value.mediaUrls) {
+      form.value.mediaUrls = []
+    }
+    
+    // 对于音频和视频，只保留一个文件
+    if (form.value.type === 'audio' || form.value.type === 'video') {
+      form.value.mediaUrls = [result.url]
+    } else {
+      form.value.mediaUrls.push(result.url)
+    }
+    
+    // 更新文件列表
+    updateFileList()
+    
+    onSuccess(result)
+    message.success('上传成功')
   } catch (error) {
-    onError()
-    console.error('上传失败:', error)
-    message.error('上传失败')
+    console.error('上传处理失败:', error)
+    message.error(error.message || '上传失败')
+    onError(error)
   }
 }
 
