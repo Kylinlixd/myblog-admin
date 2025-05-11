@@ -246,7 +246,7 @@ const rules = {
     {
       validator: (rule, value) => {
         if ((form.value.type === 'image' || form.value.type === 'audio' || form.value.type === 'video') 
-            && (!value || value.length === 0)) {
+            && (!form.value.mediaUrls || form.value.mediaUrls.length === 0)) {
           return Promise.reject(`请上传${form.value.type === 'image' ? '图片' : form.value.type === 'audio' ? '音频' : '视频'}`)
         }
         return Promise.resolve()
@@ -330,9 +330,13 @@ const updateFileList = () => {
       uid: `-${index}`,
       name: `file-${index}`,
       status: 'done',
-      url: url
+      url: url,
+      thumbUrl: url
     }
   })
+  
+  // 触发表单验证
+  formRef.value?.validateFields(['mediaUrls'])
 }
 
 // 保存动态
@@ -491,6 +495,9 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     } else {
       fileList.value.push(fileInfo)
     }
+    
+    // 触发表单验证
+    formRef.value?.validateFields(['mediaUrls'])
     
     onSuccess(result)
     message.success('上传成功')
