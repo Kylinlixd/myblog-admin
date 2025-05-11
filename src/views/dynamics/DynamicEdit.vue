@@ -54,10 +54,14 @@
       </a-form-item>
 
       <a-form-item label="内容" name="content">
-        <a-textarea
-          v-model:value="form.content"
-          :rows="10"
-          placeholder="请输入动态内容，支持Markdown格式"
+        <markdown-editor
+          v-model="form.content"
+          :height="'400px'"
+          :theme="'light'"
+          :preview-theme="'default'"
+          :code-theme="'atom-one-light'"
+          :language="'zh-CN'"
+          @onSave="handleSave"
         />
       </a-form-item>
 
@@ -184,6 +188,7 @@ import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynami
 import { uploadImage, uploadAudio, uploadVideo, checkFileSize, checkFileType } from '../../utils/upload'
 import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -7,7 +7,8 @@
       class="aside"
     >
       <div class="logo">
-        <span>博客管理系统</span>
+        <span class="full-title">博客管理系统</span>
+        <span class="short-title">博客</span>
       </div>
       <a-menu
         v-model:selectedKeys="selectedKeys"
@@ -200,11 +201,36 @@ const handleOpen = (key, keyPath) => {
       overflow: hidden;
       white-space: nowrap;
       background: #002140;
+      position: relative;
       
-      span {
+      .full-title {
         font-size: 18px;
         font-weight: 600;
         color: #ffffff;
+        transition: all 0.2s;
+        opacity: 1;
+      }
+      
+      .short-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff;
+        position: absolute;
+        opacity: 0;
+        transition: all 0.2s;
+      }
+    }
+    
+    &.ant-layout-sider-collapsed {
+      .logo {
+        .full-title {
+          opacity: 0;
+          width: 0;
+        }
+        
+        .short-title {
+          opacity: 1;
+        }
       }
     }
   }

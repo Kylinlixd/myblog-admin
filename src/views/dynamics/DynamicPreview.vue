@@ -28,10 +28,8 @@
       </template>
 
       <div class="preview-content">
-        <!-- 文本内容 -->
-        <div v-if="dynamic.content" class="content-text">
-          {{ dynamic.content }}
-        </div>
+        <!-- Markdown内容 -->
+        <div v-if="dynamic.content" class="content-text markdown-body" v-html="renderMarkdown(dynamic.content)"></div>
         
         <!-- 媒体内容 -->
         <div v-if="dynamic.mediaUrls && dynamic.mediaUrls.length" class="media-content">
@@ -115,6 +113,7 @@ import { message } from 'ant-design-vue'
 import { getDynamicDetail } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
 import { EditOutlined, CloseOutlined } from '@ant-design/icons-vue'
+import MarkdownIt from 'markdown-it'
 
 const route = useRoute()
 const router = useRouter()
@@ -133,6 +132,18 @@ const dynamic = ref({
 
 // 分类数据
 const categories = ref([])
+
+// 创建Markdown渲染器
+const md = new MarkdownIt({
+  html: true,
+  linkify: true,
+  typographer: true
+})
+
+// 渲染Markdown内容
+const renderMarkdown = (content) => {
+  return md.render(content || '')
+}
 
 // 获取动态详情
 const fetchDynamicDetail = async () => {
@@ -222,7 +233,7 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .dynamic-preview {
   padding: 24px;
   
@@ -262,6 +273,74 @@ onMounted(async () => {
       margin-bottom: 24px;
       white-space: pre-wrap;
       word-break: break-all;
+      
+      &.markdown-body {
+        white-space: normal;
+        
+        :deep(h1) {
+          font-size: 2em;
+          margin-bottom: 0.5em;
+        }
+        
+        :deep(h2) {
+          font-size: 1.5em;
+          margin-bottom: 0.5em;
+        }
+        
+        :deep(h3) {
+          font-size: 1.25em;
+          margin-bottom: 0.5em;
+        }
+        
+        :deep(p) {
+          margin-bottom: 1em;
+        }
+        
+        :deep(ul), :deep(ol) {
+          margin-bottom: 1em;
+          padding-left: 2em;
+        }
+        
+        :deep(blockquote) {
+          margin: 1em 0;
+          padding: 0.5em 1em;
+          border-left: 4px solid #ddd;
+          color: #666;
+        }
+        
+        :deep(code) {
+          background: #f5f5f5;
+          padding: 0.2em 0.4em;
+          border-radius: 3px;
+          font-family: monospace;
+        }
+        
+        :deep(pre) {
+          background: #f5f5f5;
+          padding: 1em;
+          border-radius: 4px;
+          overflow-x: auto;
+          
+          code {
+            background: none;
+            padding: 0;
+          }
+        }
+        
+        :deep(img) {
+          max-width: 100%;
+          height: auto;
+        }
+        
+        :deep(a) {
+          color: #1890ff;
+          text-decoration: none;
+          
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
     }
     
     .media-content {
