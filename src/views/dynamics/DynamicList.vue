@@ -232,10 +232,28 @@
       :title="previewTitle"
       :footer="null"
       width="800px"
+      @cancel="previewVisible = false"
     >
-      <img v-if="previewType === 'image'" alt="预览" style="width: 100%" :src="previewUrl" />
-      <audio v-if="previewType === 'audio'" controls style="width: 100%" :src="previewUrl"></audio>
-      <video v-if="previewType === 'video'" controls style="width: 100%" :src="previewUrl"></video>
+      <div class="media-preview-container">
+        <img
+          v-if="previewType === 'image'"
+          :src="previewUrl"
+          alt="预览"
+          style="width: 100%; max-height: 600px; object-fit: contain;"
+        />
+        <audio
+          v-if="previewType === 'audio'"
+          :src="previewUrl"
+          controls
+          style="width: 100%"
+        ></audio>
+        <video
+          v-if="previewType === 'video'"
+          :src="previewUrl"
+          controls
+          style="width: 100%; max-height: 600px;"
+        ></video>
+      </div>
     </a-modal>
 
     <!-- 动态预览对话框 -->
@@ -514,7 +532,59 @@ const columns = [
     dataIndex: 'mediaUrls',
     key: 'mediaUrls',
     width: 120,
-    align: 'center'
+    align: 'center',
+    customRender: ({ record }) => {
+      if (!record.mediaUrls || record.mediaUrls.length === 0) {
+        return '-';
+      }
+
+      const media = record.mediaUrls[0]; // 获取第一个媒体文件
+      const type = record.type;
+
+      if (type === 'image') {
+        return h('div', { class: 'media-preview' }, [
+          h('img', {
+            src: media.url || media.file_url,
+            alt: media.name,
+            style: {
+              width: '50px',
+              height: '50px',
+              objectFit: 'cover',
+              cursor: 'pointer'
+            },
+            onClick: () => previewMedia('image', media.url || media.file_url)
+          })
+        ]);
+      }
+
+      if (type === 'audio') {
+        return h('div', { class: 'media-preview' }, [
+          h(SoundOutlined, {
+            style: {
+              fontSize: '24px',
+              color: '#1890ff',
+              cursor: 'pointer'
+            },
+            onClick: () => previewMedia('audio', media.url || media.file_url)
+          })
+        ]);
+      }
+
+      if (type === 'video') {
+        return h('div', { class: 'media-preview' }, [
+          h(VideoCameraOutlined, {
+            style: {
+              fontSize: '24px',
+              color: '#1890ff',
+              cursor: 'pointer'
+            },
+            onClick: () => previewMedia('video', media.url || media.file_url)
+          })
+        ]);
+      }
+
+      return '-';
+    }
   },
   {
     title: '类型',
@@ -669,10 +739,10 @@ const formatDate = (dateString) => {
 
 // 媒体预览
 const previewMedia = (type, url) => {
-  previewType.value = type
-  previewUrl.value = url
-  previewTitle.value = type === 'audio' ? '音频预览' : '视频预览'
-  previewVisible.value = true
+  previewType.value = type;
+  previewUrl.value = url;
+  previewTitle.value = type === 'image' ? '图片预览' : type === 'audio' ? '音频预览' : '视频预览';
+  previewVisible.value = true;
 }
 
 // 获取标签列表
@@ -1004,6 +1074,31 @@ onUnmounted(() => {
     padding: 24px;
     max-height: 80vh;
     overflow-y: auto;
+  }
+}
+
+.media-preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.media-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  img {
+    border-radius: 4px;
+    transition: transform 0.3s;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 }
 </style>

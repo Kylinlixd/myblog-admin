@@ -76,7 +76,7 @@
           :file-list="fileList"
           :before-upload="beforeImageUpload"
           :custom-request="handleCustomUpload"
-          :remove="handleMediaRemove"
+          @remove="handleMediaRemove"
           :preview="handleImagePreview"
           multiple
           accept="image/*"
@@ -112,7 +112,7 @@
           :file-list="fileList"
           :before-upload="beforeAudioUpload"
           :custom-request="handleCustomUpload"
-          :remove="handleMediaRemove"
+          @remove="handleMediaRemove"
           accept="audio/*"
         >
           <a-button type="primary">
@@ -134,7 +134,7 @@
           :file-list="fileList"
           :before-upload="beforeVideoUpload"
           :custom-request="handleCustomUpload"
-          :remove="handleMediaRemove"
+          @remove="handleMediaRemove"
           accept="video/*"
         >
           <a-button type="primary">
@@ -514,6 +514,8 @@ const handleMediaRemove = (file) => {
   if (index !== -1) {
     fileList.value.splice(index, 1)
     form.value.mediaUrls.splice(index, 1)
+    // 触发表单验证
+    formRef.value?.validateFields(['mediaUrls'])
   }
   return true
 }

@@ -77,13 +77,36 @@ export const getDynamicList = async (params) => {
       total = response.total || items.length;
     }
     
-    // 确保每个项目都有必要的字段
-    items = items.map(item => ({
-      ...item,  // 保留所有原始字段
-      mediaUrls: Array.isArray(item.mediaUrls) ? item.mediaUrls : [],
-      category: item.category || null,  // 确保保留 category 字段
-      tags: Array.isArray(item.tags) ? item.tags : []
-    }));
+    // 确保每个项目都有必要的字段，并处理媒体文件信息
+    items = items.map(item => {
+      // 处理媒体文件信息
+      let mediaUrls = [];
+      if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
+        mediaUrls = item.mediaUrls.map(media => {
+          if (typeof media === 'string') {
+            // 如果是字符串，转换为对象格式
+            return {
+              id: media.split('/').pop(), // 从URL中提取ID
+              name: media.split('/').pop(), // 从URL中提取文件名
+              file_type: item.type,
+              file_url: media,
+              url: media // 兼容性字段
+            };
+          }
+          return {
+            ...media,
+            url: media.file_url || media.url // 确保有url字段
+          };
+        });
+      }
+      
+      return {
+        ...item,  // 保留所有原始字段
+        mediaUrls, // 使用处理后的媒体文件信息
+        category: item.category || null,  // 确保保留 category 字段
+        tags: Array.isArray(item.tags) ? item.tags : []
+      };
+    });
     
     // 构造标准响应
     return { 

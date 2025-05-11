@@ -51,18 +51,25 @@ export const uploadFile = async (file, type) => {
     })
 
     // 检查响应数据
-    if (response.data && response.data.code === 200) {
-      message.success(response.data.message || '上传成功')
-      // 确保返回的数据包含url字段
-      const result = response.data.data
-      if (result) {
-        result.url = result.file_url // 添加url字段以兼容前端
+    if (response.data) {
+      // 如果响应是字符串，尝试解析JSON
+      const responseData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+      
+      if (responseData.code === 200 && responseData.data) {
+        message.success(responseData.message || '上传成功')
+        // 确保返回的数据包含url字段
+        const result = responseData.data
+        if (result) {
+          result.url = result.file_url // 添加url字段以兼容前端
+        }
+        return responseData // 返回完整的响应数据
       }
-      return result
+      
+      // 如果响应不成功，抛出错误
+      throw new Error(responseData.message || '上传失败')
     }
     
-    // 如果响应不成功，抛出错误
-    throw new Error(response.data?.message || '上传失败')
+    throw new Error('服务器响应无效')
   } catch (error) {
     console.error('Upload error:', error)
     if (error.response?.status === 401) {
