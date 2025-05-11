@@ -189,6 +189,7 @@ const handleOpen = (key, keyPath) => {
     bottom: 0;
     z-index: 10;
     background-color: #001529;
+    transition: all 0.2s;
     
     .logo {
       height: 64px;
@@ -222,6 +223,7 @@ const handleOpen = (key, keyPath) => {
     justify-content: space-between;
     height: 64px;
     line-height: 64px;
+    transition: all 0.2s;
     
     .header-left {
       display: flex;
@@ -268,6 +270,18 @@ const handleOpen = (key, keyPath) => {
     min-height: calc(100vh - 64px);
     background-color: #f0f2f5;
     overflow-y: auto;
+    transition: all 0.2s;
+  }
+  
+  // 当侧边栏折叠时的样式
+  .aside.ant-layout-sider-collapsed + .ant-layout {
+    .header {
+      left: 80px;
+    }
+    
+    .main {
+      margin-left: 80px;
+    }
   }
 }
 
