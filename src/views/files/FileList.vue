@@ -99,6 +99,11 @@
                 <VideoCameraOutlined /> 视频
               </a-button>
             </template>
+            <template v-else>
+              <a-button type="link" size="small" @click="handleDownload(record)">
+                <DownloadOutlined /> 下载
+              </a-button>
+            </template>
           </template>
 
           <!-- 类型列 -->
@@ -230,7 +235,9 @@ const columns = [
     filters: [
       { text: '图片', value: 'image' },
       { text: '音频', value: 'audio' },
-      { text: '视频', value: 'video' }
+      { text: '视频', value: 'video' },
+      { text: '文档', value: 'document' },
+      { text: '其他', value: 'other' }
     ],
     onFilter: (value, record) => record.type === value
   },
@@ -241,6 +248,22 @@ const columns = [
     width: 100,
     align: 'center',
     sorter: (a, b) => a.size - b.size
+  },
+  {
+    title: '上传者',
+    dataIndex: 'uploader',
+    key: 'uploader',
+    width: 120,
+    align: 'center',
+    customRender: ({ text }) => text?.nickname || text?.username || '-'
+  },
+  {
+    title: '下载次数',
+    dataIndex: 'downloadCount',
+    key: 'downloadCount',
+    width: 100,
+    align: 'center',
+    sorter: (a, b) => a.downloadCount - b.downloadCount
   },
   {
     title: '上传时间',
@@ -254,7 +277,7 @@ const columns = [
     title: '操作',
     dataIndex: 'action',
     key: 'action',
-    width: 150,
+    width: 200,
     fixed: 'right',
     align: 'center'
   }
@@ -286,12 +309,27 @@ const fetchFiles = async () => {
     loading.value = true
     const response = await getFileList({
       page: currentPage.value,
-      pageSize: pageSize.value,
-      ...searchForm.value
+      pageSize: pageSize.value
     })
     
     if (response && response.code === 200 && response.data) {
-      fileList.value = response.data.items
+      // 确保数据格式正确
+      fileList.value = response.data.items.map(item => ({
+        ...item,
+        id: item.id,
+        name: item.name,
+        type: item.file_type,
+        size: item.file_size,
+        url: item.file_url,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        downloadCount: item.download_count,
+        isPublic: item.is_public,
+        description: item.description,
+        category: item.category,
+        tags: item.tags,
+        uploader: item.uploader
+      }))
       total.value = response.data.total
     } else {
       fileList.value = []
@@ -318,7 +356,23 @@ const handleSearch = async () => {
     })
     
     if (response && response.code === 200 && response.data) {
-      fileList.value = response.data.items
+      // 确保数据格式正确
+      fileList.value = response.data.items.map(item => ({
+        ...item,
+        id: item.id,
+        name: item.name,
+        type: item.file_type,
+        size: item.file_size,
+        url: item.file_url,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        downloadCount: item.download_count,
+        isPublic: item.is_public,
+        description: item.description,
+        category: item.category,
+        tags: item.tags,
+        uploader: item.uploader
+      }))
       total.value = response.data.total
     } else {
       fileList.value = []
