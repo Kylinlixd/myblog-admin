@@ -58,6 +58,10 @@
           <breadcrumb />
         </div>
         <div class="header-right">
+          <a-button type="link" @click="goToBlog">
+            <template #icon><home-outlined /></template>
+            博客主页
+          </a-button>
           <a-dropdown>
             <div class="user-info">
               <a-avatar :src="userStore.avatar">{{ userStore.nickname ? userStore.nickname.charAt(0) : '管' }}</a-avatar>
@@ -88,7 +92,18 @@
 <script setup>
 import { computed, onMounted, ref, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { MonitorOutlined, FileOutlined, FolderOutlined, TagsOutlined, CommentOutlined, MenuUnfoldOutlined, MenuFoldOutlined, PlusOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { 
+  MonitorOutlined, 
+  FileOutlined, 
+  FolderOutlined, 
+  TagsOutlined, 
+  CommentOutlined, 
+  MenuUnfoldOutlined, 
+  MenuFoldOutlined, 
+  PlusOutlined, 
+  UnorderedListOutlined,
+  HomeOutlined 
+} from '@ant-design/icons-vue'
 import { useUserStore } from '../stores/user'
 import { useAppStore } from '../stores/app'
 import { Modal } from 'ant-design-vue'
@@ -180,6 +195,11 @@ const handleOpen = (key, keyPath) => {
   if (key === 'dynamics' || key.includes('dynamics')) {
     navigateTo('/dashboard/dynamics')
   }
+}
+
+// 跳转到博客主页
+const goToBlog = () => {
+  router.push('/blog')
 }
 </script>
 
@@ -276,6 +296,14 @@ const handleOpen = (key, keyPath) => {
       display: flex;
       align-items: center;
       gap: 16px;
+      
+      .ant-btn-link {
+        color: rgba(0, 0, 0, 0.65);
+        
+        &:hover {
+          color: #1890ff;
+        }
+      }
       
       .user-info {
         display: flex;
