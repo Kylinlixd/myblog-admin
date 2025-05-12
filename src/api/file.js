@@ -46,6 +46,7 @@ export const uploadFile = async (params) => {
  */
 export const getFileList = async (params) => {
   try {
+    console.log('获取文件列表参数:', params)
     const response = await api.admin.get('/api/upload/files/', {
       params: {
         page: params.page || 1,
@@ -53,10 +54,68 @@ export const getFileList = async (params) => {
       }
     })
     
-    return response
+    console.log('获取文件列表响应:', response)
+    
+    if (!response) {
+      console.error('获取文件列表失败: 响应为空')
+      return {
+        code: 500,
+        data: {
+          items: [],
+          total: 0
+        },
+        message: '获取文件列表失败: 响应为空'
+      }
+    }
+
+    // 处理响应数据
+    let items = []
+    let total = 0
+
+    if (response.results) {
+      items = response.results
+      total = response.count || items.length
+    } else if (Array.isArray(response)) {
+      items = response
+      total = response.length
+    } else if (response.data) {
+      if (Array.isArray(response.data)) {
+        items = response.data
+        total = response.data.length
+      } else if (response.data.items) {
+        items = response.data.items
+        total = response.data.total || items.length
+      } else {
+        items = [response.data]
+        total = 1
+      }
+    }
+
+    // 处理文件URL，添加前缀
+    items = items.map(item => ({
+      ...item,
+      file_url: item.file_url ? `http://localhost:8000${item.file_url}` : item.file_url,
+      url: item.url ? `http://localhost:8000${item.url}` : item.url
+    }))
+
+    return {
+      code: 200,
+      data: {
+        items,
+        total
+      },
+      message: 'success'
+    }
   } catch (error) {
     console.error('获取文件列表失败:', error)
-    throw error
+    return {
+      code: 500,
+      data: {
+        items: [],
+        total: 0
+      },
+      message: error.message || '获取文件列表失败'
+    }
   }
 }
 

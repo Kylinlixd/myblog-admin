@@ -89,13 +89,14 @@ export const getDynamicList = async (params) => {
               id: media.split('/').pop(), // 从URL中提取ID
               name: media.split('/').pop(), // 从URL中提取文件名
               file_type: item.type,
-              file_url: media,
-              url: media // 兼容性字段
+              file_url: `http://localhost:8000${media}`,
+              url: `http://localhost:8000${media}` // 兼容性字段
             };
           }
           return {
             ...media,
-            url: media.file_url || media.url // 确保有url字段
+            file_url: media.file_url ? `http://localhost:8000${media.file_url}` : media.file_url,
+            url: media.url ? `http://localhost:8000${media.url}` : media.url // 确保有url字段
           };
         });
       }

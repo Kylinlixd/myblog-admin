@@ -157,7 +157,7 @@
       :title="previewTitle"
       :footer="null"
       width="800px"
-      @cancel="previewVisible = false"
+      @cancel="handlePreviewClose"
     >
       <div class="media-preview-container">
         <audio
@@ -165,12 +165,14 @@
           :src="previewUrl"
           controls
           style="width: 100%"
+          ref="audioPlayer"
         ></audio>
         <video
           v-if="previewType === 'video'"
           :src="previewUrl"
           controls
           style="width: 100%; max-height: 600px;"
+          ref="videoPlayer"
         ></video>
       </div>
     </a-modal>
@@ -307,10 +309,13 @@ const paginationConfig = computed(() => ({
 const fetchFiles = async () => {
   try {
     loading.value = true
+    console.log('开始获取文件列表...')
     const response = await getFileList({
       page: currentPage.value,
       pageSize: pageSize.value
     })
+    
+    console.log('获取文件列表响应:', response)
     
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
@@ -331,14 +336,19 @@ const fetchFiles = async () => {
         uploader: item.uploader
       }))
       total.value = response.data.total
+      console.log('文件列表数据:', fileList.value)
     } else {
       fileList.value = []
       total.value = 0
-      message.error('获取文件列表失败')
+      const errorMsg = response?.message || '获取文件列表失败'
+      console.error('获取文件列表失败:', errorMsg)
+      message.error(errorMsg)
     }
   } catch (error) {
-    console.error('获取文件列表失败:', error)
-    message.error('获取文件列表失败')
+    console.error('获取文件列表异常:', error)
+    fileList.value = []
+    total.value = 0
+    message.error(error.message || '获取文件列表失败')
   } finally {
     loading.value = false
   }
@@ -348,12 +358,15 @@ const fetchFiles = async () => {
 const handleSearch = async () => {
   try {
     loading.value = true
+    console.log('开始搜索文件...')
     const response = await searchFiles({
       q: searchForm.value.name,
       type: searchForm.value.type,
       page: currentPage.value,
       pageSize: pageSize.value
     })
+    
+    console.log('搜索文件响应:', response)
     
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
@@ -374,14 +387,19 @@ const handleSearch = async () => {
         uploader: item.uploader
       }))
       total.value = response.data.total
+      console.log('搜索结果数据:', fileList.value)
     } else {
       fileList.value = []
       total.value = 0
-      message.error('搜索文件失败')
+      const errorMsg = response?.message || '搜索文件失败'
+      console.error('搜索文件失败:', errorMsg)
+      message.error(errorMsg)
     }
   } catch (error) {
-    console.error('搜索文件失败:', error)
-    message.error('搜索文件失败')
+    console.error('搜索文件异常:', error)
+    fileList.value = []
+    total.value = 0
+    message.error(error.message || '搜索文件失败')
   } finally {
     loading.value = false
   }
@@ -570,6 +588,23 @@ const handleDownload = async (file) => {
   } finally {
     loading.value = false
   }
+}
+
+// 在 script setup 部分添加
+const audioPlayer = ref(null)
+const videoPlayer = ref(null)
+
+// 处理预览窗口关闭
+const handlePreviewClose = () => {
+  // 暂停视频播放
+  if (videoPlayer.value) {
+    videoPlayer.value.pause()
+  }
+  // 暂停音频播放
+  if (audioPlayer.value) {
+    audioPlayer.value.pause()
+  }
+  previewVisible.value = false
 }
 
 onMounted(() => {
