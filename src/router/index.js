@@ -200,6 +200,15 @@ const routes = [
           keepAlive: false,
           hideInMenu: true
         }
+      },
+      {
+        path: 'files',
+        name: 'FileList',
+        component: () => import('@/views/files/FileList.vue'),
+        meta: {
+          title: '文件管理',
+          requiresAuth: true
+        }
       }
     ]
   },

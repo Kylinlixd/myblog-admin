@@ -40,6 +40,11 @@
           <template #icon><comment-outlined /></template>
           <span>评论管理</span>
         </a-menu-item>
+
+        <a-menu-item key="files" @click="navigateTo('/dashboard/files')">
+          <template #icon><file-outlined /></template>
+          <span>文件管理</span>
+        </a-menu-item>
       </a-menu>
     </a-layout-sider>
     
