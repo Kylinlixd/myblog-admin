@@ -46,12 +46,25 @@ export const uploadFile = async (params) => {
  */
 export const getFileList = async (params) => {
   try {
-    console.log('获取文件列表参数:', params)
+    // 构建请求参数
+    const requestParams = {
+      page: params.page || 1,
+      pageSize: params.pageSize || 10
+    }
+
+    // 添加搜索关键词
+    if (params.keyword) {
+      requestParams.keyword = params.keyword
+    }
+
+    // 添加文件类型
+    if (params.type) {
+      requestParams.file_type = params.type
+    }
+
+    console.log('获取文件列表参数:', requestParams)
     const response = await api.admin.get('/api/upload/files/', {
-      params: {
-        page: params.page || 1,
-        pageSize: params.pageSize || 10
-      }
+      params: requestParams
     })
     
     console.log('获取文件列表响应:', response)
@@ -94,9 +107,19 @@ export const getFileList = async (params) => {
     // 处理文件URL，添加前缀
     items = items.map(item => ({
       ...item,
-      file_url: item.file_url ? `http://localhost:8000${item.file_url}` : item.file_url,
-      url: item.url ? `http://localhost:8000${item.url}` : item.url
+      id: item.id,
+      name: item.name,
+      type: item.file_type || item.type,
+      size: item.file_size || item.size,
+      url: item.file_url ? `http://localhost:8000${item.file_url}` : 
+           item.url ? `http://localhost:8000${item.url}` : null,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      description: item.description,
+      is_public: item.is_public
     }))
+
+    console.log('处理后的文件列表数据:', items)
 
     return {
       code: 200,

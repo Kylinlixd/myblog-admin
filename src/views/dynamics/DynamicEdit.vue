@@ -72,34 +72,27 @@
         name="mediaUrls"
         v-if="form.type === 'image'"
       >
-        <a-upload
-          list-type="picture-card"
-          :file-list="fileList"
-          :before-upload="beforeImageUpload"
-          :custom-request="handleCustomUpload"
-          @remove="handleMediaRemove"
-          :preview="handleImagePreview"
-          multiple
-          accept="image/*"
-        >
-          <div>
-            <plus-outlined />
-            <div style="margin-top: 8px">上传</div>
-          </div>
-          <template #itemRender="{ file }">
+        <div class="media-upload-container">
+          <a-upload
+            list-type="picture-card"
+            :file-list="fileList"
+            :before-upload="beforeImageUpload"
+            :custom-request="handleCustomUpload"
+            @remove="handleMediaRemove"
+            :preview="handleImagePreview"
+            multiple
+            accept="image/*"
+          >
             <div>
-              <img :src="file.url || file.thumbUrl" alt="image" style="width: 100%; height: 100%; object-fit: cover;" />
-              <div class="ant-upload-list-item-actions">
-                <a-button type="link" @click="() => handlePreviewMedia(file)">
-                  <eye-outlined />
-                </a-button>
-                <a-button type="link" @click="() => handleMediaRemove(file)">
-                  <delete-outlined />
-                </a-button>
-              </div>
+              <plus-outlined />
+              <div style="margin-top: 8px">上传</div>
             </div>
-          </template>
-        </a-upload>
+          </a-upload>
+          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
+            <template #icon><folder-outlined /></template>
+            从文件库选择
+          </a-button>
+        </div>
         <div class="upload-tip">支持 jpg、jpeg、png、gif 格式，单个文件不超过 2MB</div>
       </a-form-item>
 
@@ -109,17 +102,23 @@
         name="mediaUrls"
         v-if="form.type === 'audio'"
       >
-        <a-upload
-          :file-list="fileList"
-          :before-upload="beforeAudioUpload"
-          :custom-request="handleCustomUpload"
-          @remove="handleMediaRemove"
-          accept="audio/*"
-        >
-          <a-button type="primary">
-            <template #icon><upload-outlined /></template>上传音频
+        <div class="media-upload-container">
+          <a-upload
+            :file-list="fileList"
+            :before-upload="beforeAudioUpload"
+            :custom-request="handleCustomUpload"
+            @remove="handleMediaRemove"
+            accept="audio/*"
+          >
+            <a-button type="primary">
+              <template #icon><upload-outlined /></template>上传音频
+            </a-button>
+          </a-upload>
+          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
+            <template #icon><folder-outlined /></template>
+            从文件库选择
           </a-button>
-        </a-upload>
+        </div>
         <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
           <audio controls :src="form.mediaUrls[0]" style="width: 100%"></audio>
         </div>
@@ -131,17 +130,23 @@
         name="mediaUrls"
         v-if="form.type === 'video'"
       >
-        <a-upload
-          :file-list="fileList"
-          :before-upload="beforeVideoUpload"
-          :custom-request="handleCustomUpload"
-          @remove="handleMediaRemove"
-          accept="video/*"
-        >
-          <a-button type="primary">
-            <template #icon><upload-outlined /></template>上传视频
+        <div class="media-upload-container">
+          <a-upload
+            :file-list="fileList"
+            :before-upload="beforeVideoUpload"
+            :custom-request="handleCustomUpload"
+            @remove="handleMediaRemove"
+            accept="video/*"
+          >
+            <a-button type="primary">
+              <template #icon><upload-outlined /></template>上传视频
+            </a-button>
+          </a-upload>
+          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
+            <template #icon><folder-outlined /></template>
+            从文件库选择
           </a-button>
-        </a-upload>
+        </div>
         <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
           <video controls :src="form.mediaUrls[0]" style="width: 100%"></video>
         </div>
@@ -170,6 +175,96 @@
       <audio v-if="previewType === 'audio'" controls style="width: 100%" :src="previewUrl"></audio>
       <video v-if="previewType === 'video'" controls style="width: 100%" :src="previewUrl"></video>
     </a-modal>
+
+    <!-- 文件选择器弹窗 -->
+    <a-modal
+      v-model:open="fileSelectorVisible"
+      title="选择文件"
+      width="800px"
+      :footer="null"
+    >
+      <div class="file-selector">
+        <div class="file-selector-header">
+          <a-input-search
+            v-model:value="fileSearchKeyword"
+            placeholder="搜索文件"
+            style="width: 200px"
+            @search="handleFileSearch"
+            :loading="fileListLoading"
+          />
+          <a-select
+            v-model:value="fileTypeFilter"
+            style="width: 120px; margin-left: 8px"
+            @change="handleFileTypeChange"
+            :loading="fileListLoading"
+          >
+            <a-select-option value="all">全部类型</a-select-option>
+            <a-select-option value="image">图片</a-select-option>
+            <a-select-option value="audio">音频</a-select-option>
+            <a-select-option value="video">视频</a-select-option>
+          </a-select>
+        </div>
+        
+        <div class="file-list">
+          <a-spin :spinning="fileListLoading">
+            <a-list
+              :grid="{ gutter: 16, column: 4 }"
+              :data-source="fileListData"
+              :loading="fileListLoading"
+            >
+              <template #renderItem="{ item }">
+                <a-list-item>
+                  <div
+                    class="file-item"
+                    :class="{ 'file-item-selected': isFileSelected(item) }"
+                    @click="handleFileSelect(item)"
+                  >
+                    <div class="file-preview">
+                      <div class="file-preview-content">
+                        <img
+                          v-if="item.type === 'image'"
+                          :src="item.url"
+                          :alt="item.name"
+                        />
+                        <video
+                          v-else-if="item.type === 'video'"
+                          :src="item.url"
+                          controls
+                          style="max-width: 100%; max-height: 100%;"
+                        ></video>
+                        <audio
+                          v-else-if="item.type === 'audio'"
+                          :src="item.url"
+                          controls
+                        ></audio>
+                        <file-outlined v-else />
+                      </div>
+                      <div class="file-selected-icon" v-if="isFileSelected(item)">
+                        <check-outlined />
+                      </div>
+                    </div>
+                    <div class="file-info">
+                      <div class="file-name" :title="item.name">{{ item.name }}</div>
+                      <div class="file-size">{{ formatFileSize(item.size) }}</div>
+                    </div>
+                  </div>
+                </a-list-item>
+              </template>
+            </a-list>
+          </a-spin>
+        </div>
+        
+        <div class="file-selector-footer">
+          <div class="selected-info" v-if="selectedFiles.length > 0">
+            已选择 {{ selectedFiles.length }} 个文件
+          </div>
+          <div class="file-selector-actions">
+            <a-button @click="fileSelectorVisible = false">取消</a-button>
+            <a-button type="primary" @click="handleFileConfirm">确定</a-button>
+          </div>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -183,12 +278,15 @@ import {
   CloseOutlined, 
   PlusOutlined, 
   UploadOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  FolderOutlined,
+  FileOutlined
 } from '@ant-design/icons-vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadImage, uploadAudio, uploadVideo, checkFileSize, checkFileType } from '../../utils/upload'
 import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
+import { getFileList } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 
 const route = useRoute()
@@ -224,6 +322,17 @@ const categories = ref([])
 const tags = ref([])
 const categoriesLoading = ref(false)
 const tagsLoading = ref(false)
+
+// 文件选择器相关状态
+const fileSelectorVisible = ref(false)
+const fileSearchKeyword = ref('')
+const fileTypeFilter = ref('all')
+const fileListLoading = ref(false)
+const fileListData = ref([])
+const fileCurrentPage = ref(1)
+const filePageSize = ref(12)
+const fileTotal = ref(0)
+const selectedFiles = ref([])
 
 // 添加计算属性来处理标签选项
 const tagOptions = computed(() => {
@@ -655,6 +764,257 @@ const beforeVideoUpload = (file) => {
   return isValidType && isValidSize
 }
 
+// 显示文件选择器
+const showFileSelector = () => {
+  fileSelectorVisible.value = true
+  fetchFileList()
+}
+
+// 获取文件列表
+const fetchFileList = async () => {
+  fileListLoading.value = true
+  try {
+    const params = {
+      page: fileCurrentPage.value,
+      pageSize: filePageSize.value,
+      keyword: fileSearchKeyword.value,
+      type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
+    }
+    
+    console.log('获取文件列表参数:', params)
+    const response = await getFileList(params)
+    console.log('获取文件列表响应:', response)
+    
+    if (response.code === 200 && response.data) {
+      // 处理文件列表数据
+      fileListData.value = response.data.items.map(file => ({
+        id: file.id,
+        name: file.name,
+        type: file.type,
+        url: file.url,
+        size: file.size || 0,
+        created_at: file.created_at,
+        updated_at: file.updated_at,
+        description: file.description,
+        is_public: file.is_public
+      }))
+      fileTotal.value = response.data.total
+      console.log('处理后的文件列表数据:', fileListData.value)
+    } else {
+      message.error('获取文件列表失败')
+      fileListData.value = []
+      fileTotal.value = 0
+    }
+  } catch (error) {
+    console.error('获取文件列表失败:', error)
+    message.error('获取文件列表失败')
+    fileListData.value = []
+    fileTotal.value = 0
+  } finally {
+    fileListLoading.value = false
+  }
+}
+
+// 处理文件搜索
+const handleFileSearch = async (value) => {
+  console.log('搜索文件:', value)
+  fileSearchKeyword.value = value
+  fileCurrentPage.value = 1
+  fileListLoading.value = true
+  
+  try {
+    const params = {
+      page: fileCurrentPage.value,
+      pageSize: filePageSize.value,
+      keyword: value,
+      type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
+    }
+    
+    console.log('搜索文件参数:', params)
+    const response = await getFileList(params)
+    console.log('搜索文件响应:', response)
+    
+    if (response.code === 200 && response.data) {
+      fileListData.value = response.data.items.map(file => ({
+        id: file.id,
+        name: file.name,
+        type: file.type,
+        url: file.url,
+        size: file.size || 0,
+        created_at: file.created_at,
+        updated_at: file.updated_at,
+        description: file.description,
+        is_public: file.is_public
+      }))
+      fileTotal.value = response.data.total
+      console.log('处理后的文件列表数据:', fileListData.value)
+    } else {
+      message.error('搜索文件失败')
+      fileListData.value = []
+      fileTotal.value = 0
+    }
+  } catch (error) {
+    console.error('搜索文件失败:', error)
+    message.error('搜索文件失败')
+    fileListData.value = []
+    fileTotal.value = 0
+  } finally {
+    fileListLoading.value = false
+  }
+}
+
+// 处理文件类型筛选
+const handleFileTypeChange = async (value) => {
+  console.log('文件类型筛选变化:', value)
+  fileTypeFilter.value = value
+  fileCurrentPage.value = 1
+  fileListLoading.value = true
+  
+  try {
+    const params = {
+      page: fileCurrentPage.value,
+      pageSize: filePageSize.value,
+      keyword: fileSearchKeyword.value,
+      type: value === 'all' ? undefined : value
+    }
+    
+    console.log('获取文件列表参数:', params)
+    const response = await getFileList(params)
+    console.log('获取文件列表响应:', response)
+    
+    if (response.code === 200 && response.data) {
+      fileListData.value = response.data.items.map(file => ({
+        id: file.id,
+        name: file.name,
+        type: file.type,
+        url: file.url,
+        size: file.size || 0,
+        created_at: file.created_at,
+        updated_at: file.updated_at,
+        description: file.description,
+        is_public: file.is_public
+      }))
+      fileTotal.value = response.data.total
+      console.log('处理后的文件列表数据:', fileListData.value)
+    } else {
+      message.error('获取文件列表失败')
+      fileListData.value = []
+      fileTotal.value = 0
+    }
+  } catch (error) {
+    console.error('获取文件列表失败:', error)
+    message.error('获取文件列表失败')
+    fileListData.value = []
+    fileTotal.value = 0
+  } finally {
+    fileListLoading.value = false
+  }
+}
+
+// 处理分页变化
+const handleFilePageChange = (page) => {
+  fileCurrentPage.value = page
+  fetchFileList()
+}
+
+// 检查文件是否被选中
+const isFileSelected = (file) => {
+  return selectedFiles.value.some(f => f.id === file.id)
+}
+
+// 处理文件选择
+const handleFileSelect = (file) => {
+  console.log('选择文件:', file)
+  const index = selectedFiles.value.findIndex(f => f.id === file.id)
+  if (index === -1) {
+    // 根据文件类型自动设置动态类型
+    if (file.type === 'image') {
+      form.value.type = 'image'
+    } else if (file.type === 'audio') {
+      form.value.type = 'audio'
+    } else if (file.type === 'video') {
+      form.value.type = 'video'
+    }
+
+    // 如果是音频或视频，只允许选择一个文件
+    if (form.value.type === 'audio' || form.value.type === 'video') {
+      selectedFiles.value = [file]
+      message.success('已选择视频文件')
+    } else {
+      selectedFiles.value.push(file)
+      message.success('已选择图片文件')
+    }
+  } else {
+    selectedFiles.value.splice(index, 1)
+    message.info('已取消选择')
+  }
+  console.log('当前选中的文件:', selectedFiles.value)
+}
+
+// 处理文件确认
+const handleFileConfirm = () => {
+  if (selectedFiles.value.length === 0) {
+    message.warning('请选择文件')
+    return
+  }
+  
+  console.log('确认选择的文件:', selectedFiles.value)
+  
+  // 检查文件类型是否一致
+  const fileTypes = new Set(selectedFiles.value.map(file => file.type))
+  if (fileTypes.size > 1) {
+    message.warning('请选择相同类型的文件')
+    return
+  }
+  
+  // 更新文件列表和表单数据
+  const newFileList = selectedFiles.value.map(file => ({
+    uid: `-${file.id}`,
+    name: file.name,
+    status: 'done',
+    url: file.url,
+    thumbUrl: file.url,
+    type: file.type,
+    id: file.id
+  }))
+  
+  console.log('更新后的文件列表:', newFileList)
+  
+  fileList.value = newFileList
+  form.value.mediaUrls = selectedFiles.value.map(file => file.url)
+  form.value.fileIds = selectedFiles.value.map(file => file.id)
+  
+  console.log('更新后的表单数据:', {
+    mediaUrls: form.value.mediaUrls,
+    fileIds: form.value.fileIds,
+    type: form.value.type
+  })
+  
+  fileSelectorVisible.value = false
+  selectedFiles.value = []
+  
+  // 触发表单验证
+  formRef.value?.validateFields(['mediaUrls', 'type'])
+}
+
+// 格式化文件大小
+const formatFileSize = (size) => {
+  if (!size) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  let index = 0
+  while (size >= 1024 && index < units.length - 1) {
+    size /= 1024
+    index++
+  }
+  return `${size.toFixed(2)} ${units[index]}`
+}
+
+// 在 script setup 部分添加 getFullUrl 方法
+const getFullUrl = (url) => {
+  if (!url) return ''
+  return url.startsWith('http') ? url : `http://localhost:8000${url}`
+}
+
 onMounted(() => {
   console.log('DynamicEdit组件挂载')
   console.log('当前路由:', route.fullPath)
@@ -709,14 +1069,117 @@ onMounted(() => {
     }
   }
   
-  :deep(.ant-upload-list-item) {
-    width: 128px;
-    height: 128px;
+  .media-upload-container {
+    display: flex;
+    align-items: flex-start;
+  }
+  
+  .file-selector {
+    .file-selector-header {
+      display: flex;
+      margin-bottom: 16px;
+    }
     
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .file-list {
+      min-height: 400px;
+      max-height: 600px;
+      overflow-y: auto;
+      margin-bottom: 16px;
+      
+      .file-item {
+        position: relative;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        padding: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        
+        &:hover {
+          border-color: #1890ff;
+          box-shadow: 0 0 8px rgba(24, 144, 255, 0.2);
+        }
+        
+        &.file-item-selected {
+          border-color: #1890ff;
+          background-color: #e6f7ff;
+          box-shadow: 0 0 8px rgba(24, 144, 255, 0.3);
+        }
+        
+        .file-preview {
+          position: relative;
+          width: 100%;
+          height: 120px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: #fafafa;
+          margin-bottom: 8px;
+          border-radius: 4px;
+          overflow: hidden;
+          
+          .file-preview-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            img, video, audio {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: contain;
+            }
+          }
+          
+          .file-selected-icon {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background-color: #1890ff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          }
+        }
+        
+        .file-info {
+          .file-name {
+            font-size: 12px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          .file-size {
+            font-size: 12px;
+            color: #999;
+          }
+        }
+      }
+    }
+    
+    .file-selector-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      
+      .selected-info {
+        color: #1890ff;
+        font-size: 14px;
+      }
+      
+      .file-selector-actions {
+        display: flex;
+        gap: 8px;
+      }
     }
   }
 }
