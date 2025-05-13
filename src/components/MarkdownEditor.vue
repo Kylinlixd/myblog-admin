@@ -51,13 +51,15 @@ const content = ref(props.modelValue)
 
 // 监听外部值变化
 watch(() => props.modelValue, (newValue) => {
+  console.log('MarkdownEditor 接收到新的内容:', newValue)
   if (newValue !== content.value) {
     content.value = newValue
   }
-})
+}, { immediate: true })
 
 // 监听内部值变化
 const handleChange = (value) => {
+  console.log('MarkdownEditor 内容变化:', value)
   content.value = value
   emit('update:modelValue', value)
 }
@@ -66,6 +68,14 @@ const handleChange = (value) => {
 const handleSave = () => {
   emit('onSave')
 }
+
+// 暴露方法给父组件
+defineExpose({
+  setContent: (value) => {
+    console.log('设置编辑器内容:', value)
+    content.value = value
+  }
+})
 </script>
 
 <style scoped>

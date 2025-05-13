@@ -45,8 +45,11 @@ export const getDynamicList = async (params) => {
     // 添加排序参数
     apiParams.sort = 'createdAt:desc';  // 默认按创建时间降序
     
+    console.log('获取动态列表参数:', apiParams)
+    
     // 使用API工具类发送请求
     const response = await api.admin.get(apiUrl, apiParams);
+    console.log('动态列表原始响应:', response)
     
     // 处理不同的响应格式
     let items = [];
@@ -77,29 +80,38 @@ export const getDynamicList = async (params) => {
       total = response.total || items.length;
     }
     
+    console.log('处理后的动态列表数据:', items)
+    
     // 确保每个项目都有必要的字段，并处理媒体文件信息
     items = items.map(item => {
       // 处理媒体文件信息
       let mediaUrls = [];
-      if (item.mediaUrls && Array.isArray(item.mediaUrls)) {
-        mediaUrls = item.mediaUrls.map(media => {
-          if (typeof media === 'string') {
-            // 如果是字符串，转换为对象格式
+      if (item.mediaUrls) {
+        // 确保 mediaUrls 是数组
+        const urls = Array.isArray(item.mediaUrls) ? item.mediaUrls : [item.mediaUrls];
+        mediaUrls = urls.map(url => {
+          if (!url) return null;
+          // 如果是字符串，转换为对象格式
+          if (typeof url === 'string') {
+            const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`;
             return {
-              id: media.split('/').pop(), // 从URL中提取ID
-              name: media.split('/').pop(), // 从URL中提取文件名
+              id: url.split('/').pop(), // 从URL中提取ID
+              name: url.split('/').pop(), // 从URL中提取文件名
               file_type: item.type,
-              file_url: `http://localhost:8000${media}`,
-              url: `http://localhost:8000${media}` // 兼容性字段
+              file_url: fullUrl,
+              url: fullUrl // 兼容性字段
             };
           }
+          // 如果已经是对象，确保 URL 字段正确
           return {
-            ...media,
-            file_url: media.file_url ? `http://localhost:8000${media.file_url}` : media.file_url,
-            url: media.url ? `http://localhost:8000${media.url}` : media.url // 确保有url字段
+            ...url,
+            file_url: url.file_url ? (url.file_url.startsWith('http') ? url.file_url : `http://localhost:8000${url.file_url}`) : url.file_url,
+            url: url.url ? (url.url.startsWith('http') ? url.url : `http://localhost:8000${url.url}`) : url.url
           };
-        });
+        }).filter(Boolean); // 过滤掉无效的项
       }
+      
+      console.log(`处理动态 ${item.id} 的媒体文件:`, mediaUrls)
       
       return {
         ...item,  // 保留所有原始字段
@@ -108,6 +120,8 @@ export const getDynamicList = async (params) => {
         tags: Array.isArray(item.tags) ? item.tags : []
       };
     });
+    
+    console.log('最终处理后的动态列表:', items)
     
     // 构造标准响应
     return { 
@@ -193,16 +207,46 @@ export const deleteDynamic = async (id) => {
  */
 export const getDynamicDetail = async (id) => {
   try {
-    // 使用API工具类发送请求
-    const response = await api.admin.get(`/api/dynamics/${id}/`);
-    return { 
-      code: 200, 
-      data: response, 
-      message: 'success'
-    };
+    console.log('获取动态详情，ID:', id)
+    const response = await api.admin.get(`/api/dynamics/${id}/`)
+    console.log('动态详情原始响应:', response)
+    
+    // 确保返回的数据格式正确
+    if (response) {
+      // 如果响应是字符串，尝试解析JSON
+      const responseData = typeof response === 'string' ? JSON.parse(response) : response
+      console.log('处理后的动态详情数据:', responseData)
+      
+      // 确保返回的数据包含必要的字段
+      if (responseData.data) {
+        const data = responseData.data
+        // 处理 mediaUrls
+        if (data.mediaUrls) {
+          data.mediaUrls = Array.isArray(data.mediaUrls) ? data.mediaUrls : [data.mediaUrls]
+          // 确保每个 URL 都包含前缀
+          data.mediaUrls = data.mediaUrls.map(url => {
+            if (!url) return url
+            return url.startsWith('http') ? url : `http://localhost:8000${url}`
+          })
+        }
+        console.log('处理后的动态详情数据（包含媒体URL）:', data)
+      }
+      
+      return {
+        code: 200,
+        data: responseData.data,
+        message: 'success'
+      }
+    }
+    
+    throw new Error('获取动态详情失败：响应数据为空')
   } catch (error) {
-    console.error('获取动态详情失败:', error);
-    throw error;
+    console.error('获取动态详情失败:', error)
+    return {
+      code: 500,
+      data: null,
+      message: error.message || '获取动态详情失败'
+    }
   }
 }
 

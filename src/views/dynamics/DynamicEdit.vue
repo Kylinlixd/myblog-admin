@@ -55,6 +55,7 @@
 
       <a-form-item label="内容" name="content">
         <markdown-editor
+          ref="markdownEditorRef"
           v-model="form.content"
           :height="'400px'"
           :theme="'light'"
@@ -87,7 +88,7 @@
           </div>
           <template #itemRender="{ file }">
             <div>
-              <img :src="file.url || file.thumbUrl" alt="image" style="width: 100%" />
+              <img :src="file.url || file.thumbUrl" alt="image" style="width: 100%; height: 100%; object-fit: cover;" />
               <div class="ant-upload-list-item-actions">
                 <a-button type="link" @click="() => handlePreviewMedia(file)">
                   <eye-outlined />
@@ -120,7 +121,7 @@
           </a-button>
         </a-upload>
         <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
-          <audio controls :src="form.mediaUrls[0]"></audio>
+          <audio controls :src="form.mediaUrls[0]" style="width: 100%"></audio>
         </div>
       </a-form-item>
 
@@ -142,7 +143,7 @@
           </a-button>
         </a-upload>
         <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
-          <video controls :src="form.mediaUrls[0]" style="max-width: 100%"></video>
+          <video controls :src="form.mediaUrls[0]" style="width: 100%"></video>
         </div>
       </a-form-item>
 
@@ -173,7 +174,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import { 
@@ -193,6 +194,7 @@ import MarkdownEditor from '@/components/MarkdownEditor.vue'
 const route = useRoute()
 const router = useRouter()
 const formRef = ref(null)
+const markdownEditorRef = ref(null)  // 添加编辑器引用
 
 // 判断是否为编辑模式
 const isEdit = computed(() => route.params.id !== undefined)
@@ -202,6 +204,7 @@ const form = ref({
   type: 'text',
   content: '',
   mediaUrls: [],
+  fileIds: [],
   status: 'draft',
   categoryId: undefined,
   tags: []
@@ -241,7 +244,17 @@ const categoryOptions = computed(() => {
 // 表单验证规则
 const rules = {
   type: [{ required: true, message: '请选择内容类型', trigger: 'change' }],
-  content: [{ required: true, message: '请输入内容', trigger: 'blur' }],
+  content: [{ 
+    required: true, 
+    message: '请输入内容', 
+    trigger: ['blur', 'change'],
+    validator: (rule, value) => {
+      if (!value && form.value.type === 'text') {
+        return Promise.reject('请输入内容')
+      }
+      return Promise.resolve()
+    }
+  }],
   mediaUrls: [
     {
       validator: (rule, value) => {
@@ -296,21 +309,54 @@ const fetchDynamicDetail = async () => {
   
   try {
     const response = await getDynamicDetail(route.params.id)
-    if (response.code === 200) {
+    console.log('获取到的动态详情:', response)
+    
+    if (response && response.code === 200 && response.data) {
       const data = response.data
+      console.log('原始数据:', data)
+      
+      // 处理 mediaUrls，确保是数组且包含前缀
+      let mediaUrls = []
+      if (data.mediaUrls) {
+        mediaUrls = Array.isArray(data.mediaUrls) ? data.mediaUrls : [data.mediaUrls]
+        mediaUrls = mediaUrls.map(url => {
+          if (!url) return null
+          const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`
+          console.log('处理媒体URL:', { original: url, full: fullUrl })
+          return fullUrl
+        }).filter(Boolean) // 过滤掉无效的 URL
+      }
+      
+      console.log('处理后的 mediaUrls:', mediaUrls)
       
       // 填充表单数据
-      form.value.type = data.type
-      form.value.content = data.content
-      form.value.status = data.status
-      form.value.mediaUrls = data.mediaUrls || []
-      form.value.categoryId = data.categoryId
-      form.value.tags = data.tags?.map(tag => tag.id) || []
+      form.value = {
+        type: data.type || 'text',
+        content: data.content || '',
+        status: data.status || 'draft',
+        mediaUrls: mediaUrls,
+        fileIds: data.fileIds || [],
+        categoryId: data.category?.id,
+        tags: Array.isArray(data.tags) ? data.tags.map(tag => tag.id) : []
+      }
+      
+      console.log('填充后的表单数据:', form.value)
       
       // 更新文件列表用于上传组件显示
       updateFileList()
+      
+      // 重置表单验证状态
+      formRef.value?.resetFields()
+      
+      // 确保内容更新到编辑器
+      nextTick(() => {
+        if (form.value.content && markdownEditorRef.value) {
+          console.log('设置编辑器内容:', form.value.content)
+          markdownEditorRef.value.setContent(form.value.content)
+        }
+      })
     } else {
-      message.error(response.message || '获取动态详情失败')
+      message.error(response?.message || '获取动态详情失败')
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
@@ -320,23 +366,43 @@ const fetchDynamicDetail = async () => {
 
 // 更新文件列表
 const updateFileList = () => {
+  console.log('更新文件列表，当前 mediaUrls:', form.value.mediaUrls)
+  
   if (!form.value.mediaUrls || form.value.mediaUrls.length === 0) {
+    console.log('没有媒体文件，清空文件列表')
     fileList.value = []
     return
   }
   
-  fileList.value = form.value.mediaUrls.map((url, index) => {
+  // 确保 mediaUrls 是数组
+  const mediaUrls = Array.isArray(form.value.mediaUrls) ? form.value.mediaUrls : [form.value.mediaUrls]
+  console.log('处理后的 mediaUrls 数组:', mediaUrls)
+  
+  fileList.value = mediaUrls.map((url, index) => {
+    if (!url) {
+      console.warn(`跳过无效的 URL，索引: ${index}`)
+      return null
+    }
+    
+    const fileName = url.split('/').pop() || `file-${index}`
+    // 确保 URL 包含前缀
+    const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`
+    console.log(`处理文件 ${index}:`, {
+      originalUrl: url,
+      fullUrl: fullUrl,
+      fileName: fileName
+    })
+    
     return {
       uid: `-${index}`,
-      name: `file-${index}`,
+      name: fileName,
       status: 'done',
-      url: url,
-      thumbUrl: url
+      url: fullUrl,
+      thumbUrl: fullUrl
     }
-  })
+  }).filter(Boolean) // 过滤掉无效的项
   
-  // 触发表单验证
-  formRef.value?.validateFields(['mediaUrls'])
+  console.log('更新后的文件列表:', fileList.value)
 }
 
 // 保存动态
@@ -359,12 +425,20 @@ const handleSave = async () => {
       return
     }
     
+    // 处理媒体文件 URL，移除前缀
+    const processedMediaUrls = form.value.mediaUrls.map(url => {
+      if (!url) return url;
+      // 如果 URL 包含前缀，则移除
+      return url.replace('http://localhost:8000', '');
+    });
+    
     // 准备提交的数据，确保格式正确
     const dynamicData = {
       type: form.value.type,
       content: form.value.content.trim(),
       status: form.value.status,
-      mediaUrls: Array.isArray(form.value.mediaUrls) ? form.value.mediaUrls : [],
+      mediaUrls: processedMediaUrls,
+      fileIds: form.value.fileIds || [],
       categoryId: form.value.categoryId,
       tags: form.value.tags,
       token: accessToken // 添加 token 到请求数据中
@@ -439,6 +513,12 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       throw new Error('无效的文件对象')
     }
 
+    console.log('开始处理文件上传:', {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size
+    })
+
     let result
     try {
       if (form.value.type === 'image') {
@@ -457,6 +537,8 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       return
     }
     
+    console.log('上传结果:', result)
+    
     if (!result || !result.data || !result.data.file_url) {
       const error = new Error('上传结果无效')
       console.error('上传结果无效:', result)
@@ -470,15 +552,27 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       form.value.mediaUrls = []
     }
     
-    // 使用 file_url
-    const fileUrl = result.data.file_url
+    // 使用 file_url，确保添加前缀
+    const fileUrl = result.data.file_url.startsWith('http') ? 
+      result.data.file_url : 
+      `http://localhost:8000${result.data.file_url}`
+    
+    console.log('处理后的文件URL:', fileUrl)
     
     // 对于音频和视频，只保留一个文件
     if (form.value.type === 'audio' || form.value.type === 'video') {
       form.value.mediaUrls = [fileUrl]
+      form.value.fileIds = [result.data.id]
     } else {
       form.value.mediaUrls.push(fileUrl)
+      if (!form.value.fileIds) {
+        form.value.fileIds = []
+      }
+      form.value.fileIds.push(result.data.id)
     }
+    
+    console.log('更新后的 mediaUrls:', form.value.mediaUrls)
+    console.log('更新后的 fileIds:', form.value.fileIds)
     
     // 更新文件列表
     const fileInfo = {
@@ -487,7 +581,8 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       status: 'done',
       url: fileUrl,
       thumbUrl: fileUrl,
-      type: result.data.file_type
+      type: result.data.file_type,
+      id: result.data.id
     }
     
     if (form.value.type === 'audio' || form.value.type === 'video') {
@@ -495,6 +590,8 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     } else {
       fileList.value.push(fileInfo)
     }
+    
+    console.log('更新后的文件列表:', fileList.value)
     
     // 触发表单验证
     formRef.value?.validateFields(['mediaUrls'])
@@ -514,6 +611,9 @@ const handleMediaRemove = (file) => {
   if (index !== -1) {
     fileList.value.splice(index, 1)
     form.value.mediaUrls.splice(index, 1)
+    if (form.value.fileIds) {
+      form.value.fileIds.splice(index, 1)
+    }
     // 触发表单验证
     formRef.value?.validateFields(['mediaUrls'])
   }
@@ -522,7 +622,8 @@ const handleMediaRemove = (file) => {
 
 // 预览媒体文件
 const handlePreviewMedia = (file) => {
-  previewUrl.value = file.url || file.thumbUrl
+  const url = file.url || file.thumbUrl
+  previewUrl.value = url.startsWith('http') ? url : `http://localhost:8000${url}`
   previewVisible.value = true
   previewTitle.value = file.name || '预览'
   previewType.value = form.value.type
@@ -600,6 +701,23 @@ onMounted(() => {
   
   .media-preview {
     margin-top: 16px;
+    width: 100%;
+    
+    audio, video {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+  
+  :deep(.ant-upload-list-item) {
+    width: 128px;
+    height: 128px;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   }
 }
 

@@ -3,7 +3,7 @@ import axios from 'axios'
 
 // 创建一个完全独立的axios实例，不使用任何全局配置
 const uploadAxios = axios.create({
-  baseURL: '',
+  baseURL: 'http://localhost:8000',  // 修改为正确的后端地址
   timeout: 30000,
   withCredentials: true,
   // 禁用所有默认转换
@@ -40,27 +40,52 @@ export const uploadFile = async (file, type) => {
     // 确保令牌格式正确
     const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
 
+    console.log('开始上传文件:', {
+      fileName: file.name,
+      fileType: type,
+      fileSize: file.size
+    })
+
     // 使用专门的上传实例
     const response = await uploadAxios({
       method: 'post',
-      url: '/api/upload/',
+      url: '/api/upload/upload/',
       data: formData,
       headers: {
-        'Authorization': token
+        'Authorization': token,
+        'Content-Type': 'multipart/form-data'
       }
     })
+
+    console.log('上传响应:', response)
 
     // 检查响应数据
     if (response.data) {
       // 如果响应是字符串，尝试解析JSON
       const responseData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data
+      console.log('处理后的响应数据:', responseData)
       
       if (responseData.code === 200 && responseData.data) {
         message.success(responseData.message || '上传成功')
         // 确保返回的数据包含url字段
         const result = responseData.data
         if (result) {
-          result.url = result.file_url // 添加url字段以兼容前端
+          // 确保 file_url 存在
+          if (!result.file_url) {
+            console.error('服务器返回的数据缺少 file_url:', result)
+            throw new Error('服务器返回的数据格式不正确')
+          }
+          
+          // 添加 url 字段以兼容前端
+          result.url = result.file_url
+          
+          // 确保 URL 包含前缀
+          if (!result.file_url.startsWith('http')) {
+            result.file_url = `http://localhost:8000${result.file_url}`
+            result.url = result.file_url
+          }
+          
+          console.log('处理后的文件数据:', result)
         }
         return responseData // 返回完整的响应数据
       }
