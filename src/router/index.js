@@ -83,6 +83,26 @@ const routes = [
         }
       },
       {
+        path: 'categories/:id/',
+        name: 'BlogCategoryDetail',
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategoryDetail.vue'),
+        meta: { 
+          title: '分类文章',
+          keepAlive: true,
+          requiresAuth: false
+        }
+      },
+      {
+        path: 'dynamics/:id',
+        name: 'BlogDynamicDetail',
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamicDetail.vue'),
+        meta: { 
+          title: '文章详情',
+          keepAlive: true,
+          requiresAuth: false
+        }
+      },
+      {
         path: 'about',
         name: 'BlogAbout',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogAbout.vue'),

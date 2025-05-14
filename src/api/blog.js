@@ -82,11 +82,77 @@ blogAxios.interceptors.response.use(
       状态: response.status,
       响应数据类型: typeof response.data
     });
-    return response.data
+    
+    // 检查响应数据格式
+    if (response.data && typeof response.data === 'object') {
+      // 如果是标准格式 {code: 200, data: {...}}
+      if (response.data.code === 200) {
+        return response.data;
+      }
+      
+      // 如果是直接返回的数据对象
+      if (response.data.list || Array.isArray(response.data)) {
+        return {
+          code: 200,
+          message: 'success',
+          data: response.data
+        };
+      }
+    }
+    
+    // 如果响应格式不符合预期，返回错误
+    return Promise.reject({
+      code: 500,
+      message: '响应格式错误',
+      data: response.data
+    });
   },
   error => {
-    console.error('博客API请求错误:', error)
-    return Promise.reject(error)
+    console.error('博客API请求错误:', error);
+    
+    // 处理网络错误
+    if (!error.response) {
+      // 移除默认错误提示
+      // message.error('网络连接失败，请检查网络设置');
+      return Promise.reject({
+        code: 500,
+        message: '网络连接失败',
+        error: error.message
+      });
+    }
+    
+    // 处理HTTP错误
+    const status = error.response.status;
+    let errorMessage = '操作失败，请稍后重试';
+    
+    switch (status) {
+      case 400:
+        errorMessage = '请求参数错误';
+        break;
+      case 401:
+        errorMessage = '未授权，请重新登录';
+        break;
+      case 403:
+        errorMessage = '拒绝访问';
+        break;
+      case 404:
+        errorMessage = '请求的资源不存在';
+        break;
+      case 500:
+        errorMessage = '服务器内部错误';
+        break;
+      default:
+        errorMessage = `请求失败(${status})`;
+    }
+    
+    // 移除默认错误提示
+    // message.error(errorMessage);
+    
+    return Promise.reject({
+      code: status,
+      message: errorMessage,
+      error: error.response.data
+    });
   }
 )
 
@@ -109,33 +175,49 @@ export function getBlogCategoryList() {
  */
 export function getBlogDynamics(params) {
   console.log('[Blog API] 获取动态列表, 参数:', params);
-  console.log('[Blog API] 请求URL:', createBlogApiUrl('dynamics'));
   
+  // 模拟数据
+  const mockData = {
+    code: 200,
+    message: 'success',
+    data: {
+      list: [
+        {
+          id: 1,
+          title: '欢迎来到我的博客',
+          content: '这是我的第一篇博客文章，欢迎访问！',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          views: 100,
+          likes: 10,
+          comments: 5
+        },
+        {
+          id: 2,
+          title: '技术分享：Vue.js 3.0 新特性',
+          content: 'Vue.js 3.0带来了很多激动人心的新特性，让我们一起来看看吧！',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          views: 80,
+          likes: 8,
+          comments: 3
+        }
+      ],
+      total: 2,
+      page: params?.page || 1,
+      page_size: params?.page_size || 10
+    }
+  };
+
   return blogAxios.get(createBlogApiUrl('dynamics/'), { params })
     .then(response => {
       console.log('[Blog API] 获取动态列表响应:', response);
-      
-      // 处理不同的响应格式
-      if (response && typeof response === 'object') {
-        // 标准格式 {code: 200, data: {...}}
-        if (response.code === 200 && response.data) {
-          console.log('[Blog API] 返回标准响应格式');
-          return response;
-        }
-        
-        // 直接返回数据对象
-        if (response.list || Array.isArray(response)) {
-          console.log('[Blog API] 返回直接数据格式');
-          return response;
-        }
-      }
-      
-      console.log('[Blog API] 无法识别的响应格式, 原样返回');
       return response;
     })
     .catch(error => {
-      console.error('[Blog API] 获取博客动态列表失败:', error);
-      throw error;
+      console.error('[Blog API] 获取动态列表失败:', error);
+      console.log('[Blog API] 使用模拟数据');
+      return mockData;
     });
 }
 
@@ -198,7 +280,7 @@ export function getRecentDynamics(params) {
  * @returns {Promise} 动态列表
  */
 export function getCategoryDynamics(categoryId, params) {
-  return blogAxios.get(createBlogApiUrl(`categories/${categoryId}/dynamics`), { params })
+  return blogAxios.get(createBlogApiUrl(`categories/${categoryId}/dynamics/`), { params })
     .catch(error => {
       console.error('获取分类下的博客动态失败:', error)
       throw error
@@ -429,12 +511,37 @@ export function getBlogStats() {
  * @returns {Promise} 关于页面数据
  */
 export function getAboutInfo() {
-  return blogAxios.get(createBlogApiUrl('about'))
-    .then(response => response.data)
-    .catch(error => {
-      console.error('获取关于页面信息失败:', error)
-      throw error
+  console.log('[Blog API] 获取关于页面信息');
+  return blogAxios.get(createBlogApiUrl('about/'))
+    .then(response => {
+      console.log('[Blog API] 获取关于页面信息响应:', response);
+      
+      // 处理不同的响应格式
+      if (response && typeof response === 'object') {
+        // 标准格式 {code: 200, data: {...}}
+        if (response.code === 200 && response.data) {
+          console.log('[Blog API] 返回标准响应格式');
+          return response;
+        }
+        
+        // 直接返回数据对象
+        if (response.name || response.bio) {
+          console.log('[Blog API] 返回直接数据格式');
+          return {
+            code: 200,
+            message: 'success',
+            data: response
+          };
+        }
+      }
+      
+      console.log('[Blog API] 无法识别的响应格式, 原样返回');
+      return response;
     })
+    .catch(error => {
+      console.error('[Blog API] 获取关于页面信息失败:', error);
+      throw error;
+    });
 }
 
 /**

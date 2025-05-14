@@ -151,11 +151,9 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           secure: false,
           ws: true,
-          // 增加代理超时和日志设置
           configure: (proxy, _options) => {
             proxy.on('error', (err, _req, res) => {
               console.error('[博客代理错误]', err);
-              // 确保响应对象存在并且可写入
               if (res && !res.writableEnded) {
                 res.writeHead(500, {
                   'Content-Type': 'application/json',
@@ -169,48 +167,29 @@ export default defineConfig(({ mode }) => {
               }
             });
             
-            // 记录完整的博客API请求
             proxy.on('proxyReq', (proxyReq, req, _res) => {
               const targetUrl = `http://127.0.0.1:8000${proxyReq.path}`;
               console.log(`[博客代理请求] ${req.method} ${req.url} -> ${targetUrl}`);
-              proxyReq.setSocketKeepAlive(true);
             });
             
-            // 添加响应日志
             proxy.on('proxyRes', (proxyRes, req, _res) => {
               console.log(`[博客代理响应] ${req.method} ${req.url} - 状态: ${proxyRes.statusCode}`);
             });
           },
-          bypass: function(req, res, proxyOptions) {
-            // 获取请求信息
-            const url = req.url;
-            const method = req.method;
-            const acceptHeader = req.headers.accept || '';
-            const isHtmlRequest = acceptHeader.includes('text/html');
-            
-            // 调试信息
-            console.log(`[博客请求] ${method} ${url}`, isHtmlRequest ? '(HTML页面请求)' : '(API请求)');
-            
-            // 处理刷新页面情况 - 任何HTML请求都由Vite处理
-            if (isHtmlRequest) {
-              console.log('[博客页面] 检测到HTML请求，交给Vite处理:', url);
-              return '/'; // 使用根路径，确保强制刷新时能正确加载
-            }
-            
-            // 所有其他请求正常代理
-            console.log('[博客请求] 正常代理:', url);
-            return false;
-          },
           rewrite: (path) => {
-            // 记录重写前的路径
             console.log('[博客重写] 原始路径:', path);
-            const finalUrl = `http://127.0.0.1:8000${path}`;
-            console.log('[博客重写] 最终请求URL:', finalUrl);
             return path;
           },
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-Proxy-By': 'Vite'
+          bypass: (req, res, options) => {
+            // 如果是HTML请求，不进行代理
+            if (req.headers.accept && req.headers.accept.includes('text/html')) {
+              console.log('[博客代理] 检测到HTML请求，不进行代理:', req.url);
+              return req.url;
+            }
+            
+            // 其他请求都进行代理
+            console.log('[博客代理] 进行代理:', req.url);
+            return null;
           }
         }
       }

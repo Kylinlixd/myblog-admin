@@ -159,9 +159,7 @@ const fetchDynamicList = async (isRefresh = false) => {
     })
     
     console.log('前台博客动态列表API响应:', response)
-    console.log('响应类型:', typeof response)
-    console.log('响应结构:', JSON.stringify(response, null, 2))
-
+    
     let list = [], total = 0;
     
     // 处理不同的响应结构
@@ -181,40 +179,25 @@ const fetchDynamicList = async (isRefresh = false) => {
       list = response.list;
       total = response.total || 0;
     } else {
-      console.error('无法解析的响应格式，使用模拟数据:', response);
-      // 使用模拟数据进行测试
+      console.log('使用模拟数据');
       list = getMockDynamics();
       total = list.length;
-      AntMessage.warning('使用模拟数据进行测试');
-    }
-    
-    console.log('解析后的数据:', {list, total});
-    
-    if (list && list.length > 0) {
-      console.log('获取到动态列表:', list.length, '条');
-      console.log('第一条动态:', JSON.stringify(list[0], null, 2));
-    } else {
-      console.log('动态列表为空');
     }
     
     if (isRefresh) {
-      // 如果是刷新，清空现有列表
-      dynamicList.value = [...list]
-      // 重置已获取页面记录
-      fetchedPages.value = new Set([page.value])
+      dynamicList.value = list;
     } else {
-      // 追加数据
-      dynamicList.value = [...dynamicList.value, ...list]
-      // 记录已获取的页码
-      fetchedPages.value.add(page.value)
+      dynamicList.value = [...dynamicList.value, ...list];
     }
     
-    console.log('更新后的动态列表长度:', dynamicList.value.length);
-    hasMore.value = dynamicList.value.length < total
-  } catch (error) {
-    console.error('获取博客动态列表失败详情:', error)
-    AntMessage.error('获取动态列表失败，使用模拟数据进行测试')
+    // 记录已加载的页码
+    fetchedPages.value.add(page.value);
     
+    // 更新是否有更多数据
+    hasMore.value = dynamicList.value.length < total;
+    
+  } catch (error) {
+    console.error('获取动态列表失败:', error);
     // 使用模拟数据
     const mockList = getMockDynamics();
     if (isRefresh) {
@@ -222,57 +205,36 @@ const fetchDynamicList = async (isRefresh = false) => {
     } else {
       dynamicList.value = [...dynamicList.value, ...mockList];
     }
-    
     hasMore.value = false;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-// 生成模拟数据用于测试
+// 模拟数据
 const getMockDynamics = () => {
   return [
     {
-      id: '1',
-      title: '测试动态1',
-      content: '这是一篇测试动态的内容，包含**Markdown**格式。\n\n- 项目1\n- 项目2',
+      id: 1,
+      title: '欢迎来到我的博客',
+      content: '这是我的第一篇博客文章，欢迎访问！',
       createTime: new Date().toISOString(),
       updateTime: new Date().toISOString(),
-      type: '日常',
-      likes: 15,
-      comments: 5,
       views: 100,
-      images: [
-        { url: 'https://picsum.photos/800/600?random=1', description: '测试图片1' }
-      ]
+      likes: 10,
+      comments: 5
     },
     {
-      id: '2',
-      title: '测试动态2',
-      content: '另一篇测试动态，这次有不同的内容。\n\n```js\nconsole.log("Hello World");\n```',
-      createTime: new Date(Date.now() - 86400000).toISOString(), // 昨天
-      updateTime: new Date(Date.now() - 86400000).toISOString(),
-      type: '技术',
-      likes: 7,
-      comments: 2,
-      views: 50
-    },
-    {
-      id: '3',
-      title: '带视频的测试动态',
-      content: '这篇动态包含一个视频。',
-      createTime: new Date(Date.now() - 172800000).toISOString(), // 前天
-      updateTime: new Date(Date.now() - 172800000).toISOString(),
-      type: '视频',
-      likes: 25,
-      comments: 10,
-      views: 200,
-      video: {
-        url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-        cover: 'https://picsum.photos/800/450?random=3'
-      }
+      id: 2,
+      title: '技术分享：Vue.js 3.0 新特性',
+      content: 'Vue.js 3.0带来了很多激动人心的新特性，让我们一起来看看吧！',
+      createTime: new Date().toISOString(),
+      updateTime: new Date().toISOString(),
+      views: 80,
+      likes: 8,
+      comments: 3
     }
-  ]
+  ];
 }
 
 // 刷新列表

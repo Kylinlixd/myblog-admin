@@ -67,11 +67,23 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getAboutInfo } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
-const profile = ref({})
+const profile = ref({
+  name: 'LiXD',
+  title: '全栈开发工程师 / 技术博主',
+  bio: '嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。\n\n通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。',
+  skills: {
+    '前端开发': ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TypeScript'],
+    '后端开发': ['Node.js', 'Python', 'Django', 'Flask', 'Express'],
+    '数据库': ['MySQL', 'MongoDB', 'Redis', 'PostgreSQL'],
+    '开发工具': ['Git', 'Docker', 'Webpack', 'VS Code']
+  },
+  email: 'lixd@example.com',
+  github: 'https://github.com/lixd',
+  twitter: 'https://twitter.com/lixd'
+})
 
 // 默认技能数据
 const defaultSkills = {
@@ -79,23 +91,6 @@ const defaultSkills = {
   '后端开发': ['Node.js', 'Python', 'Django', 'Flask', 'Express'],
   '数据库': ['MySQL', 'MongoDB', 'Redis', 'PostgreSQL'],
   '开发工具': ['Git', 'Docker', 'Webpack', 'VS Code']
-}
-
-// 获取关于我页面数据
-const fetchAboutInfo = async () => {
-  try {
-    appStore.startLoading('加载个人资料...')
-    const response = await getAboutInfo()
-    if (response.code === 200) {
-      profile.value = response.data
-    } else {
-      console.error('获取个人资料失败:', response.message)
-    }
-  } catch (error) {
-    console.error('获取个人资料失败:', error)
-  } finally {
-    appStore.endLoading()
-  }
 }
 
 onMounted(() => {
@@ -106,12 +101,6 @@ onMounted(() => {
     fontAwesome.rel = 'stylesheet'
     fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
     document.head.appendChild(fontAwesome)
-  }
-  
-  // 只有在访问关于页面时才加载数据
-  if (window.location.pathname.includes('/blog/about')) {
-    // 获取个人资料
-    fetchAboutInfo()
   }
 })
 </script>

@@ -568,7 +568,6 @@ import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButt
 const router = useRouter()
 const appStore = useAppStore()
 
-
 // 搜索相关
 const searchQuery = ref('')
 const showSearchSuggestions = ref(false)
@@ -576,6 +575,9 @@ const searchHistory = ref([])
 const hotSearches = ref([
   '前端技术', 'Vue3', 'JavaScript', '旅行日记', '摄影技巧'
 ])
+
+// 动态菜单状态
+const showDynamicMenu = ref(false)
 
 // 切换动态菜单显示状态
 const toggleDynamicMenu = () => {
