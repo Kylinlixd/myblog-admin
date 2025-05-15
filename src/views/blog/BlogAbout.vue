@@ -76,13 +76,14 @@ const profile = ref({
   bio: '嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。\n\n通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。',
   skills: {
     '前端开发': ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TypeScript'],
-    '后端开发': ['Node.js', 'Python', 'Django', 'Flask', 'Express'],
+    '后端开发': ['Java', 'SpringBoot', 'Python', 'Django', 'Flask'],
     '数据库': ['MySQL', 'MongoDB', 'Redis', 'PostgreSQL'],
-    '开发工具': ['Git', 'Docker', 'Webpack', 'VS Code']
+    '开发工具': ['Git', 'Docker', 'VS Code']
   },
-  email: 'lixd@example.com',
-  github: 'https://github.com/lixd',
-  twitter: 'https://twitter.com/lixd'
+  email: '946951925@qq.com',
+  github: 'https://github.com/Kylinlixd',
+  twitter: 'https://twitter.com/lixiaodong_0',
+  avatar: 'https://www.keaitupian.cn/cjpic/frombd/0/253/1152107840/119779555.jpg'
 })
 
 // 默认技能数据

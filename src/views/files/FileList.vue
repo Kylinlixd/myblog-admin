@@ -78,16 +78,29 @@
           <!-- 预览列 -->
           <template v-if="column.dataIndex === 'preview'">
             <template v-if="record.type === 'image'">
-              <a-image
-                :src="record.url"
-                :width="60"
-                :height="60"
-                fit="cover"
-                :preview="{
-                  src: record.url,
-                  mask: '预览',
-                }"
-              />
+              <div class="image-preview-container">
+                <a-image
+                  :src="record.url"
+                  :width="60"
+                  :height="60"
+                  fit="cover"
+                  :preview="{
+                    src: record.url,
+                    mask: true,
+                    onError: (e) => handlePreviewError(e, record)
+                  }"
+                  @error="handleImageError"
+                >
+                  <template #preview-mask>
+                    <div class="preview-mask-text">预览</div>
+                  </template>
+                  <template #placeholder>
+                    <div class="image-placeholder">
+                      <LoadingOutlined />
+                    </div>
+                  </template>
+                </a-image>
+              </div>
             </template>
             <template v-else-if="record.type === 'audio'">
               <a-button type="link" size="small" @click="previewMedia('audio', record.url)">
@@ -130,7 +143,7 @@
                 <DownloadOutlined />
                 下载
               </a-button>
-              <a-button type="link" size="small" @click="copyFileUrl(record.file_url)">
+              <a-button type="link" size="small" @click="copyFileUrl(record.url)">
                 <CopyOutlined />
                 复制链接
               </a-button>
@@ -166,6 +179,7 @@
           controls
           style="width: 100%"
           ref="audioPlayer"
+          @error="handleMediaError"
         ></audio>
         <video
           v-if="previewType === 'video'"
@@ -173,6 +187,7 @@
           controls
           style="width: 100%; max-height: 600px;"
           ref="videoPlayer"
+          @error="handleMediaError"
         ></video>
       </div>
     </a-modal>
@@ -190,7 +205,8 @@ import {
   SoundOutlined,
   VideoCameraOutlined,
   CopyOutlined,
-  DownloadOutlined
+  DownloadOutlined,
+  LoadingOutlined
 } from '@ant-design/icons-vue'
 import { uploadFile, getFileList, searchFiles, deleteFile, downloadFile } from '@/api/file'
 
@@ -319,22 +335,53 @@ const fetchFiles = async () => {
     
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
-      fileList.value = response.data.items.map(item => ({
-        ...item,
-        id: item.id,
-        name: item.name,
-        type: item.file_type,
-        size: item.file_size,
-        url: item.file_url,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-        downloadCount: item.download_count,
-        isPublic: item.is_public,
-        description: item.description,
-        category: item.category,
-        tags: item.tags,
-        uploader: item.uploader
-      }))
+      fileList.value = response.data.items.map(item => {
+        // 确保baseUrl不为空
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const url = item.file_url ? `${baseUrl}${item.file_url}` : item.file_url;
+        console.log('处理文件URL:', {
+          file_url: item.file_url,
+          baseUrl: baseUrl,
+          finalUrl: url,
+          file_type: item.file_type
+        });
+        
+        // 验证图片URL
+        if (item.file_type === 'image' && url) {
+          fetch(url)
+            .then(response => {
+              console.log('图片URL验证:', {
+                url: url,
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
+              });
+            })
+            .catch(error => {
+              console.error('图片URL验证失败:', {
+                url: url,
+                error: error
+              });
+            });
+        }
+        
+        return {
+          ...item,
+          id: item.id,
+          name: item.name,
+          type: item.file_type,
+          size: item.file_size,
+          url: url,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+          downloadCount: item.download_count,
+          isPublic: item.is_public,
+          description: item.description,
+          category: item.category,
+          tags: item.tags,
+          uploader: item.uploader
+        }
+      })
       total.value = response.data.total
       console.log('文件列表数据:', fileList.value)
     } else {
@@ -370,22 +417,25 @@ const handleSearch = async () => {
     
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
-      fileList.value = response.data.items.map(item => ({
-        ...item,
-        id: item.id,
-        name: item.name,
-        type: item.file_type,
-        size: item.file_size,
-        url: item.file_url,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-        downloadCount: item.download_count,
-        isPublic: item.is_public,
-        description: item.description,
-        category: item.category,
-        tags: item.tags,
-        uploader: item.uploader
-      }))
+      fileList.value = response.data.items.map(item => {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL;
+        return {
+          ...item,
+          id: item.id,
+          name: item.name,
+          type: item.file_type,
+          size: item.file_size,
+          url: item.file_url ? `${baseUrl}${item.file_url}` : item.file_url,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+          downloadCount: item.download_count,
+          isPublic: item.is_public,
+          description: item.description,
+          category: item.category,
+          tags: item.tags,
+          uploader: item.uploader
+        }
+      })
       total.value = response.data.total
       console.log('搜索结果数据:', fileList.value)
     } else {
@@ -501,21 +551,114 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
   }
 }
 
-// 预览媒体文件
+// 处理预览错误
+const handlePreviewError = (e, record) => {
+  console.error('预览加载失败:', {
+    error: e,
+    record: record,
+    url: record.url,
+    errorType: e.type,
+    errorTarget: e.target,
+    errorTimeStamp: e.timeStamp,
+    errorIsTrusted: e.isTrusted
+  });
+  
+  // 尝试直接访问URL
+  fetch(record.url)
+    .then(response => {
+      console.log('文件访问响应:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+    })
+    .catch(error => {
+      console.error('文件访问失败:', error);
+    });
+    
+  message.error('预览加载失败，请检查文件是否存在');
+}
+
+// 处理媒体文件错误
+const handleMediaError = (e) => {
+  console.error('媒体文件加载失败:', {
+    error: e,
+    url: previewUrl.value,
+    errorType: e.type,
+    errorTarget: e.target,
+    errorTimeStamp: e.timeStamp,
+    errorIsTrusted: e.isTrusted
+  });
+  
+  // 尝试直接访问URL
+  fetch(previewUrl.value)
+    .then(response => {
+      console.log('媒体文件访问响应:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+    })
+    .catch(error => {
+      console.error('媒体文件访问失败:', error);
+    });
+    
+  message.error('媒体文件加载失败，请检查文件是否存在');
+}
+
+// 修改预览媒体文件函数
 const previewMedia = (type, url) => {
-  previewType.value = type
-  previewUrl.value = url
-  previewTitle.value = type === 'audio' ? '音频预览' : '视频预览'
-  previewVisible.value = true
+  // 确保baseUrl不为空
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  
+  console.log('预览媒体文件:', {
+    type: type,
+    url: fullUrl,
+    baseUrl: baseUrl
+  });
+  
+  // 验证URL
+  if (!fullUrl) {
+    message.error('无效的文件URL');
+    return;
+  }
+  
+  // 尝试预加载文件
+  fetch(fullUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      console.log('文件预加载成功:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
+      previewType.value = type;
+      previewUrl.value = fullUrl;
+      previewTitle.value = type === 'audio' ? '音频预览' : '视频预览';
+      previewVisible.value = true;
+    })
+    .catch(error => {
+      console.error('文件预加载失败:', error);
+      message.error('文件加载失败，请检查文件是否存在');
+    });
 }
 
 // 复制文件链接
 const copyFileUrl = (url) => {
+  if (!url) {
+    message.error('无效的文件链接');
+    return;
+  }
+  
   navigator.clipboard.writeText(url).then(() => {
-    message.success('链接已复制到剪贴板')
+    message.success('链接已复制到剪贴板');
   }).catch(() => {
-    message.error('复制失败，请手动复制')
-  })
+    message.error('复制失败，请手动复制');
+  });
 }
 
 // 获取类型名称
@@ -605,6 +748,38 @@ const handlePreviewClose = () => {
     audioPlayer.value.pause()
   }
   previewVisible.value = false
+}
+
+// 处理图片加载错误
+const handleImageError = (e) => {
+  console.error('图片加载失败:', {
+    error: e,
+    target: e.target,
+    src: e.target.src,
+    type: e.type,
+    timeStamp: e.timeStamp
+  });
+  
+  // 尝试直接访问图片URL
+  const imgUrl = e.target.src;
+  fetch(imgUrl)
+    .then(response => {
+      console.log('图片访问响应:', {
+        url: imgUrl,
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+    })
+    .catch(error => {
+      console.error('图片访问失败:', {
+        url: imgUrl,
+        error: error
+      });
+    });
+    
+  // 设置默认图片
+  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNFNUU1RTUiLz48dGV4dCB4PSIzMCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
 }
 
 onMounted(() => {
@@ -729,5 +904,21 @@ onMounted(() => {
   background: #f5f5f5;
   border-radius: 4px;
   padding: 16px;
+}
+
+.image-preview-container {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  
+  .image-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: #f5f5f5;
+    color: #999;
+  }
 }
 </style> 

@@ -42,6 +42,7 @@
               :preview-src-list="item.images.map(i => i.url)"
               fit="cover"
               class="gallery-image"
+              :mask="true"
             />
           </div>
 
@@ -159,6 +160,8 @@ const fetchDynamicList = async (isRefresh = false) => {
     })
     
     console.log('前台博客动态列表API响应:', response)
+    console.log('API响应类型:', typeof response)
+    console.log('API响应数据结构:', JSON.stringify(response, null, 2))
     
     let list = [], total = 0;
     
@@ -168,21 +171,92 @@ const fetchDynamicList = async (isRefresh = false) => {
       console.log('使用标准响应格式解析数据')
       list = response.data.list || [];
       total = response.data.total || 0;
+      
+      // 处理图片URL，添加后端基础地址并转换为预览格式
+      list = list.map(item => {
+        console.log('处理列表项:', item)
+        // 获取图片URL（优先使用file_url，如果没有则使用url）
+        const imageUrl = item.file_url || item.url;
+        if (imageUrl) {
+          const baseUrl = import.meta.env.VITE_API_BASE_URL;
+          const fullUrl = `${baseUrl}${imageUrl}`;
+          console.log('图片URL:', {
+            original: imageUrl,
+            baseUrl: baseUrl,
+            fullUrl: fullUrl
+          });
+          // 转换为预览格式
+          item.images = [{
+            url: fullUrl,
+            name: item.name || imageUrl.split('/').pop()
+          }];
+          console.log('转换后的图片数据:', item.images)
+        }
+        return item;
+      });
     } else if (Array.isArray(response)) {
       // 后端直接返回数组
       console.log('使用数组格式解析数据')
       list = response;
       total = response.length;
+      
+      // 处理图片URL，添加后端基础地址并转换为预览格式
+      list = list.map(item => {
+        console.log('处理列表项:', item)
+        // 获取图片URL（优先使用file_url，如果没有则使用url）
+        const imageUrl = item.file_url || item.url;
+        if (imageUrl) {
+          const baseUrl = import.meta.env.VITE_API_BASE_URL;
+          const fullUrl = `${baseUrl}${imageUrl}`;
+          console.log('图片URL:', {
+            original: imageUrl,
+            baseUrl: baseUrl,
+            fullUrl: fullUrl
+          });
+          // 转换为预览格式
+          item.images = [{
+            url: fullUrl,
+            name: item.name || imageUrl.split('/').pop()
+          }];
+          console.log('转换后的图片数据:', item.images)
+        }
+        return item;
+      });
     } else if (response && response.list) {
       // 后端返回 {list: [], total: 0}
       console.log('使用对象格式解析数据')
       list = response.list;
       total = response.total || 0;
+      
+      // 处理图片URL，添加后端基础地址并转换为预览格式
+      list = list.map(item => {
+        console.log('处理列表项:', item)
+        // 获取图片URL（优先使用file_url，如果没有则使用url）
+        const imageUrl = item.file_url || item.url;
+        if (imageUrl) {
+          const baseUrl = import.meta.env.VITE_API_BASE_URL;
+          const fullUrl = `${baseUrl}${imageUrl}`;
+          console.log('图片URL:', {
+            original: imageUrl,
+            baseUrl: baseUrl,
+            fullUrl: fullUrl
+          });
+          // 转换为预览格式
+          item.images = [{
+            url: fullUrl,
+            name: item.name || imageUrl.split('/').pop()
+          }];
+          console.log('转换后的图片数据:', item.images)
+        }
+        return item;
+      });
     } else {
       console.log('使用模拟数据');
       list = getMockDynamics();
       total = list.length;
     }
+    
+    console.log('处理后的列表数据:', list)
     
     if (isRefresh) {
       dynamicList.value = list;
