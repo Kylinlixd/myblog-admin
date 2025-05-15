@@ -369,24 +369,21 @@ export function increaseDynamicView(id) {
     })
 }
 
-
-
 /**
  * 点赞博客动态
  * @param {string} id 动态ID
  * @returns {Promise} 点赞结果
  */
-export function likeDynamic(id) {
-  console.log('[Blog API] 点赞动态, ID:', id);
-  return blogAxios.post(createBlogApiUrl(`dynamics/${id}/like`))
-    .then(response => {
-      console.log('[Blog API] 点赞响应:', response);
-      return response;
-    })
-    .catch(error => {
-      console.error('[Blog API] 点赞失败:', error);
-      throw error;
-    });
+export const likeDynamic = async (id) => {
+  try {
+    console.log('[Blog API] 点赞动态, ID:', id)
+    const response = await blogAxios.post(createBlogApiUrl(`dynamics/${id}/like/`))
+    console.log('[Blog API] 点赞动态响应:', response)
+    return response
+  } catch (error) {
+    console.error('[Blog API] 点赞动态失败:', error)
+    throw error
+  }
 }
 
 /**

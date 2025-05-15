@@ -14,6 +14,9 @@
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form">
       <div class="search-form-left">
+        <a-form-item label="标题">
+          <a-input v-model:value="searchForm.title" placeholder="搜索标题" allowClear />
+        </a-form-item>
         <a-form-item label="内容">
           <a-input v-model:value="searchForm.content" placeholder="搜索内容" allowClear />
         </a-form-item>
@@ -184,6 +187,11 @@
             <template v-else>
               <span class="text-muted">无标签</span>
             </template>
+          </template>
+          
+          <!-- 点赞数列 -->
+          <template v-if="column.dataIndex === 'like_count'">
+            {{ record.like_count }}
           </template>
           
           <!-- 状态列 -->
@@ -399,6 +407,7 @@ const sortOrder = ref('')
 // 添加搜索表单
 const searchForm = reactive({
   content: '',
+  title: '',
   categoryId: undefined,
   tagIds: [],
   status: undefined,
@@ -417,6 +426,7 @@ const fetchDynamics = async () => {
       type: searchForm.type,
       status: searchForm.status,
       content: searchForm.content?.trim(),
+      title: searchForm.title?.trim(),  // 添加标题搜索
       categoryId: searchForm.categoryId,
       tagIds: searchForm.tagIds
     };
@@ -428,16 +438,21 @@ const fetchDynamics = async () => {
       }
     });
     
+    console.log('获取动态列表参数:', params);
     const response = await getDynamicList(params);
+    console.log('获取动态列表响应:', response);
     
     if (response && response.code === 200 && response.data) {
       // 直接使用 response.data.items
       dynamicList.value = response.data.items.map(item => ({
         ...item,  // 保留所有原始字段
-        mediaUrls: item.media_urls || [],  // 转换 media_urls 为 mediaUrls
-        category: item.category || null    // 确保保留 category 字段
+        mediaUrls: item.mediaUrls || [],  // 使用 mediaUrls 而不是 media_urls
+        category: item.category || null,    // 确保保留 category 字段
+        like_count: item.likes || 0,   // 使用 likes 而不是 like_count
+        title: item.title || '无标题'        // 确保保留 title 字段
       }));
       total.value = response.data.total || 0;
+      console.log('处理后的动态列表:', dynamicList.value);
     } else {
       dynamicList.value = [];
       total.value = 0;
@@ -465,6 +480,7 @@ const handleSearch = () => {
 const resetSearch = () => {
   // 重置搜索表单
   searchForm.content = '';
+  searchForm.title = '';
   searchForm.categoryId = undefined;
   searchForm.tagIds = [];
   searchForm.status = undefined;
@@ -519,6 +535,14 @@ const columns = [
     key: 'id',
     width: 60,
     align: 'center'
+  },
+  {
+    title: '标题',
+    dataIndex: 'title',
+    key: 'title',
+    width: 200,
+    ellipsis: true,
+    customRender: ({ text }) => text || '无标题'
   },
   {
     title: '内容',
@@ -612,6 +636,14 @@ const columns = [
     dataIndex: 'tags',
     key: 'tags',
     width: 200
+  },
+  {
+    title: '点赞数',
+    dataIndex: 'like_count',
+    key: 'like_count',
+    width: 100,
+    align: 'center',
+    sorter: (a, b) => a.like_count - b.like_count
   },
   {
     title: '状态',

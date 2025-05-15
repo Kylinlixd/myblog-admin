@@ -23,7 +23,7 @@
             <span class="dynamic-time">{{ formatDate(item.createTime) }}</span>
             <span v-if="item.type" class="dynamic-type">{{ item.type }}</span>
             <span v-if="item.views" class="dynamic-views">
-              <a-icon type="eye" /> {{ item.views }}
+              <eye-outlined /> {{ item.views }}
             </span>
           </div>
         </div>
@@ -70,11 +70,11 @@
         <div class="dynamic-footer">
           <div class="dynamic-actions">
             <a-button type="text" @click="handleLike(item)">
-              <a-icon type="star" />
+              <like-outlined />
               <span>{{ item.likes || 0 }}</span>
             </a-button>
             <a-button type="text" @click="handleComment(item)">
-              <a-icon type="message" />
+              <message-outlined />
               <span>{{ item.comments || 0 }}</span>
             </a-button>
           </div>
@@ -100,14 +100,22 @@
 <script setup>
 import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
-import { message as AntMessage } from 'ant-design-vue'
-// 导入API函数而不是仅导入createBlogApiUrl
+import { message } from 'ant-design-vue'
+import { useRoute } from 'vue-router'
 import { 
   getBlogDynamics, 
   likeDynamic, 
   commentDynamic, 
   getDynamicComments 
 } from '../../api/blog'
+import { 
+  LikeOutlined, 
+  MessageOutlined, 
+  EyeOutlined,
+  CalendarOutlined,
+  TagOutlined,
+  FolderOutlined
+} from '@ant-design/icons-vue'
 
 // 创建Markdown渲染器
 const md = new MarkdownIt({
@@ -160,96 +168,38 @@ const fetchDynamicList = async (isRefresh = false) => {
     })
     
     console.log('前台博客动态列表API响应:', response)
-    console.log('API响应类型:', typeof response)
-    console.log('API响应数据结构:', JSON.stringify(response, null, 2))
     
     let list = [], total = 0;
     
     // 处理不同的响应结构
     if (response && response.code === 200 && response.data) {
-      // 后端返回标准格式 {code: 200, data: {list: [], total: 0}}
+      // 后端返回标准格式 {code: 200, data: {items: [], total: 0}}
       console.log('使用标准响应格式解析数据')
-      list = response.data.list || [];
+      list = response.data.items || [];
       total = response.data.total || 0;
       
-      // 处理图片URL，添加后端基础地址并转换为预览格式
-      list = list.map(item => {
-        console.log('处理列表项:', item)
-        // 获取图片URL（优先使用file_url，如果没有则使用url）
-        const imageUrl = item.file_url || item.url;
-        if (imageUrl) {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL;
-          const fullUrl = `${baseUrl}${imageUrl}`;
-          console.log('图片URL:', {
-            original: imageUrl,
-            baseUrl: baseUrl,
-            fullUrl: fullUrl
-          });
-          // 转换为预览格式
-          item.images = [{
-            url: fullUrl,
-            name: item.name || imageUrl.split('/').pop()
-          }];
-          console.log('转换后的图片数据:', item.images)
-        }
-        return item;
-      });
+      // 处理列表数据
+      list = list.map(item => ({
+        ...item,
+        createTime: item.created_at || item.createdAt,
+        updateTime: item.updated_at || item.updatedAt,
+        views: item.views || 0,
+        likes: item.likes || 0,
+        comments: item.comments || 0,
+        images: item.mediaUrls || [],
+        type: item.type || 'text',
+        status: item.status || 'draft'
+      }));
     } else if (Array.isArray(response)) {
       // 后端直接返回数组
       console.log('使用数组格式解析数据')
       list = response;
       total = response.length;
-      
-      // 处理图片URL，添加后端基础地址并转换为预览格式
-      list = list.map(item => {
-        console.log('处理列表项:', item)
-        // 获取图片URL（优先使用file_url，如果没有则使用url）
-        const imageUrl = item.file_url || item.url;
-        if (imageUrl) {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL;
-          const fullUrl = `${baseUrl}${imageUrl}`;
-          console.log('图片URL:', {
-            original: imageUrl,
-            baseUrl: baseUrl,
-            fullUrl: fullUrl
-          });
-          // 转换为预览格式
-          item.images = [{
-            url: fullUrl,
-            name: item.name || imageUrl.split('/').pop()
-          }];
-          console.log('转换后的图片数据:', item.images)
-        }
-        return item;
-      });
     } else if (response && response.list) {
       // 后端返回 {list: [], total: 0}
       console.log('使用对象格式解析数据')
       list = response.list;
       total = response.total || 0;
-      
-      // 处理图片URL，添加后端基础地址并转换为预览格式
-      list = list.map(item => {
-        console.log('处理列表项:', item)
-        // 获取图片URL（优先使用file_url，如果没有则使用url）
-        const imageUrl = item.file_url || item.url;
-        if (imageUrl) {
-          const baseUrl = import.meta.env.VITE_API_BASE_URL;
-          const fullUrl = `${baseUrl}${imageUrl}`;
-          console.log('图片URL:', {
-            original: imageUrl,
-            baseUrl: baseUrl,
-            fullUrl: fullUrl
-          });
-          // 转换为预览格式
-          item.images = [{
-            url: fullUrl,
-            name: item.name || imageUrl.split('/').pop()
-          }];
-          console.log('转换后的图片数据:', item.images)
-        }
-        return item;
-      });
     } else {
       console.log('使用模拟数据');
       list = getMockDynamics();
@@ -334,7 +284,7 @@ const handleLike = async (item) => {
     const result = await likeDynamic(item.id)
     item.likes = result.likes || (item.likes + 1) // 更新点赞数
   } catch (error) {
-    AntMessage.error('点赞失败')
+    message.error('点赞失败')
     console.error('点赞失败:', error)
   } finally {
     item.isLiking = false
@@ -353,7 +303,7 @@ const fetchComments = async (item) => {
     item.commentList = result.list || []
     item.commentsLoaded = true
   } catch (error) {
-    AntMessage.error('获取评论失败')
+    message.error('获取评论失败')
     console.error('获取评论失败:', error)
   } finally {
     item.isLoadingComments = false
@@ -373,7 +323,7 @@ const handleComment = (item) => {
 // 提交评论
 const submitComment = async (item) => {
   if (!commentContent.value.trim()) {
-    AntMessage.warning('评论内容不能为空')
+    message.warning('评论内容不能为空')
     return
   }
   
@@ -392,10 +342,10 @@ const submitComment = async (item) => {
     if (result.success) {
       fetchComments(item) // 重新获取评论列表
       commentContent.value = '' // 清空评论内容
-      AntMessage.success('评论成功')
+      message.success('评论成功')
     }
   } catch (error) {
-    AntMessage.error('评论失败')
+    message.error('评论失败')
     console.error('评论失败:', error)
   } finally {
     item.isSubmittingComment = false

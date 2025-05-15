@@ -148,6 +148,7 @@ export const updateDynamic = async (id, data) => {
   try {
     // 数据格式化，确保数据完整性
     const formattedData = {
+      title: data.title || '',  // 添加标题字段
       type: data.type || 'text',
       content: data.content || '',
       status: data.status || 'draft',
@@ -259,6 +260,7 @@ export const createDynamic = async (data) => {
   try {
     // 数据格式化，确保数据完整性
     const formattedData = {
+      title: data.title || '',  // 添加标题字段
       type: data.type || 'text',
       content: data.content || '',
       status: data.status || 'draft',

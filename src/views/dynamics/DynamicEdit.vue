@@ -23,6 +23,16 @@
       :wrapper-col="{ span: 18 }"
       class="edit-form"
     >
+      <!-- 标题输入框 -->
+      <a-form-item label="标题" name="title" :rules="rules.title">
+        <a-input
+          v-model:value="form.title"
+          placeholder="请输入动态标题"
+          :maxLength="100"
+          show-count
+        />
+      </a-form-item>
+
       <a-form-item label="分类" name="categoryId">
         <a-select
           v-model:value="form.categoryId"
@@ -299,6 +309,7 @@ const isEdit = computed(() => route.params.id !== undefined)
 
 // 表单数据 - 修改为使用 mediaUrls 统一存储媒体文件
 const form = ref({
+  title: '',  // 添加标题字段
   type: 'text',
   content: '',
   mediaUrls: [],
@@ -352,6 +363,10 @@ const categoryOptions = computed(() => {
 
 // 表单验证规则
 const rules = {
+  title: [
+    { required: true, message: '请输入标题' },
+    { max: 100, message: '标题不能超过100个字符' }
+  ],
   type: [{ required: true, message: '请选择内容类型', trigger: 'change' }],
   content: [{ 
     required: true, 
@@ -433,13 +448,12 @@ const fetchDynamicDetail = async () => {
           const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`
           console.log('处理媒体URL:', { original: url, full: fullUrl })
           return fullUrl
-        }).filter(Boolean) // 过滤掉无效的 URL
+        }).filter(Boolean)
       }
-      
-      console.log('处理后的 mediaUrls:', mediaUrls)
       
       // 填充表单数据
       form.value = {
+        title: data.title || '',  // 确保标题字段存在
         type: data.type || 'text',
         content: data.content || '',
         status: data.status || 'draft',
@@ -543,14 +557,14 @@ const handleSave = async () => {
     
     // 准备提交的数据，确保格式正确
     const dynamicData = {
+      title: form.value.title.trim(),  // 确保标题字段存在
       type: form.value.type,
       content: form.value.content.trim(),
       status: form.value.status,
       mediaUrls: processedMediaUrls,
       fileIds: form.value.fileIds || [],
       categoryId: form.value.categoryId,
-      tags: form.value.tags,
-      token: accessToken // 添加 token 到请求数据中
+      tags: form.value.tags
     };
     
     // 打印将要提交的数据，用于调试

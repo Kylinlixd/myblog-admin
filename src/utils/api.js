@@ -509,4 +509,36 @@ const api = {
   create: createApiModule
 }
 
+// 创建博客前台API实例
+export const blog = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// 博客前台API请求拦截器
+blog.interceptors.request.use(
+  config => {
+    // 移除令牌验证相关代码
+    return config
+  },
+  error => {
+    console.error('[Blog API] 请求错误:', error)
+    return Promise.reject(error)
+  }
+)
+
+// 博客前台API响应拦截器
+blog.interceptors.response.use(
+  response => {
+    return response.data
+  },
+  error => {
+    console.error('[Blog API] 响应错误:', error)
+    return Promise.reject(error)
+  }
+)
+
 export default api 

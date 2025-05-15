@@ -339,31 +339,6 @@ const fetchFiles = async () => {
         // 确保baseUrl不为空
         const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
         const url = item.file_url ? `${baseUrl}${item.file_url}` : item.file_url;
-        console.log('处理文件URL:', {
-          file_url: item.file_url,
-          baseUrl: baseUrl,
-          finalUrl: url,
-          file_type: item.file_type
-        });
-        
-        // 验证图片URL
-        if (item.file_type === 'image' && url) {
-          fetch(url)
-            .then(response => {
-              console.log('图片URL验证:', {
-                url: url,
-                status: response.status,
-                statusText: response.statusText,
-                headers: Object.fromEntries(response.headers.entries())
-              });
-            })
-            .catch(error => {
-              console.error('图片URL验证失败:', {
-                url: url,
-                error: error
-              });
-            });
-        }
         
         return {
           ...item,
@@ -383,7 +358,6 @@ const fetchFiles = async () => {
         }
       })
       total.value = response.data.total
-      console.log('文件列表数据:', fileList.value)
     } else {
       fileList.value = []
       total.value = 0
@@ -418,14 +392,17 @@ const handleSearch = async () => {
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
       fileList.value = response.data.items.map(item => {
-        const baseUrl = import.meta.env.VITE_API_BASE_URL;
+        // 确保baseUrl不为空
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const url = item.file_url ? `${baseUrl}${item.file_url}` : item.file_url;
+        
         return {
           ...item,
           id: item.id,
           name: item.name,
           type: item.file_type,
           size: item.file_size,
-          url: item.file_url ? `${baseUrl}${item.file_url}` : item.file_url,
+          url: url,
           createdAt: item.created_at,
           updatedAt: item.updated_at,
           downloadCount: item.download_count,
@@ -437,7 +414,6 @@ const handleSearch = async () => {
         }
       })
       total.value = response.data.total
-      console.log('搜索结果数据:', fileList.value)
     } else {
       fileList.value = []
       total.value = 0
