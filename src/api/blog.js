@@ -240,7 +240,7 @@ export function getBlogDynamicDetail(id) {
  * @returns {Promise} 相邻动态
  */
 export function getAdjacentDynamics(id) {
-  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/adjacent`))
+  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/adjacent/`))
     .catch(error => {
       console.error('获取相邻博客动态失败:', error)
       throw error
@@ -253,7 +253,7 @@ export function getAdjacentDynamics(id) {
  * @returns {Promise} 热门动态
  */
 export function getHotDynamics(params) {
-  return blogAxios.get(createBlogApiUrl('dynamics/hot'), { params })
+  return blogAxios.get(createBlogApiUrl('dynamics/hot/'), { params })
     .catch(error => {
       console.error('获取热门博客动态失败:', error)
       throw error
@@ -266,7 +266,7 @@ export function getHotDynamics(params) {
  * @returns {Promise} 最近动态
  */
 export function getRecentDynamics(params) {
-  return blogAxios.get(createBlogApiUrl('dynamics/recent'), { params })
+  return blogAxios.get(createBlogApiUrl('dynamics/recent/'), { params })
     .catch(error => {
       console.error('获取最近博客动态失败:', error)
       throw error
@@ -299,9 +299,9 @@ export function getCategoryDynamics(categoryId, params) {
  */
 export function searchBlogDynamics(params) {
   console.log('[Blog API] 搜索动态, 参数:', params);
-  console.log('[Blog API] 搜索URL:', createBlogApiUrl('dynamics/search'));
+  console.log('[Blog API] 搜索URL:', createBlogApiUrl('dynamics/search/'));
   
-  return blogAxios.get(createBlogApiUrl('dynamics/search'), { params })
+  return blogAxios.get(createBlogApiUrl('dynamics/search/'), { params })
     .then(response => {
       console.log('[Blog API] 搜索响应:', response);
       
@@ -336,7 +336,7 @@ export function searchBlogDynamics(params) {
  * @returns {Promise} 动态列表
  */
 export function getTagDynamics(tagId, params) {
-  return blogAxios.get(createBlogApiUrl(`tags/${tagId}/dynamics`), { params })
+  return blogAxios.get(createBlogApiUrl(`tags/${tagId}/dynamics/`), { params })
     .catch(error => {
       console.error('获取标签下的博客动态失败:', error)
       throw error
@@ -361,7 +361,7 @@ export function getBlogTagList() {
  * @returns {Promise}
  */
 export function increaseDynamicView(id) {
-  return blogAxios.put(createBlogApiUrl(`dynamics/${id}/view`))
+  return blogAxios.put(createBlogApiUrl(`dynamics/${id}/view/`))
     .then(response => response.data)
     .catch(error => {
       console.error('增加浏览量失败:', error)
@@ -369,48 +369,7 @@ export function increaseDynamicView(id) {
     })
 }
 
-/**
- * 创建动态
- * @param {Object} data 动态数据
- * @returns {Promise} 新创建的动态
- */
-export function createDynamic(data) {
-  return blogAxios.post(createBlogApiUrl('dynamics'), data)
-    .then(response => response.data)
-    .catch(error => {
-      console.error('创建动态失败:', error)
-      throw error
-    })
-}
 
-/**
- * 更新动态
- * @param {string} id 动态ID
- * @param {Object} data 动态数据
- * @returns {Promise} 更新后的动态
- */
-export function updateDynamic(id, data) {
-  return blogAxios.put(createBlogApiUrl(`dynamics/${id}`), data)
-    .then(response => response.data)
-    .catch(error => {
-      console.error('更新动态失败:', error)
-      throw error
-    })
-}
-
-/**
- * 删除动态
- * @param {string} id 动态ID
- * @returns {Promise}
- */
-export function deleteDynamic(id) {
-  return blogAxios.delete(createBlogApiUrl(`dynamics/${id}`))
-    .then(response => response.data)
-    .catch(error => {
-      console.error('删除动态失败:', error)
-      throw error
-    })
-}
 
 /**
  * 点赞博客动态
@@ -438,7 +397,7 @@ export function likeDynamic(id) {
  */
 export function commentDynamic(id, data) {
   console.log('[Blog API] 发表评论, ID:', id, '数据:', data);
-  return blogAxios.post(createBlogApiUrl(`dynamics/${id}/comments`), data)
+  return blogAxios.post(createBlogApiUrl(`dynamics/${id}/comments/`), data)
     .then(response => {
       console.log('[Blog API] 评论响应:', response);
       return response;
@@ -457,7 +416,7 @@ export function commentDynamic(id, data) {
  */
 export function getDynamicComments(id, params) {
   console.log('[Blog API] 获取评论, ID:', id, '参数:', params);
-  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/comments`), { params })
+  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/comments/`), { params })
     .then(response => {
       console.log('[Blog API] 获取评论响应:', response);
       
@@ -485,7 +444,7 @@ export function getDynamicComments(id, params) {
  * @returns {Promise} 删除结果
  */
 export function deleteDynamicComment(dynamicId, commentId) {
-  return blogAxios.delete(createBlogApiUrl(`dynamics/${dynamicId}/comments/${commentId}`))
+  return blogAxios.delete(createBlogApiUrl(`dynamics/${dynamicId}/comments/${commentId}/`))
     .then(response => response.data)
     .catch(error => {
       console.error('删除评论失败:', error)
