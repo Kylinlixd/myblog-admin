@@ -18,7 +18,9 @@
       <div v-for="(item, index) in dynamicList" :key="item.id || index" class="dynamic-item">
         <!-- 动态头部 -->
         <div class="dynamic-header">
-          <h3 v-if="item.title" class="dynamic-title">{{item.title}}</h3>
+          <router-link :to="`/blog/dynamics/${item.id}`" class="dynamic-title-link">
+            <h3 v-if="item.title" class="dynamic-title">{{item.title}}</h3>
+          </router-link>
           <div class="dynamic-meta">
             <span class="dynamic-time">{{ formatDate(item.createTime) }}</span>
             <span v-if="item.type" class="dynamic-type">{{ item.type }}</span>
@@ -77,6 +79,12 @@
               <message-outlined />
               <span>{{ item.comments || 0 }}</span>
             </a-button>
+            <router-link :to="`/blog/dynamics/${item.id}`" class="view-detail-link">
+              <a-button type="text">
+                <eye-outlined />
+                <span>查看详情</span>
+              </a-button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -371,109 +379,166 @@ onActivated(() => {
 
 <style scoped>
 .blog-dynamic {
-  padding: 20px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
 .page-header {
-  margin-bottom: 20px;
+  text-align: center;
+  margin-bottom: 3rem;
 }
 
 .page-title {
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .page-description {
-  font-size: 14px;
-  color: #888;
-}
-
-.empty-state {
-  text-align: center;
-  margin-top: 50px;
+  color: #666;
+  font-size: 1.1rem;
 }
 
 .dynamic-list {
-  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .dynamic-item {
-  border-bottom: 1px solid #eee;
-  padding: 10px 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.dynamic-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .dynamic-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.dynamic-title-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .dynamic-title {
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+  transition: color 0.3s ease;
+}
+
+.dynamic-title-link:hover .dynamic-title {
+  color: #38bdf8;
 }
 
 .dynamic-meta {
-  font-size: 12px;
-  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .dynamic-content {
-  margin-top: 10px;
+  margin-bottom: 1rem;
 }
 
 .markdown-content {
-  font-size: 14px;
+  font-size: 1rem;
   line-height: 1.6;
+  color: #333;
 }
 
 .image-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
 }
 
 .gallery-image {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 4px;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.audio-player {
-  margin-top: 10px;
-}
-
+.audio-player,
 .video-player {
-  margin-top: 10px;
+  margin: 1rem 0;
 }
 
+.audio-element,
 .video-element {
   width: 100%;
-  height: auto;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .dynamic-footer {
-  margin-top: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  margin-top: 1rem;
 }
 
 .dynamic-actions {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-detail-link {
+  text-decoration: none;
 }
 
 .load-more {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 2rem;
 }
 
 .no-more {
-  color: #999;
-  font-size: 14px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .blog-dynamic {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .dynamic-item {
+    padding: 1rem;
+  }
+
+  .dynamic-title {
+    font-size: 1.3rem;
+  }
+
+  .image-gallery {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -85,9 +85,15 @@ onMounted(() => {
 
 <style scoped>
 .dynamic-detail-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .loading-state,
@@ -95,36 +101,60 @@ onMounted(() => {
   text-align: center;
   padding: 3rem;
   color: #666;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.dynamic-content {
+  width: 100%;
+  margin: 0;
+  padding: 0 15px 30px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 2;
 }
 
 .dynamic-header {
   margin-bottom: 2rem;
+  padding: 30px 15px;
+  background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+  border-bottom: 1px solid #eaecef;
 }
 
 .dynamic-title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
+  font-size: 2em;
+  font-weight: bold;
+  color: #1a1a1a;
+  margin-bottom: 15px;
   line-height: 1.3;
-  color: #333;
 }
 
 .dynamic-meta {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 15px;
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.9em;
+  flex-wrap: wrap;
 }
 
 .dynamic-body {
   margin-bottom: 3rem;
   line-height: 1.8;
   color: #333;
+  position: relative;
+  z-index: 2;
 }
 
 .dynamic-footer {
   border-top: 1px solid #eee;
   padding-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .dynamic-tags {
@@ -147,6 +177,8 @@ onMounted(() => {
   font-size: 0.9rem;
   text-decoration: none;
   transition: all 0.2s;
+  position: relative;
+  z-index: 3;
 }
 
 .tag-item:hover {
@@ -154,13 +186,102 @@ onMounted(() => {
   color: #1f2937;
 }
 
-@media (max-width: 768px) {
-  .dynamic-title {
-    font-size: 2rem;
+/* Markdown 样式优化 */
+:deep(.markdown-body) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.8;
+  color: #24292e;
+  word-wrap: break-word;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+:deep(.markdown-body > *) {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 2;
+}
+
+:deep(.markdown-body a) {
+  color: #38bdf8;
+  text-decoration: none;
+  position: relative;
+  z-index: 3;
+  cursor: pointer;
+}
+
+:deep(.markdown-body a:hover) {
+  text-decoration: underline;
+}
+
+:deep(.markdown-body button) {
+  position: relative;
+  z-index: 3;
+  cursor: pointer;
+}
+
+:deep(.markdown-body input),
+:deep(.markdown-body select),
+:deep(.markdown-body textarea) {
+  position: relative;
+  z-index: 3;
+}
+
+/* 响应式布局 */
+@media screen and (min-width: 768px) {
+  .dynamic-content {
+    padding: 0 30px 40px;
   }
-  
-  .dynamic-detail-container {
-    padding: 1.5rem 1rem;
+
+  .dynamic-header {
+    padding: 40px 30px;
+  }
+
+  .dynamic-title {
+    font-size: 2.2em;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  .dynamic-content {
+    padding: 0 40px 40px;
+  }
+
+  .dynamic-header {
+    padding: 50px 40px;
+  }
+
+  .dynamic-title {
+    font-size: 2.5em;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .dynamic-header {
+    padding: 20px 15px;
+  }
+
+  .dynamic-title {
+    font-size: 1.8em;
+  }
+
+  .dynamic-meta {
+    gap: 12px;
+  }
+
+  .dynamic-content {
+    padding: 0 15px 20px;
+  }
+
+  :deep(.markdown-body) {
+    font-size: 15px;
   }
 }
 </style> 

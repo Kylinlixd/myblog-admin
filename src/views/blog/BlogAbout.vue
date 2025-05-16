@@ -48,7 +48,7 @@
       <section class="about-section">
         <h2 class="section-title">联系我</h2>
         <div class="section-content">
-          <p>如果你有任何问题、合作意向或者只是想交个朋友，欢迎随时联系我。</p>
+          <p>如果你有任何问题或者只是想交个朋友，欢迎随时联系我。</p>
           <div class="contact-info">
             <div v-if="profile.email" class="contact-item">
               <i class="fas fa-envelope"></i>
