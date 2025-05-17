@@ -22,7 +22,7 @@
               </div>
             </router-link>
             
-            <!-- 动态菜单 - 改为直接链接 -->
+            <!-- 动态菜单 -->
             <router-link 
               to="/blog/blogdynamic" 
               class="nav-item" 
@@ -62,40 +62,45 @@
             </router-link>
           </div>
         </nav>
+        <!-- 搜索框 -->
         <div class="blog-search">
-          <a-input
-            v-model:value="searchQuery"
-            placeholder="搜索动态..."
-            @press-enter="handleSearch"
-            @focus="showSearchSuggestions = true"
-            allowClear
-          >
-            <template #prefix>
-              <search-outlined />
-            </template>
-            <template #addonAfter>
-              <a-button @click="handleSearch">
-                <search-outlined />
-              </a-button>
-            </template>
-          </a-input>
+          <div class="search-box">
+            <div class="search-input">
+              <search-outlined class="search-icon" />
+              <input 
+                type="text" 
+                v-model="searchQuery"
+                placeholder="搜索动态、标签、分类或关键词..."
+                @input="handleSearchInput"
+                @keyup.enter="handleSearch"
+              />
+            </div>
+            <a-button 
+              type="primary" 
+              class="search-button"
+              :loading="searching"
+              @click="handleSearch"
+            >
+              搜索
+            </a-button>
+          </div>
           
-          <!-- 搜索建议下拉 -->
-          <div v-if="showSearchSuggestions && (searchHistory.length > 0 || hotSearches.length > 0)" class="search-suggestions">
-            <!-- 历史搜索 -->
+          <!-- 搜索建议 -->
+          <div v-if="showSuggestions && (suggestions.length > 0 || searchHistory.length > 0)" class="search-suggestions">
+            <!-- 搜索历史 -->
             <div v-if="searchHistory.length > 0" class="suggestion-section">
               <div class="suggestion-header">
                 <span>历史搜索</span>
-                <a-button type="link" size="small" @click="clearSearchHistory">
+                <a-button type="link" size="small" @click="searchHistory = []">
                   <delete-outlined />
                 </a-button>
               </div>
               <div class="suggestion-list">
                 <div 
-                  v-for="(item, index) in searchHistory.slice(0, 5)" 
-                  :key="`history-${index}`" 
-                  class="suggestion-item" 
-                  @click="useSearchSuggestion(item)"
+                  v-for="(item, index) in searchHistory" 
+                  :key="`history-${index}`"
+                  class="suggestion-item"
+                  @click="useSuggestion({ title: item })"
                 >
                   <clock-circle-outlined />
                   <span>{{ item }}</span>
@@ -103,20 +108,21 @@
               </div>
             </div>
             
-            <!-- 热门搜索 -->
-            <div v-if="hotSearches.length > 0" class="suggestion-section">
+            <!-- 搜索结果 -->
+            <div v-if="suggestions.length > 0" class="suggestion-section">
               <div class="suggestion-header">
-                <span>热门搜索</span>
+                <span>搜索结果</span>
               </div>
               <div class="suggestion-list">
                 <div 
-                  v-for="(item, index) in hotSearches" 
-                  :key="`hot-${index}`" 
-                  class="suggestion-item" 
-                  @click="useSearchSuggestion(item)"
+                  v-for="(item, index) in suggestions" 
+                  :key="`suggestion-${index}`"
+                  class="suggestion-item"
+                  @click="useSuggestion(item)"
                 >
-                  <fire-outlined />
-                  <span>{{ item }}</span>
+                  <component :is="item.icon" />
+                  <span>{{ item.title }}</span>
+                  <span class="suggestion-type">{{ item.type === 'dynamic' ? '动态' : item.type === 'category' ? '分类' : '标签' }}</span>
                 </div>
               </div>
             </div>
@@ -215,16 +221,60 @@
   
   .blog-search {
     flex-shrink: 0;
-    width: 200px;
     margin-right: 15px;
     position: relative;
     
-    .ant-input {
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
       border-radius: 20px;
+      padding: 4px;
       transition: all 0.3s ease;
+      min-width: 300px;
       
-      &:focus {
-        box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.2);
+      &:hover {
+        background: #e8e8e8;
+      }
+      
+      .search-input {
+        display: flex;
+        align-items: center;
+        flex: 1;
+        padding: 0 12px;
+        
+        .search-icon {
+          color: #999;
+          font-size: 16px;
+          margin-right: 8px;
+        }
+        
+        input {
+          flex: 1;
+          border: none;
+          background: none;
+          outline: none;
+          font-size: 14px;
+          color: #333;
+          padding: 4px 0;
+          
+          &::placeholder {
+            color: #999;
+          }
+        }
+      }
+      
+      .search-button {
+        border-radius: 16px;
+        height: 32px;
+        padding: 0 16px;
+        font-size: 14px;
+        background: #1890ff;
+        border: none;
+        
+        &:hover {
+          background: #40a9ff;
+        }
       }
     }
     
@@ -232,54 +282,66 @@
       position: absolute;
       top: 100%;
       left: 0;
-      width: 100%;
-      max-height: 300px;
-      overflow-y: auto;
-      background-color: #fff;
+      right: 0;
+      background: white;
       border-radius: 8px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-      z-index: 150;
-      margin-top: 5px;
-      padding: 10px 0;
-    }
-
-    .suggestion-section {
-      margin-bottom: 10px;
-    }
-
-    .suggestion-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0 15px;
-      margin-bottom: 5px;
-      color: #666;
-      font-size: 0.9em;
-      font-weight: bold;
-    }
-
-    .suggestion-list {
-      padding: 0 5px;
-    }
-
-    .suggestion-item {
-      display: flex;
-      align-items: center;
-      padding: 8px 10px;
-      cursor: pointer;
-      border-radius: 4px;
-      transition: background-color 0.2s;
-      font-size: 0.9em;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-top: 8px;
+      z-index: 1000;
       
-      &:hover {
-        background-color: #f5f5f5;
-        color: #c084fc;
+      .suggestion-section {
+        padding: 8px 0;
+        
+        &:not(:last-child) {
+          border-bottom: 1px solid #f0f0f0;
+        }
       }
       
-      .anticon {
-        margin-right: 8px;
-        font-size: 14px;
-        color: #999;
+      .suggestion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 16px;
+        margin-bottom: 8px;
+        
+        span {
+          color: #666;
+          font-size: 12px;
+        }
+      }
+      
+      .suggestion-list {
+        .suggestion-item {
+          display: flex;
+          align-items: center;
+          padding: 8px 16px;
+          cursor: pointer;
+          transition: background-color 0.3s;
+          
+          &:hover {
+            background-color: #f5f5f5;
+          }
+          
+          .anticon {
+            color: #999;
+            margin-right: 8px;
+            font-size: 14px;
+          }
+          
+          span {
+            color: #333;
+            font-size: 14px;
+            
+            &.suggestion-type {
+              margin-left: auto;
+              color: #999;
+              font-size: 12px;
+              background: #f5f5f5;
+              padding: 2px 6px;
+              border-radius: 4px;
+            }
+          }
+        }
       }
     }
   }
@@ -561,62 +623,21 @@
 <script setup>
 import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { SearchOutlined, DeleteOutlined, ClockCircleOutlined, FireOutlined } from '@ant-design/icons-vue'
+import { SearchOutlined, TagOutlined, FolderOutlined, FireOutlined, DeleteOutlined, ClockCircleOutlined } from '@ant-design/icons-vue'
 import { useAppStore } from '../stores/app'
 import InteractiveHoverButton from '../components/InspiraUI/InteractiveHoverButton.vue'
+import { message } from 'ant-design-vue'
+import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
 
 const router = useRouter()
 const appStore = useAppStore()
 
 // 搜索相关
 const searchQuery = ref('')
-const showSearchSuggestions = ref(false)
+const searching = ref(false)
+const showSuggestions = ref(false)
+const suggestions = ref([])
 const searchHistory = ref([])
-const hotSearches = ref([
-  '前端技术', 'Vue3', 'JavaScript', '旅行日记', '摄影技巧'
-])
-
-// 动态菜单状态
-const showDynamicMenu = ref(false)
-
-// 切换动态菜单显示状态
-const toggleDynamicMenu = () => {
-  showDynamicMenu.value = !showDynamicMenu.value
-}
-
-// 点击其他区域关闭菜单和搜索建议
-const closeMenuOnOutsideClick = (event) => {
-  const menu = document.querySelector('.dynamic-menu')
-  if (menu && !menu.contains(event.target)) {
-    showDynamicMenu.value = false
-  }
-  
-  const searchContainer = document.querySelector('.blog-search')
-  if (searchContainer && !searchContainer.contains(event.target)) {
-    showSearchSuggestions.value = false
-  }
-}
-
-// 搜索
-const handleSearch = () => {
-  if (!searchQuery.value.trim()) return
-  
-  // 保存到搜索历史
-  saveSearchHistory(searchQuery.value)
-  
-  router.push({
-    path: '/blog/search',
-    query: { keyword: searchQuery.value.trim() }
-  })
-  searchQuery.value = ''
-  showSearchSuggestions.value = false
-}
-
-// 使用搜索建议
-const useSearchSuggestion = (suggestion) => {
-  searchQuery.value = suggestion
-  handleSearch()
-}
 
 // 加载搜索历史
 const loadSearchHistory = () => {
@@ -652,34 +673,123 @@ const saveSearchHistory = (keyword) => {
   }
 }
 
-// 清除搜索历史
-const clearSearchHistory = (e) => {
-  e.stopPropagation() // 阻止事件冒泡
-  searchHistory.value = []
-  localStorage.removeItem('search_history')
+// 处理搜索输入
+const handleSearchInput = async () => {
+  if (!searchQuery.value.trim()) {
+    showSuggestions.value = false
+    suggestions.value = []
+    return
+  }
+
+  showSuggestions.value = true
+  const keyword = searchQuery.value.trim()
+  
+  try {
+    // 使用搜索API获取建议
+    const searchRes = await searchBlog({
+      keyword,
+      page: 1,
+      pageSize: 5,
+      searchType: 'all',
+      includeTags: true,
+      includeCategories: true,
+      sortBy: 'relevance'
+    })
+    
+    // 处理搜索结果
+    if (searchRes.data && searchRes.data.list) {
+      suggestions.value = searchRes.data.list.map(item => {
+        let type = 'dynamic'
+        let icon = FireOutlined
+        let title = item.title
+        
+        if (item.type === 'tag') {
+          type = 'tag'
+          icon = TagOutlined
+          title = item.name
+        } else if (item.type === 'category') {
+          type = 'category'
+          icon = FolderOutlined
+          title = item.name
+        }
+        
+        return {
+          type,
+          title,
+          id: item.id,
+          icon,
+          relevance: item.relevance || 0
+        }
+      })
+      
+      // 按相关度排序
+      suggestions.value.sort((a, b) => b.relevance - a.relevance)
+    } else {
+      suggestions.value = []
+    }
+    
+  } catch (error) {
+    console.error('获取搜索建议失败:', error)
+    suggestions.value = []
+  }
 }
 
-// 监听路由变化关闭菜单
+// 使用搜索建议
+const useSuggestion = (suggestion) => {
+  searchQuery.value = suggestion.title
+  handleSearch()
+}
+
+// 处理搜索
+const handleSearch = () => {
+  if (!searchQuery.value.trim()) {
+    message.warning('请输入搜索关键词')
+    return
+  }
+  
+  searching.value = true
+  saveSearchHistory(searchQuery.value.trim())
+  
+  // 跳转到搜索页面，带上搜索参数
+  router.push({
+    path: '/blog/search',
+    query: { 
+      keyword: searchQuery.value.trim(),
+      type: 'all', // 综合搜索
+      includeTags: true,
+      includeCategories: true,
+      sortBy: 'relevance'
+    }
+  }).catch(err => {
+    if (err.name !== 'NavigationDuplicated') {
+      console.error('路由跳转错误:', err)
+    }
+  }).finally(() => {
+    searching.value = false
+    showSuggestions.value = false
+  })
+}
+
+// 点击外部关闭搜索建议
+const closeSuggestions = (event) => {
+  const searchContainer = document.querySelector('.blog-search')
+  if (searchContainer && !searchContainer.contains(event.target)) {
+    showSuggestions.value = false
+  }
+}
+
+// 监听路由变化
 watch(() => router.currentRoute.value, () => {
-  showDynamicMenu.value = false
-  showSearchSuggestions.value = false
+  showSuggestions.value = false
 })
 
-// 格式化日期
-const formatDate = (dateString) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-}
-
 onMounted(() => {
-  document.addEventListener('click', closeMenuOnOutsideClick)
+  document.addEventListener('click', closeSuggestions)
   loadSearchHistory()
-  // 不要在这里调用任何API请求
 })
 
 // 组件销毁时移除事件监听
 onBeforeUnmount(() => {
-  document.removeEventListener('click', closeMenuOnOutsideClick)
+  document.removeEventListener('click', closeSuggestions)
 })
 </script>

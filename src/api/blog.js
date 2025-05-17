@@ -42,9 +42,13 @@ export function createBlogApiUrl(path) {
   }
   
   // 确保path不以/开头，避免出现双斜杠
-  const cleanPath = path.startsWith('/') ? path.substring(1) : path
+  const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+  
+  // 确保path以/结尾
+  const finalPath = cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`;
+  
   // 使用相对路径，通过开发服务器代理转发
-  const url = `/blog/${cleanPath}`;
+  const url = `/blog/${finalPath}`;
   console.log(`[Blog] 创建URL: ${url}`);
   return url;
 }
@@ -80,40 +84,18 @@ blogAxios.interceptors.response.use(
     console.log(`[Blog] 接收响应:`, {
       URL: response.config.url,
       状态: response.status,
-      响应数据类型: typeof response.data
+      响应数据类型: typeof response.data,
+      响应数据: response.data
     });
     
-    // 检查响应数据格式
-    if (response.data && typeof response.data === 'object') {
-      // 如果是标准格式 {code: 200, data: {...}}
-      if (response.data.code === 200) {
-        return response.data;
-      }
-      
-      // 如果是直接返回的数据对象
-      if (response.data.list || Array.isArray(response.data)) {
-        return {
-          code: 200,
-          message: 'success',
-          data: response.data
-        };
-      }
-    }
-    
-    // 如果响应格式不符合预期，返回错误
-    return Promise.reject({
-      code: 500,
-      message: '响应格式错误',
-      data: response.data
-    });
+    // 直接返回响应数据，不做额外处理
+    return response.data;
   },
   error => {
     console.error('博客API请求错误:', error);
     
     // 处理网络错误
     if (!error.response) {
-      // 移除默认错误提示
-      // message.error('网络连接失败，请检查网络设置');
       return Promise.reject({
         code: 500,
         message: '网络连接失败',
@@ -144,9 +126,6 @@ blogAxios.interceptors.response.use(
       default:
         errorMessage = `请求失败(${status})`;
     }
-    
-    // 移除默认错误提示
-    // message.error(errorMessage);
     
     return Promise.reject({
       code: status,
@@ -344,15 +323,21 @@ export function getTagDynamics(tagId, params) {
 }
 
 /**
- * 获取标签列表
+ * 获取博客标签列表
  * @returns {Promise} 标签列表
  */
 export function getBlogTagList() {
-  return blogAxios.get(createBlogApiUrl('tags'))
-    .catch(error => {
-      console.error('获取博客标签列表失败:', error)
-      throw error
+  console.log('[Blog API] 获取标签列表');
+  
+  return blogAxios.get(createBlogApiUrl('tags/'))
+    .then(response => {
+      console.log('[Blog API] 获取标签列表响应:', response);
+      return response;
     })
+    .catch(error => {
+      console.error('[Blog API] 获取标签列表失败:', error);
+      throw error;
+    });
 }
 
 /**
@@ -512,4 +497,23 @@ export function updateAboutInfo(data) {
       console.error('更新关于页面信息失败:', error)
       throw error
     })
+}
+
+/**
+ * 综合搜索
+ * @param {Object} params 搜索参数
+ * @returns {Promise} 搜索结果
+ */
+export function searchBlog(params) {
+  console.log('[Blog API] 执行搜索, 参数:', params);
+  
+  return blogAxios.get(createBlogApiUrl('search/'), { params })
+    .then(response => {
+      console.log('[Blog API] 搜索响应:', response);
+      return response;
+    })
+    .catch(error => {
+      console.error('[Blog API] 搜索失败:', error);
+      throw error;
+    });
 }
