@@ -1,107 +1,100 @@
 <template>
-  <div class="blog-dynamic">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <h1 class="page-title">动态</h1>
-      <p class="page-description">分享我的生活点滴和思考</p>
-    </div>
+  <div class="blog-dynamic-container">
+    <div class="blog-dynamic">
+      <!-- 页面标题 -->
+      <div class="page-header">
+        <h1 class="page-title">动态</h1>
+        <p class="page-description">分享我的生活点滴和思考</p>
+      </div>
 
-    <!-- 调试信息 -->
-    <div v-if="dynamicList.length === 0 && !loading" class="empty-state">
-      <p>暂无动态内容</p>
-      <a-button @click="refreshList" type="primary" size="small">刷新</a-button>
-      <a-button @click="useMockData" type="success" size="small">使用测试数据</a-button>
-    </div>
+      <!-- 调试信息 -->
+      <div v-if="dynamicList.length === 0 && !loading" class="empty-state">
+        <p>暂无动态内容</p>
+        <a-button @click="refreshList" type="primary" size="small">刷新</a-button>
+        <a-button @click="useMockData" type="success" size="small">使用测试数据</a-button>
+      </div>
 
-    <!-- 动态列表 -->
-    <div v-if="dynamicList.length > 0" class="dynamic-list">
-      <div v-for="(item, index) in dynamicList" :key="item.id || index" class="dynamic-item">
-        <!-- 动态头部 -->
-        <div class="dynamic-header">
-          <router-link :to="`/blog/dynamics/${item.id}`" class="dynamic-title-link">
-            <h3 v-if="item.title" class="dynamic-title">{{item.title}}</h3>
-          </router-link>
-          <div class="dynamic-meta">
-            <span class="dynamic-time">{{ formatDate(item.createTime) }}</span>
-            <span v-if="item.type" class="dynamic-type">{{ item.type }}</span>
-            <span v-if="item.views" class="dynamic-views">
-              <eye-outlined /> {{ item.views }}
-            </span>
-          </div>
-        </div>
-
-        <!-- 动态内容 -->
-        <div class="dynamic-content">
-          <!-- Markdown内容 -->
-          <div v-if="item.content" class="markdown-content" v-html="renderMarkdown(item.content)"></div>
-
-          <!-- 图片展示 -->
-          <div v-if="item.images && item.images.length" class="image-gallery">
-            <a-image
-              v-for="(img, imgIndex) in item.images"
-              :key="imgIndex"
-              :src="img.url"
-              :preview-src-list="item.images.map(i => i.url)"
-              fit="cover"
-              class="gallery-image"
-              :mask="true"
-            />
-          </div>
-
-          <!-- 音频播放器 -->
-          <div v-if="item.audio" class="audio-player">
-            <audio controls :src="item.audio.url" class="audio-element">
-              您的浏览器不支持音频播放
-            </audio>
-          </div>
-
-          <!-- 视频播放器 -->
-          <div v-if="item.video" class="video-player">
-            <video
-              controls
-              :src="item.video.url"
-              :poster="item.video.cover"
-              class="video-element"
-            >
-              您的浏览器不支持视频播放
-            </video>
-          </div>
-        </div>
-
-        <!-- 动态底部 -->
-        <div class="dynamic-footer">
-          <div class="dynamic-actions">
-            <a-button type="text" @click="handleLike(item)">
-              <like-outlined />
-              <span>{{ item.likes || 0 }}</span>
-            </a-button>
-            <a-button type="text" @click="handleComment(item)">
-              <message-outlined />
-              <span>{{ item.comments || 0 }}</span>
-            </a-button>
-            <router-link :to="`/blog/dynamics/${item.id}`" class="view-detail-link">
-              <a-button type="text">
-                <eye-outlined />
-                <span>查看详情</span>
-              </a-button>
+      <!-- 动态列表 -->
+      <div v-if="dynamicList.length > 0" class="dynamic-list">
+        <div v-for="(item, index) in dynamicList" :key="item.id || index" class="dynamic-item">
+          <!-- 动态头部 -->
+          <div class="dynamic-header">
+            <router-link :to="`/blog/dynamics/${item.id}`" class="dynamic-title-link">
+              <h3 v-if="item.title" class="dynamic-title">{{item.title}}</h3>
             </router-link>
+            <div class="dynamic-meta">
+              <span class="dynamic-time">{{ formatDate(item.createTime) }}</span>
+              <span v-if="item.type" class="dynamic-type">{{ item.type }}</span>
+              <span v-if="item.views" class="dynamic-views">
+                <eye-outlined /> {{ item.views }}
+              </span>
+            </div>
+          </div>
+
+          <!-- 动态内容 -->
+          <div class="dynamic-content">
+            <div v-if="item.content" class="markdown-content" v-html="renderMarkdown(item.content)"></div>
+
+            <!-- 图片展示 -->
+            <div v-if="item.images && item.images.length" class="image-gallery">
+              <div v-for="(image, imgIndex) in item.images" :key="imgIndex" class="gallery-image">
+                <img :src="image" :alt="`图片 ${imgIndex + 1}`" />
+              </div>
+            </div>
+
+            <!-- 音频播放器 -->
+            <div v-if="item.audio" class="audio-player">
+              <audio class="audio-element" controls>
+                <source :src="item.audio" type="audio/mpeg">
+                您的浏览器不支持音频播放
+              </audio>
+            </div>
+
+            <!-- 视频播放器 -->
+            <div v-if="item.video" class="video-player">
+              <video class="video-element" controls>
+                <source :src="item.video" type="video/mp4">
+                您的浏览器不支持视频播放
+              </video>
+            </div>
+          </div>
+
+          <!-- 动态底部 -->
+          <div class="dynamic-footer">
+            <div class="dynamic-actions">
+              <a-button type="text" @click="handleLike(item)">
+                <like-outlined />
+                <span>{{ item.likes || 0 }}</span>
+              </a-button>
+              <a-button type="text" @click="handleComment(item)">
+                <message-outlined />
+                <span>{{ item.comments || 0 }}</span>
+              </a-button>
+              <router-link :to="`/blog/dynamics/${item.id}`" class="view-detail-link">
+                <a-button type="text">
+                  <eye-outlined />
+                  <span>查看详情</span>
+                </a-button>
+              </router-link>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 加载更多 -->
-    <div class="load-more">
-      <a-button 
-        type="primary" 
-        :loading="loading" 
-        @click="loadMore"
-        v-if="hasMore"
-      >
-        加载更多
-      </a-button>
-      <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
+      <!-- 加载更多 -->
+      <div class="load-more">
+        <a-button 
+          type="primary" 
+          :loading="loading" 
+          @click="loadMore"
+          v-if="hasMore"
+        >
+          加载更多
+        </a-button>
+        <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
+      </div>
     </div>
+    <SnowfallBg class="snowfall-bg" />
   </div>
 </template>
 
@@ -109,7 +102,7 @@
 import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { message } from 'ant-design-vue'
-import { useRoute } from 'vue-router'
+import SnowfallBg from '@/components/InspiraUI/SnowfallBg.vue'
 import { 
   getBlogDynamics, 
   likeDynamic, 
@@ -378,11 +371,29 @@ onActivated(() => {
 </script>
 
 <style scoped>
+.blog-dynamic-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+}
+
 .blog-dynamic {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem 1rem;
+}
+
+.snowfall-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .page-header {

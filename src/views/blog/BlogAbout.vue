@@ -1,73 +1,76 @@
 <template>
-  <div class="about-container">
-    <div class="about-header">
-      <div class="avatar">
-        <img :src="profile.avatar" alt="LiXD" onerror="this.src='https://ui-avatars.com/api/?name=LiXD&background=random'" />
-      </div>
-      <h1 class="name">{{ profile.name || 'LiXD' }}</h1>
-      <div class="title">{{ profile.title || '全栈开发工程师 / 技术博主' }}</div>
-      <div class="social-links">
-        <a v-if="profile.github" :href="profile.github" target="_blank" class="social-item">
-          <i class="fab fa-github"></i>
-        </a>
-        <a v-if="profile.twitter" :href="profile.twitter" target="_blank" class="social-item">
-          <i class="fab fa-twitter"></i>
-        </a>
-        <a v-if="profile.email" :href="`mailto:${profile.email}`" class="social-item">
-          <i class="fas fa-envelope"></i>
-        </a>
-      </div>
-    </div>
-
-    <div class="about-content">
-      <section class="about-section">
-        <h2 class="section-title">关于我</h2>
-        <div class="section-content">
-          <div v-if="profile.bio" v-html="profile.bio"></div>
-          <div v-else>
-            <p>嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。</p>
-            <p>通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。</p>
-          </div>
+  <WarpBackground>  
+    <div class="about-container">
+      <div class="about-header">
+        <div class="avatar">
+          <img :src="profile.avatar" alt="LiXD" onerror="this.src='https://ui-avatars.com/api/?name=LiXD&background=random'" />
         </div>
-      </section>
+        <h1 class="name">{{ profile.name || 'LiXD' }}</h1>
+        <div class="title">{{ profile.title || '全栈开发工程师 / 技术博主' }}</div>
+        <div class="social-links">
+          <a v-if="profile.github" :href="profile.github" target="_blank" class="social-item">
+            <i class="fab fa-github"></i>
+          </a>
+          <a v-if="profile.twitter" :href="profile.twitter" target="_blank" class="social-item">
+            <i class="fab fa-twitter"></i>
+          </a>
+          <a v-if="profile.email" :href="`mailto:${profile.email}`" class="social-item">
+            <i class="fas fa-envelope"></i>
+          </a>
+        </div>
+      </div>
 
-      <section class="about-section">
-        <h2 class="section-title">技能与专长</h2>
-        <div class="section-content">
-          <div class="skills-grid">
-            <div v-for="(skills, category) in profile.skills || defaultSkills" :key="category" class="skill-category">
-              <h3>{{ category }}</h3>
-              <div class="skill-items">
-                <div v-for="skill in skills" :key="skill" class="skill-item">{{ skill }}</div>
+      <div class="about-content">
+        <section class="about-section">
+          <h2 class="section-title">关于我</h2>
+          <div class="section-content">
+            <div v-if="profile.bio" v-html="profile.bio"></div>
+            <div v-else>
+              <p>嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。</p>
+              <p>通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="about-section">
+          <h2 class="section-title">技能与专长</h2>
+          <div class="section-content">
+            <div class="skills-grid">
+              <div v-for="(skills, category) in profile.skills || defaultSkills" :key="category" class="skill-category">
+                <h3>{{ category }}</h3>
+                <div class="skill-items">
+                  <div v-for="skill in skills" :key="skill" class="skill-item">{{ skill }}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="about-section">
-        <h2 class="section-title">联系我</h2>
-        <div class="section-content">
-          <p>如果你有任何问题或者只是想交个朋友，欢迎随时联系我。</p>
-          <div class="contact-info">
-            <div v-if="profile.email" class="contact-item">
-              <i class="fas fa-envelope"></i>
-              <a :href="`mailto:${profile.email}`">{{ profile.email }}</a>
-            </div>
-            <div v-if="profile.website" class="contact-item">
-              <i class="fas fa-globe"></i>
-              <a :href="profile.website" target="_blank">{{ profile.website }}</a>
+        <section class="about-section">
+          <h2 class="section-title">联系我</h2>
+          <div class="section-content">
+            <p>如果你有任何问题或者只是想交个朋友，欢迎随时联系我。</p>
+            <div class="contact-info">
+              <div v-if="profile.email" class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <a :href="`mailto:${profile.email}`">{{ profile.email }}</a>
+              </div>
+              <div v-if="profile.website" class="contact-item">
+                <i class="fas fa-globe"></i>
+                <a :href="profile.website" target="_blank">{{ profile.website }}</a>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
-  </div>
+  </WarpBackground>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
+import WarpBackground from '@/components/InspiraUI/WarpBackground.vue'
 
 const appStore = useAppStore()
 const profile = ref({
