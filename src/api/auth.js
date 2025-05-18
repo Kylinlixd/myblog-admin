@@ -1,4 +1,5 @@
 import api from '../utils/api'
+import request from '../utils/request'
 
 /**
  * 判断是否在开发环境
@@ -248,33 +249,24 @@ export function getUserInfo() {
  * @returns {Promise<void>}
  */
 export function changePassword(data) {
-  // 开发环境下，模拟密码修改
-  if (shouldUseMockData()) {
-    console.log('[模拟数据] 模拟密码修改')
-    
-    // 简单验证
-    if (!data.oldPassword || !data.newPassword) {
-      return Promise.reject({
-        response: {
-          status: 400,
-          data: {
-            code: 400,
-            message: '请填写完整的密码信息',
-            data: null
-          }
-        }
-      })
-    }
-    
-    // 模拟成功
-    return Promise.resolve({
-      code: 200,
-      message: '密码修改成功',
-      data: null
-    })
+  // 确保发送正确的数据格式
+  const requestData = {
+    old_password: data.oldPassword,  // 修改字段名以匹配后端期望的格式
+    new_password: data.newPassword   // 修改字段名以匹配后端期望的格式
   }
   
-  return api.admin.put('/api/auth/password/', data)
+  console.log('发送修改密码请求:', requestData) // 添加日志
+  
+  // 使用 api 工具发送请求
+  return api.admin.put('/api/auth/password/', requestData)
+    .then(response => {
+      console.log('修改密码响应:', response) // 添加日志
+      return response
+    })
+    .catch(error => {
+      console.error('[API错误] 修改密码失败:', error)
+      throw error
+    })
 }
 
 /**

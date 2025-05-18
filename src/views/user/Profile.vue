@@ -44,12 +44,12 @@
             <span class="value">{{ userInfo.bio || '未设置' }}</span>
           </div>
           <div class="info-item">
-            <span class="label">注册时间：</span>
-            <span class="value">{{ formatDate(userInfo.createdAt) }}</span>
+            <span class="label">创建时间：</span>
+            <span class="value">{{ formatDate(userInfo.created_at) }}</span>
           </div>
           <div class="info-item">
-            <span class="label">最后更新：</span>
-            <span class="value">{{ formatDate(userInfo.updatedAt) }}</span>
+            <span class="label">更新时间：</span>
+            <span class="value">{{ formatDate(userInfo.updated_at) }}</span>
           </div>
         </div>
       </div>
@@ -206,7 +206,15 @@ const cancelProfileEdit = () => {
 const formatDate = (dateString) => {
   if (!dateString) return '未知'
   const date = new Date(dateString)
-  return date.toLocaleString()
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
 }
 
 // 头像上传前的验证
@@ -279,21 +287,40 @@ const profileRules = {
 // 密码表单验证规则
 const passwordRules = {
   oldPassword: [
-    { required: true, message: '请输入原密码', trigger: 'blur' }
+    { required: true, message: '请输入原密码', trigger: 'submit' }
   ],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, message: '新密码不能少于6个字符', trigger: 'blur' }
+    { required: true, message: '请输入新密码', trigger: 'submit' },
+    { min: 6, message: '新密码长度不能少于6个字符', trigger: 'submit' },
+    { 
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback()
+        } else if (value.length < 6) {
+          callback(new Error('密码长度不能少于6个字符'))
+        } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/.test(value)) {
+          callback(new Error('密码必须包含大小写字母和数字'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'submit' 
+    }
   ],
   confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
-    { validator: (rule, value, callback) => {
-      if (value !== passwordForm.newPassword) {
-        callback(new Error('两次输入的密码不一致'))
-      } else {
-        callback()
-      }
-    }, trigger: 'blur' }
+    { required: true, message: '请确认新密码', trigger: 'submit' },
+    { 
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback()
+        } else if (value !== passwordForm.newPassword) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      }, 
+      trigger: 'submit' 
+    }
   ]
 }
 
@@ -302,21 +329,73 @@ const handlePasswordChange = async () => {
   if (!passwordFormRef.value) return
   
   try {
+    // 验证表单
     await passwordFormRef.value.validate()
+    
+    // 检查密码是否为空
+    if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      return
+    }
     
     loading.value = true
     
-    // 调用修改密码的API
-    await changePassword({
+    console.log('准备发送修改密码请求:', {
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword
     })
     
-    AntMessage.success('密码修改成功')
-    resetForm()
+    // 调用修改密码的API
+    const result = await changePassword({
+      oldPassword: passwordForm.oldPassword.trim(),
+      newPassword: passwordForm.newPassword.trim()
+    })
+    
+    console.log('修改密码响应:', result)
+    
+    // 处理成功响应
+    if (result.status === 200 || result.status === 204) {
+      AntMessage.success('密码修改成功')
+      resetForm()
+    } else {
+      AntMessage.error(result.message || '修改密码失败')
+    }
   } catch (error) {
     console.error('修改密码失败:', error)
-    AntMessage.error(error.message || '修改密码失败')
+    
+    // 处理表单验证错误
+    if (error.name === 'ValidationError') {
+      return
+    }
+    
+    // 处理后端返回的错误
+    if (error.response?.data) {
+      const errorData = error.response.data
+      
+      // 处理数组格式的验证错误
+      if (Array.isArray(errorData)) {
+        const errorMessages = errorData.map(item => {
+          const fieldName = item.name?.[0] || ''
+          const errorMsg = item.errors?.[0] || ''
+          return `${fieldName}: ${errorMsg}`
+        }).join('\n')
+        
+        if (errorMessages) {
+          AntMessage.error(errorMessages)
+          return
+        }
+      }
+      
+      // 处理对象格式的错误
+      if (errorData.message) {
+        AntMessage.error(errorData.message)
+      } else if (errorData.detail) {
+        AntMessage.error(errorData.detail)
+      } else {
+        AntMessage.error('修改密码失败，请检查输入')
+      }
+    } else {
+      AntMessage.error('修改密码失败，请稍后重试')
+    }
   } finally {
     loading.value = false
   }
@@ -324,7 +403,13 @@ const handlePasswordChange = async () => {
 
 // 重置密码表单
 const resetForm = () => {
-  passwordFormRef.value.resetFields()
+  if (passwordFormRef.value) {
+    passwordFormRef.value.resetFields()
+  }
+  // 手动清空表单数据
+  passwordForm.oldPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.confirmPassword = ''
 }
 
 onMounted(() => {
