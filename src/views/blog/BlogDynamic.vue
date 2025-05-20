@@ -34,11 +34,21 @@
           <!-- 动态内容 -->
           <div class="dynamic-content">
             <div v-if="item.content" class="markdown-content" v-html="renderMarkdown(item.content)"></div>
+            <div v-if="item.content && item.content.length > 200" class="read-more">
+              <router-link :to="`/blog/dynamics/${item.id}`">
+                阅读全文
+              </router-link>
+            </div>
 
             <!-- 图片展示 -->
             <div v-if="item.images && item.images.length" class="image-gallery">
-              <div v-for="(image, imgIndex) in item.images" :key="imgIndex" class="gallery-image">
+              <div v-for="(image, imgIndex) in item.images.slice(0, 3)" :key="imgIndex" class="gallery-image">
                 <img :src="image" :alt="`图片 ${imgIndex + 1}`" />
+              </div>
+              <div v-if="item.images.length > 3" class="more-images">
+                <router-link :to="`/blog/dynamics/${item.id}`">
+                  查看全部 {{ item.images.length }} 张图片
+                </router-link>
               </div>
             </div>
 
@@ -62,8 +72,12 @@
           <!-- 动态底部 -->
           <div class="dynamic-footer">
             <div class="dynamic-actions">
-              <a-button type="text" @click="handleLike(item)">
-                <like-outlined />
+              <a-button 
+                type="text" 
+                @click="handleLike(item)"
+                :class="{ 'liked': item.liked }"
+              >
+                <like-outlined :style="{ color: item.liked ? '#1890ff' : 'inherit' }" />
                 <span>{{ item.likes || 0 }}</span>
               </a-button>
               <a-button type="text" @click="handleComment(item)">
@@ -138,7 +152,12 @@ const email = ref('')
 
 // 渲染Markdown内容
 const renderMarkdown = (content) => {
-  return md.render(content || '')
+  if (!content) return ''
+  // 移除HTML标签
+  const plainText = content.replace(/<[^>]+>/g, '')
+  // 截取前200个字符
+  const truncatedText = plainText.length > 200 ? plainText.slice(0, 200) + '...' : plainText
+  return md.render(truncatedText)
 }
 
 // 格式化日期
@@ -281,12 +300,18 @@ const handleLike = async (item) => {
   
   item.isLiking = true
   try {
-    // 使用likeDynamic函数替代原生fetch
-    const result = await likeDynamic(item.id)
-    item.likes = result.likes || (item.likes + 1) // 更新点赞数
+    const response = await likeDynamic(item.id)
+    if (response.code === 200) {
+      // 更新点赞状态和数量
+      item.liked = response.data.liked
+      item.likes = response.data.like_count
+      message.success(item.liked ? '点赞成功' : '取消点赞成功')
+    } else {
+      message.error(response.message || '操作失败')
+    }
   } catch (error) {
-    message.error('点赞失败')
     console.error('点赞失败:', error)
+    message.error(error.response?.data?.message || '点赞失败')
   } finally {
     item.isLiking = false
   }
@@ -472,6 +497,23 @@ onActivated(() => {
   font-size: 1rem;
   line-height: 1.6;
   color: #333;
+  margin-bottom: 1rem;
+}
+
+.read-more {
+  margin-top: 0.5rem;
+  text-align: right;
+}
+
+.read-more a {
+  color: #1890ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.read-more a:hover {
+  color: #40a9ff;
+  text-decoration: underline;
 }
 
 .image-gallery {
@@ -508,7 +550,27 @@ onActivated(() => {
 .dynamic-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
+}
+
+.dynamic-actions .ant-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  transition: all 0.3s;
+}
+
+.dynamic-actions .ant-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.dynamic-actions .liked {
+  color: #1890ff;
+}
+
+.dynamic-actions .liked:hover {
+  background-color: rgba(24, 144, 255, 0.1);
 }
 
 .view-detail-link {
@@ -529,6 +591,24 @@ onActivated(() => {
   text-align: center;
   padding: 3rem;
   color: #666;
+}
+
+.more-images {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+.more-images a {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.more-images a:hover {
+  color: #40a9ff;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
