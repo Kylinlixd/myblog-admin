@@ -379,7 +379,10 @@ export const likeDynamic = async (id) => {
  */
 export function commentDynamic(id, data) {
   console.log('[Blog API] 发表评论, ID:', id, '数据:', data);
-  return blogAxios.post(createBlogApiUrl(`dynamics/${id}/comments/`), data)
+  return blogAxios.post(createBlogApiUrl('comments/'), {
+    ...data,
+    dynamic_id: id
+  })
     .then(response => {
       console.log('[Blog API] 评论响应:', response);
       return response;
@@ -398,19 +401,14 @@ export function commentDynamic(id, data) {
  */
 export function getDynamicComments(id, params) {
   console.log('[Blog API] 获取评论, ID:', id, '参数:', params);
-  return blogAxios.get(createBlogApiUrl(`dynamics/${id}/comments/`), { params })
+  return blogAxios.get(createBlogApiUrl('comments/'), { 
+    params: {
+      ...params,
+      dynamic_id: id
+    }
+  })
     .then(response => {
       console.log('[Blog API] 获取评论响应:', response);
-      
-      // 处理不同的响应格式
-      if (response && typeof response === 'object') {
-        if (response.code === 200 && response.data) {
-          return response.data;
-        }
-        if (response.list || Array.isArray(response)) {
-          return response;
-        }
-      }
       return response;
     })
     .catch(error => {

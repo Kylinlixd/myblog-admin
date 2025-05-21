@@ -33,6 +33,85 @@
           </router-link>
         </div>
       </div>
+
+      <!-- 评论列表 -->
+      <div class="comment-section">
+        <div class="comment-header">
+          <h3>评论 ({{ dynamic.comments || 0 }})</h3>
+        </div>
+        
+        <!-- 评论表单 -->
+        <div class="comment-form">
+          <a-form
+            ref="commentForm"
+            :model="{ nickname, email, content: commentContent }"
+            :rules="commentRules"
+            layout="vertical"
+          >
+            <a-form-item label="昵称（选填）" name="nickname">
+              <a-input 
+                v-model:value="nickname" 
+                placeholder="请输入您的昵称，不填则显示为匿名用户" 
+              />
+            </a-form-item>
+            <a-form-item label="邮箱（选填）" name="email">
+              <a-input 
+                v-model:value="email" 
+                placeholder="请输入您的邮箱，用于接收回复通知" 
+              />
+            </a-form-item>
+            <a-form-item label="评论内容" name="content">
+              <a-textarea
+                v-model:value="commentContent"
+                placeholder="请输入评论内容"
+                :rows="4"
+                :maxLength="500"
+                show-count
+              />
+            </a-form-item>
+            <a-form-item>
+              <a-button
+                type="primary"
+                :loading="isSubmittingComment"
+                @click="submitComment"
+              >
+                发表评论
+              </a-button>
+            </a-form-item>
+          </a-form>
+        </div>
+
+        <!-- 评论列表 -->
+        <div class="comment-list">
+          <div v-if="commentList && commentList.length > 0">
+            <div
+              v-for="comment in commentList"
+              :key="comment.id"
+              class="comment-item"
+            >
+              <div class="comment-user">
+                <a-avatar :src="comment.avatar || '/default-avatar.png'" />
+                <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                <span class="time">{{ formatDate(comment.createTime) }}</span>
+              </div>
+              <div class="comment-content">{{ comment.content }}</div>
+            </div>
+          </div>
+          <div v-else class="no-comments">
+            暂无评论，快来发表第一条评论吧！
+          </div>
+        </div>
+
+        <!-- 评论分页 -->
+        <div v-if="commentList && commentList.length > 0" class="comment-pagination">
+          <a-pagination
+            v-model:current="commentPage"
+            :total="commentTotal"
+            :pageSize="commentPageSize"
+            @change="handleCommentPageChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -40,12 +119,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getBlogDynamicDetail, increaseDynamicView } from '@/api/blog'
+import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-light.css'
+import { message } from 'ant-design-vue'
 
 // 创建 Markdown 渲染器
 const md = new MarkdownIt({
@@ -72,8 +152,111 @@ const appStore = useAppStore()
 const dynamic = ref(null)
 const loading = ref(true)
 
+// 评论相关
+const commentForm = ref(null)
+const commentContent = ref('')
+const nickname = ref('')
+const email = ref('')
+const isSubmittingComment = ref(false)
+const commentList = ref([])
+const commentPage = ref(1)
+const commentPageSize = ref(10)
+const commentTotal = ref(0)
+
+// 评论表单验证规则
+const commentRules = {
+  content: [
+    { required: true, message: '请输入评论内容', trigger: 'blur' },
+    { min: 1, max: 500, message: '评论内容长度在1-500个字符之间', trigger: 'blur' }
+  ],
+  nickname: [
+    { max: 50, message: '昵称长度不能超过50个字符', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ]
+}
+
 const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
+}
+
+// 获取评论列表
+const fetchComments = async () => {
+  if (!dynamic.value) return
+  
+  try {
+    const result = await getDynamicComments(dynamic.value.id, {
+      page: commentPage.value,
+      pageSize: commentPageSize.value
+    })
+    
+    if (result && result.code === 200) {
+      commentList.value = result.data.list || []
+      commentTotal.value = result.data.total || 0
+      commentPageSize.value = result.data.pageSize || 10
+    } else {
+      console.error('获取评论列表失败:', result?.message)
+      message.error('获取评论列表失败')
+    }
+  } catch (error) {
+    message.error('获取评论失败')
+    console.error('获取评论失败:', error)
+  }
+}
+
+// 提交评论
+const submitComment = async () => {
+  if (!dynamic.value) return
+  
+  try {
+    // 验证表单
+    await commentForm.value.validate()
+    
+    if (isSubmittingComment.value) return
+    isSubmittingComment.value = true
+    
+    const commentData = {
+      dynamic_id: dynamic.value.id,
+      content: commentContent.value,
+      nickname: nickname.value || '匿名用户',
+      email: email.value || ''
+    }
+    
+    console.log('提交评论数据:', commentData)
+    
+    const result = await commentDynamic(dynamic.value.id, commentData)
+    
+    if (result.code === 200) {
+      message.success('评论成功')
+      commentContent.value = ''
+      nickname.value = ''
+      email.value = ''
+      // 重新获取评论列表
+      commentPage.value = 1
+      await fetchComments()
+      // 更新评论数
+      dynamic.value.comments = (dynamic.value.comments || 0) + 1
+    } else {
+      message.error(result.message || '评论失败')
+    }
+  } catch (error) {
+    if (error.errorFields) {
+      // 表单验证错误
+      message.error('请检查评论内容')
+    } else {
+      console.error('评论失败:', error)
+      message.error(error.response?.data?.message || '评论失败，请稍后重试')
+    }
+  } finally {
+    isSubmittingComment.value = false
+  }
+}
+
+// 评论分页
+const handleCommentPageChange = async (page) => {
+  commentPage.value = page
+  await fetchComments()
 }
 
 const fetchDynamicDetail = async () => {
@@ -88,6 +271,8 @@ const fetchDynamicDetail = async () => {
       dynamic.value = response.data
       // 增加阅读量
       await increaseDynamicView(dynamicId)
+      // 加载评论列表
+      await fetchComments()
     } else {
       console.error('获取文章详情失败:', response.message)
       appStore.setLoadingError('获取文章详情失败，请刷新重试')
@@ -511,5 +696,74 @@ onMounted(() => {
 
 :deep(.hljs-strong) {
   font-weight: bold;
+}
+
+/* 评论区域样式 */
+.comment-section {
+  margin-top: 40px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.comment-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.comment-form {
+  margin-bottom: 30px;
+}
+
+.comment-list {
+  margin-bottom: 20px;
+}
+
+.comment-item {
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-user .nickname {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.comment-user .time {
+  margin-left: 12px;
+  color: #999;
+  font-size: 12px;
+}
+
+.comment-content {
+  color: #666;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.no-comments {
+  text-align: center;
+  color: #999;
+  padding: 20px 0;
+}
+
+.comment-pagination {
+  text-align: center;
+  margin-top: 20px;
 }
 </style> 

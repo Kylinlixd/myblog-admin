@@ -92,6 +92,85 @@
               </router-link>
             </div>
           </div>
+
+          <!-- 评论列表 -->
+          <div v-if="selectedDynamic && selectedDynamic.id === item.id" class="comment-section">
+            <div class="comment-header">
+              <h3>评论 ({{ item.comments || 0 }})</h3>
+            </div>
+            
+            <!-- 评论表单 -->
+            <div class="comment-form">
+              <a-form
+                ref="commentForm"
+                :model="{ nickname, email, content: commentContent }"
+                :rules="commentRules"
+                layout="vertical"
+              >
+                <a-form-item label="昵称（选填）" name="nickname">
+                  <a-input 
+                    v-model:value="nickname" 
+                    placeholder="请输入您的昵称，不填则显示为匿名用户" 
+                  />
+                </a-form-item>
+                <a-form-item label="邮箱（选填）" name="email">
+                  <a-input 
+                    v-model:value="email" 
+                    placeholder="请输入您的邮箱，用于接收回复通知" 
+                  />
+                </a-form-item>
+                <a-form-item label="评论内容" name="content">
+                  <a-textarea
+                    v-model:value="commentContent"
+                    placeholder="请输入评论内容"
+                    :rows="4"
+                    :maxLength="500"
+                    show-count
+                  />
+                </a-form-item>
+                <a-form-item>
+                  <a-button
+                    type="primary"
+                    :loading="item.isSubmittingComment"
+                    @click="submitComment(item)"
+                  >
+                    发表评论
+                  </a-button>
+                </a-form-item>
+              </a-form>
+            </div>
+
+            <!-- 评论列表 -->
+            <div class="comment-list">
+              <div v-if="item.commentList && item.commentList.length > 0">
+                <div
+                  v-for="comment in item.commentList"
+                  :key="comment.id"
+                  class="comment-item"
+                >
+                  <div class="comment-user">
+                    <a-avatar :src="comment.avatar || '/default-avatar.png'" />
+                    <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                    <span class="time">{{ formatDate(comment.createTime) }}</span>
+                  </div>
+                  <div class="comment-content">{{ comment.content }}</div>
+                </div>
+              </div>
+              <div v-else class="no-comments">
+                暂无评论，快来发表第一条评论吧！
+              </div>
+            </div>
+
+            <!-- 评论分页 -->
+            <div v-if="item.commentList && item.commentList.length > 0" class="comment-pagination">
+              <a-pagination
+                v-model:current="item.commentPage"
+                :total="item.commentTotal"
+                :pageSize="item.commentPageSize"
+                @change="handleCommentPageChange"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -149,6 +228,16 @@ const fetchedPages = ref(new Set()) // 用于跟踪已请求的页码
 const commentContent = ref('')
 const nickname = ref('')
 const email = ref('')
+
+// 选中的动态
+const selectedDynamic = ref(null)
+
+// 评论分页相关
+const handleCommentPageChange = async (page) => {
+  if (!selectedDynamic.value) return
+  selectedDynamic.value.commentPage = page
+  await fetchComments(selectedDynamic.value)
+}
 
 // 渲染Markdown内容
 const renderMarkdown = (content) => {
@@ -320,14 +409,25 @@ const handleLike = async (item) => {
 // 获取评论
 const fetchComments = async (item) => {
   if (item.isLoadingComments) return
-  if (item.commentsLoaded) return
   
   item.isLoadingComments = true
   try {
-    // 使用getDynamicComments函数替代原生fetch
-    const result = await getDynamicComments(item.id, { page: 1, pageSize: 10 })
-    item.commentList = result.list || []
-    item.commentsLoaded = true
+    const result = await getDynamicComments(item.id, {
+      page: item.commentPage || 1,
+      pageSize: item.commentPageSize || 10
+    })
+    
+    if (result && result.code === 200 && result.data) {
+      // 直接使用后端返回的评论列表数据
+      item.commentList = result.data.list || []
+      item.commentTotal = result.data.total || 0
+      item.commentPageSize = result.data.pageSize || 10
+      item.commentsLoaded = true
+      console.log('评论列表数据:', item.commentList)
+    } else {
+      console.error('获取评论列表失败:', result?.message)
+      message.error('获取评论列表失败')
+    }
   } catch (error) {
     message.error('获取评论失败')
     console.error('获取评论失败:', error)
@@ -336,52 +436,91 @@ const fetchComments = async (item) => {
   }
 }
 
-// 处理评论按钮点击
-const handleComment = (item) => {
-  // 如果评论未加载，加载评论
-  if (!item.commentsLoaded) {
-    fetchComments(item)
-  }
-  // 这里可以显示评论表单或评论列表
-  // 根据实际UI设计实现
-}
-
-// 提交评论
-const submitComment = async (item) => {
-  if (!commentContent.value.trim()) {
-    message.warning('评论内容不能为空')
+// 修改handleComment函数
+const handleComment = async (item) => {
+  // 如果点击的是当前选中的动态，则关闭评论列表
+  if (selectedDynamic.value && selectedDynamic.value.id === item.id) {
+    selectedDynamic.value = null
     return
   }
   
-  if (item.isSubmittingComment) return
-  item.isSubmittingComment = true
-  
+  // 选中新的动态并加载评论
+  selectedDynamic.value = item
+  if (!item.commentsLoaded) {
+    await fetchComments(item)
+  }
+}
+
+// 修改submitComment函数
+const submitComment = async (item) => {
   try {
-    // 使用commentDynamic函数替代原生fetch
-    const result = await commentDynamic(item.id, {
+    // 验证表单
+    await commentForm.value.validate()
+    
+    if (item.isSubmittingComment) return
+    item.isSubmittingComment = true
+    
+    const commentData = {
+      dynamic_id: item.id,
       content: commentContent.value,
       nickname: nickname.value || '匿名用户',
       email: email.value || ''
-    })
+    }
     
-    // 更新评论列表
-    if (result.success) {
-      fetchComments(item) // 重新获取评论列表
-      commentContent.value = '' // 清空评论内容
+    console.log('提交评论数据:', commentData)
+    
+    const result = await commentDynamic(item.id, commentData)
+    
+    if (result.code === 200) {
       message.success('评论成功')
+      commentContent.value = ''
+      nickname.value = ''
+      email.value = ''
+      // 重新获取评论列表
+      item.commentPage = 1
+      await fetchComments(item)
+      // 更新评论数
+      item.comments = (item.comments || 0) + 1
+    } else {
+      message.error(result.message || '评论失败')
     }
   } catch (error) {
-    message.error('评论失败')
-    console.error('评论失败:', error)
+    if (error.errorFields) {
+      // 表单验证错误
+      message.error('请检查评论内容')
+    } else {
+      console.error('评论失败:', error)
+      message.error(error.response?.data?.message || '评论失败，请稍后重试')
+    }
   } finally {
     item.isSubmittingComment = false
   }
+}
+
+// 修改评论表单部分
+const commentForm = ref(null)
+const commentRules = {
+  content: [
+    { required: true, message: '请输入评论内容', trigger: 'blur' },
+    { min: 1, max: 500, message: '评论内容长度在1-500个字符之间', trigger: 'blur' }
+  ],
+  nickname: [
+    { max: 50, message: '昵称长度不能超过50个字符', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ]
 }
 
 // 使用模拟数据进行测试
 const useMockData = () => {
   dynamicList.value = getMockDynamics()
   hasMore.value = false
+}
+
+// 修改评论列表的显示逻辑
+const isCommentSectionVisible = (item) => {
+  return selectedDynamic.value && selectedDynamic.value.id === item.id
 }
 
 onMounted(() => {
@@ -631,5 +770,73 @@ onActivated(() => {
   .image-gallery {
     grid-template-columns: 1fr;
   }
+}
+
+.comment-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.comment-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.comment-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.comment-form {
+  margin-bottom: 30px;
+}
+
+.comment-list {
+  margin-bottom: 20px;
+}
+
+.comment-item {
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-user .nickname {
+  margin-left: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.comment-user .time {
+  margin-left: 12px;
+  color: #999;
+  font-size: 12px;
+}
+
+.comment-content {
+  color: #666;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.no-comments {
+  text-align: center;
+  color: #999;
+  padding: 20px 0;
+}
+
+.comment-pagination {
+  text-align: center;
+  margin-top: 20px;
 }
 </style>

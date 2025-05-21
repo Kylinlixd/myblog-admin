@@ -87,7 +87,7 @@ import SearchForm from '../../components/common/SearchForm.vue'
 // 表格列配置
 const columns = [
   { label: '评论内容', prop: 'content', slot: 'content', width: '300px' },
-  { label: '评论者', prop: 'author', width: '120px' },
+  { label: '评论者', prop: 'nickname', width: '120px' },
   { label: '邮箱', prop: 'email', width: '180px' },
   { label: '状态', prop: 'status', slot: 'status', width: '100px' },
   { label: '评论时间', prop: 'createTime', width: '180px' },
@@ -132,44 +132,19 @@ const getComments = async () => {
     
     console.log('获取评论列表响应:', response);
     
-    if (response) {
-      // 如果response是一个数组，适配为标准格式
-      if (Array.isArray(response)) {
-        comments.value = response;
-        total.value = response.length;
-      } 
-      // 如果有list字段，使用标准格式
-      else if (response.list) {
-        comments.value = response.list;
-        total.value = response.total || response.list.length;
-      } 
-      // 其他情况尝试检查是否有items等字段
-      else if (response.items) {
-        comments.value = response.items;
-        total.value = response.total || response.count || response.items.length;
-      }
-      // 如果都不是，尝试直接使用响应
-      else if (typeof response === 'object') {
-        console.warn('响应格式不标准，尝试直接使用');
-        comments.value = [response];
-        total.value = 1;
-      }
-      else {
-        console.error('未知的响应格式:', response);
-        message.error('获取评论列表失败: 响应格式异常');
-        comments.value = [];
-        total.value = 0;
-      }
-      
+    if (response && response.code === 200 && response.data) {
+      // 使用标准响应格式
+      comments.value = response.data.list || [];
+      total.value = response.data.total || 0;
       console.log('评论列表数据处理完成, 共', comments.value.length, '条记录');
     } else {
-      console.error('评论数据为空:', response)
-      message.error('获取评论列表失败: 响应为空')
+      console.error('评论数据为空或格式不正确:', response);
+      message.error('获取评论列表失败: 响应格式异常');
       comments.value = [];
       total.value = 0;
     }
   } catch (error) {
-    console.error('获取评论列表失败:', error)
+    console.error('获取评论列表失败:', error);
     
     // 检查是否是认证错误
     if (error.message && (
@@ -177,15 +152,15 @@ const getComments = async () => {
       error.message.includes('未登录') ||
       error.response?.status === 401
     )) {
-      message.error('登录已过期，请重新登录')
+      message.error('登录已过期，请重新登录');
       setTimeout(() => {
-        router.push('/login')
-      }, 1500)
+        router.push('/login');
+      }, 1500);
     } else {
-      message.error('获取评论列表失败: ' + (error.message || '未知错误'))
+      message.error('获取评论列表失败: ' + (error.message || '未知错误'));
     }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -288,6 +263,21 @@ const getStatusText = (status) => {
     rejected: '已拒绝'
   }
   return map[status] || status
+}
+
+// 格式化日期
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
 }
 
 const router = useRouter()
