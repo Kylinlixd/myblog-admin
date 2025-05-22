@@ -191,7 +191,9 @@ const fetchComments = async () => {
       pageSize: commentPageSize.value
     })
     
-    if (result && result.code === 200) {
+    console.log('获取评论列表响应:', result)
+    
+    if (result && result.code === 200 && result.data) {
       commentList.value = result.data.list || []
       commentTotal.value = result.data.total || 0
       commentPageSize.value = result.data.pageSize || 10
@@ -200,8 +202,8 @@ const fetchComments = async () => {
       message.error('获取评论列表失败')
     }
   } catch (error) {
-    message.error('获取评论失败')
     console.error('获取评论失败:', error)
+    message.error('获取评论失败')
   }
 }
 
@@ -227,8 +229,9 @@ const submitComment = async () => {
     
     const result = await commentDynamic(dynamic.value.id, commentData)
     
-    if (result.code === 200) {
+    if (result && result.code === 200) {
       message.success('评论成功')
+      // 清空表单
       commentContent.value = ''
       nickname.value = ''
       email.value = ''
@@ -238,7 +241,7 @@ const submitComment = async () => {
       // 更新评论数
       dynamic.value.comments = (dynamic.value.comments || 0) + 1
     } else {
-      message.error(result.message || '评论失败')
+      message.error(result?.message || '评论失败')
     }
   } catch (error) {
     if (error.errorFields) {

@@ -412,27 +412,49 @@ const fetchComments = async (item) => {
   
   item.isLoadingComments = true
   try {
+    console.log(`正在获取ID为${item.id}的动态评论...`);
     const result = await getDynamicComments(item.id, {
       page: item.commentPage || 1,
       pageSize: item.commentPageSize || 10
     })
     
     if (result && result.code === 200 && result.data) {
-      // 直接使用后端返回的评论列表数据
-      item.commentList = result.data.list || []
-      item.commentTotal = result.data.total || 0
-      item.commentPageSize = result.data.pageSize || 10
-      item.commentsLoaded = true
-      console.log('评论列表数据:', item.commentList)
+      // 检查返回的数据格式
+      console.log('获取到评论数据结构:', JSON.stringify(result.data));
+      
+      // 兼容不同的返回格式
+      if (Array.isArray(result.data)) {
+        // 如果直接返回数组
+        item.commentList = result.data;
+        item.commentTotal = result.data.length;
+      } else if (result.data.list) {
+        // 返回标准格式
+        item.commentList = result.data.list || [];
+        item.commentTotal = result.data.total || 0;
+        item.commentPageSize = result.data.pageSize || 10;
+      } else {
+        // 其他可能的格式
+        item.commentList = [];
+        item.commentTotal = 0;
+      }
+      
+      item.commentsLoaded = true;
+      console.log('评论列表数据处理完成:', item.commentList);
     } else {
-      console.error('获取评论列表失败:', result?.message)
-      message.error('获取评论列表失败')
+      console.error('获取评论列表响应格式错误:', result);
+      message.error('获取评论列表失败：响应格式错误');
+      // 设置空数据避免UI错误
+      item.commentList = [];
+      item.commentTotal = 0;
     }
   } catch (error) {
-    message.error('获取评论失败')
-    console.error('获取评论失败:', error)
+    console.error('获取评论异常:', error);
+    message.error(error?.message || '获取评论失败，请稍后重试');
+    // 设置空数据避免UI错误
+    item.commentList = [];
+    item.commentTotal = 0;
   } finally {
-    item.isLoadingComments = false
+    item.isLoadingComments = false;
   }
 }
 
