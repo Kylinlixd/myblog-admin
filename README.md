@@ -492,3 +492,220 @@
 - 增加了令牌格式检查和标准化处理
 - 实现了基于refreshToken的令牌刷新机制
 - 增强了401错误处理流程 
+
+# 博客管理系统
+
+## 项目介绍
+
+这是一个基于Vue 3 + Ant Design Vue的博客管理系统，提供博客内容管理、用户管理、评论管理等功能。
+
+## 技术栈
+
+- 前端框架：Vue 3
+- UI组件库：Ant Design Vue
+- 状态管理：Pinia
+- 路由：Vue Router
+- HTTP客户端：Axios
+- 构建工具：Vite
+
+## 开发环境要求
+
+- Node.js >= 16.0.0
+- npm >= 7.0.0 或 yarn >= 1.22.0
+- Python >= 3.8 (后端API)
+
+## 开发环境搭建
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/yourusername/myblog-admin.git
+cd myblog-admin
+```
+
+### 2. 安装依赖
+
+```bash
+# 使用npm
+npm install
+
+# 或使用yarn
+yarn install
+```
+
+### 3. 配置环境变量
+
+复制`.env.example`文件为`.env.development`，并根据需要修改配置：
+
+```bash
+cp .env.example .env.development
+```
+
+主要配置项：
+```
+# 开发环境配置
+VITE_APP_TITLE=博客管理系统(开发)
+
+# API配置（只用于管理后台）
+VITE_API_BASE_URL=
+# 前台博客API配置（明确区分）
+VITE_BLOG_API_BASE_URL=/blog
+VITE_USE_MOCK=false
+
+# 调试配置
+VITE_APP_DEBUG=true
+```
+
+### 4. 启动开发服务器
+
+```bash
+# 使用npm
+npm run dev
+
+# 或使用yarn
+yarn dev
+```
+
+开发服务器将在 http://localhost:5173 启动。
+
+## 项目结构
+
+```
+myblog-admin/
+├── public/                 # 静态资源
+├── src/                    # 源代码
+│   ├── api/                # API接口
+│   ├── assets/             # 资源文件
+│   ├── components/         # 公共组件
+│   ├── layouts/            # 布局组件
+│   ├── router/             # 路由配置
+│   ├── stores/             # 状态管理
+│   ├── utils/              # 工具函数
+│   ├── views/              # 页面组件
+│   ├── App.vue             # 根组件
+│   └── main.js             # 入口文件
+├── .env                    # 环境变量
+├── .env.development        # 开发环境变量
+├── .env.production         # 生产环境变量
+├── index.html              # HTML模板
+├── package.json            # 项目配置
+├── vite.config.js          # Vite配置
+└── README.md               # 项目文档
+```
+
+## 开发规范
+
+### 1. 代码风格
+
+- 使用ESLint进行代码检查
+- 使用Prettier进行代码格式化
+- 遵循Vue 3组合式API风格指南
+
+### 2. 命名规范
+
+- 组件名：使用PascalCase（如`BlogDynamic.vue`）
+- 文件名：使用kebab-case（如`blog-dynamic.vue`）
+- 变量名：使用camelCase（如`dynamicList`）
+- 常量名：使用UPPER_SNAKE_CASE（如`API_BASE_URL`）
+
+### 3. 注释规范
+
+- 组件顶部添加功能说明
+- 复杂逻辑添加详细注释
+- API接口添加参数和返回值说明
+
+## 构建部署
+
+### 1. 构建生产版本
+
+```bash
+# 使用npm
+npm run build
+
+# 或使用yarn
+yarn build
+```
+
+构建产物将生成在`dist`目录。
+
+### 2. 预览生产版本
+
+```bash
+# 使用npm
+npm run preview
+
+# 或使用yarn
+yarn preview
+```
+
+### 3. 部署到服务器
+
+#### 使用Nginx部署
+
+1. 安装Nginx
+2. 配置Nginx：
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    root /path/to/myblog-admin/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # API代理配置
+    location /api/ {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /blog/ {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+3. 重启Nginx：
+
+```bash
+sudo nginx -s reload
+```
+
+## 常见问题
+
+### 1. 开发环境API请求失败
+
+- 检查后端服务是否正常运行
+- 确认API代理配置是否正确
+- 查看浏览器控制台网络请求
+
+### 2. 构建失败
+
+- 检查Node.js版本是否符合要求
+- 清除node_modules并重新安装依赖
+- 检查是否有语法错误或类型错误
+
+### 3. 部署后页面404
+
+- 检查Nginx配置是否正确
+- 确认构建产物是否正确部署
+- 检查路由配置是否正确
+
+## 贡献指南
+
+1. Fork本仓库
+2. 创建特性分支：`git checkout -b feature/your-feature`
+3. 提交更改：`git commit -m 'Add some feature'`
+4. 推送到分支：`git push origin feature/your-feature`
+5. 提交Pull Request
+
+## 许可证
+
+MIT License 
