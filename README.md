@@ -542,7 +542,7 @@ cp .env.example .env.development
 ```
 
 主要配置项：
-```
+```bash
 # 开发环境配置
 VITE_APP_TITLE=博客管理系统(开发)
 
@@ -709,3 +709,181 @@ sudo nginx -s reload
 ## 许可证
 
 MIT License 
+
+## 自动化部署
+
+### 1. 部署脚本
+
+在项目根目录创建 `deploy.sh` 文件：
+
+```bash
+#!/bin/bash
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# 配置信息
+APP_NAME="myblog-admin"
+DEPLOY_PATH="/var/www/myblog-admin"
+BACKUP_PATH="/var/www/backups"
+NGINX_CONF="/etc/nginx/conf.d/myblog-admin.conf"
+NODE_VERSION="16.0.0"
+
+# 日志函数
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+error() {
+    echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: $1${NC}"
+    exit 1
+}
+
+warn() {
+    echo -e "${YELLOW}[$(date +'%Y-%m-%d %H:%M:%S')] WARNING: $1${NC}"
+}
+
+# 检查环境
+check_env() {
+    log "检查环境..."
+    
+    # 检查Node.js版本
+    if ! command -v node &> /dev/null; then
+        error "Node.js未安装"
+    fi
+    
+    node_version=$(node -v | cut -d'v' -f2)
+    if [ "$(printf '%s\n' "$NODE_VERSION" "$node_version" | sort -V | head -n1)" != "$NODE_VERSION" ]; then
+        error "Node.js版本必须 >= $NODE_VERSION"
+    fi
+    
+    # 检查npm
+    if ! command -v npm &> /dev/null; then
+        error "npm未安装"
+    fi
+    
+    # 检查部署目录
+    if [ ! -d "$DEPLOY_PATH" ]; then
+        log "创建部署目录: $DEPLOY_PATH"
+        sudo mkdir -p "$DEPLOY_PATH"
+    fi
+    
+    # 检查备份目录
+    if [ ! -d "$BACKUP_PATH" ]; then
+        log "创建备份目录: $BACKUP_PATH"
+        sudo mkdir -p "$BACKUP_PATH"
+    fi
+}
+
+# 安装依赖
+install_deps() {
+    log "安装依赖..."
+    npm install || error "依赖安装失败"
+}
+
+# 构建项目
+build() {
+    log "构建项目..."
+    npm run build || error "项目构建失败"
+}
+
+# 备份当前版本
+backup() {
+    if [ -d "$DEPLOY_PATH/dist" ]; then
+        local backup_name="${APP_NAME}_$(date +'%Y%m%d_%H%M%S')"
+        log "备份当前版本到: $BACKUP_PATH/$backup_name"
+        sudo cp -r "$DEPLOY_PATH/dist" "$BACKUP_PATH/$backup_name" || error "备份失败"
+    fi
+}
+
+# 部署新版本
+deploy() {
+    log "部署新版本..."
+    sudo cp -r dist/* "$DEPLOY_PATH/" || error "部署失败"
+}
+
+# 配置Nginx
+configure_nginx() {
+    if [ ! -f "$NGINX_CONF" ]; then
+        log "配置Nginx..."
+        sudo tee "$NGINX_CONF" > /dev/null << EOF
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    root $DEPLOY_PATH;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+
+    location /blog/ {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+    }
+}
+EOF
+        sudo nginx -t && sudo systemctl reload nginx || error "Nginx配置失败"
+    fi
+}
+
+# 回滚到指定版本
+rollback() {
+    local version=$1
+    if [ -z "$version" ]; then
+        error "请指定要回滚的版本"
+    fi
+    
+    if [ ! -d "$BACKUP_PATH/$version" ]; then
+        error "指定的版本不存在: $version"
+    fi
+    
+    log "回滚到版本: $version"
+    sudo rm -rf "$DEPLOY_PATH/dist" || error "删除当前版本失败"
+    sudo cp -r "$BACKUP_PATH/$version" "$DEPLOY_PATH/dist" || error "回滚失败"
+    sudo systemctl reload nginx || error "Nginx重载失败"
+    log "回滚完成"
+}
+
+# 清理旧备份
+cleanup() {
+    log "清理30天前的备份..."
+    find "$BACKUP_PATH" -maxdepth 1 -type d -name "${APP_NAME}_*" -mtime +30 -exec rm -rf {} \;
+}
+
+# 主函数
+main() {
+    case "$1" in
+        "deploy")
+            check_env
+            install_deps
+            build
+            backup
+            deploy
+            configure_nginx
+            cleanup
+            log "部署完成"
+            ;;
+        "rollback")
+            rollback "$2"
+            ;;
+        *)
+            echo "用法: $0 {deploy|rollback <version>}"
+            exit 1
+            ;;
+    esac
+}
+
+# 执行主函数
+main "$@" 
