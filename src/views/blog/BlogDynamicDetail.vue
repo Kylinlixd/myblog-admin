@@ -299,7 +299,7 @@ onMounted(() => {
   width: 100%;
   margin: 0;
   padding: 0;
-  background: #fff;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -321,7 +321,8 @@ onMounted(() => {
 
 .dynamic-content {
   width: 100%;
-  margin: 0;
+  max-width: 900px;
+  margin: 0 auto;
   padding: 0 15px 30px;
   flex: 1;
   display: flex;
@@ -331,35 +332,75 @@ onMounted(() => {
 }
 
 .dynamic-header {
-  margin-bottom: 2rem;
-  padding: 30px 15px;
-  background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
-  border-bottom: 1px solid #eaecef;
+  margin: 2rem 0 3rem;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dynamic-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    rgba(79, 70, 229, 0.05) 0%,
+    rgba(124, 58, 237, 0.05) 50%,
+    rgba(219, 39, 119, 0.05) 100%
+  );
+  z-index: 0;
 }
 
 .dynamic-title {
-  font-size: 2em;
-  font-weight: bold;
-  color: #1a1a1a;
-  margin-bottom: 15px;
+  font-size: 2.2em;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
   line-height: 1.3;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(90deg, #1e293b, #334155);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .dynamic-meta {
   display: flex;
   align-items: center;
-  gap: 15px;
-  color: #666;
-  font-size: 0.9em;
+  gap: 1.5rem;
+  color: #64748b;
+  font-size: 0.95em;
   flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.dynamic-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .dynamic-body {
   margin-bottom: 3rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   line-height: 1.8;
-  color: #333;
+  color: #334155;
   position: relative;
   z-index: 2;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .dynamic-footer {
@@ -402,17 +443,9 @@ onMounted(() => {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   font-size: 16px;
   line-height: 1.8;
-  color: #24292e;
+  color: #334155;
   word-wrap: break-word;
   padding: 0;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 2;
-}
-
-:deep(.markdown-body > *) {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -426,24 +459,25 @@ onMounted(() => {
 :deep(.markdown-body h4),
 :deep(.markdown-body h5),
 :deep(.markdown-body h6) {
-  margin-top: 24px;
-  margin-bottom: 16px;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
   font-weight: 600;
   line-height: 1.25;
-  color: #1a1a1a;
-  width: 100%;
+  color: #1e293b;
+  position: relative;
+  padding-left: 1rem;
 }
 
 :deep(.markdown-body h1) {
   font-size: 1.8em;
-  border-bottom: 1px solid #eaecef;
-  padding-bottom: 0.3em;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.5rem;
 }
 
 :deep(.markdown-body h2) {
   font-size: 1.5em;
-  border-bottom: 1px solid #eaecef;
-  padding-bottom: 0.3em;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.3rem;
 }
 
 :deep(.markdown-body h3) {
@@ -452,31 +486,29 @@ onMounted(() => {
 
 :deep(.markdown-body p) {
   margin-top: 0;
-  margin-bottom: 16px;
-  width: 100%;
+  margin-bottom: 1.5rem;
+  color: #334155;
 }
 
 :deep(.markdown-body code) {
   padding: 0.2em 0.4em;
   margin: 0;
   font-size: 85%;
-  background-color: rgba(27, 31, 35, 0.05);
-  border-radius: 3px;
+  background-color: rgba(79, 70, 229, 0.1);
+  border-radius: 6px;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-  color: #24292e;
+  color: #4f46e5;
 }
 
 :deep(.markdown-body pre) {
-  margin-top: 0;
-  margin-bottom: 16px;
-  padding: 16px;
+  margin: 1.5rem 0;
+  padding: 1.5rem;
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #f6f8fa;
-  border-radius: 3px;
-  width: 100%;
-  box-sizing: border-box;
+  background-color: #1e293b;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 :deep(.markdown-body pre code) {
@@ -487,87 +519,83 @@ onMounted(() => {
   white-space: pre;
   background: transparent;
   border: 0;
-  width: 100%;
-  display: block;
-  color: #24292e;
+  color: #e2e8f0;
 }
 
 :deep(.markdown-body blockquote) {
-  padding: 0 1em;
-  color: #6a737d;
-  border-left: 0.25em solid #dfe2e5;
-  margin: 0 0 16px 0;
-  width: 100%;
-  box-sizing: border-box;
+  padding: 1rem 1.5rem;
+  color: #64748b;
+  border-left: 4px solid #4f46e5;
+  background: rgba(79, 70, 229, 0.05);
+  border-radius: 0 8px 8px 0;
+  margin: 1.5rem 0;
 }
 
 :deep(.markdown-body img) {
   max-width: 100%;
   height: auto;
-  margin: 16px 0;
-  border-radius: 4px;
-  display: block;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 :deep(.markdown-body table) {
-  display: block;
   width: 100%;
-  overflow: auto;
-  margin-top: 0;
-  margin-bottom: 16px;
+  margin: 1.5rem 0;
+  border-collapse: separate;
   border-spacing: 0;
-  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 :deep(.markdown-body table th),
 :deep(.markdown-body table td) {
-  padding: 6px 13px;
-  border: 1px solid #dfe2e5;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
 }
 
-:deep(.markdown-body table tr) {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
+:deep(.markdown-body table th) {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
 }
 
-:deep(.markdown-body table tr:nth-child(2n)) {
-  background-color: #f6f8fa;
+:deep(.markdown-body table tr:nth-child(even)) {
+  background-color: #f8fafc;
 }
 
 :deep(.markdown-body ul),
 :deep(.markdown-body ol) {
-  padding-left: 2em;
-  margin-top: 0;
-  margin-bottom: 16px;
-  width: 100%;
-  box-sizing: border-box;
+  padding-left: 2rem;
+  margin: 1.5rem 0;
 }
 
 :deep(.markdown-body li) {
-  margin-top: 0.25em;
+  margin: 0.5rem 0;
+  color: #334155;
 }
 
 :deep(.markdown-body hr) {
-  height: 0.25em;
+  height: 1px;
   padding: 0;
-  margin: 24px 0;
-  background-color: #e1e4e8;
+  margin: 2rem 0;
+  background: linear-gradient(to right, transparent, #e2e8f0, transparent);
   border: 0;
-  width: 100%;
 }
 
-/* 响应式布局 */
+/* 响应式布局优化 */
 @media screen and (min-width: 768px) {
   .dynamic-content {
     padding: 0 30px 40px;
   }
 
   .dynamic-header {
-    padding: 40px 30px;
+    padding: 3rem;
   }
 
   .dynamic-title {
-    font-size: 2.2em;
+    font-size: 2.5em;
   }
 }
 
@@ -577,17 +605,18 @@ onMounted(() => {
   }
 
   .dynamic-header {
-    padding: 50px 40px;
+    padding: 3.5rem;
   }
 
   .dynamic-title {
-    font-size: 2.5em;
+    font-size: 2.8em;
   }
 }
 
 @media screen and (max-width: 767px) {
   .dynamic-header {
-    padding: 20px 15px;
+    padding: 1.5rem;
+    margin: 1rem 0 2rem;
   }
 
   .dynamic-title {
@@ -595,11 +624,15 @@ onMounted(() => {
   }
 
   .dynamic-meta {
-    gap: 12px;
+    gap: 1rem;
   }
 
   .dynamic-content {
     padding: 0 15px 20px;
+  }
+
+  .dynamic-body {
+    padding: 1.5rem;
   }
 
   :deep(.markdown-body) {
