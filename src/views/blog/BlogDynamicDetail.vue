@@ -671,7 +671,7 @@ onMounted(() => {
 
 :deep(.hljs-string),
 :deep(.hljs-doctag) {
-  color: #032f62;
+  color: #1890ff;
 }
 
 :deep(.hljs-title),
@@ -700,7 +700,7 @@ onMounted(() => {
 
 :deep(.hljs-regexp),
 :deep(.hljs-link) {
-  color: #032f62;
+  color: #1890ff;
 }
 
 :deep(.hljs-symbol),

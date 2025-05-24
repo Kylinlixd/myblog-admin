@@ -202,8 +202,13 @@
           </template>
           
           <!-- 创建时间列 -->
-          <template v-if="column.dataIndex === 'createdAt'">
-            {{ formatDate(record.createdAt) }}
+          <template v-else-if="column.dataIndex === 'created_at'">
+            {{ formatDate(record.created_at) }}
+          </template>
+          
+          <!-- 更新时间列 -->
+          <template v-else-if="column.dataIndex === 'updated_at'">
+            {{ formatDate(record.updated_at) }}
           </template>
           
           <!-- 操作列 -->
@@ -659,11 +664,19 @@ const columns = [
   },
   {
     title: '创建时间',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
+    dataIndex: 'created_at',
+    key: 'created_at',
     width: 160,
     align: 'center',
-    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+    sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at)
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updated_at',
+    key: 'updated_at',
+    width: 160,
+    align: 'center',
+    sorter: (a, b) => new Date(a.updated_at) - new Date(b.updated_at)
   },
   {
     title: '操作',
@@ -1052,6 +1065,75 @@ onUnmounted(() => {
       white-space: pre-wrap;
       word-break: break-word;
       color: #262626;
+      background-color: #f8f9fa;
+      padding: 16px;
+      border-radius: 4px;
+      border: 1px solid #e9ecef;
+
+      :deep(pre) {
+        background-color: #1a1a1a !important;
+        padding: 16px;
+        border-radius: 4px;
+        overflow-x: auto;
+        margin: 16px 0;
+        border: 1px solid #333;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+        code {
+          color: #ffffff !important;
+          font-family: 'Consolas', 'Monaco', monospace;
+          font-size: 14px;
+          line-height: 1.6;
+          text-shadow: none;
+        }
+      }
+
+      :deep(.hljs) {
+        background: #1a1a1a !important;
+        color: #ffffff !important;
+      }
+
+      :deep(.hljs-string),
+      :deep(.hljs-bullet),
+      :deep(.hljs-subst),
+      :deep(.hljs-title),
+      :deep(.hljs-section),
+      :deep(.hljs-emphasis),
+      :deep(.hljs-type),
+      :deep(.hljs-built_in),
+      :deep(.hljs-builtin-name),
+      :deep(.hljs-selector-attr),
+      :deep(.hljs-selector-pseudo),
+      :deep(.hljs-addition),
+      :deep(.hljs-variable),
+      :deep(.hljs-template-variable) {
+        color: #ffeb3b !important;
+        font-weight: 700 !important;
+        text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
+      }
+
+      :deep(.language-json) {
+        .hljs-string {
+          color: #ffeb3b !important;
+          font-weight: 700 !important;
+          text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
+        }
+
+        .hljs-property {
+          color: #64b5f6 !important;
+          font-weight: 700 !important;
+        }
+
+        .hljs-number {
+          color: #ffb74d !important;
+          font-weight: 700 !important;
+        }
+
+        .hljs-literal {
+          color: #f48fb1 !important;
+          font-weight: 700 !important;
+        }
+      }
     }
     
     .media-content {
@@ -1101,11 +1183,76 @@ onUnmounted(() => {
   }
 }
 
-:deep(.ant-modal-content) {
+:global(.ant-modal-content) {
   .ant-modal-body {
     padding: 24px;
     max-height: 80vh;
     overflow-y: auto;
+    background-color: #ffffff;
+
+    pre {
+      background-color: #1a1a1a !important;
+      padding: 16px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid #333;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+      code {
+        color: #ffffff !important;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+    }
+
+    .hljs {
+      background: #1a1a1a !important;
+      color: #ffffff !important;
+    }
+
+    .hljs-string,
+    .hljs-bullet,
+    .hljs-subst,
+    .hljs-title,
+    .hljs-section,
+    .hljs-emphasis,
+    .hljs-type,
+    .hljs-built_in,
+    .hljs-builtin-name,
+    .hljs-selector-attr,
+    .hljs-selector-pseudo,
+    .hljs-addition,
+    .hljs-variable,
+    .hljs-template-variable {
+      color: #ffeb3b !important;
+      font-weight: 700 !important;
+      text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
+    }
+
+    .language-json {
+      .hljs-string {
+        color: #ffeb3b !important;
+        font-weight: 700 !important;
+        text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
+      }
+
+      .hljs-property {
+        color: #64b5f6 !important;
+        font-weight: 700 !important;
+      }
+
+      .hljs-number {
+        color: #ffb74d !important;
+        font-weight: 700 !important;
+      }
+
+      .hljs-literal {
+        color: #f48fb1 !important;
+        font-weight: 700 !important;
+      }
+    }
   }
 }
 
@@ -1132,5 +1279,97 @@ onUnmounted(() => {
       transform: scale(1.05);
     }
   }
+}
+
+// 添加代码高亮样式
+:deep(.hljs) {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #1e1e1e;
+  color: #d4d4d4;
+}
+
+:deep(.hljs-keyword),
+:deep(.hljs-selector-tag),
+:deep(.hljs-literal),
+:deep(.hljs-name),
+:deep(.hljs-strong) {
+  color: #569cd6;
+}
+
+:deep(.hljs-code) {
+  color: #d4d4d4;
+}
+
+:deep(.hljs-class .hljs-title) {
+  color: #4ec9b0;
+}
+
+:deep(.hljs-attribute),
+:deep(.hljs-symbol),
+:deep(.hljs-regexp),
+:deep(.hljs-link) {
+  color: #d16969;
+}
+
+:deep(.hljs-string),
+:deep(.hljs-bullet),
+:deep(.hljs-subst),
+:deep(.hljs-title),
+:deep(.hljs-section),
+:deep(.hljs-emphasis),
+:deep(.hljs-type),
+:deep(.hljs-built_in),
+:deep(.hljs-builtin-name),
+:deep(.hljs-selector-attr),
+:deep(.hljs-selector-pseudo),
+:deep(.hljs-addition),
+:deep(.hljs-variable),
+:deep(.hljs-template-variable) {
+  color: #ce9178;
+}
+
+:deep(.hljs-comment),
+:deep(.hljs-quote),
+:deep(.hljs-deletion) {
+  color: #6a9955;
+}
+
+:deep(.hljs-keyword),
+:deep(.hljs-selector-tag),
+:deep(.hljs-literal),
+:deep(.hljs-doctag),
+:deep(.hljs-title),
+:deep(.hljs-section),
+:deep(.hljs-type),
+:deep(.hljs-selector-id) {
+  font-weight: bold;
+}
+
+:deep(.hljs-emphasis) {
+  font-style: italic;
+}
+
+:deep(.hljs-attribute),
+:deep(.hljs-symbol),
+:deep(.hljs-regexp),
+:deep(.hljs-link) {
+  color: #d16969;
+}
+
+:deep(.hljs-number),
+:deep(.hljs-literal) {
+  color: #b5cea8;
+}
+
+:deep(.hljs-tag),
+:deep(.hljs-name),
+:deep(.hljs-selector-tag) {
+  color: #569cd6;
+}
+
+:deep(.hljs-attr) {
+  color: #9cdcfe;
 }
 </style>

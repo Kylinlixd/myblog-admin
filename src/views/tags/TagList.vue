@@ -57,7 +57,12 @@
       :data-source="tagList"
       :loading="loading"
       :pagination="pagination"
-      :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+      :row-selection="{
+        selectedRowKeys,
+        onChange: onSelectChange,
+        type: 'checkbox'
+      }"
+      :row-key="record => record.id"
       @change="handleTableChange"
       :scroll="{ x: 800 }"
     >
@@ -72,6 +77,11 @@
         <!-- 创建时间列 -->
         <template v-else-if="column.dataIndex === 'createdAt'">
           {{ formatDate(record.createdAt) }}
+        </template>
+
+        <!-- 更新时间列 -->
+        <template v-else-if="column.dataIndex === 'updatedAt'">
+          {{ formatDate(record.updatedAt) }}
         </template>
 
         <!-- 操作列 -->
@@ -101,7 +111,8 @@
     <a-modal
       v-model:open="dialogVisible"
       :title="dialogType === 'create' ? '新建标签' : '编辑标签'"
-      :footer="null"
+      @ok="handleSubmit"
+      :confirmLoading="formLoading"
       width="600px"
     >
       <a-form
@@ -171,6 +182,12 @@ const columns = [
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
+    width: '15%',
+  },
+  {
+    title: '更新时间',
+    dataIndex: 'updatedAt',
+    key: 'updatedAt',
     width: '15%',
   },
   {
