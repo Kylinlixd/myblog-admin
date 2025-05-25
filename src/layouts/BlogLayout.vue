@@ -750,35 +750,42 @@ const handleSearch = () => {
   searching.value = true
   saveSearchHistory(searchQuery.value.trim())
   
-  // 跳转到搜索页面，带上搜索参数
-  router.push({
-    path: '/blog/search',
-    query: { 
-      keyword: searchQuery.value.trim(),
-      type: 'all', // 综合搜索
-      includeTags: true,
-      includeCategories: true,
-      sortBy: 'relevance'
-    }
-  }).catch(err => {
-    if (err.name !== 'NavigationDuplicated') {
-      console.error('路由跳转错误:', err)
-    } else {
-      // 如果已经在搜索页面，刷新搜索参数
-      if (router.currentRoute.value.path === '/blog/search') {
-        // 发布一个事件，让搜索页面知道有新的搜索请求
-        window.dispatchEvent(new CustomEvent('update-search', {
-          detail: {
-            keyword: searchQuery.value.trim(),
-            type: 'all',
-            includeTags: true,
-            includeCategories: true,
-            sortBy: 'relevance'
-          }
-        }))
+  // 如果已经在搜索页面，直接发送事件
+  if (router.currentRoute.value.path === '/blog/search') {
+    console.log('[布局] 已在搜索页面，发送搜索事件')
+    
+    // 发布一个事件，让搜索页面知道有新的搜索请求
+    window.dispatchEvent(new CustomEvent('update-search', {
+      detail: {
+        keyword: searchQuery.value.trim(),
+        type: 'all',
+        includeTags: true,
+        includeCategories: true,
+        sortBy: 'relevance'
       }
-    }
-  }).finally(() => {
+    }))
+  } else {
+    // 否则跳转到搜索页面，带上搜索参数
+    console.log('[布局] 跳转到搜索页面')
+    
+    router.push({
+      path: '/blog/search',
+      query: { 
+        keyword: searchQuery.value.trim(),
+        type: 'all', // 综合搜索
+        includeTags: true,
+        includeCategories: true,
+        sortBy: 'relevance'
+      }
+    }).catch(err => {
+      if (err.name !== 'NavigationDuplicated') {
+        console.error('路由跳转错误:', err)
+      }
+    })
+  }
+  
+  // 最终处理
+  setTimeout(() => {
     searching.value = false
     showSuggestions.value = false
   })

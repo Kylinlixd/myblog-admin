@@ -401,15 +401,31 @@ const useSuggestion = (suggestion) => {
 
 // 处理来自布局搜索框的搜索请求
 const handleUpdateSearch = (event) => {
+  console.log('[搜索页面] 收到顶部搜索请求:', event.detail)
+  
   // 更新搜索参数
   keyword.value = event.detail.keyword
-  advancedOptions.value.type = event.detail.type || ''
-  advancedOptions.value.includeTags = event.detail.includeTags || true
-  advancedOptions.value.includeCategories = event.detail.includeCategories || true
-  advancedOptions.value.sortBy = event.detail.sortBy || 'relevance'
+  
+  // 更新高级搜索选项
+  // 要特别注意，这里我们只将event.detail中的字段更新到advancedOptions.value中存在的相应属性
+  if (event.detail.type !== undefined) {
+    advancedOptions.value.type = event.detail.type
+  }
+  
+  if (event.detail.sortBy !== undefined) {
+    advancedOptions.value.sortBy = event.detail.sortBy
+  }
   
   // 执行搜索
-  handleSearch()
+  console.log('[搜索页面] 执行搜索，参数:', {
+    keyword: keyword.value,
+    advancedOptions: advancedOptions.value
+  })
+  
+  // 延迟一下，确保参数更新完成
+  setTimeout(() => {
+    handleSearch()
+  }, 0)
 }
 
 // 处理搜索
