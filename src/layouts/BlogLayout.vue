@@ -763,6 +763,20 @@ const handleSearch = () => {
   }).catch(err => {
     if (err.name !== 'NavigationDuplicated') {
       console.error('路由跳转错误:', err)
+    } else {
+      // 如果已经在搜索页面，刷新搜索参数
+      if (router.currentRoute.value.path === '/blog/search') {
+        // 发布一个事件，让搜索页面知道有新的搜索请求
+        window.dispatchEvent(new CustomEvent('update-search', {
+          detail: {
+            keyword: searchQuery.value.trim(),
+            type: 'all',
+            includeTags: true,
+            includeCategories: true,
+            sortBy: 'relevance'
+          }
+        }))
+      }
     }
   }).finally(() => {
     searching.value = false

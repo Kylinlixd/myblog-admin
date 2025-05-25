@@ -399,6 +399,19 @@ const useSuggestion = (suggestion) => {
   handleSearch()
 }
 
+// 处理来自布局搜索框的搜索请求
+const handleUpdateSearch = (event) => {
+  // 更新搜索参数
+  keyword.value = event.detail.keyword
+  advancedOptions.value.type = event.detail.type || ''
+  advancedOptions.value.includeTags = event.detail.includeTags || true
+  advancedOptions.value.includeCategories = event.detail.includeCategories || true
+  advancedOptions.value.sortBy = event.detail.sortBy || 'relevance'
+  
+  // 执行搜索
+  handleSearch()
+}
+
 // 处理搜索
 const handleSearch = async () => {
   if (!keyword.value.trim()) {
@@ -506,6 +519,14 @@ onMounted(async () => {
   
   // 加载搜索历史
   loadSearchHistory()
+  
+  // 添加事件监听器，响应顶部搜索框的请求
+  window.addEventListener('update-search', handleUpdateSearch)
+})
+
+// 组件卸载前移除事件监听器
+onBeforeUnmount(() => {
+  window.removeEventListener('update-search', handleUpdateSearch)
 })
 
 // 加载搜索历史
