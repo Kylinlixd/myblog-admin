@@ -60,9 +60,10 @@
       :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
       :row-key="record => record.id"
       @change="handleTableChange"
-      :scroll="{ x: 800 }"
       :expandable="false"
       :indent-size="0"
+      :scroll="{ x: '100%' }"
+      class="responsive-table"
     >
       <template #bodyCell="{ column, record }">
         <!-- 状态列 -->
@@ -406,145 +407,28 @@ onMounted(() => {
 .category-list {
   padding: 24px;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+}
 
-  :deep(.ant-table-row-expand-icon) {
-    display: none !important;
-  }
+.search-form {
+  margin-bottom: 24px;
+}
 
+.table-operations {
+  margin-bottom: 24px;
+}
+
+.responsive-table {
+  width: 100%;
+}
+
+@media screen and (max-width: 1200px) {
   .search-form {
-    margin-bottom: 24px;
-    padding: 24px;
-    background: #fafafa;
-    border-radius: 8px;
-
-    :deep(.ant-form-item) {
-      margin-bottom: 16px;
-      margin-right: 16px;
-
-      @media (max-width: 768px) {
-        margin-right: 0;
-        width: 100%;
-      }
-    }
-
-    :deep(.ant-form-item-control-input) {
-      min-width: 200px;
-    }
+    display: block;
   }
-
+  
   .table-operations {
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  :deep(.ant-table) {
-    .ant-table-cell {
-      vertical-align: middle;
-    }
-  }
-
-  :deep(.ant-table-thead > tr > th) {
-    white-space: nowrap;
-    background: #fafafa;
-    font-weight: 600;
-  }
-
-  :deep(.ant-table-tbody > tr > td) {
-    padding: 16px 8px;
-  }
-
-  :deep(.ant-space) {
-    flex-wrap: wrap;
-  }
-
-  // 模态框样式
-  :deep(.ant-modal) {
-    .ant-modal-content {
-      border-radius: 8px;
-      overflow: hidden;
-      background: #ffffff;
-    }
-
-    .ant-modal-header {
-      background: #ffffff;
-      border-bottom: 1px solid #f0f0f0;
-      padding: 16px 24px;
-      margin-bottom: 0;
-
-      .ant-modal-title {
-        font-weight: 600;
-        color: #262626;
-      }
-    }
-
-    .ant-modal-body {
-      padding: 24px;
-      background: #ffffff;
-    }
-
-    .ant-modal-footer {
-      border-top: 1px solid #f0f0f0;
-      padding: 16px 24px;
-      margin-top: 0;
-      background: #ffffff;
-    }
-
-    .ant-form-item-label > label {
-      font-weight: 500;
-      color: #262626;
-    }
-
-    .ant-input,
-    .ant-input-textarea,
-    .ant-select-selector {
-      border-radius: 4px;
-      border-color: #d9d9d9;
-      background: #ffffff;
-      color: #262626;
-      
-      &:hover,
-      &:focus {
-        border-color: #40a9ff;
-      }
-    }
-
-    .ant-btn {
-      border-radius: 4px;
-      font-weight: 500;
-      color: #262626;
-      
-      &-primary {
-        background: #1890ff;
-        border-color: #1890ff;
-        color: #ffffff;
-        
-        &:hover {
-          background: #40a9ff;
-          border-color: #40a9ff;
-        }
-      }
-    }
-
-    .ant-select-dropdown {
-      background: #ffffff;
-      color: #262626;
-    }
-
-    .ant-select-item {
-      color: #262626;
-      
-      &-option-selected {
-        background: #e6f7ff;
-        color: #1890ff;
-      }
-      
-      &:hover {
-        background: #f5f5f5;
-      }
-    }
+    display: block;
   }
 }
 
@@ -568,4 +452,4 @@ onMounted(() => {
     }
   }
 }
-</style> 
+</style>
