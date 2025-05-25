@@ -390,8 +390,10 @@ export const likeDynamic = async (id) => {
 export function commentDynamic(id, data) {
   console.log('[Blog API] 发表评论, ID:', id, '数据:', data);
   return blogAxios.post(createBlogApiUrl('comments/'), {
-    ...data,
-    dynamic_id: id
+    dynamic_id: id,
+    content: data.content,
+    nickname: data.nickname,
+    email: data.email
   })
     .then(response => {
       console.log('[Blog API] 评论响应:', response);

@@ -473,17 +473,34 @@ const handleComment = async (item) => {
   }
 }
 
+// 修改评论表单部分
+const commentForm = ref(null)
+const commentRules = {
+  content: [
+    { required: true, message: '请输入评论内容', trigger: 'blur' },
+    { min: 1, max: 500, message: '评论内容长度在1-500个字符之间', trigger: 'blur' }
+  ],
+  nickname: [
+    { max: 50, message: '昵称长度不能超过50个字符', trigger: 'blur' }
+  ],
+  email: [
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ]
+}
+
 // 修改submitComment函数
 const submitComment = async (item) => {
   try {
-    // 验证表单
-    await commentForm.value.validate()
+    // 手动验证表单
+    if (!commentContent.value) {
+      message.error('请输入评论内容')
+      return
+    }
     
     if (item.isSubmittingComment) return
     item.isSubmittingComment = true
     
     const commentData = {
-      dynamic_id: item.id,
       content: commentContent.value,
       nickname: nickname.value || '匿名用户',
       email: email.value || ''
@@ -507,31 +524,11 @@ const submitComment = async (item) => {
       message.error(result.message || '评论失败')
     }
   } catch (error) {
-    if (error.errorFields) {
-      // 表单验证错误
-      message.error('请检查评论内容')
-    } else {
-      console.error('评论失败:', error)
-      message.error(error.response?.data?.message || '评论失败，请稍后重试')
-    }
+    console.error('评论失败:', error)
+    message.error(error.response?.data?.message || '评论失败，请稍后重试')
   } finally {
     item.isSubmittingComment = false
   }
-}
-
-// 修改评论表单部分
-const commentForm = ref(null)
-const commentRules = {
-  content: [
-    { required: true, message: '请输入评论内容', trigger: 'blur' },
-    { min: 1, max: 500, message: '评论内容长度在1-500个字符之间', trigger: 'blur' }
-  ],
-  nickname: [
-    { max: 50, message: '昵称长度不能超过50个字符', trigger: 'blur' }
-  ],
-  email: [
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-  ]
 }
 
 // 使用模拟数据进行测试
