@@ -85,57 +85,11 @@ onMounted(() => {
 }
 
 .categories-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
   margin-top: 20px;
-  grid-auto-rows: minmax(120px, auto);
-}
-
-/* 当卡片数量不足时的布局 */
-.categories-grid:has(.category-card:nth-child(4):last-child) {
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: 1fr;
-}
-
-.categories-grid:has(.category-card:nth-child(3):last-child) {
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 1fr;
-}
-
-.categories-grid:has(.category-card:nth-child(2):last-child) {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: 1fr;
-}
-
-.categories-grid:has(.category-card:nth-child(1):last-child) {
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-}
-
-/* 大屏幕 (1200px以上) */
-@media screen and (min-width: 1200px) {
-  .categories-grid {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-  }
-}
-
-/* 中等屏幕 (992px - 1199px) */
-@media screen and (max-width: 1199px) {
-  .categories-grid {
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-  }
-}
-
-/* 平板屏幕 (768px - 991px) */
-@media screen and (max-width: 991px) {
-  .categories-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-  }
+  justify-content: center; /* 居中显示 */
 }
 
 /* 移动端 (480px - 767px) */
@@ -143,26 +97,13 @@ onMounted(() => {
   .categories-container {
     padding: 15px;
   }
-
-  .categories-grid {
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-  }
-
+  
   .page-title {
     font-size: 24px;
   }
-
+  
   .page-desc {
     font-size: 14px;
-  }
-}
-
-/* 小屏幕移动端 (480px以下) */
-@media screen and (max-width: 480px) {
-  .categories-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(8, 1fr);
   }
 }
 
@@ -173,11 +114,30 @@ onMounted(() => {
   transition: all 0.3s ease;
   cursor: pointer;
   overflow: hidden;
-  height: 100%;
   display: flex;
   flex-direction: column;
+  width: calc(25% - 15px); /* 4列布局，考虑gap */
+  min-width: 280px; /* 防止卡片变得太小 */
+  max-width: 400px; /* 防止卡片变得太大*/
   min-height: 120px;
-  aspect-ratio: 16/9;
+}
+
+@media screen and (max-width: 1199px) {
+  .category-card {
+    width: calc(33.333% - 14px); /* 3列布局 */
+  }
+}
+
+@media screen and (max-width: 991px) {
+  .category-card {
+    width: calc(50% - 10px); /* 2列布局 */
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .category-card {
+    width: 100%; /* 1列布局 */
+  }
 }
 
 .category-card:hover {
