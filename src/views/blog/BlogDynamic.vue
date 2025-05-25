@@ -149,7 +149,7 @@
                   class="comment-item"
                 >
                   <div class="comment-user">
-                    <a-avatar :src="comment.avatar || '/default-avatar.png'" />
+                    <a-avatar :src="comment.avatar || '/assets/default-avatar.png'" />
                     <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
                     <span class="time">{{ formatDate(comment.createTime) }}</span>
                   </div>
