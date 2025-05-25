@@ -3,8 +3,8 @@
     <div class="blog-dynamic">
       <!-- 页面标题 -->
       <div class="page-header">
-        <h1 class="page-title">动态</h1>
-        <p class="page-description">分享我的生活点滴和思考</p>
+        <h1 class="page-title">探索动态</h1>
+        <p class="page-description">记录我的开发之路，分享生活点滴和思考</p>
       </div>
 
       <!-- 调试信息 -->
