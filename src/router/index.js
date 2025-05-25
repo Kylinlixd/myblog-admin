@@ -121,6 +121,16 @@ const routes = [
           keepAlive: false,
           requiresAuth: false
         }
+      },
+      {
+        path: 'tags/:id',
+        name: 'BlogTagDetail',
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogTagDetail.vue'),
+        meta: { 
+          title: '标签文章',
+          keepAlive: false,
+          requiresAuth: false
+        }
       }
     ]
   },
