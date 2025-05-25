@@ -446,6 +446,8 @@ onMounted(() => {
 
   :deep(.ant-table-thead > tr > th) {
     white-space: nowrap;
+    background: #fafafa;
+    font-weight: 600;
   }
 
   :deep(.ant-table-tbody > tr > td) {
@@ -454,6 +456,93 @@ onMounted(() => {
 
   :deep(.ant-space) {
     flex-wrap: wrap;
+  }
+
+  // 模态框样式
+  :deep(.ant-modal) {
+    .ant-modal-content {
+      border-radius: 8px;
+      overflow: hidden;
+      background: #ffffff !important;
+    }
+
+    .ant-modal-header {
+      background: #ffffff !important;
+      border-bottom: 1px solid #f0f0f0;
+      padding: 16px 24px;
+      margin-bottom: 0;
+
+      .ant-modal-title {
+        font-weight: 600;
+        color: #262626;
+      }
+    }
+
+    .ant-modal-body {
+      padding: 24px;
+      background: #ffffff !important;
+    }
+
+    .ant-modal-footer {
+      border-top: 1px solid #f0f0f0;
+      padding: 16px 24px;
+      margin-top: 0;
+      background: #ffffff !important;
+    }
+
+    .ant-form-item-label > label {
+      font-weight: 500;
+      color: #262626;
+    }
+
+    .ant-input,
+    .ant-input-textarea,
+    .ant-select-selector {
+      border-radius: 4px;
+      border-color: #d9d9d9;
+      background: #ffffff !important;
+      color: #262626;
+      
+      &:hover,
+      &:focus {
+        border-color: #40a9ff;
+      }
+    }
+
+    .ant-btn {
+      border-radius: 4px;
+      font-weight: 500;
+      color: #262626;
+      
+      &-primary {
+        background: #1890ff;
+        border-color: #1890ff;
+        color: #ffffff;
+        
+        &:hover {
+          background: #40a9ff;
+          border-color: #40a9ff;
+        }
+      }
+    }
+
+    .ant-select-dropdown {
+      background: #ffffff !important;
+      color: #262626;
+    }
+
+    .ant-select-item {
+      color: #262626;
+      
+      &-option-selected {
+        background: #e6f7ff;
+        color: #1890ff;
+      }
+      
+      &:hover {
+        background: #f5f5f5;
+      }
+    }
   }
 }
 

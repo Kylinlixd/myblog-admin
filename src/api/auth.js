@@ -189,53 +189,8 @@ export function register(data) {
  * @returns {Promise<Object>} - 用户信息
  */
 export function getUserInfo() {
-  // 开发环境下，使用本地存储的用户信息
-  if (shouldUseMockData()) {
-    console.log('[模拟数据] 使用本地存储的用户信息')
-    
-    // 从localStorage获取用户信息
-    const userInfoStr = localStorage.getItem('userInfo')
-    if (userInfoStr) {
-      try {
-        const userInfo = JSON.parse(userInfoStr)
-        return Promise.resolve({
-          code: 200,
-          data: userInfo,
-          message: 'success'
-        })
-      } catch (error) {
-        console.error('解析本地用户信息失败:', error)
-      }
-    }
-    
-    // 如果没有存储用户信息，但有token，则返回默认管理员信息
-    if (localStorage.getItem('token')) {
-      const userInfo = getMockUserInfo()
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
-      
-      return Promise.resolve({
-        code: 200,
-        data: userInfo,
-        message: 'success'
-      })
-    }
-    
-    // 无token，返回错误
-    return Promise.reject({
-      response: {
-        status: 401,
-        data: {
-          code: 401,
-          message: '未登录或会话已过期',
-          data: null
-        }
-      }
-    })
-  }
-  
   return api.admin.get('/api/auth/info/')
     .catch(error => {
-      // 不自动回退到模拟数据，直接抛出错误
       console.error('[API错误] 获取用户信息失败:', error)
       throw error
     })

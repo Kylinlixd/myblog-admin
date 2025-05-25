@@ -49,13 +49,19 @@
           >
             <template #icon><close-outlined /></template>拒绝
           </a-button>
-          <a-button
-            type="primary" 
-            danger
-            @click="handleDelete(row)"
+          <a-popconfirm
+            title="确定要删除该评论吗？"
+            ok-text="确定"
+            cancel-text="取消"
+            @confirm="handleDelete(row)"
           >
-            <template #icon><delete-outlined /></template>删除
-          </a-button>
+            <a-button
+              type="primary" 
+              danger
+            >
+              <template #icon><delete-outlined /></template>删除
+            </a-button>
+          </a-popconfirm>
         </a-space>
       </template>
     </DataTable>
@@ -221,28 +227,19 @@ const handleReject = async (row) => {
 }
 
 // 删除评论
-const handleDelete = (row) => {
-  Modal.confirm({
-    title: '提示',
-    content: '确定要删除该评论吗？',
-    okText: '确定',
-    okType: 'danger',
-    cancelText: '取消',
-    onOk: async () => {
-      try {
-        const response = await deleteComment(row.id)
-        if (response.code === 200) {
-          message.success('删除成功')
-          getComments()
-        } else {
-          message.error(response.message || '删除失败')
-        }
-      } catch (error) {
-        console.error('删除评论失败:', error)
-        message.error('删除失败')
-      }
+const handleDelete = async (row) => {
+  try {
+    const response = await deleteComment(row.id)
+    if (response.code === 200) {
+      message.success('删除成功')
+      getComments()
+    } else {
+      message.error(response.message || '删除失败')
     }
-  })
+  } catch (error) {
+    console.error('删除评论失败:', error)
+    message.error('删除失败')
+  }
 }
 
 // 获取状态颜色

@@ -253,6 +253,25 @@ h6 {
   text-align: center;
 }
 
+/* 模态框样式覆盖 */
+.ant-modal {
+  .ant-modal-content {
+    background: #ffffff !important;
+  }
+
+  .ant-modal-header {
+    background: #ffffff !important;
+  }
+
+  .ant-modal-body {
+    background: #ffffff !important;
+  }
+
+  .ant-modal-footer {
+    background: #ffffff !important;
+  }
+}
+
 /* 防止样式冲突 */
 :where(.ant-btn, .ant-input, .ant-menu, .ant-submenu) {
   box-sizing: border-box;
