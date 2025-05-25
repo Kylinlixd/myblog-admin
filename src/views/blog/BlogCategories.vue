@@ -10,7 +10,7 @@
         <router-link :to="`/blog/categories/${category.id}`" class="category-link">
           <div class="category-content">
             <h3 class="category-name">{{ category.name }}</h3>
-            <div class="category-count">{{ category.count }}篇文章</div>
+            <div class="category-count">{{ category.dynamicCount ?? category.count ?? 0 }}篇文章</div>
             <p class="category-desc">{{ category.description }}</p>
           </div>
         </router-link>
@@ -90,9 +90,7 @@ onMounted(() => {
   grid-template-rows: repeat(2, 1fr);
   gap: 20px;
   margin-top: 20px;
-  max-height: 600px;
-  justify-content: center; /* 水平居中 */
-  align-content: center; /* 垂直居中 */
+  grid-auto-rows: minmax(120px, auto);
 }
 
 /* 当卡片数量不足时的布局 */
@@ -149,7 +147,6 @@ onMounted(() => {
   .categories-grid {
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: 15px;
   }
 
   .page-title {
@@ -181,8 +178,6 @@ onMounted(() => {
   flex-direction: column;
   min-height: 120px;
   aspect-ratio: 16/9;
-  max-width: 300px; /* 限制最大宽度 */
-  margin: 0 auto; /* 水平居中 */
 }
 
 .category-card:hover {
