@@ -431,7 +431,7 @@ const fetchDynamics = async () => {
       type: searchForm.type,
       status: searchForm.status,
       content: searchForm.content?.trim(),
-      title: searchForm.title?.trim(),  // 添加标题搜索
+      title: searchForm.title?.trim(),  // 确保标题搜索参数正确传递
       categoryId: searchForm.categoryId,
       tagIds: searchForm.tagIds
     };
@@ -448,13 +448,12 @@ const fetchDynamics = async () => {
     console.log('获取动态列表响应:', response);
     
     if (response && response.code === 200 && response.data) {
-      // 直接使用 response.data.items
       dynamicList.value = response.data.items.map(item => ({
-        ...item,  // 保留所有原始字段
-        mediaUrls: item.mediaUrls || [],  // 使用 mediaUrls 而不是 media_urls
-        category: item.category || null,    // 确保保留 category 字段
-        like_count: item.likes || 0,   // 使用 likes 而不是 like_count
-        title: item.title || '无标题'        // 确保保留 title 字段
+        ...item,
+        mediaUrls: item.mediaUrls || [],
+        category: item.category || null,
+        like_count: item.likes || 0,
+        title: item.title || '无标题'
       }));
       total.value = response.data.total || 0;
       console.log('处理后的动态列表:', dynamicList.value);

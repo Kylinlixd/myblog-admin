@@ -9,6 +9,7 @@ import api from '../utils/api';
  * @param {string} params.type - 动态类型 (text/image/audio/video)
  * @param {string} params.status - 状态 (draft/published)
  * @param {string} params.content - 内容搜索
+ * @param {string} params.title - 标题搜索
  * @param {string} params.categoryId - 分类ID
  * @param {Array} params.tagIds - 标签ID数组
  * @returns {Promise<Object>} 动态列表数据
@@ -24,6 +25,7 @@ export const getDynamicList = async (params) => {
       type: params.type,
       status: params.status,
       content: params.content,
+      title: params.title,  // 添加标题搜索参数
       categoryId: params.categoryId,
       tagIds: params.tagIds
     };
