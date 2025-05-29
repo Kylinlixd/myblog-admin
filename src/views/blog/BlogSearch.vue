@@ -272,6 +272,7 @@
             show-quick-jumper
             show-size-changer
             :pageSizeOptions="['10', '20', '50', '100']"
+            :showTotal="(total) => `共 ${total} 条`"
             @change="handlePageChange"
             @showSizeChange="handleSizeChange"
           />
@@ -388,7 +389,9 @@ const handlePageChange = (page) => {
 
 // 处理每页数量变化
 const handleSizeChange = (current, size) => {
-  pageSize.value = size
+  // 从"10/页"格式中提取数字
+  const sizeNumber = parseInt(size)
+  pageSize.value = sizeNumber
   currentPage.value = 1
   handleSearch()
 }

@@ -18,12 +18,14 @@
         <div class="tech-section">
           <h2 class="text-2xl font-semibold mb-6 text-white text-center">技术栈</h2>
           <div class="tech-grid">
-            <div v-for="(tech, index) in techStack" 
-                 :key="tech" 
-                 class="tech-item"
-                 :style="{ animationDelay: `${index * 0.2}s` }">
+            <router-link 
+              v-for="(tech, index) in techStack" 
+              :key="tech" 
+              :to="`/blog/search?keyword=${tech}`"
+              class="tech-item"
+              :style="{ animationDelay: `${index * 0.2}s` }">
               {{ tech }}
-            </div>
+            </router-link>
           </div>
         </div>
       </div>
@@ -149,6 +151,14 @@ watch(() => route.query, (newQuery) => {
   min-width: 0;
   word-break: break-word;
   font-size: 0.875rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.tech-item:hover {
+  @apply bg-white/30;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 640px) {
