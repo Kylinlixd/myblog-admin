@@ -76,7 +76,7 @@ const appStore = useAppStore()
 const profile = ref({
   name: 'LiXD',
   title: '全栈开发工程师 / 技术博主',
-  bio: '嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。\n\n通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。',
+  bio: '大家好，我是小东，一名热爱编程和分享生活的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。\n\n通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。期待与你共同进步',
   skills: {
     '前端开发': ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TypeScript'],
     '后端开发': ['Java', 'SpringBoot', 'Python', 'Django', 'Flask'],
@@ -86,7 +86,7 @@ const profile = ref({
   email: '946951925@qq.com',
   github: 'https://github.com/Kylinlixd',
   twitter: 'https://twitter.com/lixiaodong_0',
-  avatar: 'https://www.keaitupian.cn/cjpic/frombd/0/253/1152107840/119779555.jpg'
+  avatar: '/about-avatar.jpg'
 })
 
 // 默认技能数据
