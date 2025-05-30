@@ -11,6 +11,10 @@
       <div v-for="(comment, index) in comments" :key="index" class="comment-item">
         <p class="comment-content">{{ comment.content }}</p>
         <p class="comment-author">作者: {{ comment.author }}</p>
+        <div class="comment-actions">
+          <a-button type="link" @click="replyToComment(comment)">回复</a-button>
+          <a-button type="link" @click="addEmoji(comment)">添加表情</a-button>
+        </div>
       </div>
     </div>
   </div>
@@ -18,7 +22,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Skeleton } from 'ant-design-vue'
+import { Skeleton, Button } from 'ant-design-vue'
 
 const comments = ref([])
 const loading = ref(true)
@@ -33,6 +37,14 @@ onMounted(async () => {
     loading.value = false
   }, 1000)
 })
+
+const replyToComment = (comment) => {
+  console.log('回复评论:', comment)
+}
+
+const addEmoji = (comment) => {
+  console.log('添加表情到评论:', comment)
+}
 </script>
 
 <style scoped>
@@ -59,5 +71,8 @@ onMounted(async () => {
 .comment-author {
   font-size: 0.9rem;
   color: #888;
+}
+.comment-actions {
+  margin-top: 0.5rem;
 }
 </style> 
