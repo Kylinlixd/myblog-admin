@@ -223,23 +223,27 @@
           >
             <template #renderItem="{ item }">
               <a-list-item>
-                <router-link :to="getItemLink(item)" class="result-link">
-                  <h3 class="result-title" v-html="highlightKeyword(item.title || item.name)"></h3>
-                </router-link>
-                <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
-                <div class="result-meta">
-                  <span class="result-type">{{ getItemType(item) }}</span>
-                  <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
-                  <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
-                  <span v-if="item.category" class="result-category">
-                    <folder-outlined /> {{ item.category.name }}
-                  </span>
-                  <span v-if="item.tags && item.tags.length" class="result-tags">
-                    <tag-outlined /> 
-                    <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
-                      {{ tag.name }}
-                    </a-tag>
-                  </span>
+                <div class="result-content">
+                  <div class="result-header">
+                    <span class="result-type">{{ getItemType(item) }}</span>
+                    <router-link :to="getItemLink(item)" class="result-link">
+                      <h3 class="result-title" v-html="highlightKeyword(item.title || item.name)"></h3>
+                    </router-link>
+                  </div>
+                  <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
+                  <div class="result-meta">
+                    <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
+                    <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
+                    <span v-if="item.category" class="result-category">
+                      <folder-outlined /> {{ item.category.name }}
+                    </span>
+                    <span v-if="item.tags && item.tags.length" class="result-tags">
+                      <tag-outlined /> 
+                      <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
+                        {{ tag.name }}
+                      </a-tag>
+                    </span>
+                  </div>
                 </div>
               </a-list-item>
             </template>
@@ -982,16 +986,37 @@ const debouncedSearch = debounce(handleSearch, 300)
   border-color: #e6f7ff;
 }
 
+.result-content {
+  width: 100%;
+}
+
+.result-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.result-type {
+  background: #e6f7ff;
+  color: #1890ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
 .result-link {
+  flex: 1;
   text-decoration: none;
   color: inherit;
-  display: block;
 }
 
 .result-title {
   font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin: 0;
   color: #1a1a1a;
   line-height: 1.4;
 }
@@ -1010,22 +1035,41 @@ const debouncedSearch = debounce(handleSearch, 300)
   color: #888;
   font-size: 0.9rem;
   align-items: center;
-}
-
-.result-type {
-  background: #e6f7ff;
-  color: #1890ff;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
 }
 
 .result-date {
   color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.result-date::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
 }
 
 .result-views {
   color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.result-views::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
 }
 
 .result-category {
@@ -1035,10 +1079,28 @@ const debouncedSearch = debounce(handleSearch, 300)
   color: #52c41a;
 }
 
+.result-category::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
 .result-tags {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.result-tags::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
 }
 
 .result-tags :deep(.ant-tag) {
@@ -1144,10 +1206,34 @@ const debouncedSearch = debounce(handleSearch, 300)
 
 .card-date {
   color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-date::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
 }
 
 .card-views {
   color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-views::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
 }
 
 .card-category {
@@ -1157,10 +1243,28 @@ const debouncedSearch = debounce(handleSearch, 300)
   color: #52c41a;
 }
 
+.card-category::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
 .card-tags {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.card-tags::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
 }
 
 .card-tags :deep(.ant-tag) {
