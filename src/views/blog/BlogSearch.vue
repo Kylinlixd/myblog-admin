@@ -199,8 +199,10 @@
     <!-- 搜索结果 -->
     <div class="search-results" v-if="searched">
       <div v-if="loading" class="loading-state">
-        <a-spin size="large" />
-        <p>搜索中...</p>
+        <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" />
+        <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
+        <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
+        <p style="margin-top:2rem; color:#888;">搜索中...</p>
       </div>
       
       <div v-else-if="!searchResults || searchResults.length === 0" class="no-results">
@@ -303,9 +305,9 @@ import {
   FolderOutlined,
   TagOutlined
 } from '@ant-design/icons-vue'
-import { message, Empty } from 'ant-design-vue'
+import { message, Empty, Skeleton } from 'ant-design-vue'
 import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
-import { debounce } from '@/utils/performance'
+import { debounce, showError } from '@/utils/performance'
 
 const route = useRoute()
 const router = useRouter()
@@ -488,9 +490,9 @@ const handleSearch = async () => {
     console.error('[Search] 搜索失败:', error)
     // 如果是网络错误，显示网络错误提示
     if (error.message === '网络连接失败') {
-      message.error('网络连接失败，请检查网络设置')
+      showError('网络连接失败，请检查网络设置')
     } else {
-      message.info('未找到相关结果，请尝试其他关键词')
+      showError('未找到相关结果，请尝试其他关键词')
     }
     searchResults.value = []
     total.value = 0
