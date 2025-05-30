@@ -967,81 +967,132 @@ const debouncedSearch = debounce(handleSearch, 300)
   gap: 1.5rem;
 }
 
-.result-item {
-  background: white;
+.list-view :deep(.ant-list-item) {
   padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
 }
 
-.result-item:hover {
+.list-view :deep(.ant-list-item:hover) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #e6f7ff;
 }
 
 .result-link {
   text-decoration: none;
   color: inherit;
+  display: block;
 }
 
 .result-title {
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   color: #1a1a1a;
+  line-height: 1.4;
 }
 
 .result-excerpt {
   color: #666;
   margin-bottom: 1rem;
   line-height: 1.6;
+  font-size: 0.95rem;
 }
 
 .result-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   color: #888;
   font-size: 0.9rem;
+  align-items: center;
+}
+
+.result-type {
+  background: #e6f7ff;
+  color: #1890ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.result-date {
+  color: #8c8c8c;
+}
+
+.result-views {
+  color: #8c8c8c;
+}
+
+.result-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #52c41a;
+}
+
+.result-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-tags :deep(.ant-tag) {
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
 }
 
 /* 卡片视图样式 */
 .card-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
 .result-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .result-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #e6f7ff;
 }
 
 .card-link {
   text-decoration: none;
   color: inherit;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .card-image {
   width: 100%;
   height: 200px;
   overflow: hidden;
+  position: relative;
 }
 
 .card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .result-card:hover .card-image img {
@@ -1050,30 +1101,106 @@ const debouncedSearch = debounce(handleSearch, 300)
 
 .card-content {
   padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .card-title {
   font-size: 1.2rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   color: #1a1a1a;
+  line-height: 1.4;
 }
 
 .card-excerpt {
   color: #666;
   margin-bottom: 1rem;
   line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  font-size: 0.95rem;
+  flex: 1;
 }
 
 .card-meta {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   color: #888;
   font-size: 0.9rem;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.card-type {
+  background: #e6f7ff;
+  color: #1890ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.card-date {
+  color: #8c8c8c;
+}
+
+.card-views {
+  color: #8c8c8c;
+}
+
+.card-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #52c41a;
+}
+
+.card-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-tags :deep(.ant-tag) {
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* 高亮样式优化 */
+.highlight {
+  color: #1890ff;
+  font-weight: 600;
+  background: rgba(24, 144, 255, 0.1);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* 响应式布局优化 */
+@media (max-width: 768px) {
+  .list-view :deep(.ant-list-item) {
+    padding: 1rem;
+  }
+
+  .card-view {
+    grid-template-columns: 1fr;
+  }
+
+  .card-image {
+    height: 180px;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .result-meta,
+  .card-meta {
+    gap: 0.75rem;
+  }
 }
 
 .pagination {
@@ -1126,10 +1253,5 @@ const debouncedSearch = debounce(handleSearch, 300)
   .pagination {
     margin-top: 1rem;
   }
-}
-
-.highlight {
-  color: #1890ff;
-  font-weight: bold;
 }
 </style>
