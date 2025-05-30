@@ -1,0 +1,63 @@
+<template>
+  <div class="comment-container">
+    <h3>评论</h3>
+    <div v-if="loading" class="loading-state">
+      <a-skeleton :active="true" :paragraph="{ rows: 2 }" :title="true" :loading="true" />
+    </div>
+    <div v-else-if="comments.length === 0" class="no-comments">
+      <p>暂无评论</p>
+    </div>
+    <div v-else class="comment-list">
+      <div v-for="(comment, index) in comments" :key="index" class="comment-item">
+        <p class="comment-content">{{ comment.content }}</p>
+        <p class="comment-author">作者: {{ comment.author }}</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { Skeleton } from 'ant-design-vue'
+
+const comments = ref([])
+const loading = ref(true)
+
+onMounted(async () => {
+  // 模拟加载评论数据
+  setTimeout(() => {
+    comments.value = [
+      { content: '这是一条评论', author: '用户1' },
+      { content: '这是另一条评论', author: '用户2' }
+    ]
+    loading.value = false
+  }, 1000)
+})
+</script>
+
+<style scoped>
+.comment-container {
+  margin-top: 2rem;
+}
+.loading-state {
+  margin-top: 1rem;
+}
+.no-comments {
+  text-align: center;
+  color: #888;
+}
+.comment-list {
+  margin-top: 1rem;
+}
+.comment-item {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+.comment-content {
+  font-size: 1rem;
+}
+.comment-author {
+  font-size: 0.9rem;
+  color: #888;
+}
+</style> 
