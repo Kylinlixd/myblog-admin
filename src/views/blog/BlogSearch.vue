@@ -10,8 +10,8 @@
             enter-button
             size="large"
             :loading="loading"
-            @search="handleSearch"
-            @press-enter="handleSearch"
+            @search="debouncedSearch"
+            @press-enter="debouncedSearch"
             class="search-input"
           >
             <template #prefix>
@@ -36,7 +36,7 @@
         <a-form layout="inline" :model="advancedOptions">
           <!-- 内容类型筛选 -->
           <a-form-item label="内容类型">
-            <a-radio-group v-model:value="advancedOptions.type" @change="handleSearch">
+            <a-radio-group v-model:value="advancedOptions.type" @change="debouncedSearch">
               <a-radio value="">全部</a-radio>
               <a-radio value="note">笔记</a-radio>
               <a-radio value="share">分享</a-radio>
@@ -50,7 +50,7 @@
               placeholder="选择分类"
               style="width: 200px"
               allowClear
-              @change="handleSearch"
+              @change="debouncedSearch"
             >
               <a-select-option
                 v-for="category in categories" 
@@ -68,7 +68,7 @@
               v-model:value="advancedOptions.tag"
               placeholder="选择标签"
               allowClear
-              @change="handleSearch"
+              @change="debouncedSearch"
               style="width: 200px"
             >
               <a-select-option
@@ -87,7 +87,7 @@
               v-model:value="advancedOptions.time"
               placeholder="选择时间范围"
               allowClear
-              @change="handleSearch"
+              @change="debouncedSearch"
               style="width: 200px"
             >
               <a-select-option value="week">最近一周</a-select-option>
@@ -102,7 +102,7 @@
             <a-select
               v-model:value="advancedOptions.sortBy"
               placeholder="排序方式"
-              @change="handleSearch"
+              @change="debouncedSearch"
               style="width: 200px"
             >
               <a-select-option value="time_desc">最新发布</a-select-option>
@@ -115,13 +115,13 @@
           
           <!-- 媒体类型筛选 -->
           <a-form-item>
-            <a-checkbox v-model:checked="advancedOptions.hasMedia" @change="handleSearch">
+            <a-checkbox v-model:checked="advancedOptions.hasMedia" @change="debouncedSearch">
               包含多媒体
             </a-checkbox>
           </a-form-item>
           
           <a-form-item>
-            <a-button type="primary" @click="handleSearch">搜索</a-button>
+            <a-button type="primary" @click="debouncedSearch">搜索</a-button>
             <a-button style="margin-left: 8px" @click="resetAdvancedOptions">重置</a-button>
           </a-form-item>
         </a-form>
@@ -239,7 +239,7 @@
           <div v-for="(item, index) in searchResults" :key="item.id || index" class="result-card">
             <router-link :to="getItemLink(item)" class="card-link">
               <div class="card-image" v-if="item.cover">
-                <img :src="item.cover" :alt="item.title || item.name">
+                <img :src="item.cover" :alt="item.title || item.name" loading="lazy">
               </div>
               <div class="card-content">
                 <h3 class="card-title" v-html="highlightKeyword(item.title || item.name)"></h3>
@@ -305,6 +305,7 @@ import {
 } from '@ant-design/icons-vue'
 import { message, Empty } from 'ant-design-vue'
 import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
+import { debounce } from '@/utils/performance'
 
 const route = useRoute()
 const router = useRouter()
@@ -656,6 +657,9 @@ const getItemType = (item) => {
       return '未知'
   }
 }
+
+// 创建防抖函数
+const debouncedSearch = debounce(handleSearch, 300)
 </script>
 
 <style scoped>
