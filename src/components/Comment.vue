@@ -20,12 +20,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { Skeleton, Button } from 'ant-design-vue'
 
-const comments = ref([])
-const loading = ref(true)
+interface Comment {
+  content: string
+  author: string
+}
+
+const comments = ref<Comment[]>([])
+const loading = ref<boolean>(true)
 
 onMounted(async () => {
   // 模拟加载评论数据
@@ -38,11 +43,11 @@ onMounted(async () => {
   }, 1000)
 })
 
-const replyToComment = (comment) => {
+const replyToComment = (comment: Comment) => {
   console.log('回复评论:', comment)
 }
 
-const addEmoji = (comment) => {
+const addEmoji = (comment: Comment) => {
   console.log('添加表情到评论:', comment)
 }
 </script>
