@@ -1077,34 +1077,44 @@ const debouncedSearch = debounce(handleSearch, 300)
     padding: 1rem;
   }
 
-  .search-input {
+  .search-input-wrapper {
     max-width: 100%;
+  }
+
+  .search-input :deep(.ant-input-affix-wrapper) {
+    height: 40px;
+  }
+
+  .search-input :deep(.ant-input) {
+    font-size: 1rem;
+  }
+
+  .search-input :deep(.ant-btn) {
+    height: 40px;
   }
 
   .advanced-search-options {
     padding: 1rem;
   }
 
+  .advanced-search-options :deep(.ant-form) {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-search-options :deep(.ant-form-item) {
+    margin-bottom: 1rem;
+  }
+
   .card-view {
     grid-template-columns: 1fr;
   }
 
-  .result-item,
   .result-card {
     padding: 1rem;
   }
 
-  .advanced-search-options :deep(.ant-form) {
-    grid-template-columns: 1fr;
-  }
-  
-  .advanced-search-options :deep(.ant-form-item:last-child) {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .advanced-search-options :deep(.ant-form-item:last-child .ant-btn) {
-    width: 100%;
+  .pagination {
+    margin-top: 1rem;
   }
 }
 
