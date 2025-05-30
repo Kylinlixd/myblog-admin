@@ -214,26 +214,36 @@
       <div v-else class="results-content">
         <!-- 列表视图 -->
         <div v-if="viewMode === 'list'" class="list-view">
-          <div v-for="(item, index) in searchResults" :key="item.id || index" class="result-item">
-            <router-link :to="getItemLink(item)" class="result-link">
-              <h3 class="result-title" v-html="highlightKeyword(item.title || item.name)"></h3>
-            </router-link>
-            <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
-            <div class="result-meta">
-              <span class="result-type">{{ getItemType(item) }}</span>
-              <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
-              <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
-              <span v-if="item.category" class="result-category">
-                <folder-outlined /> {{ item.category.name }}
-              </span>
-              <span v-if="item.tags && item.tags.length" class="result-tags">
-                <tag-outlined /> 
-                <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
-                  {{ tag.name }}
-                </a-tag>
-              </span>
-            </div>
-          </div>
+          <a-list
+            :data-source="searchResults"
+            :pagination="false"
+            :virtual="true"
+            :item-height="100"
+            :height="500"
+          >
+            <template #renderItem="{ item }">
+              <a-list-item>
+                <router-link :to="getItemLink(item)" class="result-link">
+                  <h3 class="result-title" v-html="highlightKeyword(item.title || item.name)"></h3>
+                </router-link>
+                <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
+                <div class="result-meta">
+                  <span class="result-type">{{ getItemType(item) }}</span>
+                  <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
+                  <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
+                  <span v-if="item.category" class="result-category">
+                    <folder-outlined /> {{ item.category.name }}
+                  </span>
+                  <span v-if="item.tags && item.tags.length" class="result-tags">
+                    <tag-outlined /> 
+                    <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
+                      {{ tag.name }}
+                    </a-tag>
+                  </span>
+                </div>
+              </a-list-item>
+            </template>
+          </a-list>
         </div>
         
         <!-- 卡片视图 -->
@@ -284,7 +294,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { 
@@ -305,7 +315,7 @@ import {
   FolderOutlined,
   TagOutlined
 } from '@ant-design/icons-vue'
-import { message, Empty, Skeleton } from 'ant-design-vue'
+import { message, Empty, Skeleton, List } from 'ant-design-vue'
 import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
 import { debounce, showError } from '@/utils/performance'
 
