@@ -9,7 +9,7 @@ import router from './router'
 import '@/styles/tailwind.css'
 import './styles/main.scss'
 import { message } from 'ant-design-vue'
-import { useUserStore } from './stores/user'
+import { pinia, useUserStore } from './stores'
 
 // 确定环境
 const isProd = process.env.NODE_ENV === 'production'
@@ -66,7 +66,6 @@ if (isProd) {
 }
 
 // 初始化 Pinia
-const pinia = createPinia()
 app.use(pinia)
 
 // 初始化 Ant Design Vue

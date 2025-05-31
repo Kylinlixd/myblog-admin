@@ -3,6 +3,7 @@ import { message } from 'ant-design-vue'
 import router from '../router'
 import { useAppStore } from '../stores/app'
 import { useUserStore } from '../stores/user'
+import { safeStorage } from './security'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
@@ -16,7 +17,8 @@ const service = axios.create({
   timeout: requestTimeout,
   headers: {
     'Accept': 'application/json',
-    'X-Requested-With': 'XMLHttpRequest'
+    'X-Requested-With': 'XMLHttpRequest',
+    'Content-Type': 'application/json'
   },
   // 允许携带cookies
   withCredentials: true,
@@ -192,43 +194,13 @@ service.interceptors.request.use(
     increasePendingCount()
     
     // 获取访问令牌
-    const accessToken = localStorage.getItem('accessToken')
+    const token = safeStorage.get('token', '')
     const isAuthPath = config.url.includes('/auth/')
     
     // 设置请求头
-    if (accessToken) {
-      // 确保令牌格式正确
-      if (typeof accessToken === 'string') {
-        // 如果令牌不是以 Bearer 开头，添加它
-        const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
-        config.headers.Authorization = token
-        console.log('[令牌] 请求已携带令牌:', config.url)
-      } else if (typeof accessToken === 'object') {
-        // 如果意外获取到对象类型的令牌，尝试提取字符串
-        console.error('[令牌错误] 令牌是对象类型而非字符串，尝试修复')
-        
-        try {
-          let fixedToken = null
-          
-          // 尝试从对象中提取令牌字符串
-          if (accessToken.access) {
-            fixedToken = `Bearer ${String(accessToken.access)}`
-          } else if (accessToken.token) {
-            fixedToken = `Bearer ${String(accessToken.token)}`
-          }
-          
-          if (fixedToken) {
-            config.headers.Authorization = fixedToken
-            // 更新localStorage以修复问题
-            localStorage.setItem('accessToken', fixedToken)
-            console.log('[令牌修复] 成功从对象中提取并设置令牌')
-          }
-        } catch (e) {
-          console.error('[令牌错误] 处理对象令牌失败:', e)
-        }
-      } else {
-        console.error('[令牌错误] 无效的令牌类型:', typeof accessToken)
-      }
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      console.log('[令牌] 请求已携带令牌:', config.url)
     } else {
       console.log('[令牌] 请求未携带令牌:', config.url)
       

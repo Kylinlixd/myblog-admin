@@ -541,4 +541,62 @@ blog.interceptors.response.use(
   }
 )
 
+// 用户相关 API
+export const userApi = {
+  login: (data) => request.post('/auth/login', data),
+  register: (data) => request.post('/auth/register', data),
+  logout: () => request.post('/auth/logout'),
+  getInfo: () => request.get('/user/info'),
+  updateInfo: (data) => request.put('/user/info', data),
+  updatePassword: (data) => request.put('/user/password', data)
+}
+
+// 博客相关 API
+export const blogApi = {
+  getList: (params) => request.get('/blogs', { params }),
+  getDetail: (id) => request.get(`/blogs/${id}`),
+  create: (data) => request.post('/blogs', data),
+  update: (id, data) => request.put(`/blogs/${id}`, data),
+  delete: (id) => request.delete(`/blogs/${id}`),
+  getComments: (id) => request.get(`/blogs/${id}/comments`),
+  addComment: (id, data) => request.post(`/blogs/${id}/comments`, data),
+  deleteComment: (blogId, commentId) => request.delete(`/blogs/${blogId}/comments/${commentId}`)
+}
+
+// 分类相关 API
+export const categoryApi = {
+  getList: () => request.get('/categories'),
+  create: (data) => request.post('/categories', data),
+  update: (id, data) => request.put(`/categories/${id}`, data),
+  delete: (id) => request.delete(`/categories/${id}`)
+}
+
+// 标签相关 API
+export const tagApi = {
+  getList: () => request.get('/tags'),
+  create: (data) => request.post('/tags', data),
+  update: (id, data) => request.put(`/tags/${id}`, data),
+  delete: (id) => request.delete(`/tags/${id}`)
+}
+
+// 文件上传 API
+export const uploadApi = {
+  uploadImage: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post('/upload/image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+  }
+}
+
+// 统计相关 API
+export const statsApi = {
+  getOverview: () => request.get('/stats/overview'),
+  getBlogStats: () => request.get('/stats/blogs'),
+  getCommentStats: () => request.get('/stats/comments')
+}
+
 export default api 

@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import CryptoJS from 'crypto-js'
 
 // XSS 防护
 export const sanitizeHTML = (content: string): string => {
@@ -13,6 +14,17 @@ export const validateInput = (input: string, type: 'text' | 'email' | 'url'): bo
     url: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
   }
   return patterns[type].test(input)
+}
+
+// 数据加密
+export const encrypt = (data: string, key: string): string => {
+  return CryptoJS.AES.encrypt(data, key).toString()
+}
+
+// 数据解密
+export const decrypt = (encryptedData: string, key: string): string => {
+  const bytes = CryptoJS.AES.decrypt(encryptedData, key)
+  return bytes.toString(CryptoJS.enc.Utf8)
 }
 
 // 防止 CSRF 攻击
@@ -78,4 +90,45 @@ export const safeURL = {
       return ''
     }
   }
+}
+
+// 密码强度检查
+export const checkPasswordStrength = (password: string): {
+  score: number;
+  feedback: string[];
+} => {
+  const feedback: string[] = []
+  let score = 0
+
+  if (password.length < 8) {
+    feedback.push('密码长度至少需要8个字符')
+  } else {
+    score += 1
+  }
+
+  if (/[A-Z]/.test(password)) {
+    score += 1
+  } else {
+    feedback.push('建议包含大写字母')
+  }
+
+  if (/[a-z]/.test(password)) {
+    score += 1
+  } else {
+    feedback.push('建议包含小写字母')
+  }
+
+  if (/[0-9]/.test(password)) {
+    score += 1
+  } else {
+    feedback.push('建议包含数字')
+  }
+
+  if (/[^A-Za-z0-9]/.test(password)) {
+    score += 1
+  } else {
+    feedback.push('建议包含特殊字符')
+  }
+
+  return { score, feedback }
 } 
