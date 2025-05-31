@@ -126,6 +126,7 @@ import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-light.css'
 import { message } from 'ant-design-vue'
+import DOMPurify from 'dompurify'
 
 // 创建 Markdown 渲染器
 const md = new MarkdownIt({
@@ -144,7 +145,14 @@ const md = new MarkdownIt({
 
 // 渲染 Markdown 内容
 const renderMarkdown = (content) => {
-  return md.render(content || '')
+  if (!content) return ''
+  // 添加 XSS 防护
+  const sanitizedContent = DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
+    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target'],
+    ALLOWED_PROTOCOLS: ['http', 'https', 'mailto', 'tel']
+  })
+  return md.render(sanitizedContent)
 }
 
 const route = useRoute()
@@ -207,6 +215,14 @@ const fetchComments = async () => {
   }
 }
 
+// 添加内容安全策略
+const setupCSP = () => {
+  const meta = document.createElement('meta')
+  meta.httpEquiv = 'Content-Security-Policy'
+  meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'"
+  document.head.appendChild(meta)
+}
+
 // 提交评论
 const submitComment = async () => {
   if (!dynamic.value) return
@@ -218,11 +234,16 @@ const submitComment = async () => {
     if (isSubmittingComment.value) return
     isSubmittingComment.value = true
     
+    // 对用户输入进行安全处理
+    const sanitizedContent = DOMPurify.sanitize(commentContent.value)
+    const sanitizedNickname = DOMPurify.sanitize(nickname.value || '匿名用户')
+    const sanitizedEmail = DOMPurify.sanitize(email.value || '')
+    
     const commentData = {
       dynamic_id: dynamic.value.id,
-      content: commentContent.value,
-      nickname: nickname.value || '匿名用户',
-      email: email.value || ''
+      content: sanitizedContent,
+      nickname: sanitizedNickname,
+      email: sanitizedEmail
     }
     
     console.log('提交评论数据:', commentData)
@@ -245,7 +266,6 @@ const submitComment = async () => {
     }
   } catch (error) {
     if (error.errorFields) {
-      // 表单验证错误
       message.error('请检查评论内容')
     } else {
       console.error('评论失败:', error)
@@ -290,6 +310,7 @@ const fetchDynamicDetail = async () => {
 }
 
 onMounted(() => {
+  setupCSP()
   fetchDynamicDetail()
 })
 </script>
