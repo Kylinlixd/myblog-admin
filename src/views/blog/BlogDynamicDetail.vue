@@ -126,7 +126,7 @@ import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 import 'highlight.js/styles/atom-one-light.css'
 import { message } from 'ant-design-vue'
-import DOMPurify from 'dompurify'
+import { sanitizeHTML } from '@/utils/security'
 
 // 创建 Markdown 渲染器
 const md = new MarkdownIt({
@@ -146,13 +146,7 @@ const md = new MarkdownIt({
 // 渲染 Markdown 内容
 const renderMarkdown = (content) => {
   if (!content) return ''
-  // 添加 XSS 防护
-  const sanitizedContent = DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target'],
-    ALLOWED_PROTOCOLS: ['http', 'https', 'mailto', 'tel']
-  })
-  return md.render(sanitizedContent)
+  return md.render(sanitizeHTML(content))
 }
 
 const route = useRoute()
@@ -228,38 +222,27 @@ const submitComment = async () => {
   if (!dynamic.value) return
   
   try {
-    // 验证表单
     await commentForm.value.validate()
     
     if (isSubmittingComment.value) return
     isSubmittingComment.value = true
     
-    // 对用户输入进行安全处理
-    const sanitizedContent = DOMPurify.sanitize(commentContent.value)
-    const sanitizedNickname = DOMPurify.sanitize(nickname.value || '匿名用户')
-    const sanitizedEmail = DOMPurify.sanitize(email.value || '')
-    
     const commentData = {
       dynamic_id: dynamic.value.id,
-      content: sanitizedContent,
-      nickname: sanitizedNickname,
-      email: sanitizedEmail
+      content: sanitizeHTML(commentContent.value),
+      nickname: sanitizeHTML(nickname.value || '匿名用户'),
+      email: sanitizeHTML(email.value || '')
     }
-    
-    console.log('提交评论数据:', commentData)
     
     const result = await commentDynamic(dynamic.value.id, commentData)
     
     if (result && result.code === 200) {
       message.success('评论成功')
-      // 清空表单
       commentContent.value = ''
       nickname.value = ''
       email.value = ''
-      // 重新获取评论列表
       commentPage.value = 1
       await fetchComments()
-      // 更新评论数
       dynamic.value.comments = (dynamic.value.comments || 0) + 1
     } else {
       message.error(result?.message || '评论失败')

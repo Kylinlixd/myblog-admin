@@ -9,8 +9,7 @@ import DOMPurify from 'dompurify'
 // 配置 DOMPurify
 DOMPurify.setConfig({
   ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target'],
-  ALLOWED_PROTOCOLS: ['http', 'https', 'mailto', 'tel']
+  ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target']
 })
 
 // 添加全局错误处理

@@ -2,10 +2,7 @@ import DOMPurify from 'dompurify'
 
 // XSS 防护
 export const sanitizeHTML = (content: string): string => {
-  return DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'img', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td'],
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'target']
-  })
+  return DOMPurify.sanitize(content)
 }
 
 // 输入验证
@@ -37,8 +34,7 @@ export const safeJSONParse = <T>(json: string, fallback: T): T => {
 export const safeStorage = {
   set: (key: string, value: any): void => {
     try {
-      const serializedValue = JSON.stringify(value)
-      localStorage.setItem(key, serializedValue)
+      localStorage.setItem(key, JSON.stringify(value))
     } catch (error) {
       console.error('存储数据失败:', error)
     }
@@ -46,8 +42,8 @@ export const safeStorage = {
   
   get: <T>(key: string, fallback: T): T => {
     try {
-      const serializedValue = localStorage.getItem(key)
-      return serializedValue ? JSON.parse(serializedValue) as T : fallback
+      const value = localStorage.getItem(key)
+      return value ? JSON.parse(value) as T : fallback
     } catch (error) {
       console.error('读取数据失败:', error)
       return fallback
