@@ -323,7 +323,7 @@ onMounted(() => {
   width: 100%;
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 15px 30px;
+  padding: 0 2.5rem 30px;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -391,7 +391,7 @@ onMounted(() => {
 
 .dynamic-body {
   margin-bottom: 3rem;
-  padding: 2rem;
+  padding: 2.5rem;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
@@ -445,7 +445,7 @@ onMounted(() => {
   line-height: 1.8;
   color: #334155;
   word-wrap: break-word;
-  padding: 0;
+  padding: 0 2rem;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -628,7 +628,7 @@ onMounted(() => {
   }
 
   .dynamic-content {
-    padding: 0 15px 20px;
+    padding: 0 1.5rem 20px;
   }
 
   .dynamic-body {
@@ -636,6 +636,7 @@ onMounted(() => {
   }
 
   :deep(.markdown-body) {
+    padding: 0 1.5rem;
     font-size: 15px;
   }
 }

@@ -972,7 +972,7 @@ const debouncedSearch = debounce(handleSearch, 300)
 }
 
 .list-view :deep(.ant-list-item) {
-  padding: 1.5rem;
+  padding: 1.5rem 2.5rem;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
@@ -1162,7 +1162,7 @@ const debouncedSearch = debounce(handleSearch, 300)
 }
 
 .card-content {
-  padding: 1.5rem;
+  padding: 1.5rem 2.5rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1286,7 +1286,7 @@ const debouncedSearch = debounce(handleSearch, 300)
 /* 响应式布局优化 */
 @media (max-width: 768px) {
   .list-view :deep(.ant-list-item) {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
   }
 
   .card-view {
@@ -1298,7 +1298,7 @@ const debouncedSearch = debounce(handleSearch, 300)
   }
 
   .card-content {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
   }
 
   .result-meta,
