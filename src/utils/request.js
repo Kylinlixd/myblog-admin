@@ -199,7 +199,9 @@ service.interceptors.request.use(
     
     // 设置请求头
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      // 确保 token 格式正确
+      const authToken = token.startsWith('Bearer ') ? token : `Bearer ${token}`
+      config.headers.Authorization = authToken
       console.log('[令牌] 请求已携带令牌:', config.url)
     } else {
       console.log('[令牌] 请求未携带令牌:', config.url)

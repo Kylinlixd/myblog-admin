@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { login, register, getUserInfo, logout, changePassword, updateUserProfile } from '../api/auth'
 import router from '../router'
+import { safeStorage } from '../utils/security'
 
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: null,
-    accessToken: localStorage.getItem('accessToken') || '',
-    refreshToken: localStorage.getItem('refreshToken') || '',
+    accessToken: safeStorage.get('token', ''),
+    refreshToken: safeStorage.get('refreshToken', ''),
     initialized: false
   }),
   
@@ -54,112 +55,47 @@ export const useUserStore = defineStore('user', {
         
         // 发送登录请求
         const response = await login({ username, password });
-        console.log('登录原始响应:', response);
+        console.log('登录响应:', response);
         
-        // 从响应中提取数据 (考虑不同的响应结构)
+        // 从响应中提取数据
         const responseData = response.data || response;
-        console.log('响应数据结构:', typeof responseData, Object.keys(responseData).join(','));
         
-        // 直接获取令牌字符串，而不是对象引用
-        let extractedToken = null;
-        let refreshToken = null;
-        
-        // 处理令牌对象格式
-        if (responseData.token && typeof responseData.token === 'object') {
-          console.log('处理令牌对象格式');
-          
-          if (responseData.token.access) {
-            extractedToken = String(responseData.token.access);
-            console.log('提取令牌字符串:', extractedToken.substring(0, 10) + '...');
-          } else if (responseData.token.access_token) {
-            extractedToken = String(responseData.token.access_token);
-            console.log('提取access_token字符串:', extractedToken.substring(0, 10) + '...');
-          }
-          
-          if (responseData.token.refresh) {
-            refreshToken = String(responseData.token.refresh);
-            console.log('提取刷新令牌字符串:', refreshToken.substring(0, 10) + '...');
-          } else if (responseData.token.refresh_token) {
-            refreshToken = String(responseData.token.refresh_token);
-            console.log('提取refresh_token字符串:', refreshToken.substring(0, 10) + '...');
-          }
-        }
-        // 处理直接令牌字段
-        else if (responseData.access) {
-          extractedToken = String(responseData.access);
-          console.log('提取access字段:', extractedToken.substring(0, 10) + '...');
-          
-          if (responseData.refresh) {
-            refreshToken = String(responseData.refresh);
-            console.log('提取refresh字段:', refreshToken.substring(0, 10) + '...');
-          }
-        } else if (responseData.token && typeof responseData.token === 'string') {
-          extractedToken = String(responseData.token);
-          console.log('提取token字符串字段:', extractedToken.substring(0, 10) + '...');
-          
-          if (responseData.refresh_token) {
-            refreshToken = String(responseData.refresh_token);
-            console.log('提取refresh_token字段:', refreshToken.substring(0, 10) + '...');
-          }
-        }
-        
-        // 检查是否成功提取令牌
-        if (!extractedToken) {
-          console.error('无法从响应中提取访问令牌，登录失败');
+        // 检查响应格式
+        if (!responseData) {
+          console.error('登录响应为空');
           return false;
         }
         
-        // 格式化令牌并保存
-        const formattedToken = extractedToken.startsWith('Bearer ') 
-          ? extractedToken 
-          : `Bearer ${extractedToken}`;
+        // 直接获取 access 和 refresh token
+        const { access, refresh } = responseData;
         
-        // 保存令牌到本地存储和状态
-        localStorage.setItem('accessToken', formattedToken);
-        this.accessToken = formattedToken;
-        console.log('保存到localStorage的accessToken:', formattedToken.substring(0, 20) + '...');
-        
-        // 保存刷新令牌
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
-          this.refreshToken = refreshToken;
-          console.log('保存刷新令牌:', refreshToken.substring(0, 10) + '...');
+        if (!access) {
+          console.error('登录响应中缺少访问令牌');
+          return false;
         }
         
-        // 提取用户信息
-        const userInfo = responseData.user || responseData.userInfo || {};
+        // 格式化并保存访问令牌
+        const formattedToken = access.startsWith('Bearer ') ? access : `Bearer ${access}`;
+        safeStorage.set('token', formattedToken);
+        this.accessToken = formattedToken;
         
-        // 保存用户信息 - 确保没有循环引用
-        if (Object.keys(userInfo).length > 0) {
-          this.userInfo = userInfo;
-          try {
-            const userInfoCleaned = JSON.parse(JSON.stringify(userInfo));
-            localStorage.setItem('userInfo', JSON.stringify(userInfoCleaned));
-            console.log('保存用户信息成功');
-          } catch (e) {
-            console.error('保存用户信息失败:', e);
-          }
+        // 保存刷新令牌
+        if (refresh) {
+          safeStorage.set('refreshToken', refresh);
+          this.refreshToken = refresh;
+        }
+        
+        // 获取用户信息
+        try {
+          await this.getUserInfo();
+        } catch (error) {
+          console.warn('获取用户信息失败:', error);
         }
         
         this.initialized = true;
-        
-        // 验证令牌是否保存成功
-        const savedToken = localStorage.getItem('accessToken');
-        console.log('最终保存的accessToken:', savedToken ? savedToken.substring(0, 20) + '...' : '无');
-        
-        // 如果没有用户信息，尝试获取
-        if (Object.keys(userInfo).length === 0) {
-          try {
-            console.log('尝试获取额外的用户信息');
-            await this.getUserInfo();
-          } catch (error) {
-            console.warn('获取额外用户信息失败:', error.message);
-          }
-        }
-        
         return true;
       } catch (error) {
-        console.error('登录过程发生错误:', error);
+        console.error('登录失败:', error);
         this.clearUserData();
         return false;
       }
@@ -196,13 +132,13 @@ export const useUserStore = defineStore('user', {
             const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
             
             // 保存令牌
-            localStorage.setItem('accessToken', token)
+            safeStorage.set('token', token)
             this.accessToken = token
             console.log('[user store] 保存访问令牌:', token.substring(0, 20) + '...')
             
             if (refreshToken) {
               refreshToken = String(refreshToken)
-              localStorage.setItem('refreshToken', refreshToken)
+              safeStorage.set('refreshToken', refreshToken)
               this.refreshToken = refreshToken
               console.log('[user store] 保存刷新令牌:', refreshToken.substring(0, 10) + '...')
             }
@@ -210,7 +146,7 @@ export const useUserStore = defineStore('user', {
             // 处理用户信息
             const userInfo = responseData.userInfo || responseData.user || {}
             if (userInfo && Object.keys(userInfo).length > 0) {
-              localStorage.setItem('userInfo', JSON.stringify(userInfo))
+              safeStorage.set('userInfo', JSON.stringify(userInfo))
               this.userInfo = userInfo
               console.log('[user store] 保存用户信息')
             }
@@ -242,17 +178,17 @@ export const useUserStore = defineStore('user', {
         
         // 注册成功后自动登录
         this.accessToken = token
-        localStorage.setItem('accessToken', token)
+        safeStorage.set('token', token)
         
         if (refreshTokenStr) {
-          localStorage.setItem('refreshToken', refreshTokenStr)
+          safeStorage.set('refreshToken', refreshTokenStr)
           this.refreshToken = refreshTokenStr
         }
         
         this.userInfo = userInfo
         // 保存用户信息
         if (userInfo && Object.keys(userInfo).length > 0) {
-          localStorage.setItem('userInfo', JSON.stringify(userInfo))
+          safeStorage.set('userInfo', JSON.stringify(userInfo))
         }
         
         this.initialized = true
@@ -265,49 +201,42 @@ export const useUserStore = defineStore('user', {
     
     async getUserInfo() {
       try {
-        if (!this.accessToken) {
-          return null
+        const response = await getUserInfo();
+        const userInfo = response.data || response;
+        
+        if (userInfo) {
+          this.userInfo = userInfo;
+          safeStorage.set('userInfo', userInfo);
         }
         
-        const response = await getUserInfo()
-        
-        // 从正确的位置提取 userInfo
-        const userInfo = response.data || response
-        
-        if (!userInfo) {
-          console.error('获取用户信息失败: 响应中没有用户信息', response)
-          return null
-        }
-        
-        this.userInfo = userInfo
-        return userInfo
+        return userInfo;
       } catch (error) {
-        console.error('获取用户信息失败:', error)
-        this.clearUserData()
-        return null
+        console.error('获取用户信息失败:', error);
+        throw error;
       }
     },
     
     async logout() {
       try {
-        // 尝试调用退出API
-        await logout()
+        await logout();
       } catch (error) {
-        console.error('退出登录失败:', error)
+        console.error('登出请求失败:', error);
       } finally {
-        // 清除状态，无论API调用是否成功
-        this.clearUserData()
-        this.initialized = false
+        this.clearUserData();
+        router.push('/login');
       }
     },
     
     clearUserData() {
-      this.accessToken = ''
-      this.refreshToken = ''
-      this.userInfo = null
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('userInfo')
+      this.userInfo = null;
+      this.accessToken = '';
+      this.refreshToken = '';
+      this.initialized = false;
+      
+      // 清除本地存储
+      safeStorage.remove('token');
+      safeStorage.remove('refreshToken');
+      safeStorage.remove('userInfo');
     },
     
     async changePassword(oldPassword, newPassword) {
