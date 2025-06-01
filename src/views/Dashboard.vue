@@ -87,10 +87,30 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import * as echarts from 'echarts'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart, BarChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent
+} from 'echarts/components'
+import * as echarts from 'echarts/core'
 import request from '../utils/request'
 import { useAppStore } from '../stores/app'
 import { message } from 'ant-design-vue'
+
+// 注册必须的组件
+use([
+  CanvasRenderer,
+  LineChart,
+  BarChart,
+  TitleComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent
+])
 
 // 应用状态
 const appStore = useAppStore()
@@ -226,8 +246,12 @@ const initPerformanceMonitoring = () => {
 const initCharts = () => {
   // 加载时间图表
   if (loadTimeChart.value) {
-    loadTimeChartInstance = echarts.init(loadTimeChart.value)
+    loadTimeChartInstance = echarts.init(loadTimeChart.value, null, {
+      renderer: 'canvas',
+      useDirtyRect: true
+    })
     loadTimeChartInstance.setOption({
+      animation: false,
       title: {
         text: '页面加载时间',
         left: 'center',
@@ -285,16 +309,16 @@ const initCharts = () => {
         smooth: true,
         showSymbol: false,
         lineStyle: {
-          width: 3,
+          width: 2,
           color: '#1890ff'
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
             offset: 0,
-            color: 'rgba(24, 144, 255, 0.3)'
+            color: 'rgba(24, 144, 255, 0.2)'
           }, {
             offset: 1,
-            color: 'rgba(24, 144, 255, 0.1)'
+            color: 'rgba(24, 144, 255, 0.05)'
           }])
         }
       }]
@@ -303,8 +327,12 @@ const initCharts = () => {
   
   // 资源加载图表
   if (resourceChart.value) {
-    resourceChartInstance = echarts.init(resourceChart.value)
+    resourceChartInstance = echarts.init(resourceChart.value, null, {
+      renderer: 'canvas',
+      useDirtyRect: true
+    })
     resourceChartInstance.setOption({
+      animation: false,
       title: {
         text: '资源加载时间',
         left: 'center',
@@ -377,8 +405,12 @@ const initCharts = () => {
   
   // 内存使用图表
   if (memoryChart.value) {
-    memoryChartInstance = echarts.init(memoryChart.value)
+    memoryChartInstance = echarts.init(memoryChart.value, null, {
+      renderer: 'canvas',
+      useDirtyRect: true
+    })
     memoryChartInstance.setOption({
+      animation: false,
       title: {
         text: '内存使用',
         left: 'center',
@@ -436,16 +468,16 @@ const initCharts = () => {
         smooth: true,
         showSymbol: false,
         lineStyle: {
-          width: 3,
+          width: 2,
           color: '#722ed1'
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
             offset: 0,
-            color: 'rgba(114, 46, 209, 0.3)'
+            color: 'rgba(114, 46, 209, 0.2)'
           }, {
             offset: 1,
-            color: 'rgba(114, 46, 209, 0.1)'
+            color: 'rgba(114, 46, 209, 0.05)'
           }])
         }
       }]
