@@ -38,9 +38,7 @@
       <div class="performance-grid">
         <div class="performance-card">
           <h3>页面加载时间</h3>
-          <div class="performance-chart">
-            <canvas ref="loadTimeChart"></canvas>
-          </div>
+          <div class="performance-chart" ref="loadTimeChart"></div>
           <div class="performance-stats">
             <div class="stat-item">
               <span>平均加载时间</span>
@@ -55,9 +53,7 @@
         
         <div class="performance-card">
           <h3>资源加载</h3>
-          <div class="performance-chart">
-            <canvas ref="resourceChart"></canvas>
-          </div>
+          <div class="performance-chart" ref="resourceChart"></div>
           <div class="performance-stats">
             <div class="stat-item">
               <span>图片加载时间</span>
@@ -72,9 +68,7 @@
         
         <div class="performance-card">
           <h3>内存使用</h3>
-          <div class="performance-chart">
-            <canvas ref="memoryChart"></canvas>
-          </div>
+          <div class="performance-chart" ref="memoryChart"></div>
           <div class="performance-stats">
             <div class="stat-item">
               <span>当前内存使用</span>
@@ -93,7 +87,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import Chart from 'chart.js/auto'
+import * as echarts from 'echarts'
 import request from '../utils/request'
 import { useAppStore } from '../stores/app'
 import { message } from 'ant-design-vue'
@@ -232,65 +226,241 @@ const initPerformanceMonitoring = () => {
 const initCharts = () => {
   // 加载时间图表
   if (loadTimeChart.value) {
-    loadTimeChartInstance = new Chart(loadTimeChart.value, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: '页面加载时间',
-          data: [],
-          borderColor: 'rgb(75, 192, 192)',
-          tension: 0.1
-        }]
+    loadTimeChartInstance = echarts.init(loadTimeChart.value)
+    loadTimeChartInstance.setOption({
+      title: {
+        text: '页面加载时间',
+        left: 'center',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'normal'
+        }
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
+      tooltip: {
+        trigger: 'axis',
+        formatter: '{b}<br/>{a}: {c} ms'
+      },
+      grid: {
+        top: 60,
+        right: 20,
+        bottom: 40,
+        left: 50,
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: [],
+        axisLabel: {
+          rotate: 45,
+          fontSize: 12
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        }
+      },
+      yAxis: {
+        type: 'value',
+        name: '时间 (ms)',
+        nameTextStyle: {
+          fontSize: 12
+        },
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: '#ddd'
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#eee'
+          }
+        }
+      },
+      series: [{
+        name: '加载时间',
+        type: 'line',
+        data: [],
+        smooth: true,
+        showSymbol: false,
+        lineStyle: {
+          width: 3,
+          color: '#1890ff'
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+            offset: 0,
+            color: 'rgba(24, 144, 255, 0.3)'
+          }, {
+            offset: 1,
+            color: 'rgba(24, 144, 255, 0.1)'
+          }])
+        }
+      }]
     })
   }
   
   // 资源加载图表
   if (resourceChart.value) {
-    resourceChartInstance = new Chart(resourceChart.value, {
-      type: 'bar',
-      data: {
-        labels: ['图片', 'API'],
-        datasets: [{
-          label: '加载时间',
-          data: [0, 0],
-          backgroundColor: [
-            'rgba(54, 162, 235, 0.5)',
-            'rgba(255, 99, 132, 0.5)'
-          ]
-        }]
+    resourceChartInstance = echarts.init(resourceChart.value)
+    resourceChartInstance.setOption({
+      title: {
+        text: '资源加载时间',
+        left: 'center',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'normal'
+        }
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          type: 'shadow'
+        },
+        formatter: '{b}<br/>{a}: {c} ms'
+      },
+      grid: {
+        top: 60,
+        right: 20,
+        bottom: 40,
+        left: 50,
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: ['图片', 'API'],
+        axisLabel: {
+          fontSize: 12
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        }
+      },
+      yAxis: {
+        type: 'value',
+        name: '时间 (ms)',
+        nameTextStyle: {
+          fontSize: 12
+        },
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: '#ddd'
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#eee'
+          }
+        }
+      },
+      series: [{
+        name: '加载时间',
+        type: 'bar',
+        data: [0, 0],
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+            offset: 0,
+            color: '#1890ff'
+          }, {
+            offset: 1,
+            color: '#40a9ff'
+          }])
+        },
+        barWidth: '40%'
+      }]
     })
   }
   
   // 内存使用图表
   if (memoryChart.value) {
-    memoryChartInstance = new Chart(memoryChart.value, {
-      type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: '内存使用',
-          data: [],
-          borderColor: 'rgb(153, 102, 255)',
-          tension: 0.1
-        }]
+    memoryChartInstance = echarts.init(memoryChart.value)
+    memoryChartInstance.setOption({
+      title: {
+        text: '内存使用',
+        left: 'center',
+        textStyle: {
+          fontSize: 16,
+          fontWeight: 'normal'
+        }
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
+      tooltip: {
+        trigger: 'axis',
+        formatter: '{b}<br/>{a}: {c} MB'
+      },
+      grid: {
+        top: 60,
+        right: 20,
+        bottom: 40,
+        left: 50,
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: [],
+        axisLabel: {
+          rotate: 45,
+          fontSize: 12
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#ddd'
+          }
+        }
+      },
+      yAxis: {
+        type: 'value',
+        name: '内存 (MB)',
+        nameTextStyle: {
+          fontSize: 12
+        },
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: '#ddd'
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#eee'
+          }
+        }
+      },
+      series: [{
+        name: '内存使用',
+        type: 'line',
+        data: [],
+        smooth: true,
+        showSymbol: false,
+        lineStyle: {
+          width: 3,
+          color: '#722ed1'
+        },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+            offset: 0,
+            color: 'rgba(114, 46, 209, 0.3)'
+          }, {
+            offset: 1,
+            color: 'rgba(114, 46, 209, 0.1)'
+          }])
+        }
+      }]
     })
   }
+  
+  // 监听窗口大小变化
+  window.addEventListener('resize', handleResize)
+}
+
+// 处理窗口大小变化
+const handleResize = () => {
+  loadTimeChartInstance?.resize()
+  resourceChartInstance?.resize()
+  memoryChartInstance?.resize()
 }
 
 // 开始性能监控
@@ -305,16 +475,18 @@ const startPerformanceMonitoring = () => {
     // 更新图表
     if (loadTimeChartInstance) {
       const now = new Date().toLocaleTimeString()
-      loadTimeChartInstance.data.labels.push(now)
-      loadTimeChartInstance.data.datasets[0].data.push(loadTime)
+      const option = loadTimeChartInstance.getOption()
       
       // 保持最近10个数据点
-      if (loadTimeChartInstance.data.labels.length > 10) {
-        loadTimeChartInstance.data.labels.shift()
-        loadTimeChartInstance.data.datasets[0].data.shift()
+      if (option.xAxis[0].data.length >= 10) {
+        option.xAxis[0].data.shift()
+        option.series[0].data.shift()
       }
       
-      loadTimeChartInstance.update()
+      option.xAxis[0].data.push(now)
+      option.series[0].data.push(loadTime)
+      
+      loadTimeChartInstance.setOption(option)
     }
   }
   
@@ -334,8 +506,11 @@ const startPerformanceMonitoring = () => {
     
     // 更新图表
     if (resourceChartInstance) {
-      resourceChartInstance.data.datasets[0].data = [imageLoadTime, apiLoadTime]
-      resourceChartInstance.update()
+      resourceChartInstance.setOption({
+        series: [{
+          data: [imageLoadTime, apiLoadTime]
+        }]
+      })
     }
   }
   
@@ -349,16 +524,18 @@ const startPerformanceMonitoring = () => {
     // 更新图表
     if (memoryChartInstance) {
       const now = new Date().toLocaleTimeString()
-      memoryChartInstance.data.labels.push(now)
-      memoryChartInstance.data.datasets[0].data.push(usedMemory)
+      const option = memoryChartInstance.getOption()
       
       // 保持最近10个数据点
-      if (memoryChartInstance.data.labels.length > 10) {
-        memoryChartInstance.data.labels.shift()
-        memoryChartInstance.data.datasets[0].data.shift()
+      if (option.xAxis[0].data.length >= 10) {
+        option.xAxis[0].data.shift()
+        option.series[0].data.shift()
       }
       
-      memoryChartInstance.update()
+      option.xAxis[0].data.push(now)
+      option.series[0].data.push(usedMemory)
+      
+      memoryChartInstance.setOption(option)
     }
   }
 }
@@ -377,17 +554,12 @@ onMounted(() => {
   // 在组件卸载时清理
   onUnmounted(() => {
     clearInterval(performanceInterval)
+    window.removeEventListener('resize', handleResize)
     
     // 销毁图表实例
-    if (loadTimeChartInstance) {
-      loadTimeChartInstance.destroy()
-    }
-    if (resourceChartInstance) {
-      resourceChartInstance.destroy()
-    }
-    if (memoryChartInstance) {
-      memoryChartInstance.destroy()
-    }
+    loadTimeChartInstance?.dispose()
+    resourceChartInstance?.dispose()
+    memoryChartInstance?.dispose()
   })
 })
 </script>
@@ -532,8 +704,9 @@ onMounted(() => {
         }
         
         .performance-chart {
-          height: 200px;
+          height: 300px;
           margin-bottom: 20px;
+          width: 100%;
         }
         
         .performance-stats {
