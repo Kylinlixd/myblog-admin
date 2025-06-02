@@ -524,8 +524,8 @@ const submitComment = async (item) => {
       message.error(result.message || '评论失败')
     }
   } catch (error) {
-    console.error('评论失败:', error)
-    message.error(error.response?.data?.message || '评论失败，请稍后重试')
+      console.error('评论失败:', error)
+      message.error(error.response?.data?.message || '评论失败，请稍后重试')
   } finally {
     item.isSubmittingComment = false
   }

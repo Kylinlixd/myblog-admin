@@ -20,10 +20,10 @@
           <div class="tech-grid">
             <router-link 
               v-for="(tech, index) in techStack" 
-              :key="tech" 
+                 :key="tech" 
               :to="`/blog/search?keyword=${tech}`"
-              class="tech-item"
-              :style="{ animationDelay: `${index * 0.2}s` }">
+                 class="tech-item"
+                 :style="{ animationDelay: `${index * 0.2}s` }">
               {{ tech }}
             </router-link>
           </div>
