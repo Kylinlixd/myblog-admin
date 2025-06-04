@@ -4,12 +4,16 @@ import router from '../router'
 import { useAppStore } from '../stores/app'
 import { useUserStore } from '../stores/user'
 import { safeStorage } from './security'
+import { generateRequestId } from './uuid'
 
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
 // 使用相对路径，让代理处理跨域
 const baseURL = isProd ? '' : ''
 const requestTimeout = isProd ? 10000 : 15000 // 生产环境缩短超时时间提高用户体验
+
+// 创建一个 Set 来存储正在进行的请求 ID
+const pendingRequests = new Set()
 
 // 创建 axios 实例
 const service = axios.create({
@@ -50,25 +54,25 @@ const service = axios.create({
 })
 
 // 请求计数器和请求超时控制
-const pendingRequests = {
+const pendingRequestsCount = {
   count: 0,
   timeoutId: null
 }
 
 // 增加请求计数
 const increasePendingCount = () => {
-  pendingRequests.count++
+  pendingRequestsCount.count++
   
   // 非生产环境才打印日志
   if (!isProd) {
-    // console.log(`[Request] 增加请求计数: ${pendingRequests.count}`)
+    // console.log(`[Request] 增加请求计数: ${pendingRequestsCount.count}`)
   }
   
   // 设置全局超时
-  if (pendingRequests.count === 1) {
+  if (pendingRequestsCount.count === 1) {
     // 第一个请求开始时设置超时
-    pendingRequests.timeoutId = setTimeout(() => {
-      if (pendingRequests.count > 0) {
+    pendingRequestsCount.timeoutId = setTimeout(() => {
+      if (pendingRequestsCount.count > 0) {
         if (!isProd) {
           // console.log('[Request] 全局请求超时')
         }
@@ -85,17 +89,17 @@ const increasePendingCount = () => {
 
 // 减少请求计数
 const decreasePendingCount = () => {
-  pendingRequests.count = Math.max(0, pendingRequests.count - 1)
+  pendingRequestsCount.count = Math.max(0, pendingRequestsCount.count - 1)
   
   // 非生产环境才打印日志
   if (!isProd) {
-    // console.log(`[Request] 减少请求计数: ${pendingRequests.count}`)
+    // console.log(`[Request] 减少请求计数: ${pendingRequestsCount.count}`)
   }
   
   // 所有请求完成时清除超时
-  if (pendingRequests.count === 0 && pendingRequests.timeoutId) {
-    clearTimeout(pendingRequests.timeoutId)
-    pendingRequests.timeoutId = null
+  if (pendingRequestsCount.count === 0 && pendingRequestsCount.timeoutId) {
+    clearTimeout(pendingRequestsCount.timeoutId)
+    pendingRequestsCount.timeoutId = null
   }
 }
 
@@ -190,6 +194,31 @@ if (!isProd) {
 // 请求拦截器
 service.interceptors.request.use(
   config => {
+    const userStore = useUserStore()
+    
+    // 添加 token
+    if (userStore.token) {
+      config.headers.Authorization = `Bearer ${userStore.token}`
+    }
+
+    // 为非 GET 请求生成并添加请求 ID
+    if (config.method !== 'get') {
+      const requestId = generateRequestId()
+      config.headers['X-Request-ID'] = requestId
+      
+      // 检查是否存在重复请求
+      if (pendingRequests.has(requestId)) {
+        // 如果存在重复请求，取消当前请求
+        return Promise.reject(new Error('重复请求已被取消'))
+      }
+      
+      // 将请求 ID 添加到进行中的请求集合
+      pendingRequests.add(requestId)
+      
+      // 请求完成后从集合中移除
+      config.metadata = { requestId }
+    }
+
     // 统计请求次数
     increasePendingCount()
     
@@ -514,6 +543,11 @@ service.interceptors.response.use(
       if (!isAuthPage()) {
         message.error(error.message || '请求发送失败')
       }
+    }
+    
+    // 如果是非 GET 请求，从进行中的请求集合中移除
+    if (error.config?.method !== 'get' && error.config?.metadata?.requestId) {
+      pendingRequests.delete(error.config.metadata.requestId)
     }
     
     return Promise.reject(error)

@@ -305,3 +305,46 @@ export const createDynamic = async (data) => {
     };
   }
 }
+
+// 获取动态列表
+export function getDynamics(params) {
+  return request({
+    url: '/dynamics',
+    method: 'get',
+    params
+  })
+}
+
+// 获取动态详情
+export function getDynamic(id) {
+  return request({
+    url: `/dynamics/${id}`,
+    method: 'get'
+  })
+}
+
+// 创建动态
+export function createDynamic(data) {
+  return request({
+    url: '/dynamics',
+    method: 'post',
+    data
+  })
+}
+
+// 更新动态
+export function updateDynamic(id, data) {
+  return request({
+    url: `/dynamics/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+// 删除动态
+export function deleteDynamic(id) {
+  return request({
+    url: `/dynamics/${id}`,
+    method: 'delete'
+  })
+}
