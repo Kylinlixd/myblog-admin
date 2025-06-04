@@ -183,6 +183,7 @@ VITE_APP_TITLE=MyBlog Admin
     "list": [
       {
         "id": 1,
+        "title": "动态标题",
         "type": "text",
         "content": "这是一条动态内容",
         "status": "published",
@@ -241,6 +242,7 @@ VITE_APP_TITLE=MyBlog Admin
 - **请求参数**：
 ```json
 {
+  "title": "新动态标题",
   "type": "text",
   "content": "新动态内容",
   "status": "draft",
@@ -265,6 +267,7 @@ VITE_APP_TITLE=MyBlog Admin
 - **请求参数**：
 ```json
 {
+  "title": "更新后的标题",
   "type": "text",
   "content": "更新后的内容",
   "status": "published",
@@ -306,7 +309,7 @@ VITE_APP_TITLE=MyBlog Admin
         "id": 1,
         "name": "技术",
         "description": "技术相关文章",
-        "count": 10,
+        "dynamicCount": 10,
         "createdAt": "2024-03-20T10:00:00Z"
       }
     ],
@@ -326,7 +329,7 @@ VITE_APP_TITLE=MyBlog Admin
     "id": 1,
     "name": "技术",
     "description": "技术相关文章",
-    "count": 10,
+    "dynamicCount": 10,
     "dynamics": [
       {
         "id": 1,
@@ -401,7 +404,7 @@ VITE_APP_TITLE=MyBlog Admin
       {
         "id": 1,
         "name": "Vue",
-        "count": 5,
+        "dynamicCount": 5,
         "createdAt": "2024-03-20T10:00:00Z"
       }
     ],
@@ -420,7 +423,7 @@ VITE_APP_TITLE=MyBlog Admin
   "data": {
     "id": 1,
     "name": "Vue",
-    "count": 5,
+    "dynamicCount": 5,
     "dynamics": [
       {
         "id": 1,
