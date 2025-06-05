@@ -72,7 +72,7 @@
           </a-select>
         </a-form-item>
         <a-form-item>
-          <a-space>
+          <a-space size="middle">
             <a-button type="primary" @click="handleSearch">
               <SearchOutlined />
               搜索
@@ -88,7 +88,10 @@
 
     <!-- 操作按钮 -->
     <div class="table-operations">
-      <a-space>
+      <a-space size="middle">
+        <a-button type="primary" @click="navigateToCreate">
+          <PlusOutlined /> 新建动态
+        </a-button>
         <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
           <DeleteOutlined />
           批量删除
@@ -922,9 +925,10 @@ onUnmounted(() => {
 
   .table-operations {
     margin-bottom: 16px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   }
 
   :deep(.ant-table-wrapper) {
@@ -970,42 +974,33 @@ onUnmounted(() => {
 
   .search-form {
     margin-bottom: 24px;
-    padding: 16px;
-    background: #fafafa;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-
+    padding: 24px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    
     .search-form-left {
-      flex: 1;
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
+      margin-bottom: 16px;
+      
+      .ant-form-item {
+        margin-bottom: 0;
+        margin-right: 0;
+      }
     }
-
+    
     .search-form-right {
       display: flex;
-      align-items: flex-start;
+      flex-wrap: wrap;
       gap: 16px;
-    }
-
-    :deep(.ant-form-item) {
-      margin-bottom: 0;
-      margin-right: 0;
-    }
-
-    :deep(.ant-form-item-label) {
-      padding-right: 8px;
-    }
-
-    :deep(.ant-form-item-control-input) {
-      width: 100%;
-    }
-
-    :deep(.ant-select) {
-      width: 100%;
+      align-items: flex-start;
+      
+      .ant-form-item {
+        margin-bottom: 0;
+        margin-right: 0;
+      }
     }
   }
 

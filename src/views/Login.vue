@@ -73,13 +73,6 @@
           <span>还没有账号？</span>
           <router-link to="/register" class="link">立即注册</router-link>
         </div>
-        
-        <!-- 开发环境下显示模拟数据模式切换 -->
-        <div v-if="isDev" style="margin-top: 20px; display: flex; justify-content: center;">
-          <a-checkbox v-model:checked="useMockData" @change="toggleMockData">
-            使用模拟数据（开发模式）
-          </a-checkbox>
-        </div>
       </a-form>
     </div>
   </div>
@@ -93,7 +86,6 @@ import { useAppStore } from '../stores/app'
 import { message } from 'ant-design-vue'
 // 分别导入图标组件
 import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
-import { toggleMockDataMode } from '../api/auth'
 
 export default {
   name: 'LoginView',
@@ -255,37 +247,10 @@ export default {
       }
     }
 
-    // 开发环境判断
-    const isDev = ref(process.env.NODE_ENV === 'development')
-    // 模拟数据模式
-    const useMockData = ref(localStorage.getItem('useMockData') === 'true')
-    
-    // 切换模拟数据模式
-    const toggleMockData = (e) => {
-      const checked = e.target.checked
-      toggleMockDataMode(checked)
-      useMockData.value = checked
-      message.success(`已${checked ? '启用' : '禁用'}模拟数据模式`)
-    }
-
     onMounted(() => {
       // 检查是否已经登录
       if (userStore.isLoggedIn) {
         router.push('/dashboard')
-      }
-      
-      // 设置初始值
-      if (process.env.NODE_ENV === 'development') {
-        loginData.username = 'admin'
-        loginData.password = 'admin'
-        
-        // 默认使用模拟数据，避免认证问题
-        if (localStorage.getItem('useMockData') !== 'true' && 
-            localStorage.getItem('useMockData') !== 'false') {
-          console.log('开发环境：默认启用模拟数据模式');
-          localStorage.setItem('useMockData', 'true');
-          useMockData.value = true;
-        }
       }
     })
 
@@ -294,10 +259,7 @@ export default {
       loading,
       loginError,
       handleLogin,
-      shapeStyles,
-      isDev,
-      useMockData,
-      toggleMockData
+      shapeStyles
     }
   }
 }

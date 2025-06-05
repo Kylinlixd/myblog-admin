@@ -2,37 +2,46 @@
   <div class="category-list">
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form">
-      <a-form-item label="名称">
-        <a-input v-model:value="searchForm.name" placeholder="搜索分类名称" allowClear />
-      </a-form-item>
-      <a-form-item label="状态">
-        <a-select
-          v-model:value="searchForm.status"
-          placeholder="选择状态"
-          style="min-width: 100px"
-          allowClear
-        >
-          <a-select-option value="active">启用</a-select-option>
-          <a-select-option value="inactive">禁用</a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item>
-        <a-space>
-          <a-button type="primary" @click="handleSearch">
-            <template #icon><SearchOutlined /></template>
-            搜索
-          </a-button>
-          <a-button @click="resetSearch">
-            <template #icon><ReloadOutlined /></template>
-            重置
-          </a-button>
-        </a-space>
-      </a-form-item>
+      <div class="search-form-left">
+        <a-form-item label="名称">
+          <a-input 
+            v-model:value="searchForm.name" 
+            placeholder="搜索分类名称" 
+            allowClear 
+            style="width: 240px"
+          />
+        </a-form-item>
+        <a-form-item label="状态">
+          <a-select
+            v-model:value="searchForm.status"
+            placeholder="选择状态"
+            style="width: 120px"
+            allowClear
+          >
+            <a-select-option value="active">启用</a-select-option>
+            <a-select-option value="inactive">禁用</a-select-option>
+          </a-select>
+        </a-form-item>
+      </div>
+      <div class="search-form-right">
+        <a-form-item>
+          <a-space size="middle">
+            <a-button type="primary" @click="handleSearch">
+              <template #icon><SearchOutlined /></template>
+              搜索
+            </a-button>
+            <a-button @click="resetSearch">
+              <template #icon><ReloadOutlined /></template>
+              重置
+            </a-button>
+          </a-space>
+        </a-form-item>
+      </div>
     </a-form>
 
     <!-- 操作按钮 -->
     <div class="table-operations">
-      <a-space>
+      <a-space size="middle">
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>
           新建分类
@@ -412,10 +421,42 @@ onMounted(() => {
 
 .search-form {
   margin-bottom: 24px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  
+  .search-form-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+    
+    .ant-form-item {
+      margin-bottom: 0;
+      margin-right: 0;
+    }
+  }
+  
+  .search-form-right {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-start;
+    
+    .ant-form-item {
+      margin-bottom: 0;
+      margin-right: 0;
+    }
+  }
 }
 
 .table-operations {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .responsive-table {

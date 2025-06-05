@@ -3,18 +3,28 @@
     <PageHeader title="评论管理" icon="CommentOutlined" />
     
     <!-- 搜索表单 -->
-    <SearchForm :form="filterForm" @search="handleSearch" @reset="resetFilter">
-      <a-form-item label="评论者" name="author">
-        <a-input v-model:value="filterForm.author" placeholder="请输入评论者" />
-      </a-form-item>
-      
-      <a-form-item label="状态" name="status">
-        <a-select v-model:value="filterForm.status" placeholder="请选择状态" allowClear>
-          <a-select-option value="pending">待审核</a-select-option>
-          <a-select-option value="approved">已通过</a-select-option>
-          <a-select-option value="rejected">已拒绝</a-select-option>
-        </a-select>
-      </a-form-item>
+    <SearchForm 
+      :form="filterForm" 
+      :default-values="{ status: 'approved' }"
+      @search="handleSearch" 
+      @reset="resetFilter"
+    >
+      <a-row :gutter="16">
+        <a-col :span="8">
+          <a-form-item label="评论者" name="author">
+            <a-input v-model:value="filterForm.author" placeholder="请输入评论者" allowClear />
+          </a-form-item>
+        </a-col>
+        <a-col :span="8">
+          <a-form-item label="状态" name="status">
+            <a-select v-model:value="filterForm.status" placeholder="请选择状态" allowClear>
+              <a-select-option value="pending">待审核</a-select-option>
+              <a-select-option value="approved">已通过</a-select-option>
+              <a-select-option value="rejected">已拒绝</a-select-option>
+            </a-select>
+          </a-form-item>
+        </a-col>
+      </a-row>
     </SearchForm>
     
     <!-- 评论列表 -->
@@ -110,7 +120,7 @@ const pageSize = ref(10)
 // 筛选表单
 const filterForm = reactive({
   author: '',
-  status: ''
+  status: 'approved'  // 默认设置为已通过状态
 })
 
 // 获取评论列表
