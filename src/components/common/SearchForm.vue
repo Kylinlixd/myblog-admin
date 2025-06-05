@@ -67,62 +67,79 @@ const handleReset = () => {
   
   :deep(.ant-form) {
     display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-start;
+    flex-wrap: nowrap;
+    gap: 12px;
+    align-items: center;
   }
 
   :deep(.ant-form-item) {
     margin-bottom: 0;
     margin-right: 0;
+    min-width: 200px;
+    flex: none;
   }
 
-  :deep(.ant-input),
-  :deep(.ant-select-selector) {
+  :deep(.ant-input) {
+    border: none;
+    background: #fafbfc;
+    box-shadow: none;
     border-radius: 6px;
-    border: 1px solid #e8e8e8;
-    transition: all 0.3s ease;
-
+    min-width: 90px;
+    max-width: 120px;
+    width: 100px;
+    height: 24px !important;
+    line-height: 24px !important;
+    font-size: 13px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
     &:hover {
       border-color: #40a9ff;
     }
-
     &:focus {
       border-color: #40a9ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+      box-shadow: none;
     }
+  }
+
+  :deep(.ant-select-selector) {
+    min-width: 90px;
+    max-width: 120px;
+    width: 100px;
+    height: 24px !important;
+    line-height: 24px !important;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    background: #fafbfc;
+    border: none;
+    box-shadow: none;
+    padding: 0 6px;
   }
 
   .form-buttons {
     display: flex;
-    gap: 12px;
-    margin-left: auto;
+    gap: 10px;
+    margin-left: 0;
     align-items: center;
-
-    .search-button {
+    .search-button, .reset-button {
       height: 36px;
-      padding: 0 20px;
+      padding: 0 18px;
       border-radius: 6px;
       font-weight: 500;
+      font-size: 15px;
       transition: all 0.3s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
-      }
     }
-
-    .reset-button {
-      height: 36px;
-      padding: 0 20px;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-
-      &:hover {
-        color: #40a9ff;
-        border-color: #40a9ff;
-        background: rgba(24, 144, 255, 0.05);
-      }
+    .search-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+    }
+    .reset-button:hover {
+      color: #40a9ff;
+      border-color: #40a9ff;
+      background: rgba(24, 144, 255, 0.05);
     }
   }
 }
@@ -132,8 +149,7 @@ const handleReset = () => {
     background-color: #1f1f1f;
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
 
-    :deep(.ant-input),
-    :deep(.ant-select-selector) {
+    :deep(.ant-input) {
       background-color: #141414;
       border-color: #434343;
 

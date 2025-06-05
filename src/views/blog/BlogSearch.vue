@@ -474,7 +474,7 @@ const handleSearch = async () => {
     // 检查响应格式
     if (res && res.code === 200 && res.data) {
       console.log('[Search] 处理搜索结果:', res.data)
-      searchResults.value = res.data.list || []
+      searchResults.value = res.data.items || []
       total.value = res.data.total || 0
       currentPage.value = res.data.page || 1
       pageSize.value = res.data.pageSize || 10
