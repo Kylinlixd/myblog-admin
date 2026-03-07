@@ -6,6 +6,31 @@ import { useUserStore } from '../stores/user'
 import { safeStorage } from './security'
 import { generateRequestId } from './uuid'
 
+/**
+ * 统一获取访问令牌，兼容两种存储方式：
+ * 1. safeStorage 存的（JSON 序列化）— 用于 user store 等
+ * 2. localStorage 直接存的纯字符串 — 用于 auth.js 登录/刷新等
+ * 生产环境若只写了 localStorage 未写 safeStorage，safeStorage.get 会 JSON.parse 失败返回空，导致请求不带 token
+ */
+function getToken() {
+  try {
+    const fromSafe = safeStorage.get('token', '')
+    if (fromSafe && typeof fromSafe === 'string') return fromSafe
+  } catch (_) {}
+  const raw = localStorage.getItem('token')
+  if (raw && typeof raw === 'string') {
+    if (raw.startsWith('Bearer ') || /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(raw))
+      return raw
+    try {
+      const parsed = JSON.parse(raw)
+      return typeof parsed === 'string' ? parsed : ''
+    } catch (_) {
+      return raw
+    }
+  }
+  return ''
+}
+
 // 区分环境配置
 const isProd = process.env.NODE_ENV === 'production'
 // 使用相对路径，让代理处理跨域
@@ -222,8 +247,8 @@ service.interceptors.request.use(
     // 统计请求次数
     increasePendingCount()
     
-    // 获取访问令牌
-    const token = safeStorage.get('token', '')
+    // 获取访问令牌（兼容 safeStorage 与 localStorage 两种存法）
+    const token = getToken()
     const isAuthPath = config.url.includes('/auth/')
     
     // 设置请求头
@@ -418,11 +443,11 @@ service.interceptors.response.use(
                   const originalConfig = error.config;
                   originalConfig._refreshAttempted = true; // 标记已尝试刷新
                   
-                  // 获取新令牌
-                  const newToken = localStorage.getItem('accessToken');
+                  // 获取新令牌（与请求拦截器一致，从 token 键读取）
+                  const newToken = getToken();
                   if (newToken) {
-                    // 更新请求头
-                    originalConfig.headers.Authorization = `Bearer ${newToken}`;
+                    const authHeader = newToken.startsWith('Bearer ') ? newToken : `Bearer ${newToken}`;
+                    originalConfig.headers.Authorization = authHeader;
                     console.log('[认证] 更新请求头使用新的令牌');
                     
                     // 重试原始请求

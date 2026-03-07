@@ -1,5 +1,6 @@
 import api from '../utils/api'
 import request from '../utils/request'
+import { safeStorage } from '../utils/security'
 
 /**
  * 判断是否在开发环境
@@ -95,16 +96,18 @@ export function login(data) {
       if (response?.data) {
         const userData = response.data;
         
-        // 保存令牌，确保使用访问令牌而非刷新令牌
+        // 保存令牌，确保使用访问令牌而非刷新令牌（同时写 localStorage 与 safeStorage，与 request/user store 一致）
         if (userData.access) {
           const token = `Bearer ${userData.access}`;
           localStorage.setItem('token', token);
+          safeStorage.set('token', token);
           console.log('[登录] 成功保存访问令牌:', token.substring(0, 15) + '...');
         } else if (userData.token) {
           // 确保token是字符串
           const tokenStr = String(userData.token);
           const token = tokenStr.startsWith('Bearer ') ? tokenStr : `Bearer ${tokenStr}`;
           localStorage.setItem('token', token);
+          safeStorage.set('token', token);
           console.log('[登录] 成功保存令牌:', token.substring(0, 15) + '...');
         } else {
           console.warn('[登录] 警告: 响应中没有token或access字段');
@@ -338,12 +341,13 @@ export function refreshToken() {
         return Promise.reject(new Error('刷新令牌响应格式异常，无法提取访问令牌'));
       }
       
-      // 格式化并保存访问令牌
+      // 格式化并保存访问令牌（统一写入 token 键，与 request 拦截器、user store 一致）
       const formattedToken = accessToken.startsWith('Bearer ') 
         ? accessToken 
         : `Bearer ${accessToken}`;
       
-      localStorage.setItem('accessToken', formattedToken);
+      localStorage.setItem('token', formattedToken);
+      safeStorage.set('token', formattedToken);
       console.log('[认证] 成功保存新的访问令牌:', formattedToken.substring(0, 20) + '...');
       
       // 提取并保存新的刷新令牌（如果存在）
@@ -368,7 +372,10 @@ export function refreshToken() {
       
       // 清除令牌并返回登录页
       localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      safeStorage.remove('token');
       localStorage.removeItem('refreshToken');
+      safeStorage.remove('refreshToken');
       
       // 删除用户信息，强制重新登录
       localStorage.removeItem('userInfo');
@@ -383,9 +390,12 @@ export function refreshToken() {
  * @returns {Promise<void>}
  */
 export function logout() {
-  // 确保立即移除token和用户信息
+  // 确保立即移除 token 和用户信息（与 request/store 使用的 key 一致）
   localStorage.removeItem('token')
+  localStorage.removeItem('accessToken')
+  safeStorage.remove('token')
   localStorage.removeItem('refreshToken')
+  safeStorage.remove('refreshToken')
   localStorage.removeItem('userInfo')
   
   // 如果是模拟数据模式，直接返回成功
