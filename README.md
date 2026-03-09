@@ -20,7 +20,6 @@
 
 ## 快速开始
 ```bash
-git clone https://github.com/yourusername/myblog-admin.git
 cd myblog-admin
 npm install
 npm run dev
