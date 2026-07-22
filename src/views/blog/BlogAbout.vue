@@ -1,277 +1,289 @@
 <template>
-  <WarpBackground>  
-    <div class="about-container">
-      <div class="about-header">
-        <div class="avatar">
-          <img :src="profile.avatar" alt="LiXD" onerror="this.src='https://ui-avatars.com/api/?name=LiXD&background=random'" />
-        </div>
-        <h1 class="name">{{ profile.name || 'LiXD' }}</h1>
-        <div class="title">{{ profile.title || '全栈开发工程师 / 技术博主' }}</div>
-        <div class="social-links">
-          <a v-if="profile.github" :href="profile.github" target="_blank" class="social-item">
-            <i class="fab fa-github"></i>
+  <div class="about-page">
+    <section class="about-hero app-container">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> 关于 LiXD</p>
+        <h1>持续学习，也持续输出。</h1>
+        <p class="hero-intro">
+          我是小东，一名全栈开发者。这里记录真实项目里的取舍、踩坑与解法，
+          把开发经验整理成能复用的方法。
+        </p>
+        <div class="hero-actions">
+          <a
+            class="primary-action"
+            href="https://github.com/Kylinlixd"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="在 GitHub 查看 Kylinlixd"
+          >
+            <github-outlined /> GitHub <arrow-right-outlined />
           </a>
-          <a v-if="profile.twitter" :href="profile.twitter" target="_blank" class="social-item">
-            <i class="fab fa-twitter"></i>
-          </a>
-          <a v-if="profile.email" :href="`mailto:${profile.email}`" class="social-item">
-            <i class="fas fa-envelope"></i>
+          <a class="secondary-action" href="mailto:946951925@qq.com">
+            <mail-outlined /> 发送邮件
           </a>
         </div>
       </div>
 
-      <div class="about-content">
-        <section class="about-section">
-          <h2 class="section-title">关于我</h2>
-          <div class="section-content">
-            <div v-if="profile.bio" v-html="profile.bio"></div>
-            <div v-else>
-              <p>嗨，我是LiXD，一名热爱编程和分享的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Python。</p>
-              <p>通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。</p>
-            </div>
-          </div>
-        </section>
-
-        <section class="about-section">
-          <h2 class="section-title">技能与专长</h2>
-          <div class="section-content">
-            <div class="skills-grid">
-              <div v-for="(skills, category) in profile.skills || defaultSkills" :key="category" class="skill-category">
-                <h3>{{ category }}</h3>
-                <div class="skill-items">
-                  <div v-for="skill in skills" :key="skill" class="skill-item">{{ skill }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="about-section">
-          <h2 class="section-title">联系我</h2>
-          <div class="section-content">
-            <p>如果你有任何问题或者只是想交个朋友，欢迎随时联系我。</p>
-            <div class="contact-info">
-              <div v-if="profile.email" class="contact-item">
-                <i class="fas fa-envelope"></i>
-                <a :href="`mailto:${profile.email}`">{{ profile.email }}</a>
-              </div>
-              <div v-if="profile.website" class="contact-item">
-                <i class="fas fa-globe"></i>
-                <a :href="profile.website" target="_blank">{{ profile.website }}</a>
-              </div>
-            </div>
-          </div>
-        </section>
+      <div class="profile-card">
+        <div class="avatar-wrap">
+          <img src="/about-avatar.jpg" alt="LiXD 的头像" />
+          <span class="online-dot" aria-label="保持创作中"></span>
+        </div>
+        <div>
+          <strong>LiXD</strong>
+          <p>Full-stack developer</p>
+        </div>
+        <dl>
+          <div><dt>当前关注</dt><dd>可靠的 Web 产品</dd></div>
+          <div><dt>技术方向</dt><dd>Vue · Django · Java</dd></div>
+          <div><dt>生活之外</dt><dd>阅读 · 旅行 · 摄影</dd></div>
+        </dl>
       </div>
-    </div>
-  </WarpBackground>
+    </section>
+
+    <section class="about-body app-container">
+      <div class="section-heading">
+        <p class="eyebrow">我如何工作</p>
+        <h2>用工程化思维，把复杂问题讲清楚</h2>
+      </div>
+
+      <div class="principles-grid">
+        <article v-for="(item, index) in principles" :key="item.title" class="principle-card">
+          <span class="card-index">0{{ index + 1 }}</span>
+          <component :is="item.icon" class="principle-icon" />
+          <h3>{{ item.title }}</h3>
+          <p>{{ item.description }}</p>
+        </article>
+      </div>
+
+      <div class="stack-section">
+        <div>
+          <p class="eyebrow">常用技术</p>
+          <h2>从界面到服务端，关注完整交付链路</h2>
+          <p class="stack-description">
+            工具会变化，解决问题的能力不会。技术选择以可维护、可验证和适合团队为先。
+          </p>
+        </div>
+        <div class="stack-groups">
+          <div v-for="group in stack" :key="group.label" class="stack-group">
+            <span>{{ group.label }}</span>
+            <ul>
+              <li v-for="item in group.items" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <aside class="contact-banner">
+        <div>
+          <p class="eyebrow">保持连接</p>
+          <h2>有值得讨论的问题？欢迎来信。</h2>
+        </div>
+        <a href="mailto:946951925@qq.com">946951925@qq.com <arrow-right-outlined /></a>
+      </aside>
+    </section>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useAppStore } from '@/stores/app'
-import WarpBackground from '@/components/InspiraUI/WarpBackground.vue'
+import {
+  ArrowRightOutlined,
+  CodeOutlined,
+  GithubOutlined,
+  MailOutlined,
+  ReadOutlined,
+  RocketOutlined
+} from '@ant-design/icons-vue'
 
-const appStore = useAppStore()
-const profile = ref({
-  name: 'LiXD',
-  title: '全栈开发工程师 / 技术博主',
-  bio: '大家好，我是小东，一名热爱编程和分享生活的全栈开发者。我专注于前端和后端技术，尤其是Vue.js、React、Node.js和Java、Python。\n\n通过这个博客，我希望能分享我在技术道路上的所学所思，同时也记录自己的成长历程。除了编程，我还喜欢阅读、旅行和摄影。期待与你共同进步',
-  skills: {
-    '前端开发': ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TypeScript'],
-    '后端开发': ['Java', 'SpringBoot', 'Python', 'Django', 'Flask'],
-    '数据库': ['MySQL', 'MongoDB', 'Redis', 'PostgreSQL'],
-    '开发工具': ['Git', 'Docker', 'VS Code']
+const principles = [
+  {
+    title: '先理解，再动手',
+    description: '从用户目标和系统边界出发，避免用更多代码掩盖没有想清楚的问题。',
+    icon: ReadOutlined
   },
-  email: '946951925@qq.com',
-  github: 'https://github.com/Kylinlixd',
-  twitter: 'https://twitter.com/lixiaodong_0',
-  avatar: '/about-avatar.jpg'
-})
-
-// 默认技能数据
-const defaultSkills = {
-  '前端开发': ['HTML/CSS', 'JavaScript', 'Vue.js', 'React', 'TypeScript'],
-  '后端开发': ['Node.js', 'Python', 'Django', 'Flask', 'Express'],
-  '数据库': ['MySQL', 'MongoDB', 'Redis', 'PostgreSQL'],
-  '开发工具': ['Git', 'Docker', 'Webpack', 'VS Code']
-}
-
-onMounted(() => {
-  // 加载FontAwesome图标
-  if (!document.getElementById('font-awesome-css')) {
-    const fontAwesome = document.createElement('link')
-    fontAwesome.id = 'font-awesome-css'
-    fontAwesome.rel = 'stylesheet'
-    fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'
-    document.head.appendChild(fontAwesome)
+  {
+    title: '保持简单可靠',
+    description: '拆小复杂度，用清晰的数据流、自动化测试和文档守住长期可维护性。',
+    icon: CodeOutlined
+  },
+  {
+    title: '持续交付价值',
+    description: '让每次迭代都能被看见、被验证，也能为下一次改进留下空间。',
+    icon: RocketOutlined
   }
-})
+]
+
+const stack = [
+  { label: '前端', items: ['Vue', 'React', 'TypeScript', 'CSS'] },
+  { label: '后端', items: ['Django', 'Python', 'Spring Boot', 'Java'] },
+  { label: '数据与交付', items: ['PostgreSQL', 'MySQL', 'Redis', 'Docker'] }
+]
 </script>
 
 <style scoped>
-.about-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 3rem 1rem;
-}
-
-.about-header {
-  text-align: center;
-  margin-bottom: 4rem;
-}
-
-.avatar {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
+.about-page {
   overflow: hidden;
-  margin: 0 auto 1.5rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  background:
+    radial-gradient(circle at 82% 8%, rgb(49 91 234 / 10%), transparent 28rem),
+    var(--color-page);
 }
 
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.about-hero {
+  display: grid;
+  min-height: 620px;
+  align-items: center;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+  gap: clamp(48px, 8vw, 112px);
+  padding-block: clamp(72px, 10vw, 128px);
 }
 
-.name {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.title {
-  font-size: 1.2rem;
-  color: #666;
-  margin-bottom: 1.5rem;
-}
-
-.social-links {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-}
-
-.social-item {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #f3f4f6;
+.eyebrow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: #4b5563;
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
+  gap: 9px;
+  margin: 0 0 18px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.social-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-  color: #fff;
+.eyebrow span {
+  width: 28px;
+  height: 2px;
+  background: currentColor;
 }
 
-.about-section {
-  margin-bottom: 3rem;
+.hero-copy h1 {
+  max-width: 720px;
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(44px, 6.5vw, 82px);
+  font-weight: 820;
+  letter-spacing: -0.055em;
+  line-height: 1.04;
 }
 
-.section-title {
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  color: #333;
-  position: relative;
-  padding-bottom: 0.5rem;
+.hero-intro {
+  max-width: 650px;
+  margin: 28px 0 0;
+  color: var(--color-text-secondary);
+  font-size: clamp(17px, 2vw, 20px);
+  line-height: 1.85;
 }
 
-.section-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 50px;
-  height: 3px;
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-}
-
-.section-content {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: #4b5563;
-}
-
-.section-content p {
-  margin-bottom: 1rem;
-}
-
-.skills-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 2rem;
-}
-
-.skill-category h3 {
-  font-size: 1.2rem;
-  margin-bottom: 0.8rem;
-  color: #333;
-}
-
-.skill-items {
+.hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 12px;
+  margin-top: 38px;
 }
 
-.skill-item {
-  background-color: #f3e8ff;
-  color: #9333ea;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-}
-
-.contact-info {
-  margin-top: 1.5rem;
-}
-
-.contact-item {
-  display: flex;
+.hero-actions a {
+  display: inline-flex;
+  min-height: 48px;
   align-items: center;
-  margin-bottom: 0.8rem;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-weight: 680;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.contact-item i {
-  margin-right: 10px;
-  color: #6d28d9;
+.hero-actions a:hover { transform: translateY(-2px); }
+.primary-action { background: var(--color-text); color: white; box-shadow: 0 14px 30px rgb(15 23 42 / 18%); }
+.secondary-action { border: 1px solid var(--color-border); background: white; color: var(--color-text); }
+
+.profile-card {
+  position: relative;
+  padding: 34px;
+  border: 1px solid rgb(255 255 255 / 75%);
+  border-radius: 28px;
+  background: rgb(255 255 255 / 78%);
+  box-shadow: 0 30px 80px rgb(29 51 84 / 13%);
+  backdrop-filter: blur(20px);
 }
 
-.contact-item a {
-  color: #4b5563;
-  text-decoration: none;
-  transition: color 0.3s ease;
+.profile-card::before {
+  position: absolute;
+  z-index: -1;
+  top: -26px;
+  right: -26px;
+  width: 116px;
+  height: 116px;
+  border-radius: 28px;
+  background: var(--color-primary);
+  content: '';
+  opacity: 0.11;
+  transform: rotate(13deg);
 }
 
-.contact-item a:hover {
-  color: #6d28d9;
+.avatar-wrap { position: relative; width: 92px; height: 92px; margin-bottom: 22px; }
+.avatar-wrap img { width: 100%; height: 100%; border-radius: 24px; object-fit: cover; }
+.online-dot { position: absolute; right: -3px; bottom: 7px; width: 17px; height: 17px; border: 4px solid white; border-radius: 50%; background: #22c55e; }
+.profile-card strong { color: var(--color-text); font-size: 25px; }
+.profile-card > div:nth-child(3) p, .profile-card > div:nth-child(2) p { margin: 5px 0 0; color: var(--color-text-muted); }
+.profile-card dl { display: grid; gap: 0; margin: 28px 0 0; }
+.profile-card dl div { display: flex; justify-content: space-between; gap: 20px; padding: 15px 0; border-top: 1px solid var(--color-border); }
+.profile-card dt { color: var(--color-text-muted); }
+.profile-card dd { margin: 0; color: var(--color-text); font-weight: 650; text-align: right; }
+
+.about-body { padding-bottom: clamp(72px, 10vw, 128px); }
+.section-heading { max-width: 700px; margin-bottom: 42px; }
+.section-heading h2, .stack-section h2, .contact-banner h2 { margin: 0; color: var(--color-text); font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.035em; line-height: 1.2; }
+.principles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.principle-card { position: relative; min-height: 270px; padding: 32px; border: 1px solid var(--color-border); border-radius: 22px; background: white; }
+.card-index { position: absolute; top: 28px; right: 28px; color: var(--color-text-muted); font-size: 12px; font-weight: 700; }
+.principle-icon { color: var(--color-primary); font-size: 28px; }
+.principle-card h3 { margin: 54px 0 12px; color: var(--color-text); font-size: 20px; }
+.principle-card p { margin: 0; color: var(--color-text-secondary); line-height: 1.75; }
+
+.stack-section {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(48px, 8vw, 104px);
+  margin-top: clamp(80px, 12vw, 144px);
+  align-items: start;
+}
+.stack-description { max-width: 480px; margin: 24px 0 0; color: var(--color-text-secondary); font-size: 17px; line-height: 1.8; }
+.stack-groups { border-top: 1px solid var(--color-border); }
+.stack-group { display: grid; grid-template-columns: 110px 1fr; gap: 24px; padding: 25px 0; border-bottom: 1px solid var(--color-border); }
+.stack-group > span { color: var(--color-text-muted); font-size: 13px; font-weight: 700; }
+.stack-group ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.stack-group li { padding: 7px 12px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary); font-size: 13px; font-weight: 650; }
+
+.contact-banner {
+  display: flex;
+  margin-top: clamp(80px, 12vw, 144px);
+  align-items: end;
+  justify-content: space-between;
+  gap: 36px;
+  padding: clamp(32px, 6vw, 64px);
+  border-radius: 28px;
+  background: var(--color-text);
+}
+.contact-banner .eyebrow { color: #9db4ff; }
+.contact-banner h2 { max-width: 650px; color: white; }
+.contact-banner a { display: inline-flex; flex-shrink: 0; align-items: center; gap: 9px; padding-bottom: 6px; border-bottom: 1px solid rgb(255 255 255 / 42%); color: white; font-weight: 650; }
+
+@media (max-width: 900px) {
+  .about-hero, .stack-section { grid-template-columns: 1fr; }
+  .about-hero { min-height: auto; }
+  .profile-card { max-width: 520px; }
+  .principles-grid { grid-template-columns: 1fr; }
+  .principle-card { min-height: 220px; }
+  .contact-banner { align-items: flex-start; flex-direction: column; }
 }
 
-@media (max-width: 768px) {
-  .about-header {
-    margin-bottom: 2.5rem;
-  }
-  
-  .name {
-    font-size: 2rem;
-  }
-  
-  .skills-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
+@media (max-width: 560px) {
+  .about-hero { gap: 42px; padding-block: 62px 76px; }
+  .hero-copy h1 { font-size: 44px; }
+  .hero-actions a { width: 100%; }
+  .profile-card, .principle-card { padding: 26px; }
+  .stack-group { grid-template-columns: 1fr; gap: 12px; }
+  .contact-banner { border-radius: 22px; }
+  .contact-banner a { word-break: break-all; }
 }
-</style> 
+</style>

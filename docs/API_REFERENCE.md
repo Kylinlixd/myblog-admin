@@ -40,7 +40,7 @@
 | GET | `/blog/dynamics/recent/` | 最近内容，支持 `limit` |
 | PUT | `/blog/dynamics/{id}/view/` | 增加阅读量 |
 | POST | `/blog/dynamics/{id}/like/` | 点赞 |
-| GET/POST | `/blog/comments/` | 查询或提交评论 |
+| GET/POST | `/blog/comments/` | 查询已审核评论或提交评论 |
 | GET | `/blog/categories/` | 分类列表 |
 | GET | `/blog/categories/{id}/dynamics/` | 分类内容 |
 | GET | `/blog/tags/` | 标签列表 |
@@ -49,7 +49,9 @@
 
 ## 管理端
 
-`/api/dynamics/`、`/api/categories/`、`/api/tags/`、`/api/comments/` 提供标准列表、创建、详情、更新和删除操作。`/api/stats/` 返回管理仪表盘统计且必须登录。文件接口位于 `/api/upload/`。
+`/api/dynamics/`、`/api/categories/`、`/api/tags/`、`/api/comments/` 提供标准列表、创建、详情、更新和删除操作，全部需要登录。`/api/stats/` 返回管理仪表盘统计且必须登录。文件接口位于 `/api/upload/`。
+
+读取文章详情不会隐式增加阅读量；前端仅通过显式 `PUT /blog/dynamics/{id}/view/` 上报一次阅读。公开评论列表只展示审核通过的评论。
 
 ## 错误处理
 

@@ -1,10 +1,11 @@
 import { createApp } from 'vue'
-import Antd, { message } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import 'ant-design-vue/dist/reset.css'
 
 import App from './App.vue'
 import router from './router'
 import { pinia, useUserStore } from './stores'
+import { registerAntComponents } from './config/antComponents'
 import '@/styles/tailwind.css'
 import './styles/main.scss'
 
@@ -17,7 +18,7 @@ app.config.errorHandler = (error) => {
 
 app.use(pinia)
 app.use(router)
-app.use(Antd)
+registerAntComponents(app)
 app.mount('#app')
 
 window.addEventListener('auth:expired', () => {

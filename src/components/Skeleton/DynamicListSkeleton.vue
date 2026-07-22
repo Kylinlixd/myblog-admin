@@ -2,7 +2,7 @@
   <div class="dynamic-list-skeleton">
     <div class="skeleton-header">
       <a-skeleton-input :active="true" size="large" style="width: 200px" />
-      <a-button-skeleton style="width: 100px" />
+      <a-skeleton-button style="width: 100px" />
     </div>
     
     <div class="skeleton-filter">
@@ -22,10 +22,10 @@
 </template>
 
 <script setup>
-import { Skeleton, SkeletonInput, Button } from 'ant-design-vue'
+import { Skeleton, SkeletonButton, SkeletonInput } from 'ant-design-vue'
 
 const ASkeletonInput = SkeletonInput
-const AButtonSkeleton = Button.Skeleton
+const ASkeletonButton = SkeletonButton
 </script>
 
 <style scoped>
@@ -54,4 +54,4 @@ const AButtonSkeleton = Button.Skeleton
   display: flex;
   justify-content: center;
 }
-</style> 
+</style>
