@@ -1,781 +1,114 @@
 <template>
-  <div class="dashboard">
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-header">
-          <i class="icon-folder"></i>
-          <h3>分类总数</h3>
+  <div class="dashboard-page">
+    <header class="dashboard-heading">
+      <div><span class="page-kicker">OVERVIEW</span><h1>欢迎回来，{{ userStore.nickname || '管理员' }}</h1><p>快速了解博客内容状态，并继续今天的创作。</p></div>
+      <router-link class="create-button" to="/dashboard/dynamics/create"><plus-outlined /> 新建内容</router-link>
+    </header>
+
+    <a-alert v-if="error" type="error" show-icon :message="error" class="dashboard-alert">
+      <template #action><a-button size="small" @click="loadStats">重试</a-button></template>
+    </a-alert>
+
+    <section class="stats-grid" aria-label="内容统计">
+      <a-skeleton v-if="loading" v-for="item in 4" :key="item" active class="stat-card" />
+      <article v-else v-for="item in statCards" :key="item.key" class="stat-card">
+        <div class="stat-icon" :style="{ color: item.color, background: item.background }"><component :is="item.icon" /></div>
+        <div><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div>
+        <router-link :to="item.path" :aria-label="`管理${item.label}`"><export-outlined /></router-link>
+      </article>
+    </section>
+
+    <section class="dashboard-grid">
+      <article class="panel">
+        <div class="panel-heading"><div><span class="page-kicker">ACTIVITY</span><h2>近七天发布趋势</h2></div><router-link to="/dashboard/dynamics">内容管理</router-link></div>
+        <div v-if="daily.length" class="trend-list">
+          <div v-for="item in daily" :key="item.day" class="trend-row"><time>{{ item.day }}</time><div><span :style="{ width: `${Math.max(8, (item.count / maxDaily) * 100)}%` }"></span></div><strong>{{ item.count }}</strong></div>
         </div>
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.categoryCount }}</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-header">
-          <i class="icon-collection"></i>
-          <h3>标签总数</h3>
-        </div>
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.tagCount }}</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-header">
-          <i class="icon-view"></i>
-          <h3>总浏览量</h3>
-        </div>
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.totalViews }}</div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 性能监控面板 -->
-    <div class="performance-panel">
-      <h2>性能监控</h2>
-      <div class="performance-grid">
-        <div class="performance-card">
-          <h3>页面加载时间</h3>
-          <div class="performance-chart" ref="loadTimeChart"></div>
-          <div class="performance-stats">
-            <div class="stat-item">
-              <span>平均加载时间</span>
-              <span>{{ performanceStats.avgLoadTime }}ms</span>
-            </div>
-            <div class="stat-item">
-              <span>最大加载时间</span>
-              <span>{{ performanceStats.maxLoadTime }}ms</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="performance-card">
-          <h3>资源加载</h3>
-          <div class="performance-chart" ref="resourceChart"></div>
-          <div class="performance-stats">
-            <div class="stat-item">
-              <span>图片加载时间</span>
-              <span>{{ performanceStats.avgImageLoadTime }}ms</span>
-            </div>
-            <div class="stat-item">
-              <span>API响应时间</span>
-              <span>{{ performanceStats.avgApiResponseTime }}ms</span>
-            </div>
-          </div>
-        </div>
-        
-        <div class="performance-card">
-          <h3>内存使用</h3>
-          <div class="performance-chart" ref="memoryChart"></div>
-          <div class="performance-stats">
-            <div class="stat-item">
-              <span>当前内存使用</span>
-              <span>{{ performanceStats.currentMemory }}MB</span>
-            </div>
-            <div class="stat-item">
-              <span>峰值内存使用</span>
-              <span>{{ performanceStats.peakMemory }}MB</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <div v-else class="panel-empty"><read-outlined /><strong>最近还没有发布记录</strong><span>创建一篇内容后，趋势会显示在这里。</span></div>
+      </article>
+
+      <aside class="panel quick-panel">
+        <div class="panel-heading"><div><span class="page-kicker">QUICK ACTIONS</span><h2>快捷操作</h2></div></div>
+        <router-link v-for="action in quickActions" :key="action.path" :to="action.path" class="quick-action"><span><component :is="action.icon" /></span><div><strong>{{ action.label }}</strong><small>{{ action.description }}</small></div><right-outlined /></router-link>
+      </aside>
+    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart, BarChart } from 'echarts/charts'
-import {
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent
-} from 'echarts/components'
-import * as echarts from 'echarts/core'
-import request from '../utils/request'
-import { useAppStore } from '../stores/app'
-import { message } from 'ant-design-vue'
+import { computed, onMounted, ref } from 'vue'
+import { CommentOutlined, ExportOutlined, FileTextOutlined, FolderOutlined, PlusOutlined, ReadOutlined, RightOutlined, TagsOutlined } from '@ant-design/icons-vue'
+import request from '@/services/http/client'
+import { useUserStore } from '@/stores/user'
+import { mapDashboardStats } from './dashboard/stats'
 
-// 注册必须的组件
-use([
-  CanvasRenderer,
-  LineChart,
-  BarChart,
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent
-])
-
-// 应用状态
-const appStore = useAppStore()
+const userStore = useUserStore()
 const loading = ref(true)
+const error = ref('')
+const stats = ref(mapDashboardStats())
+const daily = ref([])
+const maxDaily = computed(() => Math.max(...daily.value.map((item) => item.count), 1))
+const statCards = computed(() => [
+  { key: 'dynamics', label: '内容总数', value: stats.value.dynamics, path: '/dashboard/dynamics', icon: FileTextOutlined, color: '#315bea', background: '#eef3ff' },
+  { key: 'categories', label: '分类总数', value: stats.value.categories, path: '/dashboard/category', icon: FolderOutlined, color: '#d97706', background: '#fff7e8' },
+  { key: 'tags', label: '标签总数', value: stats.value.tags, path: '/dashboard/tags', icon: TagsOutlined, color: '#7c3aed', background: '#f4efff' },
+  { key: 'comments', label: '评论总数', value: stats.value.comments, path: '/dashboard/comments', icon: CommentOutlined, color: '#0f9f75', background: '#eafaf4' }
+])
+const quickActions = [
+  { label: '发布新内容', description: '撰写并发布一篇新的博客内容', path: '/dashboard/dynamics/create', icon: PlusOutlined },
+  { label: '处理评论', description: '查看并审核读者留言', path: '/dashboard/comments', icon: CommentOutlined },
+  { label: '整理分类', description: '维护清晰的内容结构', path: '/dashboard/category', icon: FolderOutlined }
+]
 
-// 统计数据
-const stats = ref({
-  categoryCount: 0,
-  tagCount: 0,
-  totalViews: 0
-})
-
-// 性能统计数据
-const performanceStats = ref({
-  avgLoadTime: 0,
-  maxLoadTime: 0,
-  avgImageLoadTime: 0,
-  avgApiResponseTime: 0,
-  currentMemory: 0,
-  peakMemory: 0
-})
-
-// 图表引用
-const loadTimeChart = ref(null)
-const resourceChart = ref(null)
-const memoryChart = ref(null)
-
-// 图表实例
-let loadTimeChartInstance = null
-let resourceChartInstance = null
-let memoryChartInstance = null
-
-// 获取统计数据
-const getStats = async () => {
+async function loadStats() {
+  loading.value = true; error.value = ''
   try {
-    const res = await request.get('/api/stats/')
-    console.log('仪表盘统计数据响应:', res);
-    
-    if (res.code === 200 && res.data) {
-      // 从 data.total 中获取各项统计数据
-      const { total } = res.data;
-      stats.value = {
-        categoryCount: total?.categories || 0,
-        tagCount: total?.tags || 0,
-        totalViews: total?.dynamics || 0
-      };
-      
-      // 更新分类和标签数据
-      if (res.data.categories) {
-        appStore.setCategories(res.data.categories);
-      }
-      if (res.data.tags) {
-        appStore.setTags(res.data.tags);
-      }
-      
-      console.log('更新后的统计数据:', stats.value);
-    } else {
-      throw new Error(res.message || '获取统计数据失败');
-    }
-  } catch (error) {
-    console.error('获取统计数据失败:', error);
-    // 只在第一次失败时显示错误提示
-    if (!stats.value.categoryCount && !stats.value.tagCount && !stats.value.totalViews) {
-      message.error('获取统计数据失败: ' + (error.response?.data?.message || error.message || '未知错误'));
-    }
-  }
+    const response = await request.get('/api/stats/')
+    stats.value = mapDashboardStats(response)
+    daily.value = response?.data?.daily || []
+  } catch (reason) {
+    error.value = reason?.message || '仪表盘数据加载失败'
+  } finally { loading.value = false }
 }
-
-// 加载所有数据
-const loadAllData = async () => {
-  // 设置加载状态
-  loading.value = true
-  
-  // 显示仪表盘加载状态
-  appStore.startLoading('加载仪表盘数据...')
-  
-  try {
-    // 获取统计数据
-    await getStats()
-    
-    // 数据加载完成后，结束加载状态
-    setTimeout(() => {
-      loading.value = false
-      appStore.endLoading()
-    }, 500)
-  } catch (error) {
-    console.error('加载仪表盘数据失败:', error)
-    
-    // 设置错误状态
-    appStore.setLoadingError(error.response?.data?.message || error.message || '加载仪表盘数据失败')
-    loading.value = false
-    
-    // 只在第一次加载失败时显示错误提示
-    if (!stats.value.categoryCount && 
-        !stats.value.tagCount && 
-        !stats.value.totalViews) {
-      message.error({
-        content: '加载仪表盘数据失败: ' + (error.response?.data?.message || error.message || '未知错误'),
-        duration: 5000
-      })
-    }
-  }
-}
-
-// 添加自动重试机制
-const retryLoadData = async (maxRetries = 3, delay = 2000) => {
-  let retries = 0;
-  
-  while (retries < maxRetries) {
-    try {
-      await loadAllData();
-      return; // 成功则退出
-    } catch (error) {
-      retries++;
-      if (retries < maxRetries) {
-        console.log(`第 ${retries} 次重试加载数据...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  }
-}
-
-// 初始化性能监控
-const initPerformanceMonitoring = () => {
-  // 初始化图表
-  initCharts()
-  
-  // 开始性能监控
-  startPerformanceMonitoring()
-}
-
-// 初始化图表
-const initCharts = () => {
-  // 加载时间图表
-  if (loadTimeChart.value) {
-    loadTimeChartInstance = echarts.init(loadTimeChart.value, null, {
-      renderer: 'canvas',
-      useDirtyRect: true
-    })
-    loadTimeChartInstance.setOption({
-      animation: false,
-      title: {
-        text: '页面加载时间',
-        left: 'center',
-        textStyle: {
-          fontSize: 16,
-          fontWeight: 'normal'
-        }
-      },
-      tooltip: {
-        trigger: 'axis',
-        formatter: '{b}<br/>{a}: {c} ms'
-      },
-      grid: {
-        top: 60,
-        right: 20,
-        bottom: 40,
-        left: 50,
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: [],
-        axisLabel: {
-          rotate: 45,
-          fontSize: 12
-        },
-        axisLine: {
-          lineStyle: {
-            color: '#ddd'
-          }
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: '时间 (ms)',
-        nameTextStyle: {
-          fontSize: 12
-        },
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#ddd'
-          }
-        },
-        splitLine: {
-          lineStyle: {
-            color: '#eee'
-          }
-        }
-      },
-      series: [{
-        name: '加载时间',
-        type: 'line',
-        data: [],
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          width: 2,
-          color: '#1890ff'
-        },
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-            offset: 0,
-            color: 'rgba(24, 144, 255, 0.2)'
-          }, {
-            offset: 1,
-            color: 'rgba(24, 144, 255, 0.05)'
-          }])
-        }
-      }]
-    })
-  }
-  
-  // 资源加载图表
-  if (resourceChart.value) {
-    resourceChartInstance = echarts.init(resourceChart.value, null, {
-      renderer: 'canvas',
-      useDirtyRect: true
-    })
-    resourceChartInstance.setOption({
-      animation: false,
-      title: {
-        text: '资源加载时间',
-        left: 'center',
-        textStyle: {
-          fontSize: 16,
-          fontWeight: 'normal'
-        }
-      },
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          type: 'shadow'
-        },
-        formatter: '{b}<br/>{a}: {c} ms'
-      },
-      grid: {
-        top: 60,
-        right: 20,
-        bottom: 40,
-        left: 50,
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: ['图片', 'API'],
-        axisLabel: {
-          fontSize: 12
-        },
-        axisLine: {
-          lineStyle: {
-            color: '#ddd'
-          }
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: '时间 (ms)',
-        nameTextStyle: {
-          fontSize: 12
-        },
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#ddd'
-          }
-        },
-        splitLine: {
-          lineStyle: {
-            color: '#eee'
-          }
-        }
-      },
-      series: [{
-        name: '加载时间',
-        type: 'bar',
-        data: [0, 0],
-        itemStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-            offset: 0,
-            color: '#1890ff'
-          }, {
-            offset: 1,
-            color: '#40a9ff'
-          }])
-        },
-        barWidth: '40%'
-      }]
-    })
-  }
-  
-  // 内存使用图表
-  if (memoryChart.value) {
-    memoryChartInstance = echarts.init(memoryChart.value, null, {
-      renderer: 'canvas',
-      useDirtyRect: true
-    })
-    memoryChartInstance.setOption({
-      animation: false,
-      title: {
-        text: '内存使用',
-        left: 'center',
-        textStyle: {
-          fontSize: 16,
-          fontWeight: 'normal'
-        }
-      },
-      tooltip: {
-        trigger: 'axis',
-        formatter: '{b}<br/>{a}: {c} MB'
-      },
-      grid: {
-        top: 60,
-        right: 20,
-        bottom: 40,
-        left: 50,
-        containLabel: true
-      },
-      xAxis: {
-        type: 'category',
-        data: [],
-        axisLabel: {
-          rotate: 45,
-          fontSize: 12
-        },
-        axisLine: {
-          lineStyle: {
-            color: '#ddd'
-          }
-        }
-      },
-      yAxis: {
-        type: 'value',
-        name: '内存 (MB)',
-        nameTextStyle: {
-          fontSize: 12
-        },
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: '#ddd'
-          }
-        },
-        splitLine: {
-          lineStyle: {
-            color: '#eee'
-          }
-        }
-      },
-      series: [{
-        name: '内存使用',
-        type: 'line',
-        data: [],
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          width: 2,
-          color: '#722ed1'
-        },
-        areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-            offset: 0,
-            color: 'rgba(114, 46, 209, 0.2)'
-          }, {
-            offset: 1,
-            color: 'rgba(114, 46, 209, 0.05)'
-          }])
-        }
-      }]
-    })
-  }
-  
-  // 监听窗口大小变化
-  window.addEventListener('resize', handleResize)
-}
-
-// 处理窗口大小变化
-const handleResize = () => {
-  loadTimeChartInstance?.resize()
-  resourceChartInstance?.resize()
-  memoryChartInstance?.resize()
-}
-
-// 开始性能监控
-const startPerformanceMonitoring = () => {
-  // 监控页面加载时间
-  if (window.performance) {
-    const timing = window.performance.timing
-    const loadTime = timing.loadEventEnd - timing.navigationStart
-    performanceStats.value.avgLoadTime = loadTime
-    performanceStats.value.maxLoadTime = loadTime
-    
-    // 更新图表
-    if (loadTimeChartInstance) {
-      const now = new Date().toLocaleTimeString()
-      const option = loadTimeChartInstance.getOption()
-      
-      // 保持最近10个数据点
-      if (option.xAxis[0].data.length >= 10) {
-        option.xAxis[0].data.shift()
-        option.series[0].data.shift()
-      }
-      
-      option.xAxis[0].data.push(now)
-      option.series[0].data.push(loadTime)
-      
-      loadTimeChartInstance.setOption(option)
-    }
-  }
-  
-  // 监控资源加载
-  if (window.performance && window.performance.getEntriesByType) {
-    const resources = window.performance.getEntriesByType('resource')
-    const imageLoadTime = resources
-      .filter(r => r.initiatorType === 'img')
-      .reduce((acc, curr) => acc + curr.duration, 0) / resources.filter(r => r.initiatorType === 'img').length || 0
-    
-    const apiLoadTime = resources
-      .filter(r => r.initiatorType === 'xmlhttprequest' || r.initiatorType === 'fetch')
-      .reduce((acc, curr) => acc + curr.duration, 0) / resources.filter(r => r.initiatorType === 'xmlhttprequest' || r.initiatorType === 'fetch').length || 0
-    
-    performanceStats.value.avgImageLoadTime = Math.round(imageLoadTime)
-    performanceStats.value.avgApiResponseTime = Math.round(apiLoadTime)
-    
-    // 更新图表
-    if (resourceChartInstance) {
-      resourceChartInstance.setOption({
-        series: [{
-          data: [imageLoadTime, apiLoadTime]
-        }]
-      })
-    }
-  }
-  
-  // 监控内存使用
-  if (window.performance && window.performance.memory) {
-    const memory = window.performance.memory
-    const usedMemory = Math.round(memory.usedJSHeapSize / 1024 / 1024)
-    performanceStats.value.currentMemory = usedMemory
-    performanceStats.value.peakMemory = Math.max(performanceStats.value.peakMemory, usedMemory)
-    
-    // 更新图表
-    if (memoryChartInstance) {
-      const now = new Date().toLocaleTimeString()
-      const option = memoryChartInstance.getOption()
-      
-      // 保持最近10个数据点
-      if (option.xAxis[0].data.length >= 10) {
-        option.xAxis[0].data.shift()
-        option.series[0].data.shift()
-      }
-      
-      option.xAxis[0].data.push(now)
-      option.series[0].data.push(usedMemory)
-      
-      memoryChartInstance.setOption(option)
-    }
-  }
-}
-
-// 在组件挂载时初始化
-onMounted(() => {
-  // 加载数据
-  loadAllData()
-  
-  // 初始化性能监控
-  initPerformanceMonitoring()
-  
-  // 定期更新性能数据
-  const performanceInterval = setInterval(startPerformanceMonitoring, 5000)
-  
-  // 在组件卸载时清理
-  onUnmounted(() => {
-    clearInterval(performanceInterval)
-    window.removeEventListener('resize', handleResize)
-    
-    // 销毁图表实例
-    loadTimeChartInstance?.dispose()
-    resourceChartInstance?.dispose()
-    memoryChartInstance?.dispose()
-  })
-})
+onMounted(loadStats)
 </script>
 
-<style scoped lang="scss">
-.dashboard {
-  padding: 24px;
-  
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
-    margin-bottom: 32px;
-    
-    .stat-card {
-      position: relative;
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      transition: all 0.3s ease;
-      overflow: hidden;
-      
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, rgba(24, 144, 255, 0.05) 0%, rgba(24, 144, 255, 0) 100%);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-      }
-      
-      &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        
-        &::before {
-          opacity: 1;
-        }
-        
-        .stat-header i {
-          transform: scale(1.1);
-        }
-      }
-      
-      .stat-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-        
-        i {
-          font-size: 28px;
-          margin-right: 16px;
-          color: #1890ff;
-          transition: transform 0.3s ease;
-          background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        
-        h3 {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 500;
-          color: #595959;
-          letter-spacing: 0.5px;
-        }
-      }
-      
-      .stat-content {
-        position: relative;
-        
-        .stat-number {
-          font-size: 36px;
-          font-weight: 600;
-          color: #262626;
-          animation: countUp 0.5s ease-out;
-          background: linear-gradient(135deg, #262626 0%, #595959 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          letter-spacing: -0.5px;
-        }
-        
-        &::after {
-          content: '';
-          position: absolute;
-          bottom: -10px;
-          left: 0;
-          width: 40px;
-          height: 3px;
-          background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
-          border-radius: 3px;
-        }
-      }
-    }
-  }
-  
-  .performance-panel {
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 28px;
-    margin-bottom: 32px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    
-    h2 {
-      margin: 0 0 28px;
-      font-size: 24px;
-      font-weight: 600;
-      color: #262626;
-      letter-spacing: 0.5px;
-    }
-    
-    .performance-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 24px;
-      
-      .performance-card {
-        background: #ffffff;
-        border-radius: 16px;
-        padding: 24px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        transition: all 0.3s ease;
-        
-        &:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-        }
-        
-        h3 {
-          margin: 0 0 20px;
-          font-size: 18px;
-          font-weight: 500;
-          color: #595959;
-          letter-spacing: 0.5px;
-        }
-        
-        .performance-chart {
-          height: 300px;
-          margin-bottom: 20px;
-          width: 100%;
-        }
-        
-        .performance-stats {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 16px;
-          
-          .stat-item {
-            display: flex;
-            flex-direction: column;
-            
-            span:first-child {
-              font-size: 14px;
-              color: #8c8c8c;
-              margin-bottom: 6px;
-            }
-            
-            span:last-child {
-              font-size: 18px;
-              font-weight: 500;
-              color: #262626;
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-@keyframes countUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style> 
+<style scoped>
+.dashboard-page { width: min(100%, 1380px); margin: 0 auto; }
+.dashboard-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
+.page-kicker { color: var(--color-primary); font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+.dashboard-heading h1 { margin: 5px 0 4px; color: var(--color-text); font-size: clamp(25px, 3vw, 34px); letter-spacing: -.025em; }
+.dashboard-heading p { margin: 0; color: var(--color-text-secondary); }
+.create-button { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 18px; border-radius: 999px; background: var(--color-primary); color: white; font-weight: 700; box-shadow: 0 10px 22px rgb(49 91 234 / 20%); }
+.dashboard-alert { margin-bottom: 18px; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.stat-card { display: flex; min-height: 126px; align-items: center; gap: 15px; padding: 22px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: white; box-shadow: var(--shadow-card); }
+.stat-icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 13px; font-size: 21px; }
+.stat-card > div:nth-child(2) { display: flex; min-width: 0; flex-direction: column; }
+.stat-card span { color: var(--color-text-secondary); font-size: 12px; }
+.stat-card strong { color: var(--color-text); font-size: 28px; line-height: 1.25; }
+.stat-card > a { margin-left: auto; color: var(--color-text-muted); }
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .65fr); align-items: start; gap: 18px; margin-top: 18px; }
+.panel { min-height: 360px; padding: 26px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: white; box-shadow: var(--shadow-card); }
+.panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+.panel-heading h2 { margin: 4px 0 0; font-size: 20px; }
+.panel-heading > a { color: var(--color-primary); font-size: 12px; font-weight: 700; }
+.trend-list { display: grid; gap: 16px; }
+.trend-row { display: grid; grid-template-columns: 92px 1fr 28px; align-items: center; gap: 14px; font-size: 12px; }
+.trend-row time { color: var(--color-text-secondary); }
+.trend-row > div { overflow: hidden; height: 8px; border-radius: 999px; background: var(--color-primary-soft); }
+.trend-row > div span { display: block; height: 100%; border-radius: inherit; background: var(--color-primary); }
+.panel-empty { display: grid; min-height: 230px; place-items: center; align-content: center; gap: 7px; color: var(--color-text-muted); text-align: center; }
+.panel-empty svg { margin-bottom: 7px; font-size: 28px; }
+.panel-empty strong { color: var(--color-text); }
+.panel-empty span { font-size: 12px; }
+.quick-panel { min-height: 360px; }
+.quick-action { display: grid; grid-template-columns: 42px 1fr 16px; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+.quick-action > span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 11px; background: var(--color-primary-soft); color: var(--color-primary); }
+.quick-action div { display: flex; min-width: 0; flex-direction: column; }
+.quick-action strong { font-size: 13px; }
+.quick-action small { overflow: hidden; color: var(--color-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.quick-action > svg { color: var(--color-text-muted); }
+@media (max-width: 1080px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dashboard-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .dashboard-heading { align-items: stretch; flex-direction: column; } .create-button { justify-content: center; } .stats-grid { grid-template-columns: 1fr; } .stat-card { min-height: 104px; } .panel { padding: 20px; } .trend-row { grid-template-columns: 76px 1fr 24px; } }
+</style>

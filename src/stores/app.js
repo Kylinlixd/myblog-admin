@@ -1,161 +1,78 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+const LOADING_TIMEOUT = 15_000
+
 export const useAppStore = defineStore('app', () => {
   const isLoading = ref(false)
   const loadingText = ref('加载中...')
   const hasError = ref(false)
   const errorMessage = ref('')
-  const errorTimeout = ref(null)
-  const loadingTimeout = ref(null) // 加载超时计时器
   const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
-  const isNavigating = ref(false) // 添加导航状态跟踪
-  const lastNavigationTime = ref(0) // 记录最后导航时间戳
-  
-  // 设置加载状态
+  const isNavigating = ref(false)
+  const lastNavigationTime = ref(0)
+  let loadingTimer
+
+  function clearLoadingTimer() {
+    window.clearTimeout(loadingTimer)
+    loadingTimer = undefined
+  }
+
   function setLoading(status, text = '加载中...') {
-    console.log(`[AppStore] setLoading: ${status}, text: ${text}`)
-    
-    // 清除可能存在的超时计时器
-    if (loadingTimeout.value) {
-      console.log('[AppStore] 清除已有的加载超时计时器')
-      clearTimeout(loadingTimeout.value)
-      loadingTimeout.value = null
-    }
-    
+    clearLoadingTimer()
     isLoading.value = status
-    if (text) {
-      loadingText.value = text
-    }
-    
-    // 如果启动加载，设置超时自动关闭（15秒）
-    if (status) {
-      console.log('[AppStore] 设置加载超时保护（15秒）')
-      loadingTimeout.value = setTimeout(() => {
-        console.log('[AppStore] 加载超时，自动关闭')
-        endLoading()
-        setLoadingError('加载超时，请刷新页面重试')
-        loadingTimeout.value = null
-      }, 15000)
-    }
-    
-    // 重置错误状态
+    loadingText.value = text
+
     if (status) {
       hasError.value = false
       errorMessage.value = ''
+      loadingTimer = window.setTimeout(() => {
+        setLoadingError('加载超时，请刷新页面重试')
+        isLoading.value = false
+      }, LOADING_TIMEOUT)
     }
   }
-  
-  // 开始加载
-  function startLoading(text) {
-    console.log(`[AppStore] startLoading: ${text}`)
-    setLoading(true, text)
-    
-    // 添加调试信息 - 跟踪加载调用栈
-    if (process.env.NODE_ENV === 'development') {
-      console.trace('[AppStore] 加载状态开始调用栈')
-    }
-  }
-  
-  // 结束加载
-  function endLoading() {
-    console.log('[AppStore] endLoading')
-    
-    // 添加调试信息 - 跟踪结束调用栈
-    if (process.env.NODE_ENV === 'development') {
-      console.trace('[AppStore] 加载状态结束调用栈')
-    }
-    
-    setLoading(false)
-  }
-  
-  // 设置加载错误
+
+  const startLoading = (text = '加载中...') => setLoading(true, text)
+  const endLoading = () => setLoading(false)
+
   function setLoadingError(message) {
-    console.log(`[AppStore] setLoadingError: ${message}`)
     hasError.value = true
     errorMessage.value = message
-    
-    // 如果正在加载，则显示错误状态
-    if (isLoading.value) {
-      loadingText.value = `错误: ${message}`
-      
-      // 3秒后自动关闭加载状态
-      if (errorTimeout.value) {
-        clearTimeout(errorTimeout.value)
-      }
-      
-      errorTimeout.value = setTimeout(() => {
-        endLoading()
-        errorTimeout.value = null
-      }, 3000)
-    }
   }
-  
-  // 重试加载
+
   function retryLoading(text = '正在重试...') {
-    console.log(`[AppStore] retryLoading: ${text}`)
-    hasError.value = false
-    errorMessage.value = ''
-    startLoading(text)
+    setLoading(true, text)
   }
-  
-  // 强制重置所有状态 (用于调试或紧急情况)
+
   function resetLoadingState() {
-    console.log('[AppStore] 强制重置所有加载状态')
-    
-    // 清除所有计时器
-    if (errorTimeout.value) {
-      clearTimeout(errorTimeout.value)
-      errorTimeout.value = null
-    }
-    
-    if (loadingTimeout.value) {
-      clearTimeout(loadingTimeout.value)
-      loadingTimeout.value = null
-    }
-    
-    // 重置所有状态
+    clearLoadingTimer()
     isLoading.value = false
     loadingText.value = '加载中...'
     hasError.value = false
     errorMessage.value = ''
   }
-  
-  // 切换侧边栏状态
-  function toggleSidebar() {
-    sidebarCollapsed.value = !sidebarCollapsed.value
-    localStorage.setItem('sidebarCollapsed', sidebarCollapsed.value)
-  }
-  
-  // 添加直接设置侧边栏折叠状态的方法
+
   function setSidebarCollapsed(status) {
     sidebarCollapsed.value = status
-    localStorage.setItem('sidebarCollapsed', status)
+    localStorage.setItem('sidebarCollapsed', String(status))
   }
-  
-  // 开始导航
+
+  const toggleSidebar = () => setSidebarCollapsed(!sidebarCollapsed.value)
+
   function startNavigation() {
     isNavigating.value = true
     lastNavigationTime.value = Date.now()
-    console.log('[AppStore] 开始路由导航')
   }
-  
-  // 结束导航
+
   function endNavigation() {
     isNavigating.value = false
-    console.log('[AppStore] 结束路由导航，耗时:', Date.now() - lastNavigationTime.value, 'ms')
   }
-  
-  // 检查是否可以导航 (防止频繁点击导致的导航问题)
+
   function canNavigate() {
-    // 如果正在导航中且时间间隔小于300ms，阻止导航
-    if (isNavigating.value && (Date.now() - lastNavigationTime.value < 300)) {
-      console.log('[AppStore] 导航过于频繁，忽略此次导航请求')
-      return false
-    }
-    return true
+    return !isNavigating.value || Date.now() - lastNavigationTime.value >= 300
   }
-  
+
   return {
     isLoading,
     loadingText,

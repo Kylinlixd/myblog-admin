@@ -275,146 +275,46 @@ const router = createRouter({
   }
 })
 
-router.beforeEach(async (to, from, next) => {
-    // 重置错误状态
-    const appStore = useAppStore()
-    appStore.hasError = false
-    
-    // 防止重复或频繁导航，导致组件更新错误
-    if (to.path === from.path) {
-        console.log('路由相同，阻止重复导航:', to.path)
-        next(false)
-        return
-    }
-    
-    // 标记开始导航
-    appStore.startNavigation()
-    
-    // 判断是否为博客前台页面
-    const isBlogPage = to.path.startsWith('/blog')
-    
-    // 检查权限
-    const requiresAuth = to.matched.some(record => record.meta.requiresAuth === true)
-    const userStore = useUserStore()
-    
-    // 如果目标路由是登录页面或注册页面，直接放行
-    if (to.path === '/login' || to.path === '/register') {
-      // 如果已登录且试图访问登录页，重定向到首页
-      if (userStore.isLoggedIn && to.path === '/login') {
-        next({ path: '/dashboard', replace: true })
-        return
-      }
-      next()
-      return
-    }
-    
-    // 如果是博客前台页面，无需登录验证，直接放行
-    if (isBlogPage) {
-      // console.log('博客前台页面，无需验证')
-      next()
-      return
-    }
-    
-    // 如果访问的是需要登录的页面，且用户未登录，则重定向到登录页
-    if (requiresAuth && !userStore.isLoggedIn) {
-      // console.log('需要登录权限，重定向到登录页面')
-      next({ path: '/login', query: { redirect: to.fullPath }, replace: true })
-      return
-    }
-    
-    // 验证角色权限
-    const requiredRoles = to.meta.roles
-    if (requiredRoles && requiredRoles.length > 0) {
-      const userRoles = userStore.userInfo?.roles || []
-      // console.log('检查角色权限:', requiredRoles, '用户角色:', userRoles)
-      
-      const hasRole = requiredRoles.some(role => userRoles.includes(role))
-      if (!hasRole) {
-        // console.log('用户没有所需角色权限')
-        next({ path: '/dashboard', replace: true })
-        message.error('您没有权限访问该页面')
-        return
-      }
-    }
-    
-    next()
-    
-    // 然后后台预加载组件，不阻塞导航
-    if (to.matched && to.matched.length > 0) {
-      // 预加载当前路由组件及其子组件
-      const componentsToLoad = []
-      to.matched.forEach(record => {
-        if (record.components) {
-          Object.values(record.components).forEach(component => {
-            if (typeof component === 'function') {
-              componentsToLoad.push(component())
-            }
-          })
-        }
-      })
-    }
-})
+router.beforeEach((to) => {
+  const appStore = useAppStore()
+  const userStore = useUserStore()
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true)
 
-// 辅助函数
-function isMainRouteTransition(to, from) {
-  return !from.name || to.matched.some(record => record.path !== from.path)
-}
+  appStore.hasError = false
+  appStore.startNavigation()
 
-async function loadUserInfo(userStore) {
-  try {
-    await userStore.getUserInfo()
-  } catch (error) {
-    userStore.logout()
-    throw error
+  if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn) {
+    return { name: 'Dashboard' }
   }
-}
 
-function redirectToLogin(to, next) {
-  next({
-    path: '/login',
-    query: { redirect: to.fullPath }
-  })
-}
+  if (requiresAuth && !userStore.isLoggedIn) {
+    return { name: 'Login', query: { redirect: to.fullPath } }
+  }
+
+  const requiredRoles = to.meta.roles || []
+  const userRoles = userStore.userInfo?.roles || []
+  if (requiredRoles.length && !requiredRoles.some((role) => userRoles.includes(role))) {
+    message.error('您没有权限访问该页面')
+    return { name: 'Dashboard' }
+  }
+
+  return true
+})
 
 // 路由加载完成后处理
 router.afterEach((to) => {
   const appStore = useAppStore()
-  
-  // 结束导航状态
   appStore.endNavigation()
-  
-  // 设置文档标题
-  if (to.meta && to.meta.title) {
-    document.title = to.meta.title
-  }
-  
-  // 延迟很短的时间来确保组件已渲染
-  if (appStore.isLoading) {
-    setTimeout(() => {
-      appStore.endLoading()
-    }, 100)
-  }
+  document.title = to.meta.title ? `${to.meta.title} · Kylin Blog` : 'Kylin Blog'
 })
 
 // 添加路由错误处理
 router.onError((error) => {
-  console.error('路由错误:', error)
+  console.error('[Router]', error)
   const appStore = useAppStore()
   appStore.hasError = true
   appStore.errorMessage = error.message || '路由加载失败'
-  
-  // 改进错误恢复处理
-  const currentRoute = router.currentRoute.value
-  // 检查错误是否为组件加载错误
-  if (error.toString().includes('Failed to load') || 
-      error.toString().includes('Loading chunk') || 
-      error.toString().includes('Loading CSS chunk')) {
-    console.warn('检测到组件加载错误，尝试刷新页面恢复')
-    // 可以考虑尝试重新加载当前页面
-    setTimeout(() => {
-      router.replace(currentRoute.fullPath)
-    }, 500)
-  }
+  appStore.endNavigation()
 })
 
 export default router

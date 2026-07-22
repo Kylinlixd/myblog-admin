@@ -164,7 +164,7 @@ const fetchDynamicDetail = async () => {
 const fetchCategories = async () => {
   try {
     const data = await getCategoryList()
-    categories.value = data || []
+    categories.value = data.results || []
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')

@@ -8,8 +8,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "jest",
+    "test:ci": "jest --runInBand",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "check": "npm run test:ci && npm run build",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "format": "prettier --write src/"
   },

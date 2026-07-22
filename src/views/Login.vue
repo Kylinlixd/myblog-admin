@@ -1,460 +1,99 @@
 <template>
-  <div class="login-container">
-    <!-- 添加漂浮的多边形碎片，但让它们不影响登录框 -->
-    <div class="floating-shape" v-for="n in 10" :key="n" :style="shapeStyles[n-1]"></div>
-    
-    <div class="login-box">
-      <div class="login-header">
-        <h2>博客管理系统</h2>
-        <p class="subtitle">欢迎回来，请登录您的账号</p>
+  <main class="login-page">
+    <section class="login-intro" aria-label="产品介绍">
+      <router-link class="login-brand" to="/blog"><span>L</span><strong>LiXD Studio</strong></router-link>
+      <div>
+        <span class="login-kicker">CONTENT WORKSPACE</span>
+        <h1>让创作保持专注，<br />让管理回归简单。</h1>
+        <p>在一个清晰、可靠的工作台中管理文章、分类、标签与读者评论。</p>
       </div>
-      
-      <a-form
-        class="login-form"
-        :model="loginData"
-        @finish="handleLogin"
-      >
-        <div v-if="loginError" class="error-message">
-          <a-alert :message="loginError" type="error" show-icon />
-        </div>
-        
-        <div class="form-item">
-          <div class="input-wrapper">
-            <a-form-item
-              name="username"
-              :rules="[{ required: true, message: '请输入用户名' }]"
-            >
-              <a-input
-                v-model:value="loginData.username"
-                placeholder="用户名"
-                size="large"
-              >
-                <template #prefix>
-                  <UserOutlined />
-                </template>
-              </a-input>
-            </a-form-item>
-          </div>
-        </div>
-        
-        <div class="form-item">
-          <div class="input-wrapper">
-            <a-form-item
-              name="password"
-              :rules="[{ required: true, message: '请输入密码' }]"
-            >
-              <a-input-password
-                v-model:value="loginData.password"
-                placeholder="密码"
-                size="large"
-              >
-                <template #prefix>
-                  <LockOutlined />
-                </template>
-              </a-input-password>
-            </a-form-item>
-          </div>
-        </div>
-        
-        <div class="form-item">
-          <a-button
-            type="primary"
-            html-type="submit"
-            :loading="loading"
-            class="login-button"
-            size="large"
-            block
-          >
-            {{ loading ? '登录中...' : '登录' }}
-          </a-button>
-        </div>
-        
-        <div class="form-footer">
-          <span>还没有账号？</span>
-          <router-link to="/register" class="link">立即注册</router-link>
-        </div>
-      </a-form>
-    </div>
-  </div>
+      <small>© {{ year }} LiXD · Personal Blog</small>
+    </section>
+
+    <section class="login-panel">
+      <div class="login-card">
+        <header><span class="login-kicker">WELCOME BACK</span><h2>登录管理后台</h2><p>使用你的管理员账号继续创作。</p></header>
+
+        <a-alert v-if="loginError" :message="loginError" type="error" show-icon class="login-alert" />
+
+        <a-form :model="form" layout="vertical" @finish="handleLogin">
+          <a-form-item label="用户名" name="username" :rules="[{ required: true, message: '请输入用户名' }]">
+            <a-input v-model:value="form.username" size="large" autocomplete="username" placeholder="请输入用户名">
+              <template #prefix><user-outlined /></template>
+            </a-input>
+          </a-form-item>
+          <a-form-item label="密码" name="password" :rules="[{ required: true, message: '请输入密码' }]">
+            <a-input-password v-model:value="form.password" size="large" autocomplete="current-password" placeholder="请输入密码">
+              <template #prefix><lock-outlined /></template>
+            </a-input-password>
+          </a-form-item>
+          <a-button type="primary" html-type="submit" size="large" block :loading="loading">登录</a-button>
+        </a-form>
+
+        <footer>还没有账号？<router-link to="/register">创建账号</router-link><router-link to="/blog">返回博客</router-link></footer>
+      </div>
+    </section>
+  </main>
 </template>
 
-<script>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from '../stores/user'
-import { useAppStore } from '../stores/app'
-import { message } from 'ant-design-vue'
-// 分别导入图标组件
-import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
+<script setup>
+import { reactive, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { LockOutlined, UserOutlined } from '@ant-design/icons-vue'
 
-export default {
-  name: 'LoginView',
-  components: {
-    UserOutlined,
-    LockOutlined
-  },
-  setup() {
-    const router = useRouter()
-    const route = useRoute()
-    const userStore = useUserStore()
-    const appStore = useAppStore()
-    const loading = ref(false)
-    const loginError = ref('')
+import { useUserStore } from '@/stores/user'
 
-    const loginData = reactive({
-      username: '',
-      password: ''
-    })
+const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
+const form = reactive({ username: '', password: '' })
+const loading = ref(false)
+const loginError = ref('')
+const year = new Date().getFullYear()
 
-    // 优化预生成样式逻辑，减少形状数量提高性能
-    const shapeStyles = computed(() => {
-      const styles = []
-      for (let i = 0; i < 10; i++) {
-        styles.push(generateRandomStyle())
-      }
-      return styles
-    })
-
-    // 生成随机样式函数
-    function generateRandomStyle() {
-      // 随机位置
-      const top = Math.random() * 100 + '%'
-      const left = Math.random() * 100 + '%'
-      
-      // 随机大小 - 减小形状以减轻渲染负担
-      const width = 30 + Math.random() * 80 + 'px'
-      const height = 30 + Math.random() * 80 + 'px'
-      
-      // 随机旋转角度
-      const rotate = Math.random() * 360 + 'deg'
-      const skewX = -10 + Math.random() * 20 + 'deg'
-      const skewY = -10 + Math.random() * 20 + 'deg'
-      
-      // 随机动画参数 - 增加持续时间减少CPU使用
-      const duration = 20 + Math.random() * 20 + 's'
-      const moveX = -50 + Math.random() * 100 + 'px'
-      const moveY = -50 + Math.random() * 100 + 'px'
-      
-      // 随机倾斜和3D旋转
-      const transform = `rotate(${rotate}) skewX(${skewX}) skewY(${skewY})`
-      
-      // 随机透明度
-      const opacity = 0.05 + Math.random() * 0.2
-      
-      // 随机z-index，保证层叠效果
-      const zIndex = Math.floor(Math.random() * 5)
-
-      return {
-        top,
-        left,
-        width,
-        height,
-        transform,
-        opacity,
-        '--duration': duration,
-        '--move-x': moveX,
-        '--move-y': moveY,
-        '--rotate': rotate,
-        'z-index': zIndex
-      }
+async function handleLogin() {
+  loading.value = true
+  loginError.value = ''
+  try {
+    const success = await userStore.login(form.username, form.password)
+    if (!success) {
+      loginError.value = '用户名或密码错误'
+      return
     }
 
-    const handleLogin = async () => {
-      loading.value = true
-      loginError.value = ''
-      
-      // 清除可能存在的旧令牌
-      localStorage.removeItem('token')
-      localStorage.removeItem('refreshToken')
-      localStorage.removeItem('userInfo')
-      
-      try {
-        console.log('开始登录:', loginData.username)
-        
-        // 使用try-catch包装登录请求，提供更好的错误处理
-        try {
-          const success = await userStore.login(loginData.username, loginData.password)
-          
-          if (success) {
-            message.success('登录成功')
-            // 检查令牌状态
-            const token = localStorage.getItem('token')
-            console.log('登录成功，令牌状态:', token ? '有效' : '无效', token ? token.substring(0, 20) + '...' : '')
-            
-            if (!token) {
-              console.error('登录成功但获取不到令牌，可能存在浏览器存储问题')
-              message.warning('登录成功但令牌保存异常，请尝试刷新页面')
-              return
-            }
-            
-            // 强制从store同步令牌到localStorage
-            if (userStore.token) {
-              console.log('[登录] 从 store 同步令牌到 localStorage')
-              localStorage.setItem('token', userStore.token)
-              
-              if (userStore.refreshToken) {
-                localStorage.setItem('refreshToken', userStore.refreshToken)
-              }
-            }
-            
-            // 获取重定向地址，如果没有则跳转到仪表盘
-            const redirect = route.query.redirect || '/dashboard'
-            
-            // 设置全局加载状态
-            appStore.startLoading('正在准备您的工作台...')
-            
-            // 记录重定向信息
-            console.log('登录成功，即将跳转到:', redirect)
-            
-            // 增加延迟时间，确保状态已更新
-            setTimeout(() => {
-              // 再次检查令牌状态
-              const finalToken = localStorage.getItem('token')
-              console.log('跳转前最终令牌状态:', finalToken ? '有效' : '无效')
-              
-              // 再次确保令牌存在
-              if (!finalToken && userStore.token) {
-                localStorage.setItem('token', userStore.token)
-                console.log('[登录] 跳转前再次同步令牌')
-              }
-              
-              router.push(redirect).catch(err => {
-                console.error('路由跳转错误:', err)
-                // 如果重定向失败，尝试直接跳转到仪表盘
-                router.push('/dashboard')
-              })
-            }, 1000)
-          } else {
-            loginError.value = '用户名或密码错误'
-          }
-        } catch (loginErr) {
-          console.error('登录请求处理失败:', loginErr)
-          
-          // 检查是否是特定类型的错误
-          if (loginErr.message && loginErr.message.includes('startsWith is not a function')) {
-            console.error('令牌格式错误，可能是后端返回了非字符串类型的令牌')
-            loginError.value = '登录失败: 令牌格式错误，请联系管理员'
-          } else {
-            // 其他错误
-            loginError.value = loginErr.message || '登录失败，请稍后重试'
-          }
-        }
-      } catch (error) {
-        console.error('登录过程发生未捕获错误:', error)
-        loginError.value = error.message || '登录失败，请稍后重试'
-      } finally {
-        loading.value = false
-      }
-    }
-
-    onMounted(() => {
-      // 检查是否已经登录
-      if (userStore.isLoggedIn) {
-        router.push('/dashboard')
-      }
-    })
-
-    return {
-      loginData,
-      loading,
-      loginError,
-      handleLogin,
-      shapeStyles
-    }
+    const requested = typeof route.query.redirect === 'string' ? route.query.redirect : ''
+    await router.replace(requested.startsWith('/') ? requested : '/dashboard')
+  } catch (error) {
+    loginError.value = error?.message || '登录失败，请稍后重试'
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.login-container {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(-45deg, #1a4a8d, #2989d8, #207cca, #26a0da);
-  background-size: 400% 400%;
-  animation: gradient 12s ease infinite;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%),
-      radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 50%);
-    pointer-events: none;
-  }
-
-  /* 添加漂浮的多边形 */
-  .floating-shape {
-    position: absolute;
-    background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.15) 0%, 
-                rgba(255, 255, 255, 0.05) 50%, 
-                rgba(255, 255, 255, 0.02) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 
-      0 4px 15px rgba(0, 0, 0, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-    backdrop-filter: blur(2px);
-    animation: float-move var(--duration) ease-in-out infinite alternate;
-    transform-style: preserve-3d;
-    perspective: 500px;
-    clip-path: polygon(
-      var(--clip1, 0%) var(--clip2, 0%), 
-      var(--clip3, 100%) var(--clip4, 0%), 
-      var(--clip5, 100%) var(--clip6, 100%), 
-      var(--clip7, 0%) var(--clip8, 100%)
-    );
-    will-change: transform;
-    z-index: -5;
-  }
-
-  // 手动设置每个多边形的clip-path值，形成不规则形状
-  .floating-shape:nth-child(1) { --clip1: 5%; --clip2: 8%; --clip3: 95%; --clip4: 10%; --clip5: 85%; --clip6: 90%; --clip7: 15%; --clip8: 88%; }
-  .floating-shape:nth-child(2) { --clip1: 12%; --clip2: 3%; --clip3: 85%; --clip4: 18%; --clip5: 92%; --clip6: 85%; --clip7: 8%; --clip8: 95%; }
-  .floating-shape:nth-child(3) { --clip1: 8%; --clip2: 15%; --clip3: 90%; --clip4: 5%; --clip5: 80%; --clip6: 90%; --clip7: 25%; --clip8: 75%; }
-  .floating-shape:nth-child(4) { --clip1: 18%; --clip2: 12%; --clip3: 88%; --clip4: 22%; --clip5: 95%; --clip6: 78%; --clip7: 5%; --clip8: 95%; }
-  .floating-shape:nth-child(5) { --clip1: 2%; --clip2: 8%; --clip3: 98%; --clip4: 15%; --clip5: 85%; --clip6: 92%; --clip7: 18%; --clip8: 82%; }
-  .floating-shape:nth-child(6) { --clip1: 15%; --clip2: 5%; --clip3: 90%; --clip4: 25%; --clip5: 95%; --clip6: 80%; --clip7: 10%; --clip8: 90%; }
-  .floating-shape:nth-child(7) { --clip1: 10%; --clip2: 18%; --clip3: 95%; --clip4: 8%; --clip5: 88%; --clip6: 95%; --clip7: 12%; --clip8: 85%; }
-  .floating-shape:nth-child(8) { --clip1: 5%; --clip2: 12%; --clip3: 85%; --clip4: 15%; --clip5: 92%; --clip6: 85%; --clip7: 20%; --clip8: 95%; }
-  .floating-shape:nth-child(9) { --clip1: 15%; --clip2: 5%; --clip3: 92%; --clip4: 18%; --clip5: 85%; --clip6: 90%; --clip7: 8%; --clip8: 85%; }
-  .floating-shape:nth-child(10) { --clip1: 8%; --clip2: 15%; --clip3: 88%; --clip4: 5%; --clip5: 95%; --clip6: 88%; --clip7: 15%; --clip8: 92%; }
-}
-
-.error-message {
-  margin-bottom: 16px;
-}
-
-.login-box {
-  width: 400px;
-  padding: 40px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(30px);
-  -webkit-backdrop-filter: blur(30px);
-  border-radius: 12px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  overflow: hidden;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 20;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    z-index: -1;
-  }
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 
-      0 15px 40px rgba(0, 0, 0, 0.3),
-      0 0 0 1px rgba(255, 255, 255, 0.4) inset;
-  }
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 40px;
-
-  h2 {
-    margin: 0;
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 8px;
-  }
-}
-
-.subtitle {
-  margin: 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.login-form {
-  .form-item {
-    margin-bottom: 20px;
-  }
-  
-  .input-wrapper {
-    margin-bottom: 8px;
-  }
-  
-  .login-button {
-    width: 100%;
-    height: 40px;
-    font-size: 16px;
-  }
-  
-  .form-footer {
-    text-align: center;
-    margin-top: 20px;
-    color: #666;
-    
-    .link {
-      color: #1890ff; // Ant Design 主颜色
-      text-decoration: none;
-      margin-left: 8px;
-      
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes float-move {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-  }
-  100% {
-    transform: translate3d(var(--move-x), var(--move-y), 0) rotate(var(--rotate));
-  }
-}
-
-:global([data-theme='dark']) {
-  .login-box {
-    background: rgba(0, 0, 0, 0.8);
-  }
-  
-  .login-header h2 {
-    color: #fff;
-  }
-  
-  .subtitle {
-    color: #999;
-  }
-  
-  .form-footer {
-    color: #999;
-  }
-}
-</style> 
+<style scoped lang="scss">
+.login-page { display: grid; min-height: 100vh; grid-template-columns: minmax(420px, .9fr) minmax(480px, 1.1fr); background: var(--color-page); }
+.login-intro { position: relative; display: flex; overflow: hidden; padding: 46px 56px; flex-direction: column; justify-content: space-between; background: #10182b; color: white; }
+.login-intro::before { position: absolute; width: 520px; height: 520px; border: 1px solid rgb(255 255 255 / 8%); border-radius: 50%; background: radial-gradient(circle, rgb(49 91 234 / 28%), transparent 68%); content: ''; right: -160px; top: 12%; }
+.login-intro > * { position: relative; z-index: 1; }
+.login-brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; }
+.login-brand span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--color-primary); font-weight: 800; }
+.login-kicker { color: #7694ff; font-size: 10px; font-weight: 800; letter-spacing: .18em; }
+.login-intro h1 { max-width: 640px; margin: 18px 0; font-size: clamp(38px, 5vw, 68px); line-height: 1.12; letter-spacing: -.045em; }
+.login-intro p { max-width: 560px; color: #aeb9ce; font-size: 17px; line-height: 1.8; }
+.login-intro small { color: #8290ab; }
+.login-panel { display: grid; padding: 32px; place-items: center; }
+.login-card { width: min(100%, 430px); padding: 42px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: white; box-shadow: var(--shadow-float); }
+.login-card header { margin-bottom: 30px; }
+.login-card h2 { margin: 8px 0 5px; color: var(--color-text); font-size: 30px; letter-spacing: -.03em; }
+.login-card header p, .login-card footer { color: var(--color-text-secondary); }
+.login-alert { margin-bottom: 20px; }
+.login-card :deep(.ant-form-item-label > label) { color: var(--color-text); font-weight: 650; }
+.login-card :deep(.ant-input-affix-wrapper) { border-radius: 10px; }
+.login-card :deep(.ant-btn) { height: 46px; margin-top: 4px; border-radius: 10px; font-weight: 700; }
+.login-card footer { display: flex; margin-top: 24px; gap: 6px; font-size: 12px; }
+.login-card footer a:last-child { margin-left: auto; }
+.login-card a { color: var(--color-primary); font-weight: 650; }
+@media (max-width: 860px) { .login-page { grid-template-columns: 1fr; } .login-intro { min-height: 250px; padding: 30px; } .login-intro h1 { margin-block: 12px; font-size: 38px; } .login-intro p { margin: 0; font-size: 14px; } .login-intro small { display: none; } .login-panel { padding: 24px 16px; } }
+@media (max-width: 480px) { .login-card { padding: 28px 22px; } .login-intro { min-height: 220px; padding: 24px 20px; } .login-intro h1 { font-size: 31px; } }
+</style>

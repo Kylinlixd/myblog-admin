@@ -250,9 +250,7 @@ const fetchCategories = async () => {
   try {
     categoriesLoading.value = true
     const response = await getCategoryList()
-    if (response && response.code === 200 && response.data) {
-      categories.value = response.data.items || []
-    }
+    categories.value = response.results || []
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
@@ -266,9 +264,7 @@ const fetchTags = async () => {
   try {
     tagsLoading.value = true
     const response = await getTagList()
-    if (response && response.code === 200 && response.data) {
-      tags.value = response.data.items || []
-    }
+    tags.value = response.results || []
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
@@ -433,4 +429,4 @@ onMounted(async () => {
     border-radius: 4px;
   }
 }
-</style> 
+</style>

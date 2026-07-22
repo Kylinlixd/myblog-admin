@@ -123,10 +123,22 @@ import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicCo
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
 import MarkdownIt from 'markdown-it'
-import hljs from 'highlight.js'
+import hljs from 'highlight.js/lib/core'
+import bash from 'highlight.js/lib/languages/bash'
+import css from 'highlight.js/lib/languages/css'
+import javascript from 'highlight.js/lib/languages/javascript'
+import json from 'highlight.js/lib/languages/json'
+import python from 'highlight.js/lib/languages/python'
+import sql from 'highlight.js/lib/languages/sql'
+import typescript from 'highlight.js/lib/languages/typescript'
+import xml from 'highlight.js/lib/languages/xml'
 import 'highlight.js/styles/atom-one-light.css'
 import { message } from 'ant-design-vue'
 import { sanitizeHTML } from '@/utils/security'
+
+Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
+  ([language, definition]) => hljs.registerLanguage(language, definition)
+)
 
 // 创建 Markdown 渲染器
 const md = new MarkdownIt({
@@ -209,14 +221,6 @@ const fetchComments = async () => {
   }
 }
 
-// 添加内容安全策略
-const setupCSP = () => {
-  const meta = document.createElement('meta')
-  meta.httpEquiv = 'Content-Security-Policy'
-  meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'"
-  document.head.appendChild(meta)
-}
-
 // 提交评论
 const submitComment = async () => {
   if (!dynamic.value) return
@@ -292,10 +296,7 @@ const fetchDynamicDetail = async () => {
   }
 }
 
-onMounted(() => {
-  setupCSP()
-  fetchDynamicDetail()
-})
+onMounted(fetchDynamicDetail)
 </script>
 
 <style scoped>
@@ -807,4 +808,4 @@ onMounted(() => {
   text-align: center;
   margin-top: 20px;
 }
-</style> 
+</style>
