@@ -1,39 +1,56 @@
-# myblog-admin
+# Kylin Blog Web
 
-博客管理系统（v1.0）
+个人博客的公开站点与内容管理端。项目使用 Vue 3、Vite、Pinia 和 Ant Design Vue，同一套应用提供 `/blog` 公开阅读区与 `/dashboard` 管理工作台。
 
-## 简介
-本项目是基于 Vue3 + Ant Design Vue 的博客管理后台，支持内容管理、用户管理、评论管理、标签与分类管理等功能。后端采用 Django + DRF。
+## 功能
 
-## 主要功能
-- 博客动态管理
-- 分类与标签管理
-- 用户与权限管理
-- 评论管理
-- 文件上传与管理
-- 支持多角色与权限
+- 博客首页、文章列表与详情、分类、标签、搜索和评论
+- JWT 登录、会话续期与统一错误处理
+- 内容、分类、标签、评论和文件管理
+- 响应式管理布局、加载/空数据/错误状态
+- Jest 组件与业务单元测试
 
-## 技术栈
-- 前端：Vue 3, Ant Design Vue, Pinia, Vue Router, Axios, Vite
-- 后端：Django, Django REST framework
-- 数据库：MySQL 8.0+
+## 本地启动
 
-## 快速开始
+要求 Node.js 20+，后端默认运行在 `http://127.0.0.1:8000`。
+
 ```bash
+git clone https://github.com/Kylinlixd/myblog-admin.git
 cd myblog-admin
-npm install
+npm ci
 npm run dev
 ```
 
-后端请参考后端目录或文档。
+访问：
 
-## 文档索引
+- 公开博客：`http://localhost:3000/blog`
+- 管理后台：`http://localhost:3000/login`
+
+如后端地址不同，创建 `.env.local`：
+
+```dotenv
+VITE_DEV_API_TARGET=http://127.0.0.1:8000
+```
+
+## 常用命令
+
+```bash
+npm run dev          # 本地开发
+npm run test:ci      # 单次执行测试
+npm run test:watch   # 监听测试
+npm run build        # 生产构建
+npm run check        # 测试 + 生产构建
+npm run preview      # 预览 dist
+```
+
+## 文档
+
 - [开发指南](docs/DEV_GUIDE.md)
-- [接口详情](docs/API_REFERENCE.md)
-- [部署文档](docs/DEPLOY.md)
+- [前端接口约定](docs/API_REFERENCE.md)
+- [部署指南](docs/DEPLOY.md)
 
-## 版本说明
-- v1.0：初始化版本，支持基础的博客内容管理、用户与权限、评论、标签、分类、文件上传等功能。
+后端仓库：[Kylinlixd/blog_li](https://github.com/Kylinlixd/blog_li)
 
-## 许可证
-MIT License 
+## License
+
+MIT

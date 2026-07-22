@@ -1,97 +1,69 @@
-# 部署文档
+# 前端部署指南
 
-## 前端部署
+推荐使用 Nginx 提供静态文件，并把 `/api/`、`/blog/` 和 `/media/` 转发到 Django 服务。这样前端无需写入生产 API 域名，也不会产生跨域问题。
 
-### 1. 构建生产包
+## 1. 构建
+
 ```bash
-npm run build
-# 或
-yarn build
+npm ci
+npm run check
 ```
-产物在 `dist/` 目录。
 
-### 2. Nginx 配置示例
+产物位于 `dist/`。不要直接用 `vite preview` 承载生产流量。
+
+## 2. Nginx 示例
+
 ```nginx
 server {
-    listen 80;
-    server_name your-domain.com;
+    listen 443 ssl http2;
+    server_name blog.example.com;
 
-    root /path/to/myblog-admin/dist;
+    root /srv/myblog-admin/dist;
     index index.html;
+
+    location /assets/ {
+        try_files $uri =404;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /blog/ {
+        # /blog 同时承载 SPA 路由和公开 API；浏览器页面导航返回 index.html。
+        if ($http_accept ~* "text/html") {
+            rewrite ^ /index.html last;
+        }
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /media/ {
+        alias /srv/blog_li/media/;
+    }
 
     location / {
         try_files $uri $uri/ /index.html;
     }
-
-    location /api/ {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    location /blog/ {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
 }
 ```
-重启 Nginx：
-```bash
-sudo nginx -s reload
-```
 
-### 3. 自动化部署脚本（可选）
-可参考项目根目录的 `deploy.sh`，支持一键构建、备份、回滚。
+注意：`/blog/` 同时是前端路由和 API 前缀，因此必须按 `Accept: text/html` 区分页面导航与 XHR。上线前应实际验证文章详情刷新；长期建议将公开 API 迁移到 `/api/public/` 以彻底消除路径重叠。
 
----
+## 3. 发布检查
 
-## 后端部署
+- `npm run check` 全部通过
+- `/blog`、文章详情和 `/login` 刷新不返回 404
+- 登录、令牌刷新、退出流程正常
+- `/assets/` 使用长期缓存，`index.html` 不使用长期缓存
+- HTTPS、压缩、访问日志和错误日志已开启
+- 与后端的 `CORS_ALLOWED_ORIGINS`、主机名和 Cookie 安全配置一致
 
-### 1. 环境准备
-- Python >= 3.8
-- MySQL 8.0+
-- Redis（可选）
-- 推荐使用虚拟环境
-
-### 2. 安装依赖
-```bash
-pip install -r requirements.txt
-```
-
-### 3. 配置数据库
-- 修改 `settings.py` 数据库配置
-- 执行数据库迁移：
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 4. 创建超级用户
-```bash
-python manage.py createsuperuser
-```
-
-### 5. 启动服务（开发）
-```bash
-python manage.py runserver
-```
-
-### 6. 生产环境部署
-- 推荐 Gunicorn + Nginx
-- Gunicorn 启动示例：
-```bash
-gunicorn blog.wsgi:application -b 0.0.0.0:8000 --workers 3
-```
-- 配置 systemd 服务和 Nginx 反向代理
-
-### 7. 常见问题
-- 静态文件未加载：请执行 `python manage.py collectstatic`
-- 数据库连接失败：检查配置和权限
-- 权限/跨域问题：检查 CORS 和 JWT 配置
-
-### 8. 生产环境建议
-- 关闭 DEBUG
-- 配置 ALLOWED_HOSTS
-- 配置 HTTPS
-- 定期备份数据库和静态文件 
+回滚时保留上一版 `dist` 目录，通过原子切换软链接恢复，再 reload Nginx。

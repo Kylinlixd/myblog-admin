@@ -1,123 +1,66 @@
-# 接口详情文档
+# 前端 API 约定
 
-## 认证与用户
-- `POST   /api/auth/register/`      用户注册
-- `POST   /api/auth/login/`         用户登录
-- `POST   /api/token/refresh/`      刷新JWT
-- `GET    /api/auth/info/`          获取当前用户信息
-- `PUT    /api/auth/password/`      修改密码
-- `PUT    /api/auth/profile/`       修改个人资料
+开发环境由 Vite 代理到 Django；生产环境应由同一域名的反向代理转发。因此前端始终请求相对路径。
 
-### 用户注册示例
-请求：
-```json
-{
-  "username": "testuser",
-  "password": "123456",
-  "email": "test@example.com"
-}
-```
-响应：
+## 响应格式
+
+多数业务接口返回：
+
 ```json
 {
   "code": 200,
-  "data": {
-    "token": "jwt-token-string",
-    "userInfo": {"id": 1, "username": "testuser", "email": "test@example.com"}
-  },
-  "message": "注册成功"
+  "message": "success",
+  "data": {}
 }
 ```
 
-## 动态内容（Dynamic）
-- `GET    /api/dynamics/`           动态列表（支持分页、类型、状态筛选）
-- `POST   /api/dynamics/`           创建动态
-- `GET    /api/dynamics/{id}/`      动态详情
-- `PUT    /api/dynamics/{id}/`      更新动态
-- `DELETE /api/dynamics/{id}/`      删除动态
+分页内容列表使用 `data.items` 与 `data.total`；评论列表使用 `data.list` 与 `data.total`。HTTP 状态码仍是判断成功与否的首要依据。
 
-### 动态内容主要字段
-- id: int
-- type: string
-- content: string
-- status: string
-- media_urls: array
-- category: object
-- tags: array
-- created_at: string
-- updated_at: string
+## 认证
 
-### 动态列表响应示例
-```json
-{
-  "code": 200,
-  "data": {
-    "items": [
-      {"id": 1, "type": "text", "content": "内容", "status": "published", "created_at": "2024-06-01T12:00:00Z"}
-    ],
-    "total": 1
-  },
-  "message": "success"
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| POST | `/api/auth/login/` | 登录并返回 access、refresh |
+| POST | `/api/auth/register/` | 注册并返回令牌 |
+| POST | `/api/token/refresh/` | 刷新 access token |
+| POST | `/api/auth/logout/` | 退出并拉黑当前 access token |
+| GET | `/api/auth/info/` | 当前用户资料 |
+| PUT | `/api/auth/password/` | 修改密码 |
+| PUT | `/api/auth/profile/` | 修改资料 |
+
+受保护请求自动携带 `Authorization: Bearer <access>` 和 `X-Request-ID`。
+
+## 公开博客
+
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| GET | `/blog/dynamics/` | 已发布内容列表 |
+| GET | `/blog/dynamics/{id}/` | 内容详情 |
+| GET | `/blog/dynamics/hot/` | 热门内容，支持 `limit` |
+| GET | `/blog/dynamics/recent/` | 最近内容，支持 `limit` |
+| PUT | `/blog/dynamics/{id}/view/` | 增加阅读量 |
+| POST | `/blog/dynamics/{id}/like/` | 点赞 |
+| GET/POST | `/blog/comments/` | 查询或提交评论 |
+| GET | `/blog/categories/` | 分类列表 |
+| GET | `/blog/categories/{id}/dynamics/` | 分类内容 |
+| GET | `/blog/tags/` | 标签列表 |
+| GET | `/blog/tags/{id}/dynamics/` | 标签内容 |
+| GET | `/blog/search/` | 搜索公开内容 |
+
+## 管理端
+
+`/api/dynamics/`、`/api/categories/`、`/api/tags/`、`/api/comments/` 提供标准列表、创建、详情、更新和删除操作。`/api/stats/` 返回管理仪表盘统计且必须登录。文件接口位于 `/api/upload/`。
+
+## 错误处理
+
+请求层将网络错误、Django/DRF 错误标准化。页面不要读取 `error.response`，而应读取：
+
+```js
+try {
+  await getBlogDynamics({ page: 1 })
+} catch (error) {
+  errorMessage.value = error.message
 }
 ```
 
-## 分类（Category）
-- `GET    /api/categories/`         分类列表
-- `POST   /api/categories/`         创建分类
-- `GET    /api/categories/{id}/`    分类详情
-- `PUT    /api/categories/{id}/`    更新分类
-- `DELETE /api/categories/{id}/`    删除分类
-
-### 分类主要字段
-- id: int
-- name: string
-- parent: int/null
-
-## 标签（Tag）
-- `GET    /api/tags/`               标签列表
-- `POST   /api/tags/`               创建标签
-- `GET    /api/tags/{id}/`          标签详情
-- `PUT    /api/tags/{id}/`          更新标签
-- `DELETE /api/tags/{id}/`          删除标签
-
-### 标签主要字段
-- id: int
-- name: string
-- description: string
-
-## 评论（Comment）
-- `GET    /api/comments/`           评论列表
-- `POST   /api/comments/`           创建评论
-- `GET    /api/comments/{id}/`      评论详情
-- `PUT    /api/comments/{id}/`      更新评论
-- `DELETE /api/comments/{id}/`      删除评论
-
-### 评论主要字段
-- id: int
-- content: string
-- author: object
-- dynamic: int
-- parent: int/null
-- status: string
-- created_at: string
-
-## 文件上传
-- `POST   /api/upload/file/`        文件上传
-
-### 文件主要字段
-- id: int
-- name: string
-- file_type: string
-- file_url: string
-- uploader: object
-- created_at: string
-
-## 响应格式示例
-```json
-{
-  "code": 200,
-  "data": { ... },
-  "message": "success"
-}
-```
-详细参数和返回结构请参考后端API文档或 serializers.py。 
+接口定义以配套后端仓库的 `docs/api.md` 为准。
