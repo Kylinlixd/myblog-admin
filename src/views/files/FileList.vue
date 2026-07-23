@@ -1,5 +1,5 @@
 <template>
-  <div class="file-list">
+  <div class="file-list admin-page">
     <a-page-header
       title="文件管理"
       subtitle="管理上传的文件资源"
@@ -18,7 +18,7 @@
     </a-page-header>
 
     <!-- 搜索表单 -->
-    <a-form layout="inline" class="search-form">
+    <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
         <a-form-item label="文件名">
           <a-input v-model:value="searchForm.name" placeholder="搜索文件名" allowClear />
@@ -53,7 +53,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations">
+    <div class="table-operations admin-toolbar">
       <a-space>
         <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
           <DeleteOutlined />
@@ -62,7 +62,7 @@
       </a-space>
     </div>
 
-    <a-card class="data-card">
+    <a-card class="data-card admin-table-card">
       <a-table
         :loading="loading"
         :columns="columns"
@@ -897,4 +897,4 @@ onMounted(() => {
     color: #999;
   }
 }
-</style> 
+</style>

@@ -1,7 +1,7 @@
 <template>
-  <div class="tag-list">
+  <div class="tag-list admin-page">
     <!-- 搜索表单 -->
-    <a-form layout="inline" class="search-form">
+    <a-form layout="inline" class="search-form admin-filter">
       <a-form-item label="名称">
         <a-input v-model:value="searchForm.name" placeholder="搜索标签名称" allowClear />
       </a-form-item>
@@ -31,7 +31,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations">
+    <div class="table-operations admin-toolbar">
       <a-space>
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>

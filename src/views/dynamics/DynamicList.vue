@@ -1,5 +1,5 @@
 <template>
-  <div class="dynamic-list">
+  <div class="dynamic-list admin-page">
     <a-page-header
       title="动态管理"
       subtitle="管理博客动态内容"
@@ -12,7 +12,7 @@
     </a-page-header>
     
     <!-- 搜索表单 -->
-    <a-form layout="inline" class="search-form">
+    <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
         <a-form-item label="标题">
           <a-input v-model:value="searchForm.title" placeholder="搜索标题" allowClear />
@@ -87,7 +87,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations">
+    <div class="table-operations admin-toolbar">
       <a-space size="middle">
         <a-button type="primary" @click="navigateToCreate">
           <PlusOutlined /> 新建动态
@@ -99,7 +99,7 @@
       </a-space>
     </div>
 
-    <a-card class="data-card">
+    <a-card class="data-card admin-table-card">
       <a-table
         :loading="loading"
         :columns="responsive ? columnsForMobile : columns"

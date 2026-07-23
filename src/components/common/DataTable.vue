@@ -1,5 +1,5 @@
 <template>
-  <div class="data-table">
+  <div class="data-table admin-table-card">
     <div class="table-wrapper" :class="{ 'is-loading': loading }">
       <table class="inspira-table">
         <thead>
@@ -205,4 +205,4 @@ const getRowKey = (row, index) => {
     background-color: rgba(0, 0, 0, 0.5);
   }
 }
-</style> 
+</style>

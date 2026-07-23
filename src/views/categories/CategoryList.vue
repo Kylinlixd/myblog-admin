@@ -1,7 +1,7 @@
 <template>
-  <div class="category-list">
+  <div class="category-list admin-page">
     <!-- 搜索表单 -->
-    <a-form layout="inline" class="search-form">
+    <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
         <a-form-item label="名称">
           <a-input 
@@ -40,7 +40,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations">
+    <div class="table-operations admin-toolbar">
       <a-space size="middle">
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>

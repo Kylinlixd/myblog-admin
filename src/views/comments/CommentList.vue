@@ -1,5 +1,5 @@
 <template>
-  <div class="comment-list">
+  <div class="comment-list admin-page">
     <PageHeader title="评论管理" icon="CommentOutlined" />
     
     <!-- 搜索表单 -->
@@ -304,4 +304,4 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-</style> 
+</style>

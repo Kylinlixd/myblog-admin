@@ -1,5 +1,5 @@
 <template>
-  <div class="search-form">
+  <div class="search-form admin-filter">
     <a-form :model="form" layout="inline" @submit.prevent="handleSearch">
       <slot></slot>
       
@@ -59,77 +59,46 @@ const handleReset = () => {
 
 <style lang="scss" scoped>
 .search-form {
-  margin-bottom: 24px;
-  padding: 24px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  margin-bottom: 0;
   
   :deep(.ant-form) {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 12px;
-    align-items: center;
+    align-items: flex-end;
   }
 
   :deep(.ant-form-item) {
     margin-bottom: 0;
     margin-right: 0;
-    min-width: 200px;
+    min-width: 180px;
     flex: none;
   }
 
   :deep(.ant-input) {
-    border: none;
-    background: #fafbfc;
-    box-shadow: none;
-    border-radius: 6px;
-    min-width: 90px;
-    max-width: 120px;
-    width: 100px;
-    height: 24px !important;
-    line-height: 24px !important;
+    min-width: 180px;
+    height: 36px !important;
+    line-height: 36px !important;
     font-size: 13px;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    padding: 0 6px;
-    &:hover {
-      border-color: #40a9ff;
-    }
-    &:focus {
-      border-color: #40a9ff;
-      box-shadow: none;
-    }
   }
 
   :deep(.ant-select-selector) {
-    min-width: 90px;
-    max-width: 120px;
-    width: 100px;
-    height: 24px !important;
-    line-height: 24px !important;
+    min-width: 160px;
+    height: 36px !important;
     font-size: 13px;
-    display: flex;
-    align-items: center;
-    border-radius: 6px;
-    background: #fafbfc;
-    border: none;
-    box-shadow: none;
-    padding: 0 6px;
   }
 
   .form-buttons {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     margin-left: 0;
     align-items: center;
     .search-button, .reset-button {
       height: 36px;
-      padding: 0 18px;
-      border-radius: 6px;
-      font-weight: 500;
-      font-size: 15px;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-weight: 650;
+      font-size: 14px;
       transition: all 0.3s ease;
     }
     .search-button:hover {
@@ -146,9 +115,6 @@ const handleReset = () => {
 
 :global([data-theme='dark']) {
   .search-form {
-    background-color: #1f1f1f;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
-
     :deep(.ant-input) {
       background-color: #141414;
       border-color: #434343;
@@ -193,4 +159,4 @@ const handleReset = () => {
     }
   }
 }
-</style> 
+</style>
