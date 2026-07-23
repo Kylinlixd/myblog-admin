@@ -83,10 +83,9 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { message, Modal } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { getCommentList, approveComment, rejectComment, deleteComment } from '../../api/comment'
 import { CheckOutlined, CloseOutlined, DeleteOutlined, CommentOutlined } from '@ant-design/icons-vue'
-import { useRouter } from 'vue-router'
 
 // 导入通用组件
 import DataTable from '../../components/common/DataTable.vue'
@@ -121,19 +120,8 @@ const filterForm = reactive({
 const getComments = async () => {
   loading.value = true
   
-  // 先验证是否有有效令牌
-  const token = localStorage.getItem('token')
-  if (!token) {
-    message.error('未登录或会话已过期，请重新登录')
-    loading.value = false
-    setTimeout(() => {
-      router.push('/login')
-    }, 1000)
-    return
-  }
-  
   try {
-    console.log('开始获取评论列表，令牌:', token ? '存在' : '不存在');
+    console.log('开始获取评论列表');
     const response = await getCommentList({
       page: currentPage.value,
       pageSize: pageSize.value,
@@ -163,9 +151,6 @@ const getComments = async () => {
       error.response?.status === 401
     )) {
       message.error('登录已过期，请重新登录');
-      setTimeout(() => {
-        router.push('/login');
-      }, 1500);
     } else {
       message.error('获取评论列表失败: ' + (error.message || '未知错误'));
     }
@@ -280,8 +265,6 @@ const formatDate = (dateString) => {
     hour12: false
   });
 }
-
-const router = useRouter()
 
 onMounted(() => {
   getComments()
