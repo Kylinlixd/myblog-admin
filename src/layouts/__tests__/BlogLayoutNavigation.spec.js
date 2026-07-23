@@ -13,4 +13,14 @@ describe('BlogLayout navigation active state', () => {
     expect(source).toContain("currentPath === '/blog' || currentPath === '/blog/'")
     expect(source).not.toContain('a.router-link-active')
   })
+
+  it('keeps search and admin access available on mobile', () => {
+    const source = readLayout()
+
+    expect(source).toContain('mobile-admin-link')
+    expect(source).toContain('quick-search-button')
+    expect(source).toContain('管理后台')
+    expect(source).not.toContain('.quick-search input { width: 0; }')
+    expect(source).toContain('.quick-search input { width: 100%; min-width: 0;')
+  })
 })

@@ -22,7 +22,9 @@
 
         <div class="header-actions">
           <form class="quick-search" role="search" @submit.prevent="search">
-            <search-outlined />
+            <button class="quick-search-button" type="submit" aria-label="提交搜索">
+              <search-outlined />
+            </button>
             <input v-model.trim="query" aria-label="搜索博客" placeholder="搜索文章" />
           </form>
           <router-link class="admin-link" to="/login">管理后台</router-link>
@@ -43,6 +45,7 @@
         >
           {{ item.label }}
         </router-link>
+        <router-link class="mobile-admin-link" to="/login" @click="mobileOpen = false">管理后台</router-link>
       </nav>
     </header>
 
@@ -82,7 +85,9 @@ const navigation = [
 ]
 
 function search() {
-  if (query.value) router.push({ path: '/blog/search', query: { keyword: query.value } })
+  if (!query.value) return
+  router.push({ path: '/blog/search', query: { keyword: query.value } })
+  mobileOpen.value = false
 }
 
 function isNavigationActive(item) {
@@ -108,10 +113,13 @@ function isNavigationActive(item) {
 .header-actions { display: flex; margin-left: auto; align-items: center; gap: 10px; }
 .quick-search { display: flex; width: 190px; height: 40px; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-muted); color: var(--color-text-muted); }
 .quick-search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgb(49 91 234 / 10%); }
-.quick-search input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--color-text); }
+.quick-search-button { display: grid; flex: 0 0 20px; width: 20px; height: 20px; place-items: center; border: 0; padding: 0; background: transparent; color: inherit; cursor: pointer; }
+.quick-search-button:hover { color: var(--color-primary); }
+.quick-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--color-text); }
 .admin-link { padding: 9px 14px; border-radius: 999px; background: var(--color-text); color: white; font-size: 13px; font-weight: 650; }
 .menu-button { display: none; width: 40px; height: 40px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: white; color: var(--color-text); }
 .mobile-nav { display: none; padding-block: 8px 16px; }
+.mobile-admin-link { display: none; }
 .site-main { flex: 1; }
 .site-footer { border-top: 1px solid var(--color-border); background: white; color: var(--color-text-secondary); }
 .footer-inner { display: flex; min-height: 92px; align-items: center; justify-content: space-between; gap: 20px; font-size: 13px; }
@@ -119,6 +127,7 @@ function isNavigationActive(item) {
 .page-enter-active, .page-leave-active { transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .page-enter-from { opacity: 0; transform: translateY(5px); }
 .page-leave-to { opacity: 0; }
-@media (max-width: 900px) { .desktop-nav, .admin-link { display: none; } .menu-button, .mobile-nav { display: flex; } .mobile-nav { flex-direction: column; } }
-@media (max-width: 620px) { .quick-search { width: 42px; padding: 0 12px; } .quick-search input { width: 0; } .quick-search:focus-within { position: absolute; right: 64px; left: 14px; width: auto; background: white; } .quick-search:focus-within input { width: 100%; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
+@media (max-width: 900px) { .desktop-nav, .admin-link { display: none; } .menu-button, .mobile-nav { display: flex; } .mobile-nav { flex-direction: column; gap: 6px; } .mobile-admin-link { display: flex; min-height: 40px; align-items: center; justify-content: center; margin-top: 4px; background: var(--color-text); color: white !important; font-weight: 700; } }
+@media (max-width: 620px) { .header-inner { min-height: 66px; gap: 12px; } .header-actions { flex: 1; min-width: 0; justify-content: flex-end; } .quick-search { flex: 1 1 150px; width: auto; min-width: 132px; max-width: 190px; height: 38px; padding: 0 10px; } .quick-search input { width: 100%; min-width: 0; font-size: 13px; } .brand small { display: none; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
+@media (max-width: 380px) { .brand > span:last-child { display: none; } .quick-search { min-width: 138px; } }
 </style>
