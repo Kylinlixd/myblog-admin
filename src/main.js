@@ -21,6 +21,20 @@ app.use(router)
 registerAntComponents(app)
 app.mount('#app')
 
+function clearLegacyServiceWorkers() {
+  if (!('serviceWorker' in navigator)) return
+
+  navigator.serviceWorker.getRegistrations()
+    .then((registrations) => {
+      registrations.forEach((registration) => registration.unregister())
+    })
+    .catch((error) => {
+      console.warn('[ServiceWorker] 清理旧缓存代理失败', error)
+    })
+}
+
+clearLegacyServiceWorkers()
+
 window.addEventListener('auth:expired', () => {
   if (router.currentRoute.value.meta.requiresAuth) {
     router.replace({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })

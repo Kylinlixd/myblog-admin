@@ -1,11 +1,12 @@
 import request from '@/utils/request'
 
-const BLOG_API_PREFIX = '/blog'
+const LEGACY_BLOG_API_PREFIX = '/blog'
+const BLOG_API_PREFIX = '/api/blog'
 
 export function createBlogApiUrl(path = '') {
   const cleanPath = String(path).trim()
 
-  if (!cleanPath || cleanPath === BLOG_API_PREFIX) {
+  if (!cleanPath || cleanPath === BLOG_API_PREFIX || cleanPath === LEGACY_BLOG_API_PREFIX) {
     return `${BLOG_API_PREFIX}/`
   }
 
@@ -13,7 +14,10 @@ export function createBlogApiUrl(path = '') {
     return cleanPath.endsWith('/') ? cleanPath : `${cleanPath}/`
   }
 
-  const normalizedPath = cleanPath.replace(/^\/+|\/+$/g, '')
+  const withoutLegacyPrefix = cleanPath.startsWith(`${LEGACY_BLOG_API_PREFIX}/`)
+    ? cleanPath.slice(LEGACY_BLOG_API_PREFIX.length)
+    : cleanPath
+  const normalizedPath = withoutLegacyPrefix.replace(/^\/+|\/+$/g, '')
   return `${BLOG_API_PREFIX}/${normalizedPath}/`
 }
 
@@ -39,7 +43,7 @@ export const getCategoryDynamics = (categoryId, params) =>
   request.get(createBlogApiUrl(`categories/${categoryId}/dynamics`), { params })
 
 export const searchBlogDynamics = (params) =>
-  request.get(createBlogApiUrl('dynamics/search'), { params })
+  request.get(createBlogApiUrl('search'), { params })
 
 export const getTagDynamics = (tagId, params) =>
   request.get(createBlogApiUrl(`tags/${tagId}/dynamics`), { params })
