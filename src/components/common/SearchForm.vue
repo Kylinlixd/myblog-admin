@@ -71,19 +71,16 @@ const handleReset = () => {
   :deep(.ant-form-item) {
     margin-bottom: 0;
     margin-right: 0;
-    min-width: 180px;
     flex: none;
   }
 
   :deep(.ant-input) {
-    min-width: 180px;
     height: 36px !important;
     line-height: 36px !important;
     font-size: 13px;
   }
 
   :deep(.ant-select-selector) {
-    min-width: 160px;
     height: 36px !important;
     font-size: 13px;
   }

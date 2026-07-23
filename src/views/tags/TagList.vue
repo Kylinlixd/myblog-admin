@@ -9,7 +9,6 @@
         <a-select
           v-model:value="searchForm.status"
           placeholder="选择状态"
-          style="min-width: 100px"
           allowClear
         >
           <a-select-option value="active">启用</a-select-option>

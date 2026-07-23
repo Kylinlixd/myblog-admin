@@ -27,7 +27,6 @@
           <a-select
             v-model:value="searchForm.type"
             placeholder="选择类型"
-            style="width: 120px"
             allowClear
           >
             <a-select-option value="image">图片</a-select-option>

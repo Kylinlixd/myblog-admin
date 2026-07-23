@@ -66,6 +66,9 @@
 }
 
 .admin-filter {
+  --admin-filter-control-width: 140px;
+  --admin-filter-control-height: 36px;
+
   display: flex;
   gap: 14px 18px;
   align-items: flex-start;
@@ -93,14 +96,47 @@
 
 .admin-filter .ant-form-item {
   margin: 0;
+  flex: 0 0 auto;
+}
+
+.admin-filter .ant-form-item-control-input {
+  min-height: var(--admin-filter-control-height);
 }
 
 .admin-filter .ant-input,
+.admin-filter .ant-input-affix-wrapper,
+.admin-filter .ant-select,
 .admin-filter .ant-select-selector {
-  min-height: 36px;
+  width: var(--admin-filter-control-width) !important;
+  min-width: var(--admin-filter-control-width) !important;
+  min-height: var(--admin-filter-control-height);
   border-color: var(--color-border) !important;
   border-radius: 8px !important;
   background: #fbfcff !important;
+}
+
+.admin-filter .ant-input,
+.admin-filter .ant-input-affix-wrapper,
+.admin-filter .ant-select-selector {
+  height: var(--admin-filter-control-height) !important;
+}
+
+.admin-filter .ant-select-selector {
+  width: 100% !important;
+}
+
+.admin-filter .ant-input-affix-wrapper {
+  display: inline-flex;
+  align-items: center;
+  padding-block: 0;
+}
+
+.admin-filter .ant-input-affix-wrapper .ant-input {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: calc(var(--admin-filter-control-height) - 2px) !important;
+  background: transparent !important;
+  box-shadow: none;
 }
 
 .admin-toolbar {

@@ -8,14 +8,12 @@
             v-model:value="searchForm.name" 
             placeholder="搜索分类名称" 
             allowClear 
-            style="width: 240px"
           />
         </a-form-item>
         <a-form-item label="状态">
           <a-select
             v-model:value="searchForm.status"
             placeholder="选择状态"
-            style="width: 120px"
             allowClear
           >
             <a-select-option value="active">启用</a-select-option>

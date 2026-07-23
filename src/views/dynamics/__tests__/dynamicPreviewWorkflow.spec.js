@@ -44,10 +44,10 @@ describe('dynamic preview workflow', () => {
     const listView = readView('DynamicList.vue')
 
     expect(listView.match(/class="dynamic-filter-control"/g) || []).toHaveLength(6)
-    expect(listView.match(/style="width: 140px"/g) || []).toHaveLength(6)
     expect(listView).not.toContain('style="width: 100px"')
     expect(listView).not.toContain('style="width: 120px"')
     expect(listView).not.toContain('style="width: 132px"')
+    expect(listView).not.toContain('style="width: 140px"')
     expect(listView).not.toContain('style="width: 200px"')
     expect(listView).toContain('.dynamic-filter-control')
     expect(listView).toContain('height: 36px')

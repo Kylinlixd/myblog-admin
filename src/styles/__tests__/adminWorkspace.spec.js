@@ -16,4 +16,17 @@ describe('admin workspace styles', () => {
     expect(stylesheet).toContain('--admin-table-min-width')
     expect(stylesheet).toContain('overflow-x: auto')
   })
+
+  it('standardizes admin filter input and select control sizes', () => {
+    const stylesheet = fs.readFileSync(
+      path.join(process.cwd(), 'src/styles/admin-workspace.scss'),
+      'utf8'
+    )
+
+    expect(stylesheet).toContain('--admin-filter-control-width: 140px')
+    expect(stylesheet).toContain('--admin-filter-control-height: 36px')
+    expect(stylesheet).toContain('width: var(--admin-filter-control-width) !important')
+    expect(stylesheet).toContain('.admin-filter .ant-input-affix-wrapper .ant-input')
+    expect(stylesheet).toContain('background: transparent !important')
+  })
 })

@@ -19,7 +19,6 @@
             class="dynamic-filter-control"
             v-model:value="searchForm.title"
             placeholder="搜索标题"
-            style="width: 140px"
             allowClear
           />
         </a-form-item>
@@ -28,7 +27,6 @@
             class="dynamic-filter-control"
             v-model:value="searchForm.content"
             placeholder="搜索内容"
-            style="width: 140px"
             allowClear
           />
         </a-form-item>
@@ -37,7 +35,6 @@
             class="dynamic-filter-control"
             v-model:value="searchForm.categoryId"
             placeholder="选择分类"
-            style="width: 140px"
             allowClear
           >
             <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
@@ -51,7 +48,6 @@
             v-model:value="searchForm.tagIds"
             placeholder="选择标签"
             mode="multiple"
-            style="width: 140px"
             allowClear
           >
             <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
@@ -66,7 +62,6 @@
             class="dynamic-filter-control"
             v-model:value="searchForm.status"
             placeholder="选择状态"
-            style="width: 140px"
             allowClear
           >
             <a-select-option value="published">已发布</a-select-option>
@@ -78,7 +73,6 @@
             class="dynamic-filter-control"
             v-model:value="searchForm.type"
             placeholder="选择类型"
-            style="width: 140px"
             allowClear
           >
             <a-select-option value="text">文本</a-select-option>
