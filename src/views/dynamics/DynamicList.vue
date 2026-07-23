@@ -889,6 +889,14 @@ onUnmounted(() => {
         padding-block: 0;
       }
 
+      :deep(.dynamic-filter-control.ant-input-affix-wrapper .ant-input) {
+        width: 100%;
+        height: 34px;
+        min-height: 0;
+        background: transparent !important;
+        box-shadow: none;
+      }
+
       .search-form-left {
       display: flex;
       flex-wrap: wrap;

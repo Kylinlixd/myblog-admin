@@ -51,5 +51,7 @@ describe('dynamic preview workflow', () => {
     expect(listView).not.toContain('style="width: 200px"')
     expect(listView).toContain('.dynamic-filter-control')
     expect(listView).toContain('height: 36px')
+    expect(listView).toContain('.dynamic-filter-control.ant-input-affix-wrapper .ant-input')
+    expect(listView).toContain('background: transparent')
   })
 })
