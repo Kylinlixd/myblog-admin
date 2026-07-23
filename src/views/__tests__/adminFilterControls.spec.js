@@ -20,4 +20,25 @@ describe('admin filter controls', () => {
     expect(listViews).not.toContain('style="width: 240px"')
     expect(listViews).not.toContain('style="min-width: 100px"')
   })
+
+  it('uses the shared admin edit modal style for category and tag dialogs', () => {
+    const categoryView = readView('categories/CategoryList.vue')
+    const tagView = readView('tags/TagList.vue')
+    const adminStyles = fs.readFileSync(
+      path.join(process.cwd(), 'src/styles/admin-workspace.scss'),
+      'utf8'
+    )
+
+    expect(categoryView).toContain('wrap-class-name="admin-edit-modal"')
+    expect(categoryView).toContain('v-model:open="dialogVisible"')
+    expect(categoryView).toContain('width="600px"')
+    expect(tagView).toContain('wrap-class-name="admin-edit-modal"')
+    expect(tagView).toContain('width="600px"')
+    expect(adminStyles).toContain('.admin-edit-modal .ant-modal-content')
+    expect(adminStyles).toContain('.admin-edit-modal .ant-modal-header')
+    expect(adminStyles).toContain('.admin-edit-modal .ant-modal-body')
+    expect(adminStyles).toContain('.admin-edit-modal .ant-modal-footer')
+    expect(adminStyles).toContain('.admin-edit-modal .ant-input')
+    expect(adminStyles).toContain('.admin-edit-modal .ant-select-selector')
+  })
 })

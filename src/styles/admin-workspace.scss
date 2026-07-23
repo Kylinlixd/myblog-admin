@@ -231,6 +231,59 @@
   border-radius: 999px;
 }
 
+.admin-edit-modal .ant-modal-content {
+  overflow: hidden;
+  border: 1px solid rgb(226 231 239 / 90%);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-float);
+}
+
+.admin-edit-modal .ant-modal-header {
+  margin: 0;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: #fff;
+}
+
+.admin-edit-modal .ant-modal-title {
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 760;
+}
+
+.admin-edit-modal .ant-modal-body {
+  padding: 24px;
+  background: #fff;
+}
+
+.admin-edit-modal .ant-modal-footer {
+  margin: 0;
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--color-border);
+  background: #fff;
+}
+
+.admin-edit-modal .ant-form-item-label > label {
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.admin-edit-modal .ant-input,
+.admin-edit-modal .ant-input-affix-wrapper,
+.admin-edit-modal .ant-input-number,
+.admin-edit-modal .ant-select-selector,
+.admin-edit-modal textarea.ant-input {
+  border-color: var(--color-border) !important;
+  border-radius: 8px !important;
+  background: #fff !important;
+}
+
+.admin-edit-modal .ant-input-affix-wrapper .ant-input {
+  background: transparent !important;
+  box-shadow: none;
+}
+
 @media (max-width: 992px) {
   .workspace::before {
     inset-left: 0;

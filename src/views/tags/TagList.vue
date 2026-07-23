@@ -110,6 +110,7 @@
     <a-modal
       v-model:open="dialogVisible"
       :title="dialogType === 'create' ? '新建标签' : '编辑标签'"
+      wrap-class-name="admin-edit-modal"
       @ok="handleSubmit"
       :confirmLoading="formLoading"
       width="600px"

@@ -105,8 +105,10 @@
 
     <!-- 分类编辑对话框 -->
     <a-modal
-      v-model:visible="dialogVisible"
+      v-model:open="dialogVisible"
       :title="dialogType === 'create' ? '新建分类' : '编辑分类'"
+      wrap-class-name="admin-edit-modal"
+      width="600px"
       @ok="handleSubmit"
       :confirm-loading="formLoading"
       @cancel="dialogVisible = false"
