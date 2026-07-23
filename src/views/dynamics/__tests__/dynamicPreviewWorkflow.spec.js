@@ -53,5 +53,7 @@ describe('dynamic preview workflow', () => {
     expect(listView).toContain('height: 36px')
     expect(listView).toContain('.dynamic-filter-control.ant-input-affix-wrapper .ant-input')
     expect(listView).toContain('background: transparent')
+    expect(listView).toContain('buildOptionText')
+    expect(listView).toContain('${value}/页')
   })
 })

@@ -1,19 +1,22 @@
 <template>
-  <router-view v-slot="{ Component }">
-    <transition name="page-fade" mode="out-in">
-      <keep-alive :include="cachedViews">
-        <component :is="Component" />
-      </keep-alive>
-    </transition>
-  </router-view>
+  <a-config-provider :locale="antLocale">
+    <router-view v-slot="{ Component }">
+      <transition name="page-fade" mode="out-in">
+        <keep-alive :include="cachedViews">
+          <component :is="Component" />
+        </keep-alive>
+      </transition>
+    </router-view>
 
-  <div v-if="appStore.isLoading" class="app-loading" role="status" aria-live="polite">
-    <span class="app-loading__spinner" aria-hidden="true" />
-    <span>{{ appStore.loadingText }}</span>
-  </div>
+    <div v-if="appStore.isLoading" class="app-loading" role="status" aria-live="polite">
+      <span class="app-loading__spinner" aria-hidden="true" />
+      <span>{{ appStore.loadingText }}</span>
+    </div>
+  </a-config-provider>
 </template>
 
 <script setup>
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -21,6 +24,14 @@ import { useAppStore } from '@/stores/app'
 
 const router = useRouter()
 const appStore = useAppStore()
+
+const antLocale = {
+  ...zhCN,
+  Pagination: {
+    ...zhCN.Pagination,
+    items_per_page: '/页'
+  }
+}
 
 const cachedViews = computed(() =>
   router

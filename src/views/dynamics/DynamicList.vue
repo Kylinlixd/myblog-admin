@@ -648,6 +648,7 @@ const paginationConfig = computed(() => ({
   total: total.value,
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50', '100'],
+  buildOptionText: ({ value }) => `${value}/页`,
   showQuickJumper: true,
   showTotal: (total) => `共 ${total} 条`,
   onChange: (page, pageSize) => {
