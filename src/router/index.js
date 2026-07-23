@@ -275,15 +275,20 @@ const router = createRouter({
   }
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const appStore = useAppStore()
   const userStore = useUserStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true)
+  const isAuthPage = to.name === 'Login' || to.name === 'Register'
 
   appStore.hasError = false
   appStore.startNavigation()
 
-  if ((to.name === 'Login' || to.name === 'Register') && userStore.isLoggedIn) {
+  if ((requiresAuth || isAuthPage) && !to.path.startsWith('/blog') && !userStore.initialized) {
+    await userStore.initialize()
+  }
+
+  if (isAuthPage && userStore.isLoggedIn) {
     return { name: 'Dashboard' }
   }
 
