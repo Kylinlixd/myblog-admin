@@ -272,92 +272,6 @@
       </div>
     </a-modal>
 
-    <!-- 动态预览对话框 -->
-    <a-modal
-      v-model:open="detailVisible"
-      title="动态详情"
-      :footer="null"
-      width="800px"
-    >
-      <div v-if="currentDetail" class="dynamic-detail">
-        <div class="detail-header">
-          <div class="detail-title">
-            <a-tag :color="currentDetail.type === 'text' ? 'blue' : 'green'">
-              {{ currentDetail.type === 'text' ? '文本' : '图文' }}
-            </a-tag>
-            <a-tag :color="currentDetail.status === 'published' ? 'success' : 'default'">
-              {{ currentDetail.status === 'published' ? '已发布' : '草稿' }}
-            </a-tag>
-            <span class="detail-time">{{ formatDate(currentDetail.createdAt) }}</span>
-          </div>
-        </div>
-        
-        <div class="detail-content">
-          <div class="content-text">{{ currentDetail.content }}</div>
-          
-          <!-- 媒体内容 -->
-          <div v-if="currentDetail.mediaUrls?.length" class="media-content">
-            <template v-if="currentDetail.type === 'image'">
-              <a-image-preview-group>
-                <a-image
-                  v-for="(url, index) in currentDetail.mediaUrls"
-                  :key="index"
-                  :src="url"
-                  :width="200"
-                  :height="200"
-                  fit="cover"
-                  :preview="{
-                    src: url,
-                    mask: false
-                  }"
-                />
-              </a-image-preview-group>
-            </template>
-            
-            <template v-else-if="currentDetail.type === 'audio'">
-              <audio
-                v-for="(url, index) in currentDetail.mediaUrls"
-                :key="index"
-                controls
-                style="width: 100%"
-                :src="url"
-              ></audio>
-            </template>
-            
-            <template v-else-if="currentDetail.type === 'video'">
-              <video
-                v-for="(url, index) in currentDetail.mediaUrls"
-                :key="index"
-                controls
-                style="width: 100%"
-                :src="url"
-              ></video>
-            </template>
-          </div>
-        </div>
-        
-        <div class="detail-footer">
-          <div class="detail-meta">
-            <div class="meta-item">
-              <span class="meta-label">分类：</span>
-              <a-tag color="blue">{{ getCategoryName(currentDetail.category) }}</a-tag>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">标签：</span>
-              <a-space wrap :size="[4, 4]">
-                <a-tag
-                  v-for="tag in currentDetail.tags"
-                  :key="tag.id"
-                  color="blue"
-                >
-                  {{ tag.name }}
-                </a-tag>
-              </a-space>
-            </div>
-          </div>
-        </div>
-      </div>
-    </a-modal>
   </div>
 </template>
 
@@ -529,10 +443,6 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('image')
-
-// 添加详情预览相关变量
-const detailVisible = ref(false)
-const currentDetail = ref(null)
 
 // 表格列定义
 const columns = [
@@ -763,12 +673,6 @@ const fetchCategories = async () => {
   }
 }
 
-// 获取分类名称
-const getCategoryName = (category) => {
-  if (!category) return '未分类';
-  return category.name || '未分类';
-}
-
 // 格式化日期
 const formatDate = (dateString) => {
   if (!dateString) return ''
@@ -833,37 +737,17 @@ const handleTableChange = (pagination, filters, sorter) => {
 
 // 跳转到创建动态页面
 const navigateToCreate = () => {
-  try {
-    // 获取访问 token
-    const accessToken = localStorage.getItem('accessToken')
-    if (!accessToken) {
-      message.error('登录已过期，请重新登录')
-      router.push('/login')
-      return
-    }
-
-    // 使用命名路由方式跳转，并携带访问 token
-    router.push({
-      name: 'CreateDynamic',
-      query: { token: accessToken }
-    }).catch(err => {
-      // 尝试使用路径跳转
-      router.push({
-        path: '/dashboard/dynamics/create',
-        query: { token: accessToken }
-      }).catch(err => {
-        message.error('页面跳转失败，请检查路由配置')
-      })
-    })
-  } catch (error) {
+  router.push({ name: 'CreateDynamic' }).catch(() => {
     message.error('页面跳转失败，请稍后重试')
-  }
+  })
 }
 
 // 查看动态详情
 const viewDetail = (record) => {
-  currentDetail.value = record
-  detailVisible.value = true
+  router.push({
+    name: 'PreviewDynamic',
+    params: { id: record.id }
+  })
 }
 
 // 编辑动态
@@ -1025,153 +909,6 @@ onUnmounted(() => {
 
       :deep(.ant-select) {
         width: 100%;
-      }
-    }
-  }
-}
-
-.dynamic-detail {
-  .detail-header {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #f0f0f0;
-    
-    .detail-title {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      
-      .detail-time {
-        color: #8c8c8c;
-        font-size: 14px;
-      }
-    }
-  }
-  
-  .detail-content {
-    margin-bottom: 24px;
-    
-    .content-text {
-      font-size: 15px;
-      line-height: 1.6;
-      margin-bottom: 16px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      color: #262626;
-      background-color: #f8f9fa;
-      padding: 16px;
-      border-radius: 4px;
-      border: 1px solid #e9ecef;
-
-      :deep(pre) {
-        background-color: #1a1a1a !important;
-        padding: 16px;
-        border-radius: 4px;
-        overflow-x: auto;
-        margin: 16px 0;
-        border: 1px solid #333;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-
-        code {
-          color: #ffffff !important;
-          font-family: 'Consolas', 'Monaco', monospace;
-          font-size: 14px;
-          line-height: 1.6;
-          text-shadow: none;
-        }
-      }
-
-      :deep(.hljs) {
-        background: #1a1a1a !important;
-        color: #ffffff !important;
-      }
-
-      :deep(.hljs-string),
-      :deep(.hljs-bullet),
-      :deep(.hljs-subst),
-      :deep(.hljs-title),
-      :deep(.hljs-section),
-      :deep(.hljs-emphasis),
-      :deep(.hljs-type),
-      :deep(.hljs-built_in),
-      :deep(.hljs-builtin-name),
-      :deep(.hljs-selector-attr),
-      :deep(.hljs-selector-pseudo),
-      :deep(.hljs-addition),
-      :deep(.hljs-variable),
-      :deep(.hljs-template-variable) {
-        color: #ffeb3b !important;
-        font-weight: 700 !important;
-        text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
-      }
-
-      :deep(.language-json) {
-        .hljs-string {
-          color: #ffeb3b !important;
-          font-weight: 700 !important;
-          text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
-        }
-
-        .hljs-property {
-          color: #64b5f6 !important;
-          font-weight: 700 !important;
-        }
-
-        .hljs-number {
-          color: #ffb74d !important;
-          font-weight: 700 !important;
-        }
-
-        .hljs-literal {
-          color: #f48fb1 !important;
-          font-weight: 700 !important;
-        }
-      }
-    }
-    
-    .media-content {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 16px;
-      
-      .ant-image {
-        border-radius: 4px;
-        overflow: hidden;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-        
-        img {
-          width: 100%;
-          height: 200px;
-          object-fit: cover;
-        }
-      }
-
-      audio, video {
-        width: 100%;
-        border-radius: 4px;
-      }
-    }
-  }
-  
-  .detail-footer {
-    border-top: 1px solid #f0f0f0;
-    padding-top: 16px;
-    
-    .detail-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      
-      .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        
-        .meta-label {
-          color: #8c8c8c;
-          font-size: 14px;
-        }
       }
     }
   }

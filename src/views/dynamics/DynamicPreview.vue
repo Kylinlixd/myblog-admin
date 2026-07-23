@@ -147,6 +147,23 @@ const renderMarkdown = (content) => {
 
 // 获取动态详情
 const fetchDynamicDetail = async () => {
+  if (route.params.id === 'draft') {
+    const cachedPreview = localStorage.getItem('dynamicPreview')
+    if (!cachedPreview) {
+      message.warning('预览内容不存在，请返回编辑页重新预览')
+      return
+    }
+
+    try {
+      dynamic.value = JSON.parse(cachedPreview)
+      return
+    } catch (error) {
+      console.error('读取预览内容失败:', error)
+      message.error('读取预览内容失败')
+      return
+    }
+  }
+
   try {
     const res = await getDynamicDetail(route.params.id)
     if (res.code === 200 && res.data) {
@@ -216,6 +233,11 @@ const getTypeText = (type) => {
 
 // 编辑动态
 const handleEdit = () => {
+  if (route.params.id === 'draft') {
+    router.back()
+    return
+  }
+
   router.push(`/dashboard/dynamics/edit/${dynamic.value.id}`)
 }
 

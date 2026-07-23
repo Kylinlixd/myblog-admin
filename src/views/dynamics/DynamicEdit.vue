@@ -196,15 +196,17 @@
       <div class="file-selector">
         <div class="file-selector-header">
           <a-input-search
+            class="file-search"
             v-model:value="fileSearchKeyword"
             placeholder="搜索文件"
-            style="width: 200px"
+            style="width: 280px; max-width: 100%"
             @search="handleFileSearch"
             :loading="fileListLoading"
           />
           <a-select
+            class="file-type-filter"
             v-model:value="fileTypeFilter"
-            style="width: 120px; margin-left: 8px"
+            style="width: 140px"
             @change="handleFileTypeChange"
             :loading="fileListLoading"
           >
@@ -610,10 +612,17 @@ const handlePreview = () => {
   }
   
   // 创建临时对象用于预览
-  const previewData = { ...form.value }
+  const previewData = {
+    ...form.value,
+    id: route.params.id || 'draft',
+    createdAt: new Date().toISOString()
+  }
   localStorage.setItem('dynamicPreview', JSON.stringify(previewData))
   
-  router.push('/dashboard/dynamics/preview')
+  router.push({
+    name: 'PreviewDynamic',
+    params: { id: 'draft' }
+  })
 }
 
 // 取消
@@ -1091,7 +1100,19 @@ onMounted(() => {
   .file-selector {
     .file-selector-header {
       display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
       margin-bottom: 16px;
+
+      .file-search {
+        width: min(100%, 280px);
+        max-width: 280px;
+      }
+
+      .file-type-filter {
+        width: 140px;
+      }
     }
     
     .file-list {

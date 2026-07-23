@@ -181,6 +181,13 @@ const routes = [
         }
       },
       {
+        path: 'dynamics/preview',
+        redirect: {
+          name: 'PreviewDynamic',
+          params: { id: 'draft' }
+        }
+      },
+      {
         path: 'dynamics/preview/:id',
         name: 'PreviewDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicPreview.vue'),
