@@ -41,4 +41,15 @@ describe('admin filter controls', () => {
     expect(adminStyles).toContain('.admin-edit-modal .ant-input')
     expect(adminStyles).toContain('.admin-edit-modal .ant-select-selector')
   })
+
+  it('keeps tag row edit and delete actions on one line like category rows', () => {
+    const categoryView = readView('categories/CategoryList.vue')
+    const tagView = readView('tags/TagList.vue')
+
+    expect(categoryView).toContain("fixed: 'right'")
+    expect(tagView).toContain("fixed: 'right'")
+    expect(tagView).toContain('class="table-row-actions"')
+    expect(tagView).toContain('.table-row-actions')
+    expect(tagView).toContain('flex-wrap: nowrap')
+  })
 })

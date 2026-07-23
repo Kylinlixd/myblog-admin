@@ -85,7 +85,7 @@
 
         <!-- 操作列 -->
         <template v-else-if="column.dataIndex === 'action'">
-          <a-space>
+          <a-space class="table-row-actions">
             <a-button type="primary" size="small" @click="handleEdit(record)">
               <template #icon><EditOutlined /></template>
               编辑
@@ -195,6 +195,7 @@ const columns = [
     dataIndex: 'action',
     key: 'action',
     width: '20%',
+    fixed: 'right',
   }
 ]
 
@@ -456,6 +457,10 @@ onMounted(() => {
 
   :deep(.ant-space) {
     flex-wrap: wrap;
+  }
+
+  :deep(.table-row-actions) {
+    flex-wrap: nowrap;
   }
 
   // 模态框样式
