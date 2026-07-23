@@ -48,6 +48,7 @@
 import { onMounted, ref } from 'vue'
 import { ArrowRightOutlined } from '@ant-design/icons-vue'
 import { getBlogCategoryList, getBlogTagList, getHotDynamics, getRecentDynamics } from '@/api/blog'
+import { normalizeCollectionResponse } from '@/api/collections'
 import ArticleCard from '@/components/blog/ArticleCard.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
 
@@ -58,10 +59,7 @@ const tags = ref([])
 const loading = ref(true)
 const error = ref('')
 
-const extractList = (response) => {
-  const data = response?.data ?? response
-  return data?.items || data?.list || (Array.isArray(data) ? data : [])
-}
+const extractList = (response) => normalizeCollectionResponse(response).results
 
 async function loadHome() {
   loading.value = true

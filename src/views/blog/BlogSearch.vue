@@ -321,6 +321,7 @@ import {
 } from '@ant-design/icons-vue'
 import { message, Empty, Skeleton, List } from 'ant-design-vue'
 import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
+import { normalizeCollectionResponse } from '@/api/collections'
 import { debounce, showError } from '@/utils/performance'
 
 const route = useRoute()
@@ -538,9 +539,8 @@ onMounted(async () => {
       getBlogTagList()
     ])
     
-    // 检查响应格式并设置默认值
-    categories.value = categoryRes?.data?.list || []
-    tags.value = tagRes?.data?.list || []
+    categories.value = normalizeCollectionResponse(categoryRes).results
+    tags.value = normalizeCollectionResponse(tagRes).results
     
     console.log('[Search] 加载分类和标签成功:', {
       categories: categories.value,

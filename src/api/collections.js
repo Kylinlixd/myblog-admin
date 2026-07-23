@@ -9,6 +9,9 @@ export function normalizeCollectionResponse(response) {
   if (Array.isArray(data?.results)) {
     return { count: data.count ?? data.results.length, results: data.results }
   }
+  if (Array.isArray(data?.list)) {
+    return { count: data.total ?? data.list.length, results: data.list }
+  }
   if (Array.isArray(data?.items)) {
     return { count: data.total ?? data.items.length, results: data.items }
   }
