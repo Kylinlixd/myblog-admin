@@ -16,27 +16,28 @@
       <div class="search-form-left">
         <a-form-item label="标题">
           <a-input
-            class="dynamic-filter-input"
+            class="dynamic-filter-control"
             v-model:value="searchForm.title"
             placeholder="搜索标题"
-            style="width: 132px"
+            style="width: 140px"
             allowClear
           />
         </a-form-item>
         <a-form-item label="内容">
           <a-input
-            class="dynamic-filter-input"
+            class="dynamic-filter-control"
             v-model:value="searchForm.content"
             placeholder="搜索内容"
-            style="width: 132px"
+            style="width: 140px"
             allowClear
           />
         </a-form-item>
         <a-form-item label="分类">
           <a-select
+            class="dynamic-filter-control"
             v-model:value="searchForm.categoryId"
             placeholder="选择分类"
-            style="width: 120px"
+            style="width: 140px"
             allowClear
           >
             <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
@@ -46,10 +47,11 @@
         </a-form-item>
         <a-form-item label="标签">
           <a-select
+            class="dynamic-filter-control"
             v-model:value="searchForm.tagIds"
             placeholder="选择标签"
             mode="multiple"
-            style="width: 200px"
+            style="width: 140px"
             allowClear
           >
             <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
@@ -61,9 +63,10 @@
       <div class="search-form-right">
         <a-form-item label="状态">
           <a-select
+            class="dynamic-filter-control"
             v-model:value="searchForm.status"
             placeholder="选择状态"
-            style="width: 100px"
+            style="width: 140px"
             allowClear
           >
             <a-select-option value="published">已发布</a-select-option>
@@ -72,9 +75,10 @@
         </a-form-item>
         <a-form-item label="类型">
           <a-select
+            class="dynamic-filter-control"
             v-model:value="searchForm.type"
             placeholder="选择类型"
-            style="width: 100px"
+            style="width: 140px"
             allowClear
           >
             <a-select-option value="text">文本</a-select-option>
@@ -868,14 +872,24 @@ onUnmounted(() => {
     }
   }
 
-  .search-form {
-    margin-bottom: 24px;
-    padding: 24px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    
-    .search-form-left {
+    .search-form {
+      margin-bottom: 24px;
+      padding: 24px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+      :deep(.dynamic-filter-control) {
+        height: 36px;
+      }
+
+      :deep(.dynamic-filter-control.ant-input-affix-wrapper) {
+        display: inline-flex;
+        align-items: center;
+        padding-block: 0;
+      }
+
+      .search-form-left {
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
