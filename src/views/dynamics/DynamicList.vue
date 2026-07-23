@@ -15,10 +15,22 @@
     <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
         <a-form-item label="标题">
-          <a-input v-model:value="searchForm.title" placeholder="搜索标题" allowClear />
+          <a-input
+            class="dynamic-filter-input"
+            v-model:value="searchForm.title"
+            placeholder="搜索标题"
+            style="width: 132px"
+            allowClear
+          />
         </a-form-item>
         <a-form-item label="内容">
-          <a-input v-model:value="searchForm.content" placeholder="搜索内容" allowClear />
+          <a-input
+            class="dynamic-filter-input"
+            v-model:value="searchForm.content"
+            placeholder="搜索内容"
+            style="width: 132px"
+            allowClear
+          />
         </a-form-item>
         <a-form-item label="分类">
           <a-select

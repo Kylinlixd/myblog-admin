@@ -39,4 +39,11 @@ describe('dynamic preview workflow', () => {
     expect(listView).not.toContain("localStorage.getItem('accessToken')")
     expect(listView).not.toContain('query: { token: accessToken }')
   })
+
+  it('keeps title and content search inputs compact on the dynamic list', () => {
+    const listView = readView('DynamicList.vue')
+
+    expect(listView.match(/class="dynamic-filter-input"/g) || []).toHaveLength(2)
+    expect(listView).toContain('style="width: 132px"')
+  })
 })
