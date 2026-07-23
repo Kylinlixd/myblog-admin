@@ -8,7 +8,16 @@
         </router-link>
 
         <nav class="desktop-nav" aria-label="主导航">
-          <router-link v-for="item in navigation" :key="item.to" :to="item.to">{{ item.label }}</router-link>
+          <router-link
+            v-for="item in navigation"
+            :key="item.to"
+            :to="item.to"
+            active-class=""
+            exact-active-class=""
+            :class="{ 'nav-link--active': isNavigationActive(item) }"
+          >
+            {{ item.label }}
+          </router-link>
         </nav>
 
         <div class="header-actions">
@@ -23,7 +32,17 @@
         </div>
       </div>
       <nav v-if="mobileOpen" class="mobile-nav app-container" aria-label="移动端导航">
-        <router-link v-for="item in navigation" :key="item.to" :to="item.to" @click="mobileOpen = false">{{ item.label }}</router-link>
+        <router-link
+          v-for="item in navigation"
+          :key="item.to"
+          :to="item.to"
+          active-class=""
+          exact-active-class=""
+          :class="{ 'nav-link--active': isNavigationActive(item) }"
+          @click="mobileOpen = false"
+        >
+          {{ item.label }}
+        </router-link>
       </nav>
     </header>
 
@@ -47,10 +66,11 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
 
 const router = useRouter()
+const route = useRoute()
 const query = ref('')
 const mobileOpen = ref(false)
 const year = new Date().getFullYear()
@@ -64,6 +84,14 @@ const navigation = [
 function search() {
   if (query.value) router.push({ path: '/blog/search', query: { keyword: query.value } })
 }
+
+function isNavigationActive(item) {
+  const currentPath = route.path
+  if (item.to === '/blog') {
+    return currentPath === '/blog' || currentPath === '/blog/'
+  }
+  return currentPath === item.to || currentPath.startsWith(`${item.to}/`)
+}
 </script>
 
 <style scoped>
@@ -76,7 +104,7 @@ function search() {
 .brand small { margin-top: 3px; color: var(--color-text-muted); font-size: 11px; }
 .desktop-nav { display: flex; align-items: center; gap: 6px; }
 .desktop-nav a, .mobile-nav a { padding: 9px 13px; border-radius: var(--radius-sm); color: var(--color-text-secondary); font-weight: 550; }
-.desktop-nav a:hover, .desktop-nav a.router-link-active { background: var(--color-primary-soft); color: var(--color-primary); }
+.desktop-nav a:hover, .desktop-nav a.nav-link--active, .mobile-nav a.nav-link--active { background: var(--color-primary-soft); color: var(--color-primary); }
 .header-actions { display: flex; margin-left: auto; align-items: center; gap: 10px; }
 .quick-search { display: flex; width: 190px; height: 40px; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface-muted); color: var(--color-text-muted); }
 .quick-search:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgb(49 91 234 / 10%); }
