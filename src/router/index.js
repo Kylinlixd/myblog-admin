@@ -35,16 +35,6 @@ const routes = [
     }
   },
   {
-    path: '/test',
-    name: 'TestLampEffect',
-    component: () => import('../components/TestLampEffect.vue'),
-    meta: { 
-      title: '测试页面',
-      keepAlive: false,
-      requiresAuth: true // 测试页面需要登录验证
-    }
-  },
-  {
     path: '/blog',
     component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
     meta: { 
