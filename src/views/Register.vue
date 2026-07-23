@@ -1,129 +1,80 @@
 <template>
-  <div class="register-container">
-    <div class="register-box">
-      <div class="register-header">
-        <div class="logo-container">
-          <div class="logo-glow"></div>
-        </div>
-        <h2>博客管理系统</h2>
-        <p class="subtitle">创建您的账号</p>
+  <main class="register-page">
+    <section class="register-intro" aria-label="账号介绍">
+      <router-link class="register-brand" to="/blog"><span>L</span><strong>LiXD Studio</strong></router-link>
+      <div>
+        <span class="register-kicker">JOIN WORKSPACE</span>
+        <h1>创建账号后，<br />进入内容工作台。</h1>
+        <p>统一管理文章、归档、评论和文件资源，让博客维护变得更轻一些。</p>
       </div>
-      
-      <form
-        ref="registerForm"
-        class="register-form"
-        @submit.prevent="handleRegister"
-      >
-        <div class="form-item">
-          <div class="input-wrapper">
-            <i class="icon-user"></i>
-            <input
-              v-model="registerData.username"
-              type="text"
-              placeholder="用户名"
-              class="inspira-input"
-              :class="{ 'is-error': errors.username }"
-            />
-          </div>
-          <span class="error-message" v-if="errors.username">{{ errors.username }}</span>
-        </div>
-        
-        <div class="form-item">
-          <div class="input-wrapper">
-            <i class="icon-user"></i>
-            <input
-              v-model="registerData.nickname"
-              type="text"
-              placeholder="昵称"
-              class="inspira-input"
-              :class="{ 'is-error': errors.nickname }"
-            />
-          </div>
-          <span class="error-message" v-if="errors.nickname">{{ errors.nickname }}</span>
-        </div>
-        
-        <div class="form-item">
-          <div class="input-wrapper">
-            <i class="icon-email"></i>
-            <input
-              v-model="registerData.email"
-              type="email"
-              placeholder="邮箱"
-              class="inspira-input"
-              :class="{ 'is-error': errors.email }"
-            />
-          </div>
-          <span class="error-message" v-if="errors.email">{{ errors.email }}</span>
-        </div>
-        
-        <div class="form-item">
-          <div class="input-wrapper">
-            <i class="icon-lock"></i>
-            <input
-              v-model="registerData.password"
-              type="password"
-              placeholder="密码"
-              class="inspira-input"
-              :class="{ 'is-error': errors.password }"
-            />
-            <i 
-              class="icon-eye" 
-              :class="{ 'is-active': showPassword }"
-              @click="togglePassword"
-            ></i>
-          </div>
-          <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
-        </div>
-        
-        <div class="form-item">
-          <div class="input-wrapper">
-            <i class="icon-lock"></i>
-            <input
-              v-model="registerData.confirmPassword"
-              type="password"
-              placeholder="确认密码"
-              class="inspira-input"
-              :class="{ 'is-error': errors.confirmPassword }"
-            />
-          </div>
-          <span class="error-message" v-if="errors.confirmPassword">{{ errors.confirmPassword }}</span>
-        </div>
-        
-        <div class="form-item">
-          <button
-            type="submit"
-            class="inspira-button"
-            :disabled="loading"
-          >
-            <span class="button-content">
-              <i class="icon-arrow-right" v-if="!loading"></i>
-              <span>{{ loading ? '注册中...' : '注册' }}</span>
-            </span>
-          </button>
-        </div>
-        
-        <div class="form-footer">
-          <span>已有账号？</span>
-          <router-link to="/login" class="link">立即登录</router-link>
-        </div>
-      </form>
-    </div>
-  </div>
+      <small>已有账号可以直接返回登录页。</small>
+    </section>
+
+    <section class="register-panel">
+      <div class="register-card">
+        <header>
+          <span class="register-kicker">CREATE ACCOUNT</span>
+          <h2>注册管理账号</h2>
+          <p>填写基础信息，系统会在注册成功后进入后台。</p>
+        </header>
+
+        <a-alert v-if="registerError" :message="registerError" type="error" show-icon class="register-alert" />
+
+        <a-form :model="form" layout="vertical" @finish="handleRegister">
+          <a-form-item label="用户名" name="username" :rules="usernameRules">
+            <a-input v-model:value="form.username" size="large" autocomplete="username" placeholder="3 到 20 个字符">
+              <template #prefix><user-outlined /></template>
+            </a-input>
+          </a-form-item>
+
+          <a-form-item label="昵称" name="nickname" :rules="nicknameRules">
+            <a-input v-model:value="form.nickname" size="large" autocomplete="name" placeholder="用于后台展示">
+              <template #prefix><idcard-outlined /></template>
+            </a-input>
+          </a-form-item>
+
+          <a-form-item label="邮箱" name="email" :rules="emailRules">
+            <a-input v-model:value="form.email" size="large" autocomplete="email" placeholder="name@example.com">
+              <template #prefix><mail-outlined /></template>
+            </a-input>
+          </a-form-item>
+
+          <a-form-item label="密码" name="password" :rules="passwordRules">
+            <a-input-password v-model:value="form.password" size="large" autocomplete="new-password" placeholder="6 到 20 个字符">
+              <template #prefix><lock-outlined /></template>
+            </a-input-password>
+          </a-form-item>
+
+          <a-form-item label="确认密码" name="confirmPassword" :rules="confirmPasswordRules">
+            <a-input-password v-model:value="form.confirmPassword" size="large" autocomplete="new-password" placeholder="再次输入密码">
+              <template #prefix><lock-outlined /></template>
+            </a-input-password>
+          </a-form-item>
+
+          <a-button type="primary" html-type="submit" size="large" block :loading="loading">创建账号</a-button>
+        </a-form>
+
+        <footer><span>已有账号？</span><router-link to="/login">立即登录</router-link><router-link to="/blog">返回博客</router-link></footer>
+      </div>
+    </section>
+  </main>
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '../stores/user'
 import { message } from 'ant-design-vue'
+import { IdcardOutlined, LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons-vue'
+
+import { useUserStore } from '@/stores/user'
+import { validatePasswordConfirmation } from '@/views/register/validation'
 
 const router = useRouter()
 const userStore = useUserStore()
-const registerForm = ref(null)
 const loading = ref(false)
-const showPassword = ref(false)
+const registerError = ref('')
 
-const registerData = reactive({
+const form = reactive({
   username: '',
   nickname: '',
   email: '',
@@ -131,105 +82,41 @@ const registerData = reactive({
   confirmPassword: ''
 })
 
-const errors = reactive({
-  username: '',
-  nickname: '',
-  email: '',
-  password: '',
-  confirmPassword: ''
-})
-
-const validateForm = () => {
-  let isValid = true
-  errors.username = ''
-  errors.nickname = ''
-  errors.email = ''
-  errors.password = ''
-  errors.confirmPassword = ''
-  
-  // 验证用户名
-  if (!registerData.username) {
-    errors.username = '请输入用户名'
-    isValid = false
-  } else if (registerData.username.length < 3 || registerData.username.length > 20) {
-    errors.username = '长度在 3 到 20 个字符'
-    isValid = false
-  }
-  
-  // 验证昵称
-  if (!registerData.nickname) {
-    errors.nickname = '请输入昵称'
-    isValid = false
-  } else if (registerData.nickname.length < 2 || registerData.nickname.length > 20) {
-    errors.nickname = '长度在 2 到 20 个字符'
-    isValid = false
-  }
-  
-  // 验证邮箱
-  if (registerData.email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(registerData.email)) {
-      errors.email = '请输入有效的邮箱地址'
-      isValid = false
-    }
-  }
-  
-  // 验证密码
-  if (!registerData.password) {
-    errors.password = '请输入密码'
-    isValid = false
-  } else if (registerData.password.length < 6 || registerData.password.length > 20) {
-    errors.password = '长度在 6 到 20 个字符'
-    isValid = false
-  }
-  
-  // 验证确认密码
-  if (!registerData.confirmPassword) {
-    errors.confirmPassword = '请确认密码'
-    isValid = false
-  } else if (registerData.confirmPassword !== registerData.password) {
-    errors.confirmPassword = '两次输入的密码不一致'
-    isValid = false
-  }
-  
-  return isValid
-}
-
-const togglePassword = () => {
-  showPassword.value = !showPassword.value
-  const passwordInputs = document.querySelectorAll('input[type="password"]')
-  passwordInputs.forEach(input => {
-    input.type = showPassword.value ? 'text' : 'password'
-  })
-}
+const usernameRules = [
+  { required: true, message: '请输入用户名' },
+  { min: 3, max: 20, message: '长度在 3 到 20 个字符' }
+]
+const nicknameRules = [
+  { required: true, message: '请输入昵称' },
+  { min: 2, max: 20, message: '长度在 2 到 20 个字符' }
+]
+const emailRules = [
+  { required: true, message: '请输入邮箱' },
+  { type: 'email', message: '请输入有效的邮箱地址' }
+]
+const passwordRules = [
+  { required: true, message: '请输入密码' },
+  { min: 6, max: 20, message: '长度在 6 到 20 个字符' }
+]
+const confirmPasswordRules = [
+  { validator: () => validatePasswordConfirmation(form.password, form.confirmPassword), trigger: 'change' }
+]
 
 const handleRegister = async () => {
-  if (!validateForm()) return
-  
   loading.value = true
+  registerError.value = ''
   try {
-    const success = await userStore.register({
-      username: registerData.username,
-      nickname: registerData.nickname,
-      email: registerData.email,
-      password: registerData.password,
-      confirm_password: registerData.confirmPassword
+    await userStore.register({
+      username: form.username,
+      nickname: form.nickname,
+      email: form.email,
+      password: form.password,
+      confirm_password: form.confirmPassword
     })
-    
-    if (success) {
-      message.success('注册成功')
-      // 注册成功后跳转到仪表盘
-      router.push('/dashboard')
-    } else {
-      message.error('注册失败，请稍后重试')
-    }
+    message.success('注册成功')
+    await router.push('/dashboard')
   } catch (error) {
-    console.error('注册失败:', error)
-    if (error.message) {
-      message.error(error.message)
-    } else {
-      message.error('注册失败，请稍后重试')
-    }
+    registerError.value = error?.message || '注册失败，请稍后重试'
   } finally {
     loading.value = false
   }
@@ -237,218 +124,29 @@ const handleRegister = async () => {
 </script>
 
 <style scoped lang="scss">
-.register-container {
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(-45deg, #336699, #003366, #0066cc, #0099ff);
-  background-size: 400% 400%;
-  animation: gradient 15s ease infinite;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(0, 255, 255, 0.2) 0%, transparent 70%);
-    animation: rotate 20s linear infinite;
-    will-change: transform;
-  }
-  
-  .register-box {
-    width: 400px;
-    padding: 40px;
-    background: rgba(51, 102, 153, 0.2);
-    backdrop-filter: blur(20px);
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    position: relative;
-    z-index: 1;
-    transform: translateY(0);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform;
-    
-    &:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-    }
-    
-    .register-header {
-      text-align: center;
-      margin-bottom: 40px;
-      
-      .logo-container {
-        position: relative;
-        display: inline-block;
-        margin-bottom: 20px;
-        
-        .logo {
-          width: 80px;
-          height: 80px;
-          filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
-        }
-      }
-      
-      h2 {
-        margin: 0;
-        font-size: 32px;
-        color: #ffffff;
-        margin-bottom: 12px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        font-weight: 600;
-      }
-      
-      .subtitle {
-        margin: 0;
-        font-size: 16px;
-        color: rgba(204, 204, 204, 0.9);
-        opacity: 0.9;
-      }
-    }
-    
-    .register-form {
-      .form-item {
-        margin-bottom: 20px;
-        
-        .input-wrapper {
-          position: relative;
-          display: flex;
-          align-items: center;
-          height: 44px;
-          background: rgba(51, 102, 153, 0.2);
-          border: 1px solid rgba(0, 255, 255, 0.3);
-          border-radius: 22px;
-          padding: 0 15px;
-          transition: all 0.3s ease;
-          
-          &:hover, &:focus-within {
-            background: rgba(51, 102, 153, 0.3);
-            border-color: rgba(0, 255, 255, 0.6);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-            transform: translateY(-2px);
-          }
-          
-          i {
-            font-size: 18px;
-            color: rgba(0, 255, 255, 0.8);
-            margin-right: 10px;
-          }
-          
-          .inspira-input {
-            background: transparent;
-            border: none;
-            color: #ffffff;
-            flex: 1;
-            height: 100%;
-            outline: none;
-            font-size: 16px;
-            
-            &::placeholder {
-              color: rgba(255, 255, 255, 0.6);
-            }
-          }
-          
-          .icon-eye {
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s ease;
-            
-            &:hover {
-              opacity: 1;
-            }
-            
-            &.is-active {
-              color: rgba(0, 255, 255, 1);
-            }
-          }
-        }
-        
-        .error-message {
-          display: block;
-          color: #ff6b6b;
-          font-size: 14px;
-          margin-top: 8px;
-          padding-left: 15px;
-        }
-      }
-      
-      .inspira-button {
-        width: 100%;
-        height: 44px;
-        background: linear-gradient(45deg, #336699, #0099ff);
-        border: none;
-        border-radius: 22px;
-        color: #ffffff;
-        font-size: 16px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        &:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-        
-        .button-content {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-        }
-      }
-      
-      .form-footer {
-        text-align: center;
-        margin-top: 20px;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 14px;
-        
-        .link {
-          color: rgba(0, 255, 255, 0.8);
-          text-decoration: none;
-          font-weight: 500;
-          margin-left: 5px;
-          
-          &:hover {
-            text-decoration: underline;
-          }
-        }
-      }
-    }
-  }
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
+.register-page { display: grid; min-height: 100vh; grid-template-columns: minmax(420px, .92fr) minmax(500px, 1.08fr); background: var(--color-page); }
+.register-intro { position: relative; display: flex; overflow: hidden; padding: 46px 56px; flex-direction: column; justify-content: space-between; background: #10182b; color: white; }
+.register-intro::before { position: absolute; inset: auto -120px 8% auto; width: 420px; height: 420px; border: 1px solid rgb(255 255 255 / 8%); border-radius: 50%; background: radial-gradient(circle, rgb(22 163 106 / 24%), transparent 70%); content: ''; }
+.register-intro > * { position: relative; z-index: 1; }
+.register-brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; }
+.register-brand span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 10px; background: var(--color-primary); font-weight: 800; }
+.register-kicker { color: #8fb0ff; font-size: 10px; font-weight: 800; letter-spacing: .18em; }
+.register-intro h1 { max-width: 620px; margin: 18px 0; font-size: clamp(34px, 4.2vw, 56px); line-height: 1.14; }
+.register-intro p { max-width: 560px; color: #aeb9ce; font-size: 17px; line-height: 1.8; }
+.register-intro small { color: #8290ab; }
+.register-panel { display: grid; padding: 32px; place-items: center; }
+.register-card { width: min(100%, 460px); padding: 38px; border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: white; box-shadow: var(--shadow-float); }
+.register-card header { margin-bottom: 24px; }
+.register-card h2 { margin: 8px 0 5px; color: var(--color-text); font-size: 28px; }
+.register-card header p, .register-card footer { color: var(--color-text-secondary); }
+.register-alert { margin-bottom: 18px; }
+.register-card :deep(.ant-form-item) { margin-bottom: 16px; }
+.register-card :deep(.ant-form-item-label > label) { color: var(--color-text); font-weight: 650; }
+.register-card :deep(.ant-input-affix-wrapper) { border-radius: 10px; }
+.register-card :deep(.ant-btn) { height: 46px; margin-top: 4px; border-radius: 10px; font-weight: 700; }
+.register-card footer { display: flex; margin-top: 22px; gap: 6px; font-size: 12px; }
+.register-card footer a:last-child { margin-left: auto; }
+.register-card a { color: var(--color-primary); font-weight: 650; }
+@media (max-width: 900px) { .register-page { grid-template-columns: 1fr; } .register-intro { min-height: 230px; padding: 30px; } .register-intro h1 { margin-block: 12px; font-size: 36px; } .register-intro p { margin: 0; font-size: 14px; } .register-intro small { display: none; } .register-panel { padding: 24px 16px; } }
+@media (max-width: 480px) { .register-card { padding: 28px 22px; } .register-intro { min-height: 210px; padding: 24px 20px; } .register-intro h1 { font-size: 30px; } .register-card footer { flex-wrap: wrap; } .register-card footer a:last-child { margin-left: 0; } }
 </style> 

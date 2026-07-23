@@ -81,9 +81,9 @@ export const useUserStore = defineStore('user', {
         await this.getUserInfo()
         this.initialized = true
         return true
-      } catch {
+      } catch (error) {
         this.clearUserData()
-        return false
+        throw error
       }
     },
 

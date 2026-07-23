@@ -12,4 +12,16 @@ describe('adminMenu', () => {
     ])
     expect(new Set(adminMenu.map((item) => item.key)).size).toBe(adminMenu.length)
   })
+
+  it('groups menu items with descriptions for the refreshed admin shell', () => {
+    expect(adminMenu.map((item) => item.group)).toEqual([
+      'overview',
+      'content',
+      'content',
+      'content',
+      'community',
+      'system'
+    ])
+    expect(adminMenu.every((item) => item.description && item.groupLabel)).toBe(true)
+  })
 })
