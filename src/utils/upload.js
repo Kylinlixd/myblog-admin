@@ -1,9 +1,11 @@
 import { message } from 'ant-design-vue'
 import axios from 'axios'
 
+import { buildApiUrl, getApiBaseUrl } from './apiBaseUrl'
+
 // 创建一个完全独立的axios实例，不使用任何全局配置
 const uploadAxios = axios.create({
-  baseURL: 'http://localhost:8000',  // 修改为正确的后端地址
+  baseURL: getApiBaseUrl(),
   timeout: 30000,
   withCredentials: true,
   // 禁用所有默认转换
@@ -81,7 +83,7 @@ export const uploadFile = async (file, type) => {
           
           // 确保 URL 包含前缀
           if (!result.file_url.startsWith('http')) {
-            result.file_url = `http://localhost:8000${result.file_url}`
+            result.file_url = buildApiUrl(result.file_url)
             result.url = result.file_url
           }
           

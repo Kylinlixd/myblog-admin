@@ -300,6 +300,7 @@ import { getCategoryList } from '../../api/category'
 import { getTagList } from '../../api/tag'
 import { getFileList } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import { buildApiUrl, stripApiBaseUrl } from '@/utils/apiBaseUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -447,7 +448,7 @@ const fetchDynamicDetail = async () => {
         mediaUrls = Array.isArray(data.mediaUrls) ? data.mediaUrls : [data.mediaUrls]
         mediaUrls = mediaUrls.map(url => {
           if (!url) return null
-          const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`
+          const fullUrl = buildApiUrl(url)
           console.log('处理媒体URL:', { original: url, full: fullUrl })
           return fullUrl
         }).filter(Boolean)
@@ -510,8 +511,7 @@ const updateFileList = () => {
     }
     
     const fileName = url.split('/').pop() || `file-${index}`
-    // 确保 URL 包含前缀
-    const fullUrl = url.startsWith('http') ? url : `http://localhost:8000${url}`
+    const fullUrl = buildApiUrl(url)
     console.log(`处理文件 ${index}:`, {
       originalUrl: url,
       fullUrl: fullUrl,
@@ -553,8 +553,7 @@ const handleSave = async () => {
     // 处理媒体文件 URL，移除前缀
     const processedMediaUrls = form.value.mediaUrls.map(url => {
       if (!url) return url;
-      // 如果 URL 包含前缀，则移除
-      return url.replace('http://localhost:8000', '');
+      return stripApiBaseUrl(url);
     });
     
     // 准备提交的数据，确保格式正确
@@ -684,10 +683,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       form.value.mediaUrls = []
     }
     
-    // 使用 file_url，确保添加前缀
-    const fileUrl = result.data.file_url.startsWith('http') ? 
-      result.data.file_url : 
-      `http://localhost:8000${result.data.file_url}`
+    const fileUrl = buildApiUrl(result.data.file_url)
     
     console.log('处理后的文件URL:', fileUrl)
     
@@ -755,7 +751,7 @@ const handleMediaRemove = (file) => {
 // 预览媒体文件
 const handlePreviewMedia = (file) => {
   const url = file.url || file.thumbUrl
-  previewUrl.value = url.startsWith('http') ? url : `http://localhost:8000${url}`
+  previewUrl.value = buildApiUrl(url)
   previewVisible.value = true
   previewTitle.value = file.name || '预览'
   previewType.value = form.value.type
@@ -1035,7 +1031,7 @@ const formatFileSize = (size) => {
 // 在 script setup 部分添加 getFullUrl 方法
 const getFullUrl = (url) => {
   if (!url) return ''
-  return url.startsWith('http') ? url : `http://localhost:8000${url}`
+  return buildApiUrl(url)
 }
 
 onMounted(() => {

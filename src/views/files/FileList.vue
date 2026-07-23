@@ -196,7 +196,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
-import { 
+import {
   UploadOutlined,
   SearchOutlined,
   ReloadOutlined,
@@ -208,6 +208,7 @@ import {
   LoadingOutlined
 } from '@ant-design/icons-vue'
 import { uploadFile, getFileList, searchFiles, deleteFile, downloadFile } from '@/api/file'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 
 const loading = ref(false)
 const fileList = ref([])
@@ -335,9 +336,7 @@ const fetchFiles = async () => {
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
       fileList.value = response.data.items.map(item => {
-        // 确保baseUrl不为空
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-        const url = item.file_url ? `${baseUrl}${item.file_url}` : item.file_url;
+        const url = buildApiUrl(item.file_url)
         
         return {
           ...item,
@@ -391,9 +390,7 @@ const handleSearch = async () => {
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
       fileList.value = response.data.items.map(item => {
-        // 确保baseUrl不为空
-        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-        const url = item.file_url ? `${baseUrl}${item.file_url}` : item.file_url;
+        const url = buildApiUrl(item.file_url)
         
         return {
           ...item,
@@ -583,14 +580,11 @@ const handleMediaError = (e) => {
 
 // 修改预览媒体文件函数
 const previewMedia = (type, url) => {
-  // 确保baseUrl不为空
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-  const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+  const fullUrl = buildApiUrl(url)
   
   console.log('预览媒体文件:', {
     type: type,
-    url: fullUrl,
-    baseUrl: baseUrl
+    url: fullUrl
   });
   
   // 验证URL
