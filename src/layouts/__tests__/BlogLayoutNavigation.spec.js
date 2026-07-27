@@ -23,4 +23,14 @@ describe('BlogLayout navigation active state', () => {
     expect(source).not.toContain('.quick-search input { width: 0; }')
     expect(source).toContain('.quick-search input { width: 100%; min-width: 0;')
   })
+
+  it('uses a balanced floating navigation with accessible mobile state', () => {
+    const source = readLayout()
+
+    expect(source).toContain('class="site-header-panel')
+    expect(source).toContain(':aria-expanded="mobileOpen"')
+    expect(source).toContain('aria-controls="mobile-navigation"')
+    expect(source).toContain('id="mobile-navigation"')
+    expect(source).toContain('@keydown.esc="mobileOpen = false"')
+  })
 })
