@@ -162,7 +162,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { message as AntMessage } from 'ant-design-vue'
 import { useUserStore } from '../../stores/user'
 import { changePassword } from '../../api/auth'
-import defaultAvatar from '../../assets/default-avatar.png'
+
+const defaultAvatar = '/default-avatar.png'
 
 const userStore = useUserStore()
 const passwordFormRef = ref(null)

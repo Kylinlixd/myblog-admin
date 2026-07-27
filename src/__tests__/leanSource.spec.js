@@ -31,4 +31,18 @@ describe('lean source tree', () => {
     expect(auth).not.toContain('toggleMockDataMode')
     expect(auth).not.toContain('useMockData')
   })
+
+  it('does not keep obsolete entry points or duplicate public assets', () => {
+    const obsoleteFiles = [
+      '.vscode/extensions.json',
+      'public/sw.js',
+      'src/api/index.js',
+      'src/assets/default-avatar.png',
+      'src/utils/env.js'
+    ]
+
+    obsoleteFiles.forEach((file) => {
+      expect(fs.existsSync(path.join(process.cwd(), file))).toBe(false)
+    })
+  })
 })
