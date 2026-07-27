@@ -214,12 +214,12 @@
           
           <!-- 操作列 -->
           <template v-if="column.dataIndex === 'action'">
-            <a-space>
-              <a-button type="primary" size="small" @click="editDynamic(record)">
+            <a-space class="table-row-actions">
+              <a-button type="text" size="small" class="row-action row-action--primary" @click="editDynamic(record)">
                 <EditOutlined />
                 编辑
               </a-button>
-              <a-button type="primary" size="small" @click="viewDetail(record)">
+              <a-button type="text" size="small" class="row-action" @click="viewDetail(record)">
                 <EyeOutlined />
                 查看
               </a-button>
@@ -229,7 +229,7 @@
                 cancel-text="取消"
                 @confirm="handleDelete(record.id)"
               >
-                <a-button type="primary" danger size="small">
+                <a-button type="text" danger size="small" class="row-action row-action--danger">
                   <DeleteOutlined />
                   删除
                 </a-button>

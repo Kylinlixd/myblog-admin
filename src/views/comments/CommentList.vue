@@ -39,16 +39,21 @@
       </template>
       
       <template #actions="{ row }">
-        <a-space>
+        <a-space class="table-row-actions">
           <a-button
             v-if="row.status === 'pending'"
-            type="primary"
+            type="text"
+            size="small"
+            class="row-action row-action--primary"
             @click="handleApprove(row)"
           >
             <template #icon><check-outlined /></template>通过
           </a-button>
           <a-button
             v-if="row.status === 'pending'"
+            type="text"
+            size="small"
+            class="row-action"
             @click="handleReject(row)"
           >
             <template #icon><close-outlined /></template>拒绝
@@ -60,7 +65,9 @@
             @confirm="handleDelete(row)"
           >
             <a-button
-              type="primary" 
+              type="text"
+              size="small"
+              class="row-action row-action--danger"
               danger
             >
               <template #icon><delete-outlined /></template>删除

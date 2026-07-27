@@ -278,6 +278,65 @@
   border-radius: 999px;
 }
 
+.table-row-actions {
+  display: inline-flex !important;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px !important;
+}
+
+.table-row-actions .ant-space-item {
+  display: flex;
+}
+
+.admin-page .row-action.ant-btn {
+  min-height: 30px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475467;
+  box-shadow: none;
+  font-size: 12px;
+  line-height: 28px;
+}
+
+.admin-page .row-action.ant-btn:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.admin-page .row-action--primary.ant-btn {
+  border-color: #dbe5ff;
+  background: #eef3ff;
+  color: #315bea;
+}
+
+.admin-page .row-action--primary.ant-btn:hover {
+  border-color: #b9cbff;
+  background: #e2eaff;
+  color: #2142b8;
+}
+
+.admin-page .row-action--danger.ant-btn {
+  border-color: #fee2e2;
+  background: #fff5f5;
+  color: #d92d20;
+}
+
+.admin-page .row-action--danger.ant-btn:hover {
+  border-color: #fecaca;
+  background: #feecec;
+  color: #b42318;
+}
+
+.admin-page .row-action.ant-btn:focus-visible {
+  outline: 2px solid rgb(49 91 234 / 32%);
+  outline-offset: 2px;
+}
+
 .admin-edit-modal .ant-modal-content {
   overflow: hidden;
   border: 1px solid rgb(226 231 239 / 90%);
@@ -383,5 +442,9 @@
 
   .admin-page .ant-table-cell {
     white-space: nowrap;
+  }
+
+  .table-row-actions {
+    flex-wrap: wrap;
   }
 }

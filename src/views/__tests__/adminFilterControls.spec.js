@@ -80,11 +80,15 @@ describe('admin filter controls', () => {
   it('keeps tag row edit and delete actions on one line like category rows', () => {
     const categoryView = readView('categories/CategoryList.vue')
     const tagView = readView('tags/TagList.vue')
+    const adminStyles = fs.readFileSync(
+      path.join(process.cwd(), 'src/styles/admin-workspace.scss'),
+      'utf8'
+    )
 
     expect(categoryView).toContain("fixed: 'right'")
     expect(tagView).toContain("fixed: 'right'")
     expect(tagView).toContain('class="table-row-actions"')
-    expect(tagView).toContain('.table-row-actions')
-    expect(tagView).toContain('flex-wrap: nowrap')
+    expect(adminStyles).toContain('.table-row-actions')
+    expect(adminStyles).toContain('flex-wrap: nowrap')
   })
 })

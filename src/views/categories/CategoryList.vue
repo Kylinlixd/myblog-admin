@@ -88,8 +88,8 @@
 
         <!-- 操作列 -->
         <template v-else-if="column.dataIndex === 'action'">
-          <a-space>
-            <a-button type="primary" size="small" @click="handleEdit(record)">
+          <a-space class="table-row-actions">
+            <a-button type="text" size="small" class="row-action row-action--primary" @click="handleEdit(record)">
               <template #icon><EditOutlined /></template>
               编辑
             </a-button>
@@ -99,7 +99,7 @@
               cancel-text="取消"
               @confirm="handleDelete(record)"
             >
-              <a-button type="primary" danger size="small">
+              <a-button type="text" danger size="small" class="row-action row-action--danger">
                 <template #icon><DeleteOutlined /></template>
                 删除
               </a-button>
