@@ -6,7 +6,7 @@
 
 **Architecture:** 保持单文件 `Dashboard.vue` 与现有 `/api/stats/` 请求；派生指标全部使用 computed。趋势、比例条和内容构成都使用原生 HTML/CSS，避免新增图表依赖。
 
-**Tech Stack:** Vue 3、Ant Design Vue、SCSS、Vitest
+**Tech Stack:** Vue 3、Ant Design Vue、SCSS、Jest
 
 ---
 
@@ -28,7 +28,7 @@ expect(source).toContain('metric-progress')
 
 - [ ] **Step 2: 验证失败**
 
-Run: `npm test -- --run src/views/dashboard/__tests__/DashboardTrendCard.spec.js`
+Run: `npm test -- src/views/dashboard/__tests__/DashboardTrendCard.spec.js`
 Expected: FAIL，缺少构成数据和新布局。
 
 - [ ] **Step 3: 实现派生数据**
@@ -66,7 +66,7 @@ const contentBreakdown = computed(() => statCards.value.map((item) => ({
 
 - [ ] **Step 4: 测试并提交**
 
-Run: `npm test -- --run src/views/dashboard/__tests__/DashboardTrendCard.spec.js src/views/dashboard/__tests__/stats.spec.js`
+Run: `npm test -- src/views/dashboard/__tests__/DashboardTrendCard.spec.js src/views/dashboard/__tests__/stats.spec.js`
 Expected: PASS
 
 ```bash
@@ -97,4 +97,3 @@ Expected: 无空白错误，只包含本次公共站、列表、仪表盘、测�
 git add docs/DELIVERY_2026-07-27.md
 git commit -m "docs: record visual redesign delivery"
 ```
-

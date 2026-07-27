@@ -6,7 +6,7 @@
 
 **Architecture:** 使用现有全局 `admin-workspace.scss` 定义一个 CSS 契约，各页面只声明语义类，不创建新组件，不修改业务事件或确认逻辑。
 
-**Tech Stack:** Vue 3、Ant Design Vue、SCSS、Vitest
+**Tech Stack:** Vue 3、Ant Design Vue、SCSS、Jest
 
 ---
 
@@ -27,7 +27,7 @@ expect(styles).toContain('min-height: 30px')
 
 - [ ] **Step 2: 验证失败**
 
-Run: `npm test -- --run src/styles/__tests__/adminRowActions.spec.js`
+Run: `npm test -- src/styles/__tests__/adminRowActions.spec.js`
 Expected: FAIL，缺少语义样式。
 
 - [ ] **Step 3: 实现样式**
@@ -36,7 +36,7 @@ Expected: FAIL，缺少语义样式。
 
 - [ ] **Step 4: 测试并提交**
 
-Run: `npm test -- --run src/styles/__tests__/adminRowActions.spec.js`
+Run: `npm test -- src/styles/__tests__/adminRowActions.spec.js`
 Expected: PASS
 
 ```bash
@@ -66,7 +66,7 @@ listViews.forEach((view) => {
 
 - [ ] **Step 2: 验证失败**
 
-Run: `npm test -- --run src/views/__tests__/adminFilterControls.spec.js`
+Run: `npm test -- src/views/__tests__/adminFilterControls.spec.js`
 Expected: FAIL，列表动作仍分叉。
 
 - [ ] **Step 3: 更新按钮标记**
@@ -79,11 +79,10 @@ Expected: FAIL，列表动作仍分叉。
 
 - [ ] **Step 5: 测试并提交**
 
-Run: `npm test -- --run src/views/__tests__/adminFilterControls.spec.js src/styles/__tests__/adminRowActions.spec.js`
+Run: `npm test -- src/views/__tests__/adminFilterControls.spec.js src/styles/__tests__/adminRowActions.spec.js`
 Expected: PASS
 
 ```bash
 git add src/views src/styles
 git commit -m "feat: unify admin list actions"
 ```
-

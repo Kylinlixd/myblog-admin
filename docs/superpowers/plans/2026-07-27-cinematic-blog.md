@@ -6,7 +6,7 @@
 
 **Architecture:** `BlogLayout.vue` 提供共享环境层和导航，`blog-cinematic.scss` 提供公共页面视觉契约，`BlogHome.vue` 承担高强度 GSAP 叙事。旧内页只调整容器类与局部冲突样式，避免改动数据请求。
 
-**Tech Stack:** Vue 3、Vue Router、SCSS、GSAP ScrollTrigger、Vitest
+**Tech Stack:** Vue 3、Vue Router、SCSS、GSAP ScrollTrigger、Jest
 
 ---
 
@@ -29,7 +29,7 @@ expect(styles).toContain('prefers-reduced-motion: reduce')
 
 - [ ] **Step 2: 验证失败**
 
-Run: `npm test -- --run src/styles/__tests__/blogCinematic.spec.js`
+Run: `npm test -- src/styles/__tests__/blogCinematic.spec.js`
 Expected: FAIL，缺少共享样式和环境层。
 
 - [ ] **Step 3: 实现共享环境层**
@@ -48,7 +48,7 @@ Expected: FAIL，缺少共享样式和环境层。
 
 - [ ] **Step 4: 运行测试并提交**
 
-Run: `npm test -- --run src/styles/__tests__/blogCinematic.spec.js`
+Run: `npm test -- src/styles/__tests__/blogCinematic.spec.js`
 Expected: PASS
 
 ```bash
@@ -74,7 +74,7 @@ expect(source).toContain("scrub: true")
 
 - [ ] **Step 2: 验证失败**
 
-Run: `npm test -- --run src/views/blog/__tests__/BlogHomeExperience.spec.js`
+Run: `npm test -- src/views/blog/__tests__/BlogHomeExperience.spec.js`
 Expected: FAIL，首页尚无新结构。
 
 - [ ] **Step 3: 实现结构与状态**
@@ -97,7 +97,7 @@ const currentManifesto = computed(() => manifestos[manifestoIndex.value])
 
 - [ ] **Step 5: 测试并提交**
 
-Run: `npm test -- --run src/views/blog/__tests__/BlogHomeExperience.spec.js`
+Run: `npm test -- src/views/blog/__tests__/BlogHomeExperience.spec.js`
 Expected: PASS
 
 ```bash
@@ -127,7 +127,7 @@ expect(dynamic).not.toContain('@click="useMockData"')
 
 - [ ] **Step 2: 验证失败**
 
-Run: `npm test -- --run src/views/blog/__tests__/BlogCinematicPages.spec.js`
+Run: `npm test -- src/views/blog/__tests__/BlogCinematicPages.spec.js`
 Expected: FAIL，旧页面未接入主题契约。
 
 - [ ] **Step 3: 接入共享类并删除调试入口**
@@ -140,7 +140,7 @@ Expected: FAIL，旧页面未接入主题契约。
 
 - [ ] **Step 5: 回归测试并提交**
 
-Run: `npm test -- --run src/views/blog/__tests__/BlogCinematicPages.spec.js src/views/blog/__tests__/BlogAbout.spec.js src/views/blog/__tests__/BlogDetailSecurity.spec.js`
+Run: `npm test -- src/views/blog/__tests__/BlogCinematicPages.spec.js src/views/blog/__tests__/BlogAbout.spec.js src/views/blog/__tests__/BlogDetailSecurity.spec.js`
 Expected: PASS
 
 ```bash
@@ -171,4 +171,3 @@ Expected: `/blog`、`/blog/blogdynamic`、`/blog/categories`、`/blog/about` 无
 git add docs/DELIVERY_2026-07-27.md
 git commit -m "docs: record cinematic blog delivery"
 ```
-

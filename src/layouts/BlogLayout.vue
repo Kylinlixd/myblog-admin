@@ -1,5 +1,11 @@
 <template>
   <div class="blog-shell">
+    <div class="blog-atmosphere" aria-hidden="true">
+      <span class="blog-atmosphere__orb blog-atmosphere__orb--one" />
+      <span class="blog-atmosphere__orb blog-atmosphere__orb--two" />
+      <span class="blog-atmosphere__grid" />
+      <span class="blog-atmosphere__noise" />
+    </div>
     <header class="site-header" @keydown.esc="mobileOpen = false">
       <div class="site-header-panel app-container header-inner">
         <router-link class="brand" to="/blog" aria-label="LiXD 博客首页">
@@ -107,7 +113,7 @@ function isNavigationActive(item) {
 </script>
 
 <style scoped>
-.blog-shell { display: flex; min-height: 100vh; flex-direction: column; overflow-x: hidden; background: #060b14; color: #edf3ff; }
+.blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; overflow-x: hidden; background: #060b14; color: #edf3ff; isolation: isolate; }
 .site-header { position: sticky; z-index: 100; top: 14px; height: 0; }
 .site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(142 169 216 / 16%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(8 17 30 / 78%); box-shadow: 0 18px 50px rgb(0 0 0 / 22%); backdrop-filter: blur(22px); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
@@ -129,8 +135,8 @@ function isNavigationActive(item) {
 .menu-button { display: none; width: 44px; height: 44px; border: 1px solid #2a3e5c; border-radius: 12px; background: #101d30; color: #edf3ff; }
 .mobile-nav { display: none; margin-top: 8px; padding: 12px; border: 1px solid #223650; border-radius: 18px; background: rgb(8 17 30 / 96%); box-shadow: 0 24px 60px rgb(0 0 0 / 35%); }
 .mobile-admin-link { display: none; }
-.site-main { flex: 1; padding-top: 62px; }
-.site-footer { border-top: 1px solid #17263b; background: #060b14; color: #72849f; }
+.site-main { position: relative; z-index: 1; flex: 1; padding-top: 62px; }
+.site-footer { position: relative; z-index: 1; border-top: 1px solid #17263b; background: rgb(6 11 20 / 82%); color: #72849f; backdrop-filter: blur(18px); }
 .footer-inner { display: flex; min-height: 112px; align-items: center; justify-content: space-between; gap: 20px; font-size: 12px; }
 .footer-inner div { display: flex; gap: 20px; }
 .footer-inner a:hover { color: #a8bcdb; }
