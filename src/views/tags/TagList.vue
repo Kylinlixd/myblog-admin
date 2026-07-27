@@ -1,5 +1,14 @@
 <template>
   <div class="tag-list admin-page">
+    <PageHeader title="标签管理" subtitle="维护跨文章使用的主题标签。">
+      <template #actions>
+        <a-button type="primary" @click="handleAdd">
+          <template #icon><PlusOutlined /></template>
+          新建标签
+        </a-button>
+      </template>
+    </PageHeader>
+
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
       <a-form-item label="名称">
@@ -32,10 +41,6 @@
     <!-- 操作按钮 -->
     <div class="table-operations admin-toolbar">
       <a-space>
-        <a-button type="primary" @click="handleAdd">
-          <template #icon><PlusOutlined /></template>
-          新建标签
-        </a-button>
         <a-popconfirm
           title="确定要删除选中的标签吗？"
           ok-text="确定"
@@ -51,7 +56,8 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-table
+    <a-card class="admin-table-card">
+      <a-table
       :columns="columns"
       :data-source="tagList"
       :loading="loading"
@@ -104,7 +110,8 @@
           </a-space>
         </template>
       </template>
-    </a-table>
+      </a-table>
+    </a-card>
 
     <!-- 标签编辑对话框 -->
     <a-modal
@@ -150,6 +157,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Input as AInput, Textarea as ATextarea, Select as ASelect } from 'ant-design-vue'
 import { getTagList, createTag, updateTag, deleteTag } from '@/api/tag'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 
 // 表格列配置
 const columns = [
@@ -402,170 +410,8 @@ onMounted(() => {
 })
 </script>
 
-<style scoped lang="scss">
-.tag-list {
-  padding: 24px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-  .search-form {
-    margin-bottom: 24px;
-    padding: 24px;
-    background: #fafafa;
-    border-radius: 8px;
-
-    :deep(.ant-form-item) {
-      margin-bottom: 16px;
-      margin-right: 16px;
-
-      @media (max-width: 768px) {
-        margin-right: 0;
-        width: 100%;
-      }
-    }
-
-    :deep(.ant-form-item-control-input) {
-      min-width: 200px;
-    }
-  }
-
-  .table-operations {
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  :deep(.ant-table) {
-    .ant-table-cell {
-      vertical-align: middle;
-    }
-  }
-
-  :deep(.ant-table-thead > tr > th) {
-    white-space: nowrap;
-    background: #fafafa;
-    font-weight: 600;
-  }
-
-  :deep(.ant-table-tbody > tr > td) {
-    padding: 16px 8px;
-  }
-
-  :deep(.ant-space) {
-    flex-wrap: wrap;
-  }
-
-  :deep(.table-row-actions) {
-    flex-wrap: nowrap;
-  }
-
-  // 模态框样式
-  :deep(.ant-modal) {
-    .ant-modal-content {
-      border-radius: 8px;
-      overflow: hidden;
-      background: #ffffff !important;
-    }
-
-    .ant-modal-header {
-      background: #ffffff !important;
-      border-bottom: 1px solid #f0f0f0;
-      padding: 16px 24px;
-      margin-bottom: 0;
-
-      .ant-modal-title {
-        font-weight: 600;
-        color: #262626;
-      }
-    }
-
-    .ant-modal-body {
-      padding: 24px;
-      background: #ffffff !important;
-    }
-
-    .ant-modal-footer {
-      border-top: 1px solid #f0f0f0;
-      padding: 16px 24px;
-      margin-top: 0;
-      background: #ffffff !important;
-    }
-
-    .ant-form-item-label > label {
-      font-weight: 500;
-      color: #262626;
-    }
-
-    .ant-input,
-    .ant-input-textarea,
-    .ant-select-selector {
-      border-radius: 4px;
-      border-color: #d9d9d9;
-      background: #ffffff !important;
-      color: #262626;
-      
-      &:hover,
-      &:focus {
-        border-color: #40a9ff;
-      }
-    }
-
-    .ant-btn {
-      border-radius: 4px;
-      font-weight: 500;
-      color: #262626;
-      
-      &-primary {
-        background: #1890ff;
-        border-color: #1890ff;
-        color: #ffffff;
-        
-        &:hover {
-          background: #40a9ff;
-          border-color: #40a9ff;
-        }
-      }
-    }
-
-    .ant-select-dropdown {
-      background: #ffffff !important;
-      color: #262626;
-    }
-
-    .ant-select-item {
-      color: #262626;
-      
-      &-option-selected {
-        background: #e6f7ff;
-        color: #1890ff;
-      }
-      
-      &:hover {
-        background: #f5f5f5;
-      }
-    }
-  }
-}
-
-// 响应式布局
-@media (max-width: 768px) {
-  .tag-list {
-    padding: 16px;
-
-    .search-form {
-      padding: 16px;
-    }
-
-    .table-operations {
-      flex-direction: column;
-      gap: 8px;
-
-      .ant-space {
-        width: 100%;
-        justify-content: flex-start;
-      }
-    }
-  }
+<style scoped>
+:deep(.table-row-actions) {
+  flex-wrap: nowrap;
 }
 </style>

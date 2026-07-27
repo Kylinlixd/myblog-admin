@@ -1,6 +1,6 @@
 <template>
   <div class="comment-list admin-page">
-    <PageHeader title="评论管理" icon="CommentOutlined" />
+    <PageHeader title="评论管理" subtitle="审核读者反馈并维护讨论秩序。" />
     
     <!-- 搜索表单 -->
     <SearchForm 
@@ -85,7 +85,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { getCommentList, approveComment, rejectComment, deleteComment } from '../../api/comment'
-import { CheckOutlined, CloseOutlined, DeleteOutlined, CommentOutlined } from '@ant-design/icons-vue'
+import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
 // 导入通用组件
 import DataTable from '../../components/common/DataTable.vue'
@@ -269,13 +269,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-.comment-list {
-  padding: 20px;
-  :deep(.page-header) {
-    margin-bottom: 16px;
-  }
-}
-
 .content-cell {
   max-width: 300px;
   white-space: pre-wrap;

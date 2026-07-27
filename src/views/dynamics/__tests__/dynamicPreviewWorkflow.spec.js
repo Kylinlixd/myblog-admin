@@ -42,17 +42,20 @@ describe('dynamic preview workflow', () => {
 
   it('keeps dynamic list search inputs and selects the same size', () => {
     const listView = readView('DynamicList.vue')
+    const workspaceStyles = fs.readFileSync(
+      path.join(process.cwd(), 'src/styles/admin-workspace.scss'),
+      'utf8'
+    )
 
-    expect(listView.match(/class="dynamic-filter-control"/g) || []).toHaveLength(6)
     expect(listView).not.toContain('style="width: 100px"')
     expect(listView).not.toContain('style="width: 120px"')
     expect(listView).not.toContain('style="width: 132px"')
     expect(listView).not.toContain('style="width: 140px"')
     expect(listView).not.toContain('style="width: 200px"')
-    expect(listView).toContain('.dynamic-filter-control')
-    expect(listView).toContain('height: 36px')
-    expect(listView).toContain('.dynamic-filter-control.ant-input-affix-wrapper .ant-input')
-    expect(listView).toContain('background: transparent')
+    expect(listView).not.toContain('dynamic-filter-control')
+    expect(workspaceStyles).toContain('--admin-filter-control-height: 36px')
+    expect(workspaceStyles).toContain('.admin-filter .ant-input-affix-wrapper .ant-input')
+    expect(workspaceStyles).toContain('background: transparent !important')
     expect(listView).toContain('buildOptionText')
     expect(listView).toContain('${value}/页')
   })

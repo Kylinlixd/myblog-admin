@@ -1,10 +1,7 @@
 <template>
   <div class="file-list admin-page">
-    <a-page-header
-      title="文件管理"
-      subtitle="管理上传的文件资源"
-    >
-      <template #extra>
+    <PageHeader title="文件管理" subtitle="上传、筛选并管理内容资源。">
+      <template #actions>
         <a-upload
           :customRequest="handleCustomUpload"
           :showUploadList="false"
@@ -15,7 +12,7 @@
           </a-button>
         </a-upload>
       </template>
-    </a-page-header>
+    </PageHeader>
 
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
@@ -209,6 +206,7 @@ import {
 } from '@ant-design/icons-vue'
 import { uploadFile, getFileList, searchFiles, deleteFile, downloadFile } from '@/api/file'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
+import PageHeader from '@/components/common/PageHeader.vue'
 
 const loading = ref(false)
 const fileList = ref([])
@@ -662,114 +660,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.file-list {
-  padding: 24px;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-
-  .data-card {
-    :deep(.ant-card-body) {
-      padding: 0;
-    }
-  }
-
-  .table-operations {
-    margin-bottom: 16px;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  :deep(.ant-table-wrapper) {
-    .ant-table {
-      .ant-table-thead > tr > th {
-        background: #fafafa;
-        font-weight: 500;
-        padding: 12px 8px;
-        white-space: nowrap;
-      }
-
-      .ant-table-tbody > tr > td {
-        padding: 12px 8px;
-        vertical-align: middle;
-      }
-
-      .ant-table-row:hover {
-        .ant-table-cell {
-          background-color: #f5f5f5;
-        }
-      }
-    }
-  }
-
-  .search-form {
-    margin-bottom: 24px;
-    padding: 16px;
-    background: #fafafa;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-
-    .search-form-left {
-      flex: 1;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .search-form-right {
-      display: flex;
-      align-items: flex-start;
-      gap: 16px;
-    }
-
-    :deep(.ant-form-item) {
-      margin-bottom: 0;
-      margin-right: 0;
-    }
-
-    :deep(.ant-form-item-label) {
-      padding-right: 8px;
-    }
-
-    :deep(.ant-form-item-control-input) {
-      width: 100%;
-    }
-
-    :deep(.ant-select) {
-      width: 100%;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .search-form {
-      flex-direction: column;
-      gap: 16px;
-
-      .search-form-left,
-      .search-form-right {
-        width: 100%;
-        flex-direction: column;
-      }
-
-      :deep(.ant-form-item) {
-        width: 100%;
-      }
-
-      :deep(.ant-form-item-control-input) {
-        width: 100%;
-      }
-
-      :deep(.ant-select) {
-        width: 100%;
-      }
-    }
-  }
-}
-
 .media-preview-container {
   display: flex;
   justify-content: center;

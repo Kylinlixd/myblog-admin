@@ -7,6 +7,41 @@ const readView = (file) => fs.readFileSync(
 )
 
 describe('admin filter controls', () => {
+  it('uses one shared list-page shell across the admin workspace', () => {
+    const listViews = [
+      readView('categories/CategoryList.vue'),
+      readView('tags/TagList.vue'),
+      readView('comments/CommentList.vue'),
+      readView('files/FileList.vue'),
+      readView('dynamics/DynamicList.vue')
+    ]
+
+    listViews.forEach((view) => {
+      expect(view).toContain('<PageHeader')
+      expect(view).toMatch(/subtitle="[^"]+"/)
+    })
+
+    expect(listViews[0]).toContain('class="admin-table-card"')
+    expect(listViews[1]).toContain('class="admin-table-card"')
+    expect(listViews[2]).toContain('<DataTable')
+    expect(listViews[3]).toContain('class="data-card admin-table-card"')
+    expect(listViews[4]).toContain('class="data-card admin-table-card"')
+  })
+
+  it('keeps public and admin environment copy accurate', () => {
+    const homeView = readView('blog/BlogHome.vue')
+    const layout = fs.readFileSync(
+      path.join(process.cwd(), 'src/layouts/DefaultLayout.vue'),
+      'utf8'
+    )
+
+    expect(homeView).toContain('探索技术的')
+    expect(homeView).toContain('无限可能。')
+    expect(homeView).not.toContain('持续构建，<br /><em>保持清醒。</em>')
+    expect(layout).not.toContain('本地开发')
+    expect(layout).not.toContain('API 已代理到 8000')
+  })
+
   it('lets shared admin filter styles size list-page inputs and selects', () => {
     const listViews = [
       readView('categories/CategoryList.vue'),

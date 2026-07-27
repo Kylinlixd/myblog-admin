@@ -1,12 +1,15 @@
 <template>
   <div class="page-header">
-    <div class="title">
-      <slot name="icon">
-        <component :is="icon" v-if="icon" />
-      </slot>
-      <h2>{{ title }}</h2>
+    <div class="page-header__copy">
+      <div class="page-header__title">
+        <slot name="icon">
+          <component :is="icon" v-if="icon" />
+        </slot>
+        <h1>{{ title }}</h1>
+      </div>
+      <p v-if="subtitle">{{ subtitle }}</p>
     </div>
-    <div class="actions">
+    <div v-if="$slots.actions" class="page-header__actions">
       <slot name="actions"></slot>
     </div>
   </div>
@@ -21,51 +24,10 @@ defineProps({
   icon: {
     type: String,
     default: ''
+  },
+  subtitle: {
+    type: String,
+    default: ''
   }
 })
 </script>
-
-<style lang="scss" scoped>
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #ebeef5;
-  
-  .title {
-    display: flex;
-    align-items: center;
-    
-    h2 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #303133;
-    }
-    
-    .anticon {
-      margin-right: 8px;
-      font-size: 22px;
-      color: #0096ff;
-    }
-  }
-  
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-}
-
-:global([data-theme='dark']) {
-  .page-header {
-    border-bottom-color: #2c2c2c;
-    
-    .title h2 {
-      color: #e0e0e0;
-    }
-  }
-}
-</style> 

@@ -3,7 +3,7 @@
     <section class="hero app-container">
       <div class="hero-ambient" aria-hidden="true" />
       <div class="hero-copy">
-        <h1>持续构建，<br /><em>保持清醒。</em></h1>
+        <h1>探索技术的<br /><em>无限可能。</em></h1>
         <p>把开发经验、产品过程与值得记住的瞬间，连成一座可以反复进入的数字花园。</p>
         <div class="hero-actions">
           <router-link class="primary-action" to="/blog/blogdynamic">开始阅读 <arrow-right-outlined /></router-link>

@@ -1,22 +1,18 @@
 <template>
   <div class="dynamic-list admin-page">
-    <a-page-header
-      title="动态管理"
-      subtitle="管理博客动态内容"
-    >
-      <template #extra>
+    <PageHeader title="内容管理" subtitle="发布、筛选并维护数字花园中的文章。">
+      <template #actions>
         <a-button type="primary" @click="navigateToCreate">
           <PlusOutlined /> 新建动态
         </a-button>
       </template>
-    </a-page-header>
+    </PageHeader>
     
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
         <a-form-item label="标题">
           <a-input
-            class="dynamic-filter-control"
             v-model:value="searchForm.title"
             placeholder="搜索标题"
             allowClear
@@ -24,7 +20,6 @@
         </a-form-item>
         <a-form-item label="内容">
           <a-input
-            class="dynamic-filter-control"
             v-model:value="searchForm.content"
             placeholder="搜索内容"
             allowClear
@@ -32,7 +27,6 @@
         </a-form-item>
         <a-form-item label="分类">
           <a-select
-            class="dynamic-filter-control"
             v-model:value="searchForm.categoryId"
             placeholder="选择分类"
             allowClear
@@ -44,7 +38,6 @@
         </a-form-item>
         <a-form-item label="标签">
           <a-select
-            class="dynamic-filter-control"
             v-model:value="searchForm.tagIds"
             placeholder="选择标签"
             mode="multiple"
@@ -59,7 +52,6 @@
       <div class="search-form-right">
         <a-form-item label="状态">
           <a-select
-            class="dynamic-filter-control"
             v-model:value="searchForm.status"
             placeholder="选择状态"
             allowClear
@@ -70,7 +62,6 @@
         </a-form-item>
         <a-form-item label="类型">
           <a-select
-            class="dynamic-filter-control"
             v-model:value="searchForm.type"
             placeholder="选择类型"
             allowClear
@@ -99,9 +90,6 @@
     <!-- 操作按钮 -->
     <div class="table-operations admin-toolbar">
       <a-space size="middle">
-        <a-button type="primary" @click="navigateToCreate">
-          <PlusOutlined /> 新建动态
-        </a-button>
         <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
           <DeleteOutlined />
           批量删除
@@ -300,8 +288,7 @@ import {
   Input as AInput,
   Select as ASelect,
   Card as ACard,
-  Table as ATable,
-  PageHeader as APageHeader
+  Table as ATable
 } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { 
@@ -317,6 +304,7 @@ import {
 import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
 import { getTagList } from '@/api/tag'
+import PageHeader from '@/components/common/PageHeader.vue'
 
 const router = useRouter()
 const loading = ref(false)
@@ -438,11 +426,6 @@ const handleBatchDelete = async () => {
   } finally {
     loading.value = false
   }
-}
-
-// 处理新建动态
-const handleAdd = () => {
-  navigateToCreate()
 }
 
 // 媒体预览相关
@@ -803,140 +786,22 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.dynamic-list {
-  padding: 24px;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+.content-cell {
+  max-width: 300px;
 
-  .data-card {
-    :deep(.ant-card-body) {
-      padding: 0;
-    }
+  .content-text {
+    display: -webkit-box;
+    overflow: hidden;
+    margin-bottom: 8px;
+    word-break: break-word;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
-  .table-operations {
-    margin-bottom: 16px;
-    padding: 16px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  }
-
-  :deep(.ant-table-wrapper) {
-    .ant-table {
-      .ant-table-thead > tr > th {
-        background: #fafafa;
-        font-weight: 500;
-        padding: 12px 8px;
-        white-space: nowrap;
-      }
-
-      .ant-table-tbody > tr > td {
-        padding: 12px 8px;
-        vertical-align: middle;
-      }
-
-      .ant-table-row:hover {
-        .ant-table-cell {
-          background-color: #f5f5f5;
-        }
-      }
-    }
-  }
-
-  .content-cell {
-    max-width: 300px;
-    
-    .content-text {
-      margin-bottom: 8px;
-      word-break: break-word;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .media-preview {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-  }
-
-    .search-form {
-      margin-bottom: 24px;
-      padding: 24px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-
-      :deep(.dynamic-filter-control) {
-        height: 36px;
-      }
-
-      :deep(.dynamic-filter-control.ant-input-affix-wrapper) {
-        display: inline-flex;
-        align-items: center;
-        padding-block: 0;
-      }
-
-      :deep(.dynamic-filter-control.ant-input-affix-wrapper .ant-input) {
-        width: 100%;
-        height: 34px;
-        min-height: 0;
-        background: transparent !important;
-        box-shadow: none;
-      }
-
-      .search-form-left {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 16px;
-      
-      .ant-form-item {
-        margin-bottom: 0;
-        margin-right: 0;
-      }
-    }
-    
-    .search-form-right {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-start;
-      
-      .ant-form-item {
-        margin-bottom: 0;
-        margin-right: 0;
-      }
-    }
-  }
-
-  @media (max-width: 768px) {
-    .search-form {
-      flex-direction: column;
-      gap: 16px;
-
-      .search-form-left,
-      .search-form-right {
-        width: 100%;
-        flex-direction: column;
-      }
-
-      :deep(.ant-form-item) {
-        width: 100%;
-      }
-
-      :deep(.ant-form-item-control-input) {
-        width: 100%;
-      }
-
-      :deep(.ant-select) {
-        width: 100%;
-      }
-    }
+  .media-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 }
 

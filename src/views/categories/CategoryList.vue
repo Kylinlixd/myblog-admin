@@ -1,5 +1,14 @@
 <template>
   <div class="category-list admin-page">
+    <PageHeader title="分类管理" subtitle="整理内容分类与展示状态。">
+      <template #actions>
+        <a-button type="primary" @click="handleAdd">
+          <template #icon><PlusOutlined /></template>
+          新建分类
+        </a-button>
+      </template>
+    </PageHeader>
+
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
@@ -40,10 +49,6 @@
     <!-- 操作按钮 -->
     <div class="table-operations admin-toolbar">
       <a-space size="middle">
-        <a-button type="primary" @click="handleAdd">
-          <template #icon><PlusOutlined /></template>
-          新建分类
-        </a-button>
         <a-popconfirm
           title="确定要删除选中的分类吗？"
           ok-text="确定"
@@ -59,7 +64,8 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-table
+    <a-card class="admin-table-card">
+      <a-table
       :columns="columns"
       :data-source="categoryList"
       :loading="loading"
@@ -101,7 +107,8 @@
           </a-space>
         </template>
       </template>
-    </a-table>
+      </a-table>
+    </a-card>
 
     <!-- 分类编辑对话框 -->
     <a-modal
@@ -148,6 +155,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Input as AInput, Textarea as ATextarea, Select as ASelect } from 'ant-design-vue'
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from '@/api/category'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import PageHeader from '@/components/common/PageHeader.vue'
 
 // 表格列配置
 const columns = [
@@ -408,86 +416,3 @@ onMounted(() => {
   fetchCategories()
 })
 </script>
-
-<style scoped lang="scss">
-.category-list {
-  padding: 24px;
-  background: #fff;
-  border-radius: 4px;
-}
-
-.search-form {
-  margin-bottom: 24px;
-  padding: 24px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  
-  .search-form-left {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 16px;
-    
-    .ant-form-item {
-      margin-bottom: 0;
-      margin-right: 0;
-    }
-  }
-  
-  .search-form-right {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-start;
-    
-    .ant-form-item {
-      margin-bottom: 0;
-      margin-right: 0;
-    }
-  }
-}
-
-.table-operations {
-  margin-bottom: 16px;
-  padding: 16px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.responsive-table {
-  width: 100%;
-}
-
-@media screen and (max-width: 1200px) {
-  .search-form {
-    display: block;
-  }
-  
-  .table-operations {
-    display: block;
-  }
-}
-
-// 响应式布局
-@media (max-width: 768px) {
-  .category-list {
-    padding: 16px;
-
-    .search-form {
-      padding: 16px;
-    }
-
-    .table-operations {
-      flex-direction: column;
-      gap: 8px;
-
-      .ant-space {
-        width: 100%;
-        justify-content: flex-start;
-      }
-    }
-  }
-}
-</style>

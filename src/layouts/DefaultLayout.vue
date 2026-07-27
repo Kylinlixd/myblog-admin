@@ -5,10 +5,6 @@
         <span class="brand-mark">L</span><span v-if="!collapsed">LiXD Studio<small>内容工作台</small></span>
       </router-link>
       <AdminNavigation />
-      <div v-if="!collapsed" class="sidebar-status">
-        <span class="status-dot"></span>
-        <div><strong>本地开发</strong><small>API 已代理到 8000</small></div>
-      </div>
     </a-layout-sider>
 
     <a-drawer v-model:open="mobileOpen" placement="left" :closable="false" :width="272" class="admin-drawer">
@@ -142,10 +138,6 @@ function handleLogout() {
 .admin-navigation .nav-item--active { background: #315bea !important; color: white !important; box-shadow: 0 10px 22px rgb(49 91 234 / 24%); }
 .admin-navigation .nav-item--active .nav-item__icon { background: rgb(255 255 255 / 16%); }
 .admin-navigation .nav-item--active small { color: rgb(255 255 255 / 72%); }
-.sidebar-status { display: flex; gap: 10px; align-items: center; margin: 12px; padding: 12px; border: 1px solid rgb(255 255 255 / 8%); border-radius: 8px; background: rgb(255 255 255 / 4%); color: white; }
-.status-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--color-success); box-shadow: 0 0 0 5px rgb(22 163 106 / 12%); }
-.sidebar-status strong { display: block; font-size: 12px; }
-.sidebar-status small { color: #8290ab; font-size: 11px; }
 .workspace { min-width: 0; background: var(--color-page); }
 .workspace-header { position: sticky; z-index: 50; top: 0; display: flex; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: rgb(255 255 255 / 92%) !important; line-height: normal; backdrop-filter: blur(16px); }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
