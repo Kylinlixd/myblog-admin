@@ -3,7 +3,10 @@
     <section class="hero app-container">
       <div class="hero-ambient" aria-hidden="true" />
       <div class="hero-copy">
-        <h1>探索技术的<br /><em>无限可能。</em></h1>
+        <h1 class="hero-title" aria-label="探索技术，无限可能">
+          <span class="hero-title__line">探索技术</span>
+          <span class="hero-title__line hero-title__line--accent">无限可能</span>
+        </h1>
         <p>把开发经验、产品过程与值得记住的瞬间，连成一座可以反复进入的数字花园。</p>
         <div class="hero-actions">
           <router-link class="primary-action" to="/blog/blogdynamic">开始阅读 <arrow-right-outlined /></router-link>
@@ -37,6 +40,15 @@
           <h2>第一篇值得反复阅读的内容，很快会出现在这里。</h2>
         </div>
       </div>
+    </section>
+
+    <section class="signal-section app-container" aria-label="数字花园理念">
+      <p class="signal-index">SCROLL TO EXPLORE · 01</p>
+      <h2 class="scrub-reveal">
+        <span>技术不是孤立的答案，</span>
+        <span>而是一条从问题、判断</span>
+        <span>到持续构建的路径。</span>
+      </h2>
     </section>
 
     <section class="interest-section app-container">
@@ -136,6 +148,28 @@
       </div>
     </section>
 
+    <section class="manifesto-section app-container">
+      <div class="manifesto-heading">
+        <span>CREATION PRINCIPLES · 03</span>
+        <p>这座数字花园如何保持真实、清晰和持续生长。</p>
+      </div>
+      <div class="manifesto-carousel cinematic-card" aria-live="polite">
+        <div class="manifesto-number">{{ String(manifestoIndex + 1).padStart(2, '0') }}</div>
+        <transition name="manifesto" mode="out-in">
+          <article :key="currentManifesto.title">
+            <p>{{ currentManifesto.eyebrow }}</p>
+            <h2>{{ currentManifesto.title }}</h2>
+            <span>{{ currentManifesto.body }}</span>
+          </article>
+        </transition>
+        <div class="manifesto-controls" aria-label="切换创作原则">
+          <button type="button" aria-label="上一条创作原则" @click="previousManifesto">上一条</button>
+          <span>{{ manifestoIndex + 1 }} / {{ manifestos.length }}</span>
+          <button type="button" aria-label="下一条创作原则" @click="nextManifesto">下一条</button>
+        </div>
+      </div>
+    </section>
+
     <div v-if="tags.length" class="tag-marquee" aria-label="博客主题">
       <div>
         <span v-for="item in [...tags, ...tags]" :key="`${item.id}-${tags.indexOf(item)}`">{{ item.name }}</span>
@@ -172,10 +206,25 @@ const categories = ref([])
 const tags = ref([])
 const loading = ref(true)
 const error = ref('')
+const manifestoIndex = ref(0)
 let motionContext
 
 const featured = computed(() => latest.value.find((item) => mediaUrl(item)) || latest.value[0])
 const extractList = (response) => normalizeCollectionResponse(response).results
+const manifestos = [
+  { eyebrow: '从真实问题出发', title: '记录判断，不只展示答案。', body: '保留项目里的取舍、失败与修正，让经验可以在下一次真实问题中被复用。' },
+  { eyebrow: '让知识彼此连接', title: '每一次阅读，都有继续探索的方向。', body: '通过文章、分类与标签形成路径，让零散笔记逐渐生长成完整的知识脉络。' },
+  { eyebrow: '持续构建与复盘', title: '完成不是终点，沉淀才是。', body: '把每次构建变成下一次行动的起点，在持续发布中保持清醒和好奇。' }
+]
+const currentManifesto = computed(() => manifestos[manifestoIndex.value])
+
+function previousManifesto() {
+  manifestoIndex.value = (manifestoIndex.value - 1 + manifestos.length) % manifestos.length
+}
+
+function nextManifesto() {
+  manifestoIndex.value = (manifestoIndex.value + 1) % manifestos.length
+}
 
 function mediaUrl(article) {
   const media = article?.mediaUrls || article?.files || []
@@ -201,14 +250,34 @@ function setupMotion() {
   if (!homePage.value || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   motionContext = gsap.context(() => {
-    gsap.fromTo('.hero-copy', { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out' })
+    gsap.fromTo('.hero-title__line', { opacity: 0, yPercent: 110, rotateX: -16 }, { opacity: 1, yPercent: 0, rotateX: 0, duration: 1.1, stagger: .1, ease: 'power4.out' })
+    gsap.fromTo('.hero-copy > p, .hero-actions', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .85, stagger: .08, delay: .28, ease: 'power3.out' })
     gsap.fromTo('.hero-feature', { opacity: 0, scale: 0.88 }, { opacity: 1, scale: 1, duration: 1.15, ease: 'power3.out', delay: 0.15 })
+    gsap.fromTo('.hero-feature img', { scale: 1.16, opacity: .58 }, {
+      scale: 1,
+      opacity: 1,
+      scrollTrigger: { trigger: '.hero-feature', start: 'top 90%', end: 'bottom 42%', scrub: true }
+    })
+    gsap.fromTo('.scrub-reveal span', { opacity: .12, y: 42 }, {
+      opacity: 1,
+      y: 0,
+      stagger: .14,
+      scrollTrigger: { trigger: '.scrub-reveal', start: 'top 84%', end: 'bottom 48%', scrub: true }
+    })
     gsap.utils.toArray('.story-card').forEach((card) => {
       gsap.fromTo(card, { scale: 0.88, opacity: 0.42 }, {
         scale: 1,
         opacity: 1,
         scrollTrigger: { trigger: card, start: 'top 88%', end: 'top 42%', scrub: true }
       })
+      const media = card.querySelector('.story-card__media')
+      if (media) {
+        gsap.fromTo(media, { scale: .84, opacity: .36 }, {
+          scale: 1,
+          opacity: 1,
+          scrollTrigger: { trigger: card, start: 'top 92%', end: 'top 48%', scrub: true }
+        })
+      }
     })
   }, homePage.value)
 }
@@ -244,9 +313,10 @@ onBeforeUnmount(() => motionContext?.revert())
 .home-page { width: 100%; max-width: 100%; overflow-x: hidden; background: #060b14; color: #edf3ff; font-family: Outfit, Geist, ui-sans-serif, system-ui, sans-serif; }
 .hero { position: relative; display: grid; min-height: 780px; place-items: center; padding-block: 132px 116px; text-align: center; }
 .hero-ambient { position: absolute; width: min(760px, 82vw); height: 480px; border-radius: 50%; background: #285fff; filter: blur(150px); opacity: .16; pointer-events: none; top: -340px; }
-.hero-copy { position: relative; z-index: 2; }
-.hero h1 { width: 100%; max-width: 1152px; margin: 0 auto 28px; font-size: clamp(3.5rem, 8vw, 7.4rem); letter-spacing: -.072em; line-height: .88; }
-.hero h1 em { color: #789cff; font-style: normal; }
+.hero-copy { position: relative; z-index: 2; width: 100%; perspective: 800px; }
+.hero h1 { width: 100%; max-width: 1280px; margin: 0 auto 30px; font-size: clamp(3.4rem, 9vw, 8.6rem); letter-spacing: -.082em; line-height: .8; }
+.hero-title__line { display: block; overflow: hidden; padding-inline: .06em; color: #edf3ff; transform-origin: 50% 100%; }
+.hero-title__line--accent { margin-top: .12em; color: #789cff; text-shadow: 0 0 56px rgb(82 122 255 / 24%); }
 .hero-copy > p { max-width: 650px; margin: 0 auto; color: #9aaac2; font-size: clamp(15px, 1.5vw, 18px); line-height: 1.7; }
 .hero-actions { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
 .primary-action, .secondary-action { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 9px; padding: 0 20px; border-radius: 999px; font-size: 13px; font-weight: 750; transition: transform .25s ease, border-color .25s ease, background .25s ease; }
@@ -263,6 +333,12 @@ onBeforeUnmount(() => motionContext?.revert())
 .hero-feature__copy span, .bento-card__copy span, .story-card__body > span { color: #8baaff; font-size: 11px; font-weight: 700; letter-spacing: .08em; }
 .hero-feature__copy h2 { margin: 10px 0 9px; font-size: clamp(30px, 4vw, 52px); letter-spacing: -.045em; line-height: 1; }
 .hero-feature__copy p { margin: 0; color: #aebbd0; font-size: 13px; }
+.signal-section { display: grid; min-height: 84vh; align-content: center; padding-block: 120px; }
+.signal-index { margin: 0 0 28px; color: #60789e; font-size: 10px; font-weight: 750; letter-spacing: .19em; }
+.scrub-reveal { max-width: 1180px; margin: 0; font-size: clamp(3rem, 7.2vw, 7.2rem); letter-spacing: -.075em; line-height: .9; }
+.scrub-reveal span { display: block; color: #e8efff; will-change: transform, opacity; }
+.scrub-reveal span:nth-child(2) { padding-left: clamp(0px, 8vw, 120px); color: #91aaff; }
+.scrub-reveal span:nth-child(3) { padding-left: clamp(0px, 16vw, 240px); }
 .interest-section, .story-section, .topic-section { padding-block: 140px; }
 .chapter-heading { display: flex; align-items: end; justify-content: space-between; gap: 40px; margin-bottom: 46px; }
 .chapter-heading h2, .story-intro h2 { max-width: 820px; margin: 0; font-size: clamp(2.8rem, 6vw, 5rem); letter-spacing: -.06em; line-height: .94; }
@@ -302,6 +378,24 @@ onBeforeUnmount(() => motionContext?.revert())
 .topic-accordion span { font-size: 22px; font-weight: 700; }
 .topic-accordion p { max-width: 260px; margin: 8px 0 0; color: #8799b2; opacity: 0; transition: opacity .4s ease; }
 .topic-accordion a:hover p, .topic-accordion a:focus-visible p { opacity: 1; }
+.manifesto-section { display: grid; grid-template-columns: 4fr 8fr; align-items: start; gap: 70px; padding-block: 150px; }
+.manifesto-heading { position: sticky; top: 130px; }
+.manifesto-heading > span { color: #789cff; font-size: 10px; font-weight: 750; letter-spacing: .18em; }
+.manifesto-heading p { max-width: 300px; margin: 18px 0 0; color: #8fa0b9; line-height: 1.7; }
+.manifesto-carousel { position: relative; display: grid; min-height: 480px; overflow: hidden; grid-template-rows: auto 1fr auto; padding: clamp(26px, 5vw, 58px); }
+.manifesto-carousel::before { position: absolute; right: -110px; bottom: -150px; width: 420px; height: 420px; border-radius: 50%; background: #315bea; filter: blur(130px); opacity: .14; content: ''; pointer-events: none; }
+.manifesto-number { color: #667b9b; font-size: 11px; font-weight: 750; letter-spacing: .16em; }
+.manifesto-carousel article { position: relative; z-index: 1; align-self: center; }
+.manifesto-carousel article p { margin: 0 0 18px; color: #789cff; font-size: 11px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.manifesto-carousel article h2 { max-width: 760px; margin: 0; font-size: clamp(2.6rem, 5vw, 5.3rem); letter-spacing: -.064em; line-height: .94; }
+.manifesto-carousel article span { display: block; max-width: 610px; margin-top: 24px; color: #98a9c1; font-size: 16px; line-height: 1.75; }
+.manifesto-controls { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #22344e; padding-top: 20px; }
+.manifesto-controls button { min-width: 78px; min-height: 42px; border: 1px solid #2d4364; border-radius: 999px; background: #0b1727; color: #cbd7e9; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+.manifesto-controls button:hover { border-color: #789cff; background: #132441; transform: translateY(-2px); }
+.manifesto-controls span { color: #71839d; font-size: 11px; font-weight: 700; letter-spacing: .12em; }
+.manifesto-enter-active, .manifesto-leave-active { transition: opacity .25s ease, transform .25s ease; }
+.manifesto-enter-from { opacity: 0; transform: translateX(20px); }
+.manifesto-leave-to { opacity: 0; transform: translateX(-20px); }
 .tag-marquee { overflow: hidden; border-block: 1px solid #18283d; padding: 23px 0; color: #6f93ff; }
 .tag-marquee > div { display: flex; width: max-content; animation: marquee 28s linear infinite; }
 .tag-marquee span { padding-right: 52px; font-size: clamp(2rem, 5vw, 4.1rem); font-weight: 700; letter-spacing: -.045em; }
@@ -310,7 +404,7 @@ onBeforeUnmount(() => motionContext?.revert())
 .final-cta h2 { max-width: 1080px; margin: 0 auto; font-size: clamp(3.7rem, 8vw, 7.3rem); letter-spacing: -.074em; line-height: .86; }
 .final-cta p { max-width: 570px; margin: 30px auto 0; color: #8c9db7; font-size: 17px; }
 @keyframes marquee { to { transform: translateX(-50%); } }
-@media (max-width: 900px) { .hero { min-height: auto; padding-block: 125px 90px; } .hero-feature { height: 360px; } .interest-section, .story-section, .topic-section { padding-block: 100px; } .chapter-heading { align-items: flex-start; flex-direction: column; } .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; } .bento-card--lead, .bento-card--topics, .bento-card--popular { grid-column: auto; grid-row: auto; min-height: 260px; } .bento-card--lead { grid-column: 1 / -1; min-height: 420px; } .story-section { grid-template-columns: 1fr; gap: 42px; } .story-intro { position: static; } }
-@media (max-width: 640px) { .hero { padding-top: 105px; } .hero h1 { font-size: clamp(3.2rem, 15vw, 4.6rem); } .hero-actions { align-items: stretch; flex-direction: column; } .hero-feature { height: 330px; margin-top: 48px; border-radius: 20px; } .hero-feature__copy { right: 20px; bottom: 22px; left: 20px; } .interest-section, .story-section, .topic-section { padding-block: 78px; } .bento-grid { grid-template-columns: 1fr; } .bento-card--lead { grid-column: auto; min-height: 370px; } .story-card, .story-card:nth-child(2), .story-card:nth-child(3) { position: relative; top: auto; min-height: 0; } .topic-accordion { min-height: 0; flex-direction: column; } .topic-accordion a { min-height: 170px; } .topic-accordion p { opacity: 1; } .final-cta { padding-block: 105px 90px; } }
-@media (prefers-reduced-motion: reduce) { .tag-marquee > div { animation: none; } .story-card { position: relative; top: auto !important; opacity: 1 !important; transform: none !important; } }
+@media (max-width: 900px) { .hero { min-height: auto; padding-block: 125px 90px; } .hero-feature { height: 360px; } .signal-section { min-height: 68vh; } .scrub-reveal span:nth-child(2), .scrub-reveal span:nth-child(3) { padding-left: 0; } .interest-section, .story-section, .topic-section { padding-block: 100px; } .chapter-heading { align-items: flex-start; flex-direction: column; } .bento-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; } .bento-card--lead, .bento-card--topics, .bento-card--popular { grid-column: auto; grid-row: auto; min-height: 260px; } .bento-card--lead { grid-column: 1 / -1; min-height: 420px; } .story-section { grid-template-columns: 1fr; gap: 42px; } .story-intro { position: static; } .manifesto-section { grid-template-columns: 1fr; gap: 34px; padding-block: 100px; } .manifesto-heading { position: static; } }
+@media (max-width: 640px) { .hero { padding-top: 105px; } .hero h1 { font-size: clamp(3.25rem, 16vw, 5rem); line-height: .84; } .hero-actions { align-items: stretch; flex-direction: column; } .hero-feature { height: 330px; margin-top: 48px; border-radius: 20px; } .hero-feature__copy { right: 20px; bottom: 22px; left: 20px; } .signal-section { min-height: 62vh; padding-block: 80px; } .scrub-reveal { font-size: clamp(2.65rem, 13vw, 4.5rem); } .interest-section, .story-section, .topic-section { padding-block: 78px; } .bento-grid { grid-template-columns: 1fr; } .bento-card--lead { grid-column: auto; min-height: 370px; } .story-card, .story-card:nth-child(2), .story-card:nth-child(3) { position: relative; top: auto; min-height: 0; } .topic-accordion { min-height: 0; flex-direction: column; } .topic-accordion a { min-height: 170px; } .topic-accordion p { opacity: 1; } .manifesto-section { padding-block: 80px; } .manifesto-carousel { min-height: 440px; } .final-cta { padding-block: 105px 90px; } }
+@media (prefers-reduced-motion: reduce) { .tag-marquee > div { animation: none; } .story-card { position: relative; top: auto !important; opacity: 1 !important; transform: none !important; } .hero-title__line, .scrub-reveal span, .story-card__media { opacity: 1 !important; transform: none !important; } .manifesto-enter-active, .manifesto-leave-active { transition: none; } }
 </style>

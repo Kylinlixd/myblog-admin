@@ -15,4 +15,20 @@ describe('night-blue blog homepage', () => {
     expect(source).toContain("from 'gsap/ScrollTrigger'")
     expect(source).toContain('prefers-reduced-motion: reduce')
   })
+
+  it('builds a two-line cinematic hero with scrubbed storytelling', () => {
+    expect(source).toContain('hero-title__line')
+    expect(source).toContain('>探索技术<')
+    expect(source).toContain('>无限可能<')
+    expect(source).toContain('scrub-reveal')
+    expect(source).toContain("scrub: true")
+  })
+
+  it('includes a manual creation-principles carousel', () => {
+    expect(source).toContain('manifesto-carousel')
+    expect(source).toContain('currentManifesto')
+    expect(source).toContain('previousManifesto')
+    expect(source).toContain('nextManifesto')
+    expect(source).toContain('aria-live="polite"')
+  })
 })
