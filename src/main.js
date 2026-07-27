@@ -7,7 +7,6 @@ import App from './App.vue'
 import router from './router'
 import { pinia, useUserStore } from './stores'
 import { registerAntComponents } from './config/antComponents'
-import '@/styles/tailwind.css'
 import './styles/main.scss'
 
 const app = createApp(App)

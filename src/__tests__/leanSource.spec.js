@@ -45,4 +45,20 @@ describe('lean source tree', () => {
       expect(fs.existsSync(path.join(process.cwd(), file))).toBe(false)
     })
   })
+
+  it('uses native request IDs and keeps unused Tailwind tooling out', () => {
+    const obsoleteFiles = [
+      'src/styles/tailwind.css',
+      'tailwind.config.js',
+      'src/utils/uuid.js'
+    ]
+
+    obsoleteFiles.forEach((file) => {
+      expect(fs.existsSync(path.join(process.cwd(), file))).toBe(false)
+    })
+
+    const client = fs.readFileSync(path.join(process.cwd(), 'src/services/http/client.js'), 'utf8')
+    expect(client).toContain('crypto.randomUUID()')
+    expect(client).not.toContain("@/utils/uuid")
+  })
 })

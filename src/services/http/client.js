@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-import { generateRequestId } from '@/utils/uuid'
 
 import { normalizeApiError } from './errors'
 import {
@@ -24,7 +23,7 @@ export function createHttpClient(options = {}) {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    config.headers['X-Request-ID'] = generateRequestId()
+    config.headers['X-Request-ID'] = crypto.randomUUID()
 
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type']
