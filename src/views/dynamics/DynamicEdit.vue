@@ -6,7 +6,7 @@
         <a-button @click="handlePreview" v-if="form.content">
           <template #icon><eye-outlined /></template>预览
         </a-button>
-        <a-button @click="handleSave" type="primary">
+        <a-button @click="handleSave" type="primary" :loading="saving" :disabled="saving">
           <template #icon><check-outlined /></template>保存
         </a-button>
         <a-button @click="handleCancel">
@@ -24,7 +24,7 @@
       class="edit-form"
     >
       <!-- 标题输入框 -->
-      <a-form-item label="标题" name="title" :rules="rules.title">
+      <a-form-item class="editor-title-field" label="标题" name="title" :rules="rules.title">
         <a-input
           v-model:value="form.title"
           placeholder="请输入动态标题"
@@ -33,7 +33,7 @@
         />
       </a-form-item>
 
-      <a-form-item label="分类" name="categoryId">
+      <a-form-item class="editor-settings-field" label="分类" name="categoryId">
         <a-select
           v-model:value="form.categoryId"
           placeholder="请选择分类"
@@ -43,7 +43,7 @@
         </a-select>
       </a-form-item>
 
-      <a-form-item label="标签" name="tags">
+      <a-form-item class="editor-settings-field" label="标签" name="tags">
         <a-select
           v-model:value="form.tags"
           mode="multiple"
@@ -54,7 +54,7 @@
         </a-select>
       </a-form-item>
 
-      <a-form-item label="内容类型" name="type">
+      <a-form-item class="editor-settings-field" label="内容类型" name="type">
         <a-radio-group v-model:value="form.type">
           <a-radio value="text">纯文本</a-radio>
           <a-radio value="image">图文</a-radio>
@@ -63,7 +63,7 @@
         </a-radio-group>
       </a-form-item>
 
-      <a-form-item label="内容" name="content">
+      <a-form-item class="editor-content-field" label="内容" name="content">
         <markdown-editor
           ref="markdownEditorRef"
           v-model="form.content"
@@ -78,6 +78,7 @@
 
       <!-- 图片上传 -->
       <a-form-item
+        class="editor-settings-field"
         label="图片"
         name="mediaUrls"
         v-if="form.type === 'image'"
@@ -108,6 +109,7 @@
 
       <!-- 音频上传 -->
       <a-form-item
+        class="editor-settings-field"
         label="音频"
         name="mediaUrls"
         v-if="form.type === 'audio'"
@@ -136,6 +138,7 @@
 
       <!-- 视频上传 -->
       <a-form-item
+        class="editor-settings-field"
         label="视频"
         name="mediaUrls"
         v-if="form.type === 'video'"
@@ -162,15 +165,15 @@
         </div>
       </a-form-item>
 
-      <a-form-item label="状态" name="status">
+      <a-form-item class="editor-settings-field" label="状态" name="status">
         <a-radio-group v-model:value="form.status">
           <a-radio value="draft">草稿</a-radio>
           <a-radio value="published">发布</a-radio>
         </a-radio-group>
       </a-form-item>
       
-      <a-form-item :wrapper-col="{ span: 18, offset: 3 }">
-        <a-button type="primary" @click="handleSave">保存</a-button>
+      <a-form-item class="editor-form-actions" :wrapper-col="{ span: 24 }">
+        <a-button type="primary" @click="handleSave" :loading="saving" :disabled="saving">保存</a-button>
         <a-button style="margin-left: 10px" @click="handleCancel">取消</a-button>
       </a-form-item>
     </a-form>
@@ -281,7 +284,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import { 
@@ -301,6 +304,7 @@ import { getTagList } from '../../api/tag'
 import { getFileList } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { buildApiUrl, stripApiBaseUrl } from '@/utils/apiBaseUrl'
+import { clearEditorDraft, loadEditorDraft, saveEditorDraft } from './editorDraft'
 
 const route = useRoute()
 const router = useRouter()
@@ -309,6 +313,10 @@ const markdownEditorRef = ref(null)  // 添加编辑器引用
 
 // 判断是否为编辑模式
 const isEdit = computed(() => route.params.id !== undefined)
+const draftId = computed(() => String(route.params.id || 'new'))
+const saving = ref(false)
+const dirty = ref(false)
+let draftTimer
 
 // 表单数据 - 修改为使用 mediaUrls 统一存储媒体文件
 const form = ref({
@@ -321,6 +329,12 @@ const form = ref({
   categoryId: undefined,
   tags: []
 })
+
+watch(form, () => {
+  dirty.value = true
+  window.clearTimeout(draftTimer)
+  draftTimer = window.setTimeout(() => saveEditorDraft(draftId.value, form.value), 700)
+}, { deep: true })
 
 // 文件列表 - 上传组件使用
 const fileList = ref([])
@@ -403,7 +417,6 @@ const fetchTags = async () => {
     const response = await getTagList()
     // 从响应中获取 results 数组
     tags.value = response.results || []
-    console.log('获取到的标签列表:', tags.value)
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
@@ -420,7 +433,6 @@ const fetchCategories = async () => {
     const response = await getCategoryList()
     // 从响应中获取 results 数组
     categories.value = response.results || []
-    console.log('获取到的分类列表:', categories.value)
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
@@ -436,11 +448,8 @@ const fetchDynamicDetail = async () => {
   
   try {
     const response = await getDynamicDetail(route.params.id)
-    console.log('获取到的动态详情:', response)
-    
     if (response && response.code === 200 && response.data) {
       const data = response.data
-      console.log('原始数据:', data)
       
       // 处理 mediaUrls，确保是数组且包含前缀
       let mediaUrls = []
@@ -449,7 +458,6 @@ const fetchDynamicDetail = async () => {
         mediaUrls = mediaUrls.map(url => {
           if (!url) return null
           const fullUrl = buildApiUrl(url)
-          console.log('处理媒体URL:', { original: url, full: fullUrl })
           return fullUrl
         }).filter(Boolean)
       }
@@ -466,8 +474,6 @@ const fetchDynamicDetail = async () => {
         tags: Array.isArray(data.tags) ? data.tags.map(tag => tag.id) : []
       }
       
-      console.log('填充后的表单数据:', form.value)
-      
       // 更新文件列表用于上传组件显示
       updateFileList()
       
@@ -477,7 +483,6 @@ const fetchDynamicDetail = async () => {
       // 确保内容更新到编辑器
       nextTick(() => {
         if (form.value.content && markdownEditorRef.value) {
-          console.log('设置编辑器内容:', form.value.content)
           markdownEditorRef.value.setContent(form.value.content)
         }
       })
@@ -492,18 +497,13 @@ const fetchDynamicDetail = async () => {
 
 // 更新文件列表
 const updateFileList = () => {
-  console.log('更新文件列表，当前 mediaUrls:', form.value.mediaUrls)
-  
   if (!form.value.mediaUrls || form.value.mediaUrls.length === 0) {
-    console.log('没有媒体文件，清空文件列表')
     fileList.value = []
     return
   }
   
   // 确保 mediaUrls 是数组
   const mediaUrls = Array.isArray(form.value.mediaUrls) ? form.value.mediaUrls : [form.value.mediaUrls]
-  console.log('处理后的 mediaUrls 数组:', mediaUrls)
-  
   fileList.value = mediaUrls.map((url, index) => {
     if (!url) {
       console.warn(`跳过无效的 URL，索引: ${index}`)
@@ -512,12 +512,6 @@ const updateFileList = () => {
     
     const fileName = url.split('/').pop() || `file-${index}`
     const fullUrl = buildApiUrl(url)
-    console.log(`处理文件 ${index}:`, {
-      originalUrl: url,
-      fullUrl: fullUrl,
-      fileName: fileName
-    })
-    
     return {
       uid: `-${index}`,
       name: fileName,
@@ -527,11 +521,12 @@ const updateFileList = () => {
     }
   }).filter(Boolean) // 过滤掉无效的项
   
-  console.log('更新后的文件列表:', fileList.value)
 }
 
 // 保存动态
 const handleSave = async () => {
+  if (saving.value) return
+  saving.value = true
   try {
     // 表单验证
     await formRef.value.validate();
@@ -568,9 +563,6 @@ const handleSave = async () => {
       tags: form.value.tags
     };
     
-    // 打印将要提交的数据，用于调试
-    console.log('即将提交的动态数据:', dynamicData);
-    
     // 根据是否编辑模式选择API
     let response;
     if (isEdit.value) {
@@ -581,6 +573,8 @@ const handleSave = async () => {
     
     // 处理响应
     if (response.code === 200) {
+      clearEditorDraft(draftId.value)
+      dirty.value = false
       message.success(isEdit.value ? '动态更新成功' : '动态创建成功');
       router.push('/dashboard/dynamics');
     } else {
@@ -600,6 +594,8 @@ const handleSave = async () => {
       // API或其他错误
       message.error(error.message || '保存失败，请稍后重试');
     }
+  } finally {
+    saving.value = false
   }
 }
 
@@ -644,12 +640,6 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       throw new Error('无效的文件对象')
     }
 
-    console.log('开始处理文件上传:', {
-      fileName: file.name,
-      fileType: file.type,
-      fileSize: file.size
-    })
-
     let result
     try {
       if (form.value.type === 'image') {
@@ -668,8 +658,6 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       return
     }
     
-    console.log('上传结果:', result)
-    
     if (!result || !result.data || !result.data.file_url) {
       const error = new Error('上传结果无效')
       console.error('上传结果无效:', result)
@@ -685,8 +673,6 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     
     const fileUrl = buildApiUrl(result.data.file_url)
     
-    console.log('处理后的文件URL:', fileUrl)
-    
     // 对于音频和视频，只保留一个文件
     if (form.value.type === 'audio' || form.value.type === 'video') {
       form.value.mediaUrls = [fileUrl]
@@ -698,9 +684,6 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       }
       form.value.fileIds.push(result.data.id)
     }
-    
-    console.log('更新后的 mediaUrls:', form.value.mediaUrls)
-    console.log('更新后的 fileIds:', form.value.fileIds)
     
     // 更新文件列表
     const fileInfo = {
@@ -718,8 +701,6 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     } else {
       fileList.value.push(fileInfo)
     }
-    
-    console.log('更新后的文件列表:', fileList.value)
     
     // 触发表单验证
     formRef.value?.validateFields(['mediaUrls'])
@@ -800,9 +781,7 @@ const fetchFileList = async () => {
       type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
     }
     
-    console.log('获取文件列表参数:', params)
     const response = await getFileList(params)
-    console.log('获取文件列表响应:', response)
     
     if (response.code === 200 && response.data) {
       // 处理文件列表数据
@@ -818,7 +797,6 @@ const fetchFileList = async () => {
         is_public: file.is_public
       }))
       fileTotal.value = response.data.total
-      console.log('处理后的文件列表数据:', fileListData.value)
     } else {
       message.error('获取文件列表失败')
       fileListData.value = []
@@ -836,7 +814,6 @@ const fetchFileList = async () => {
 
 // 处理文件搜索
 const handleFileSearch = async (value) => {
-  console.log('搜索文件:', value)
   fileSearchKeyword.value = value
   fileCurrentPage.value = 1
   fileListLoading.value = true
@@ -849,9 +826,7 @@ const handleFileSearch = async (value) => {
       type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
     }
     
-    console.log('搜索文件参数:', params)
     const response = await getFileList(params)
-    console.log('搜索文件响应:', response)
     
     if (response.code === 200 && response.data) {
       fileListData.value = response.data.items.map(file => ({
@@ -866,7 +841,6 @@ const handleFileSearch = async (value) => {
         is_public: file.is_public
       }))
       fileTotal.value = response.data.total
-      console.log('处理后的文件列表数据:', fileListData.value)
     } else {
       message.error('搜索文件失败')
       fileListData.value = []
@@ -884,7 +858,6 @@ const handleFileSearch = async (value) => {
 
 // 处理文件类型筛选
 const handleFileTypeChange = async (value) => {
-  console.log('文件类型筛选变化:', value)
   fileTypeFilter.value = value
   fileCurrentPage.value = 1
   fileListLoading.value = true
@@ -897,9 +870,7 @@ const handleFileTypeChange = async (value) => {
       type: value === 'all' ? undefined : value
     }
     
-    console.log('获取文件列表参数:', params)
     const response = await getFileList(params)
-    console.log('获取文件列表响应:', response)
     
     if (response.code === 200 && response.data) {
       fileListData.value = response.data.items.map(file => ({
@@ -914,7 +885,6 @@ const handleFileTypeChange = async (value) => {
         is_public: file.is_public
       }))
       fileTotal.value = response.data.total
-      console.log('处理后的文件列表数据:', fileListData.value)
     } else {
       message.error('获取文件列表失败')
       fileListData.value = []
@@ -943,7 +913,6 @@ const isFileSelected = (file) => {
 
 // 处理文件选择
 const handleFileSelect = (file) => {
-  console.log('选择文件:', file)
   const index = selectedFiles.value.findIndex(f => f.id === file.id)
   if (index === -1) {
     // 根据文件类型自动设置动态类型
@@ -967,7 +936,6 @@ const handleFileSelect = (file) => {
     selectedFiles.value.splice(index, 1)
     message.info('已取消选择')
   }
-  console.log('当前选中的文件:', selectedFiles.value)
 }
 
 // 处理文件确认
@@ -976,8 +944,6 @@ const handleFileConfirm = () => {
     message.warning('请选择文件')
     return
   }
-  
-  console.log('确认选择的文件:', selectedFiles.value)
   
   // 检查文件类型是否一致
   const fileTypes = new Set(selectedFiles.value.map(file => file.type))
@@ -997,17 +963,9 @@ const handleFileConfirm = () => {
     id: file.id
   }))
   
-  console.log('更新后的文件列表:', newFileList)
-  
   fileList.value = newFileList
   form.value.mediaUrls = selectedFiles.value.map(file => file.url)
   form.value.fileIds = selectedFiles.value.map(file => file.id)
-  
-  console.log('更新后的表单数据:', {
-    mediaUrls: form.value.mediaUrls,
-    fileIds: form.value.fileIds,
-    type: form.value.type
-  })
   
   fileSelectorVisible.value = false
   selectedFiles.value = []
@@ -1034,15 +992,29 @@ const getFullUrl = (url) => {
   return buildApiUrl(url)
 }
 
-onMounted(() => {
-  console.log('DynamicEdit组件挂载')
-  console.log('当前路由:', route.fullPath)
-  console.log('路由参数:', route.params)
-  console.log('编辑模式:', isEdit.value)
-  
-  fetchDynamicDetail()
-  fetchCategories()
-  fetchTags()
+function restoreLocalDraft() {
+  const draft = loadEditorDraft(draftId.value)
+  if (!draft) return
+  Object.assign(form.value, draft)
+  updateFileList()
+  message.info('已恢复本机保存的草稿')
+}
+
+function guardUnsavedChanges(event) {
+  if (!dirty.value) return
+  event.preventDefault()
+  event.returnValue = ''
+}
+
+onMounted(async () => {
+  await Promise.all([fetchDynamicDetail(), fetchCategories(), fetchTags()])
+  restoreLocalDraft()
+  window.addEventListener('beforeunload', guardUnsavedChanges)
+})
+
+onBeforeUnmount(() => {
+  window.clearTimeout(draftTimer)
+  window.removeEventListener('beforeunload', guardUnsavedChanges)
 })
 </script>
 
@@ -1067,9 +1039,36 @@ onMounted(() => {
   }
   
   .edit-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: 0 28px;
     background: #fff;
     padding: 24px;
-    border-radius: 4px;
+    border: 1px solid #e8edf4;
+    border-radius: 16px;
+    box-shadow: 0 16px 50px rgba(15, 35, 65, 0.06);
+
+    :deep(.editor-title-field),
+    :deep(.editor-content-field) {
+      grid-column: 1;
+    }
+
+    :deep(.editor-settings-field) {
+      grid-column: 2;
+    }
+
+    :deep(.editor-content-field) {
+      grid-row: 2 / span 8;
+      min-width: 0;
+    }
+
+    :deep(.editor-form-actions) {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      padding-top: 20px;
+      border-top: 1px solid #eef1f5;
+    }
   }
   
   .upload-tip {
@@ -1211,6 +1210,57 @@ onMounted(() => {
         display: flex;
         gap: 8px;
       }
+    }
+  }
+}
+
+@media (max-width: 1080px) {
+  .dynamic-edit {
+    padding: 12px;
+
+    .edit-header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 12px 0;
+      background: var(--color-page, #f5f7fa);
+    }
+
+    .edit-form {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 18px;
+
+      :deep(.editor-title-field),
+      :deep(.editor-content-field),
+      :deep(.editor-settings-field),
+      :deep(.editor-form-actions) {
+        grid-column: 1;
+        grid-row: auto;
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .dynamic-edit {
+    .edit-header {
+      align-items: flex-start;
+      gap: 12px;
+
+      .header-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+    }
+
+    .edit-form {
+      padding: 14px;
+      border-radius: 12px;
+    }
+
+    .media-upload-container {
+      flex-direction: column;
+      gap: 10px;
     }
   }
 }

@@ -134,7 +134,7 @@ import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
 import 'highlight.js/styles/atom-one-light.css'
 import { message } from 'ant-design-vue'
-import { sanitizeHTML } from '@/utils/security'
+import DOMPurify from 'dompurify'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
   ([language, definition]) => hljs.registerLanguage(language, definition)
@@ -158,7 +158,7 @@ const md = new MarkdownIt({
 // 渲染 Markdown 内容
 const renderMarkdown = (content) => {
   if (!content) return ''
-  return md.render(sanitizeHTML(content))
+  return DOMPurify.sanitize(md.render(content))
 }
 
 const route = useRoute()
@@ -205,7 +205,6 @@ const fetchComments = async () => {
       pageSize: commentPageSize.value
     })
     
-    console.log('获取评论列表响应:', result)
     
     if (result && result.code === 200 && result.data) {
       commentList.value = result.data.list || []
@@ -233,9 +232,9 @@ const submitComment = async () => {
     
     const commentData = {
       dynamic_id: dynamic.value.id,
-      content: sanitizeHTML(commentContent.value),
-      nickname: sanitizeHTML(nickname.value || '匿名用户'),
-      email: sanitizeHTML(email.value || '')
+      content: DOMPurify.sanitize(commentContent.value),
+      nickname: DOMPurify.sanitize(nickname.value || '匿名用户'),
+      email: DOMPurify.sanitize(email.value || '')
     }
     
     const result = await commentDynamic(dynamic.value.id, commentData)
