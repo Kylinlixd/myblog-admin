@@ -35,6 +35,14 @@ a {
   text-decoration: none;
 }
 
+:where(a, button, [role='button']) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(a, button, [role='button']):active {
+  transform: scale(0.98);
+}
+
 img,
 video {
   display: block;

@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { message } from 'ant-design-vue'
+import NProgress from 'nprogress'
 import 'ant-design-vue/dist/reset.css'
 
 import App from './App.vue'
@@ -10,6 +11,18 @@ import '@/styles/tailwind.css'
 import './styles/main.scss'
 
 const app = createApp(App)
+
+router.beforeEach(() => {
+  NProgress.start()
+})
+
+router.afterEach(() => {
+  NProgress.done()
+})
+
+router.onError(() => {
+  NProgress.done()
+})
 
 app.config.errorHandler = (error) => {
   console.error('[Vue]', error)

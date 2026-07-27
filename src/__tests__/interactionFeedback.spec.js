@@ -1,0 +1,20 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
+describe('global interaction feedback', () => {
+  it('connects router navigation to NProgress', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/main.js'), 'utf8')
+
+    expect(source).toContain("import NProgress from 'nprogress'")
+    expect(source).toContain('NProgress.start()')
+    expect(source).toContain('NProgress.done()')
+  })
+
+  it('provides touch, focus, and reduced-motion fallbacks', () => {
+    const css = fs.readFileSync(path.join(process.cwd(), 'src/styles/global.scss'), 'utf8')
+
+    expect(css).toContain(':focus-visible')
+    expect(css).toContain(':active')
+    expect(css).toContain('@media (prefers-reduced-motion: reduce)')
+  })
+})
