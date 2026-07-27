@@ -33,6 +33,7 @@ app.use(pinia)
 app.use(router)
 registerAntComponents(app)
 app.mount('#app')
+document.documentElement.dataset.appReady = 'true'
 
 function clearLegacyServiceWorkers() {
   if (!('serviceWorker' in navigator)) return
