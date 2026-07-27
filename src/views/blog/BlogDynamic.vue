@@ -1,22 +1,20 @@
 <template>
-  <div class="blog-dynamic-container">
+  <div class="blog-dynamic-container cinematic-page">
     <div class="blog-dynamic">
       <!-- 页面标题 -->
-      <div class="page-header">
+      <div class="page-header cinematic-hero">
         <h1 class="page-title">探索动态</h1>
         <p class="page-description">记录我的开发之路，分享生活点滴和思考</p>
       </div>
 
-      <!-- 调试信息 -->
-      <div v-if="dynamicList.length === 0 && !loading" class="empty-state">
+      <div v-if="dynamicList.length === 0 && !loading" class="empty-state cinematic-card">
         <p>暂无动态内容</p>
         <a-button @click="refreshList" type="primary" size="small">刷新</a-button>
-        <a-button @click="useMockData" type="success" size="small">使用测试数据</a-button>
       </div>
 
       <!-- 动态列表 -->
       <div v-if="dynamicList.length > 0" class="dynamic-list">
-        <div v-for="(item, index) in dynamicList" :key="item.id || index" class="dynamic-item">
+        <div v-for="(item, index) in dynamicList" :key="item.id || index" class="dynamic-item cinematic-card">
           <!-- 动态头部 -->
           <div class="dynamic-header">
             <router-link :to="`/blog/dynamics/${item.id}`" class="dynamic-title-link">
@@ -94,7 +92,7 @@
           </div>
 
           <!-- 评论列表 -->
-          <div v-if="selectedDynamic && selectedDynamic.id === item.id" class="comment-section">
+            <div v-if="selectedDynamic && selectedDynamic.id === item.id" class="comment-section cinematic-card">
             <div class="comment-header">
               <h3>评论 ({{ item.comments || 0 }})</h3>
             </div>
@@ -187,7 +185,6 @@
         <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
       </div>
     </div>
-    <SnowfallBg class="snowfall-bg" />
   </div>
 </template>
 
@@ -195,7 +192,6 @@
 import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
 import { message } from 'ant-design-vue'
-import SnowfallBg from '@/components/InspiraUI/SnowfallBg.vue'
 import { 
   getBlogDynamics, 
   likeDynamic, 
@@ -205,10 +201,7 @@ import {
 import { 
   LikeOutlined, 
   MessageOutlined, 
-  EyeOutlined,
-  CalendarOutlined,
-  TagOutlined,
-  FolderOutlined
+  EyeOutlined
 } from '@ant-design/icons-vue'
 
 // 创建Markdown渲染器
@@ -303,9 +296,6 @@ const fetchDynamicList = async (isRefresh = false) => {
       // 后端返回 {list: [], total: 0}
       list = response.list;
       total = response.total || 0;
-    } else {
-      list = getMockDynamics();
-      total = list.length;
     }
     
     
@@ -323,43 +313,12 @@ const fetchDynamicList = async (isRefresh = false) => {
     
   } catch (error) {
     console.error('获取动态列表失败:', error);
-    // 使用模拟数据
-    const mockList = getMockDynamics();
-    if (isRefresh) {
-      dynamicList.value = mockList;
-    } else {
-      dynamicList.value = [...dynamicList.value, ...mockList];
-    }
+    message.error('动态内容加载失败，请稍后重试')
+    if (isRefresh) dynamicList.value = []
     hasMore.value = false;
   } finally {
     loading.value = false;
   }
-}
-
-// 模拟数据
-const getMockDynamics = () => {
-  return [
-    {
-      id: 1,
-      title: '欢迎来到我的博客',
-      content: '这是我的第一篇博客文章，欢迎访问！',
-      createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString(),
-      views: 100,
-      likes: 10,
-      comments: 5
-    },
-    {
-      id: 2,
-      title: '技术分享：Vue.js 3.0 新特性',
-      content: 'Vue.js 3.0带来了很多激动人心的新特性，让我们一起来看看吧！',
-      createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString(),
-      views: 80,
-      likes: 8,
-      comments: 3
-    }
-  ];
 }
 
 // 刷新列表
@@ -519,12 +478,6 @@ const submitComment = async (item) => {
   }
 }
 
-// 使用模拟数据进行测试
-const useMockData = () => {
-  dynamicList.value = getMockDynamics()
-  hasMore.value = false
-}
-
 // 修改评论列表的显示逻辑
 const isCommentSectionVisible = (item) => {
   return selectedDynamic.value && selectedDynamic.value.id === item.id
@@ -556,16 +509,6 @@ onActivated(() => {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem 1rem;
-}
-
-.snowfall-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
 }
 
 .page-header {

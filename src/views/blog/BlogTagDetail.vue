@@ -1,7 +1,7 @@
 <template>
-  <div class="tag-detail-container">
+  <div class="tag-detail-container cinematic-page">
     <!-- 标签信息头部 -->
-    <div v-if="tag" class="tag-header">
+    <div v-if="tag" class="tag-header cinematic-hero">
       <div class="tag-info">
         <h1 class="tag-name">
           <tag-outlined />
@@ -25,7 +25,7 @@
       <a-row :gutter="[24, 24]">
         <a-col :xs="24" :md="12" :lg="8" v-for="dynamic in dynamics" :key="dynamic.id">
           <router-link :to="`/blog/dynamics/${dynamic.id}`" class="dynamic-card-link">
-            <a-card hoverable class="dynamic-card">
+            <a-card hoverable class="dynamic-card cinematic-card">
               <!-- 文章图片 -->
               <img 
                 v-if="dynamic.mediaUrls && dynamic.mediaUrls.length > 0" 

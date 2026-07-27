@@ -1,5 +1,5 @@
 <template>
-  <div class="dynamic-detail-container">
+  <div class="dynamic-detail-container cinematic-page">
     <div v-if="loading" class="loading-state">
       <a-spin />
       <p>加载中...</p>
@@ -9,8 +9,8 @@
       <p>文章不存在或已被删除</p>
     </div>
     
-    <div v-else class="dynamic-content">
-      <div class="dynamic-header">
+    <div v-else class="dynamic-content cinematic-card">
+      <div class="dynamic-header cinematic-hero">
         <h1 class="dynamic-title">{{ dynamic.title }}</h1>
         <div class="dynamic-meta">
           <span class="dynamic-date">{{ formatDate(dynamic.createdAt) }}</span>
@@ -35,7 +35,7 @@
       </div>
 
       <!-- 评论列表 -->
-      <div class="comment-section">
+      <div class="comment-section cinematic-card">
         <div class="comment-header">
           <h3>评论 ({{ dynamic.comments || 0 }})</h3>
         </div>

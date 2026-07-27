@@ -124,6 +124,7 @@
   font-weight: 760 !important;
   letter-spacing: -.065em !important;
   line-height: .96 !important;
+  -webkit-text-fill-color: currentcolor !important;
 }
 
 .cinematic-hero p,
@@ -152,11 +153,29 @@
 }
 
 .cinematic-page :is(h1, h2, h3, h4, strong) {
-  color: var(--blog-text);
+  color: var(--blog-text) !important;
 }
 
 .cinematic-page :is(p, time, .meta, .description) {
-  color: var(--blog-text-soft);
+  color: var(--blog-text-soft) !important;
+}
+
+.cinematic-page :is(.dynamic-title, .category-name, .tag-name, .card-title, .section-heading h2) {
+  background: transparent !important;
+  color: var(--blog-text) !important;
+  -webkit-text-fill-color: currentcolor !important;
+}
+
+.cinematic-page :is(.dynamic-meta, .dynamic-summary, .dynamic-excerpt, .category-desc, .tag-meta, .result-meta, .card-meta, .markdown-content, .markdown-body) {
+  color: var(--blog-text-soft) !important;
+}
+
+.cinematic-page :is(.dynamic-footer, .comment-header, .comment-item) {
+  border-color: var(--blog-line) !important;
+}
+
+.cinematic-page :is(.empty-state, .loading-state, .empty-container, .loading-container) {
+  color: var(--blog-text-soft) !important;
 }
 
 .cinematic-page .ant-input,

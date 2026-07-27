@@ -1,6 +1,6 @@
 <template>
-  <div class="about-page">
-    <section class="about-hero app-container">
+  <div class="about-page cinematic-page">
+    <section class="about-hero app-container cinematic-hero">
       <div class="hero-copy">
         <p class="eyebrow"><span></span> 关于 LiXD</p>
         <h1>持续学习，也持续输出。</h1>
@@ -24,7 +24,7 @@
         </div>
       </div>
 
-      <div class="profile-card">
+      <div class="profile-card cinematic-card">
         <div class="avatar-wrap">
           <img src="/about-avatar.jpg" alt="LiXD 的头像" />
           <span class="online-dot" aria-label="保持创作中"></span>
@@ -48,7 +48,7 @@
       </div>
 
       <div class="principles-grid">
-        <article v-for="(item, index) in principles" :key="item.title" class="principle-card">
+        <article v-for="(item, index) in principles" :key="item.title" class="principle-card cinematic-card">
           <span class="card-index">0{{ index + 1 }}</span>
           <component :is="item.icon" class="principle-icon" />
           <h3>{{ item.title }}</h3>
@@ -56,7 +56,7 @@
         </article>
       </div>
 
-      <div class="stack-section">
+      <div class="stack-section cinematic-card">
         <div>
           <p class="eyebrow">常用技术</p>
           <h2>从界面到服务端，关注完整交付链路</h2>
@@ -74,7 +74,7 @@
         </div>
       </div>
 
-      <aside class="contact-banner">
+      <aside class="contact-banner cinematic-card">
         <div>
           <p class="eyebrow">保持连接</p>
           <h2>有值得讨论的问题？欢迎来信。</h2>

@@ -1,6 +1,6 @@
 <template>
-  <div class="category-detail-container">
-    <div class="page-header">
+  <div class="category-detail-container cinematic-page">
+    <div class="page-header cinematic-hero">
       <h1 class="page-title">{{ category?.name || '加载中...' }}</h1>
       <p class="page-subtitle">探索这个分类下的精彩内容</p>
       <p class="page-desc">{{ category?.description || '' }}</p>
@@ -17,7 +17,7 @@
       </div>
       
       <div v-else class="dynamics-grid">
-        <div v-for="dynamic in dynamics" :key="dynamic.id" class="dynamic-card">
+        <div v-for="dynamic in dynamics" :key="dynamic.id" class="dynamic-card cinematic-card">
           <router-link :to="`/blog/dynamics/${dynamic.id}`" class="dynamic-link">
             <div class="dynamic-content">
               <h3 class="dynamic-title">{{ dynamic.title }}</h3>
@@ -368,4 +368,4 @@ onMounted(() => {
     font-size: 1rem;
   }
 }
-</style> 
+</style>

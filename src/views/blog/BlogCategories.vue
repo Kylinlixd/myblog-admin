@@ -1,12 +1,12 @@
 <template>
-  <div class="categories-container">
-    <div class="page-header">
+  <div class="categories-container cinematic-page">
+    <div class="page-header cinematic-hero">
       <h1 class="page-title">文章归类</h1>
       <p class="page-desc">根据主题和内容对文章进行分类</p>
     </div>
     
     <div class="categories-grid">
-      <div v-for="category in categories" :key="category.id" class="category-card">
+      <div v-for="category in categories" :key="category.id" class="category-card cinematic-card">
         <router-link :to="`/blog/categories/${category.id}`" class="category-link">
           <div class="category-content">
             <h3 class="category-name">{{ category.name }}</h3>
@@ -202,4 +202,4 @@ onMounted(() => {
     font-size: 12px;
   }
 }
-</style> 
+</style>

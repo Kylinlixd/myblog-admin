@@ -1,8 +1,12 @@
 <template>
-  <div class="blog-search-container">
+  <div class="blog-search-container cinematic-page">
+    <header class="search-hero cinematic-hero">
+      <h1>搜索数字花园</h1>
+      <p>从文章、分类和标签中，找到与你当前问题最接近的线索。</p>
+    </header>
     <div class="search-section">
       <!-- 搜索框 -->
-      <div class="search-box">
+      <div class="search-box cinematic-card">
         <div class="search-input-wrapper">
           <a-input-search
             v-model:value="keyword"
@@ -32,7 +36,7 @@
       </div>
       
       <!-- 高级搜索选项 -->
-      <div v-show="showAdvancedSearch" class="advanced-search-options">
+      <div v-show="showAdvancedSearch" class="advanced-search-options cinematic-card">
         <a-form layout="inline" :model="advancedOptions">
           <!-- 内容类型筛选 -->
           <a-form-item label="内容类型">
@@ -197,7 +201,7 @@
     </div>
     
     <!-- 搜索结果 -->
-    <div class="search-results" v-if="searched">
+    <div class="search-results cinematic-card" v-if="searched">
       <div v-if="loading" class="loading-state">
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" />
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
@@ -252,7 +256,7 @@
         
         <!-- 卡片视图 -->
         <div v-else class="card-view">
-          <div v-for="(item, index) in searchResults" :key="item.id || index" class="result-card">
+          <div v-for="(item, index) in searchResults" :key="item.id || index" class="result-card cinematic-card">
             <router-link :to="getItemLink(item)" class="card-link">
               <div class="card-image" v-if="item.cover">
                 <img :src="item.cover" :alt="item.title || item.name" loading="lazy">
