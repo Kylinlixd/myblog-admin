@@ -40,4 +40,9 @@ describe('night-blue blog homepage', () => {
     expect(source).toContain("window.matchMedia('(prefers-reduced-motion: reduce)')")
     expect(source).toContain('@media (hover: none)')
   })
+
+  it('keeps the next chapter in reach on tall screens', () => {
+    expect(source).toContain('min-height: clamp(760px, 86dvh, 980px)')
+    expect(source).not.toContain('min-height: calc(100dvh - 62px)')
+  })
 })

@@ -365,7 +365,7 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .home-page { width: 100%; max-width: 100%; overflow-x: hidden; background: #060b14; color: #edf3ff; font-family: Outfit, Geist, ui-sans-serif, system-ui, sans-serif; }
-.hero { --hero-pointer-x: 50%; --hero-pointer-y: 42%; position: relative; min-height: calc(100dvh - 62px); padding-block: clamp(104px, 11vh, 138px) clamp(64px, 8vh, 96px); }
+.hero { --hero-pointer-x: 50%; --hero-pointer-y: 42%; position: relative; min-height: clamp(760px, 86dvh, 980px); padding-block: clamp(104px, 11vh, 138px) clamp(64px, 8vh, 96px); }
 .hero::before { position: absolute; inset: 0 -12vw; background: radial-gradient(circle at var(--hero-pointer-x) var(--hero-pointer-y), rgb(71 111 255 / 16%), transparent 28%); content: ''; opacity: .9; pointer-events: none; transition: opacity .3s ease; }
 .hero-ambient { position: absolute; top: 8%; left: 44%; width: min(580px, 54vw); aspect-ratio: 1; border-radius: 50%; background: conic-gradient(from 210deg, #315bea, #152c5f, #54c5dc, #315bea); filter: blur(130px); opacity: .12; pointer-events: none; animation: hero-drift 14s ease-in-out infinite alternate; }
 .hero-stage { position: relative; z-index: 1; display: grid; width: 100%; grid-template-columns: minmax(0, 7fr) minmax(330px, 5fr); align-items: center; gap: clamp(38px, 6vw, 88px); perspective: 1200px; }
