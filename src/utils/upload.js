@@ -42,12 +42,6 @@ export const uploadFile = async (file, type) => {
     // 确保令牌格式正确
     const token = accessToken.startsWith('Bearer ') ? accessToken : `Bearer ${accessToken}`
 
-    console.log('开始上传文件:', {
-      fileName: file.name,
-      fileType: type,
-      fileSize: file.size
-    })
-
     // 使用专门的上传实例
     const response = await uploadAxios({
       method: 'post',
@@ -59,14 +53,10 @@ export const uploadFile = async (file, type) => {
       }
     })
 
-    console.log('上传响应:', response)
-
     // 检查响应数据
     if (response.data) {
       // 如果响应是字符串，尝试解析JSON
       const responseData = typeof response.data === 'string' ? JSON.parse(response.data) : response.data
-      console.log('处理后的响应数据:', responseData)
-      
       if (responseData.code === 200 && responseData.data) {
         message.success(responseData.message || '上传成功')
         // 确保返回的数据包含url字段
@@ -87,7 +77,6 @@ export const uploadFile = async (file, type) => {
             result.url = result.file_url
           }
           
-          console.log('处理后的文件数据:', result)
         }
         return responseData // 返回完整的响应数据
       }

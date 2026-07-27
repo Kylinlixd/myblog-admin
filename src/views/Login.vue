@@ -30,7 +30,7 @@
           <a-button type="primary" html-type="submit" size="large" block :loading="loading">登录</a-button>
         </a-form>
 
-        <footer>还没有账号？<router-link to="/register">创建账号</router-link><router-link to="/blog">返回博客</router-link></footer>
+        <footer><span>仅限站点管理员登录</span><router-link to="/blog">返回博客</router-link></footer>
       </div>
     </section>
   </main>

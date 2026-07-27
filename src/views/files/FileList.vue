@@ -325,13 +325,11 @@ const paginationConfig = computed(() => ({
 const fetchFiles = async () => {
   try {
     loading.value = true
-    console.log('开始获取文件列表...')
     const response = await getFileList({
       page: currentPage.value,
       pageSize: pageSize.value
     })
     
-    console.log('获取文件列表响应:', response)
     
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
@@ -377,7 +375,6 @@ const fetchFiles = async () => {
 const handleSearch = async () => {
   try {
     loading.value = true
-    console.log('开始搜索文件...')
     const response = await searchFiles({
       q: searchForm.value.name,
       type: searchForm.value.type,
@@ -385,7 +382,6 @@ const handleSearch = async () => {
       pageSize: pageSize.value
     })
     
-    console.log('搜索文件响应:', response)
     
     if (response && response.code === 200 && response.data) {
       // 确保数据格式正确
@@ -525,56 +521,13 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
 
 // 处理预览错误
 const handlePreviewError = (e, record) => {
-  console.error('预览加载失败:', {
-    error: e,
-    record: record,
-    url: record.url,
-    errorType: e.type,
-    errorTarget: e.target,
-    errorTimeStamp: e.timeStamp,
-    errorIsTrusted: e.isTrusted
-  });
-  
-  // 尝试直接访问URL
-  fetch(record.url)
-    .then(response => {
-      console.log('文件访问响应:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-    })
-    .catch(error => {
-      console.error('文件访问失败:', error);
-    });
-    
+  console.error('预览加载失败:', e, record.id)
   message.error('预览加载失败，请检查文件是否存在');
 }
 
 // 处理媒体文件错误
 const handleMediaError = (e) => {
-  console.error('媒体文件加载失败:', {
-    error: e,
-    url: previewUrl.value,
-    errorType: e.type,
-    errorTarget: e.target,
-    errorTimeStamp: e.timeStamp,
-    errorIsTrusted: e.isTrusted
-  });
-  
-  // 尝试直接访问URL
-  fetch(previewUrl.value)
-    .then(response => {
-      console.log('媒体文件访问响应:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-    })
-    .catch(error => {
-      console.error('媒体文件访问失败:', error);
-    });
-    
+  console.error('媒体文件加载失败:', e)
   message.error('媒体文件加载失败，请检查文件是否存在');
 }
 
@@ -582,38 +535,16 @@ const handleMediaError = (e) => {
 const previewMedia = (type, url) => {
   const fullUrl = buildApiUrl(url)
   
-  console.log('预览媒体文件:', {
-    type: type,
-    url: fullUrl
-  });
-  
   // 验证URL
   if (!fullUrl) {
     message.error('无效的文件URL');
     return;
   }
   
-  // 尝试预加载文件
-  fetch(fullUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      console.log('文件预加载成功:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-      
-      previewType.value = type;
-      previewUrl.value = fullUrl;
-      previewTitle.value = type === 'audio' ? '音频预览' : '视频预览';
-      previewVisible.value = true;
-    })
-    .catch(error => {
-      console.error('文件预加载失败:', error);
-      message.error('文件加载失败，请检查文件是否存在');
-    });
+  previewType.value = type;
+  previewUrl.value = fullUrl;
+  previewTitle.value = type === 'audio' ? '音频预览' : '视频预览';
+  previewVisible.value = true;
 }
 
 // 复制文件链接
@@ -721,32 +652,6 @@ const handlePreviewClose = () => {
 
 // 处理图片加载错误
 const handleImageError = (e) => {
-  console.error('图片加载失败:', {
-    error: e,
-    target: e.target,
-    src: e.target.src,
-    type: e.type,
-    timeStamp: e.timeStamp
-  });
-  
-  // 尝试直接访问图片URL
-  const imgUrl = e.target.src;
-  fetch(imgUrl)
-    .then(response => {
-      console.log('图片访问响应:', {
-        url: imgUrl,
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-    })
-    .catch(error => {
-      console.error('图片访问失败:', {
-        url: imgUrl,
-        error: error
-      });
-    });
-    
   // 设置默认图片
   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNFNUU1RTUiLz48dGV4dCB4PSIzMCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
 }

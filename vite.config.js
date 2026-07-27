@@ -38,7 +38,7 @@ export default defineConfig(({ mode }) => {
           manualChunks: {
             vendor: ['vue', 'vue-router', 'pinia'],
             'ant-design': ['ant-design-vue', '@ant-design/icons-vue'],
-            'ui-utils': ['@vueuse/core', 'lodash-es'],
+            'ui-utils': ['@vueuse/core'],
             network: ['axios']
           },
           chunkFileNames: 'assets/js/[name]-[hash].js',

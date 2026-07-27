@@ -370,9 +370,7 @@ const fetchDynamics = async () => {
       }
     });
     
-    console.log('获取动态列表参数:', params);
     const response = await getDynamicList(params);
-    console.log('获取动态列表响应:', response);
     
     if (response && response.code === 200 && response.data) {
       dynamicList.value = response.data.items.map(item => ({
@@ -383,7 +381,6 @@ const fetchDynamics = async () => {
         title: item.title || '无标题'
       }));
       total.value = response.data.total || 0;
-      console.log('处理后的动态列表:', dynamicList.value);
     } else {
       dynamicList.value = [];
       total.value = 0;

@@ -339,18 +339,11 @@ const handlePasswordChange = async () => {
     
     loading.value = true
     
-    console.log('准备发送修改密码请求:', {
-      oldPassword: passwordForm.oldPassword,
-      newPassword: passwordForm.newPassword
-    })
-    
     // 调用修改密码的API
     const result = await changePassword({
       oldPassword: passwordForm.oldPassword.trim(),
       newPassword: passwordForm.newPassword.trim()
     })
-    
-    console.log('修改密码响应:', result)
     
     // 处理成功响应
     if (result.status === 200 || result.status === 204) {
@@ -483,4 +476,4 @@ onMounted(() => {
 .upload-btn {
   margin-left: 10px;
 }
-</style> 
+</style>

@@ -121,20 +121,17 @@ const getComments = async () => {
   loading.value = true
   
   try {
-    console.log('开始获取评论列表');
     const response = await getCommentList({
       page: currentPage.value,
       pageSize: pageSize.value,
       ...filterForm
     })
     
-    console.log('获取评论列表响应:', response);
     
     if (response && response.code === 200 && response.data) {
       // 使用标准响应格式
       comments.value = response.data.list || [];
       total.value = response.data.total || 0;
-      console.log('评论列表数据处理完成, 共', comments.value.length, '条记录');
     } else {
       console.error('评论数据为空或格式不正确:', response);
       message.error('获取评论列表失败: 响应格式异常');

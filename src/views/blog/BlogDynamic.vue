@@ -262,12 +262,10 @@ const fetchDynamicList = async (isRefresh = false) => {
   
   // 如果不是刷新，且该页已加载过，则跳过请求
   if (!isRefresh && fetchedPages.value.has(page.value)) {
-    console.log(`页码 ${page.value} 已加载过，跳过重复请求`)
     return
   }
   
   loading.value = true
-  console.log('前台博客页面请求动态列表，页码:', page.value, '每页数量:', pageSize.value)
   
   try {
     // 使用getBlogDynamics函数替代原生fetch
@@ -276,14 +274,12 @@ const fetchDynamicList = async (isRefresh = false) => {
       pageSize: pageSize.value
     })
     
-    console.log('前台博客动态列表API响应:', response)
     
     let list = [], total = 0;
     
     // 处理不同的响应结构
     if (response && response.code === 200 && response.data) {
       // 后端返回标准格式 {code: 200, data: {items: [], total: 0}}
-      console.log('使用标准响应格式解析数据')
       list = response.data.items || [];
       total = response.data.total || 0;
       
@@ -301,21 +297,17 @@ const fetchDynamicList = async (isRefresh = false) => {
       }));
     } else if (Array.isArray(response)) {
       // 后端直接返回数组
-      console.log('使用数组格式解析数据')
       list = response;
       total = response.length;
     } else if (response && response.list) {
       // 后端返回 {list: [], total: 0}
-      console.log('使用对象格式解析数据')
       list = response.list;
       total = response.total || 0;
     } else {
-      console.log('使用模拟数据');
       list = getMockDynamics();
       total = list.length;
     }
     
-    console.log('处理后的列表数据:', list)
     
     if (isRefresh) {
       dynamicList.value = list;
@@ -412,7 +404,6 @@ const fetchComments = async (item) => {
   
   item.isLoadingComments = true
   try {
-    console.log(`正在获取ID为${item.id}的动态评论...`);
     const result = await getDynamicComments(item.id, {
       page: item.commentPage || 1,
       pageSize: item.commentPageSize || 10
@@ -420,7 +411,6 @@ const fetchComments = async (item) => {
     
     if (result && result.code === 200 && result.data) {
       // 检查返回的数据格式
-      console.log('获取到评论数据结构:', JSON.stringify(result.data));
       
       // 兼容不同的返回格式
       if (Array.isArray(result.data)) {
@@ -439,7 +429,6 @@ const fetchComments = async (item) => {
       }
       
       item.commentsLoaded = true;
-      console.log('评论列表数据处理完成:', item.commentList);
     } else {
       console.error('获取评论列表响应格式错误:', result);
       message.error('获取评论列表失败：响应格式错误');
@@ -506,7 +495,6 @@ const submitComment = async (item) => {
       email: email.value || ''
     }
     
-    console.log('提交评论数据:', commentData)
     
     const result = await commentDynamic(item.id, commentData)
     

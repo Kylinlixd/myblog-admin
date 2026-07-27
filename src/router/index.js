@@ -26,15 +26,6 @@ const routes = [
     }
   },
   {
-    path: '/register',
-    name: 'Register',
-    component: () => import(/* webpackPrefetch: true */ '../views/Register.vue'),
-    meta: { 
-      title: '注册',
-      requiresAuth: false
-    }
-  },
-  {
     path: '/blog',
     component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
     meta: { 
@@ -240,15 +231,6 @@ const routes = [
     ]
   },
   {
-    path: '/debug',
-    name: 'Debug',
-    component: () => import('../views/Debug.vue'),
-    meta: { 
-      title: '调试页面',
-      requiresAuth: false  // 设置为false使得未登录状态也可访问
-    }
-  },
-  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('../views/NotFound.vue'),
@@ -276,7 +258,7 @@ router.beforeEach(async (to) => {
   const appStore = useAppStore()
   const userStore = useUserStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true)
-  const isAuthPage = to.name === 'Login' || to.name === 'Register'
+  const isAuthPage = to.name === 'Login'
 
   appStore.hasError = false
   appStore.startNavigation()

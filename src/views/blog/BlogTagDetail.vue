@@ -124,7 +124,6 @@ const fetchTagDynamics = async () => {
     }
     
     const response = await getTagDynamics(tagId, params)
-    console.log('标签详情响应:', response)
     
     if (response && response.code === 200 && response.data) {
       // 设置标签信息

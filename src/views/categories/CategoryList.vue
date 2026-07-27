@@ -220,7 +220,6 @@ const onSelectChange = (keys) => {
 
 // 表格变化处理
 const handleTableChange = (pagination, filters, sorter) => {
-  console.log('表格变化:', { pagination, filters, sorter })
   // 这里可以处理分页、筛选、排序等变化
 }
 
@@ -232,7 +231,6 @@ const searchForm = reactive({
 
 // 处理搜索
 const handleSearch = () => {
-  console.log('搜索条件:', searchForm)
   fetchCategories()
 }
 
@@ -276,7 +274,6 @@ const fetchCategories = async () => {
   loading.value = true
   try {
     const result = await getCategoryList()
-    console.log('分类列表API返回:', result);
     
     if (result && result.results) {
       // 标准分页格式

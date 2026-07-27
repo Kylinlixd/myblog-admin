@@ -422,8 +422,6 @@ const useSuggestion = (suggestion) => {
 
 // 处理来自布局搜索框的搜索请求
 const handleUpdateSearch = (event) => {
-  console.log('[搜索页面] 收到顶部搜索请求:', event.detail)
-  
   // 更新搜索参数
   keyword.value = event.detail.keyword
   
@@ -438,11 +436,6 @@ const handleUpdateSearch = (event) => {
   }
   
   // 执行搜索
-  console.log('[搜索页面] 执行搜索，参数:', {
-    keyword: keyword.value,
-    advancedOptions: advancedOptions.value
-  })
-  
   // 延迟一下，确保参数更新完成
   setTimeout(() => {
     handleSearch()
@@ -468,13 +461,10 @@ const handleSearch = async () => {
       ...advancedOptions.value
     }
     
-    console.log('[Search] 发送搜索请求, 参数:', params)
     const res = await searchBlog(params)
-    console.log('[Search] 收到搜索响应:', res)
     
     // 检查响应格式
     if (res && res.code === 200 && res.data) {
-      console.log('[Search] 处理搜索结果:', res.data)
       searchResults.value = res.data.items || []
       total.value = res.data.total || 0
       currentPage.value = res.data.page || 1
@@ -485,12 +475,6 @@ const handleSearch = async () => {
         message.info('未找到相关结果，请尝试其他关键词')
       }
       
-      console.log('[Search] 更新后的状态:', {
-        results: searchResults.value,
-        total: total.value,
-        page: currentPage.value,
-        pageSize: pageSize.value
-      })
     } else {
       console.error('[Search] 搜索结果格式错误:', res)
       searchResults.value = []
@@ -542,10 +526,6 @@ onMounted(async () => {
     categories.value = normalizeCollectionResponse(categoryRes).results
     tags.value = normalizeCollectionResponse(tagRes).results
     
-    console.log('[Search] 加载分类和标签成功:', {
-      categories: categories.value,
-      tags: tags.value
-    })
   } catch (error) {
     console.error('[Search] 加载分类和标签失败:', error)
     // 设置默认值，避免UI错误
