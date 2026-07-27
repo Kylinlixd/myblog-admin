@@ -45,4 +45,17 @@ describe('night-blue blog homepage', () => {
     expect(source).toContain('min-height: clamp(760px, 86dvh, 980px)')
     expect(source).not.toContain('min-height: calc(100dvh - 62px)')
   })
+
+  it('turns the second screen into a three-line path manifesto', () => {
+    expect(source).toContain('signal-path__progress')
+    expect(source).toContain('<span>问题</span>')
+    expect(source).toContain('<span>判断</span>')
+    expect(source).toContain('<span>构建</span>')
+    expect(source).toContain('技术不是孤立的答案，')
+    expect(source).toContain('而是一条从问题、判断')
+    expect(source).toContain('到持续构建的路径。')
+    expect(source).toContain('white-space: nowrap')
+    expect(source).toContain("gsap.fromTo('.signal-path__progress'")
+    expect(source).toContain('scaleX: 0')
+  })
 })
