@@ -32,4 +32,12 @@ describe('night-blue blog homepage', () => {
     expect(source).toContain('nextManifesto')
     expect(source).toContain('aria-live="polite"')
   })
+
+  it('adds responsive depth without bypassing reduced motion', () => {
+    expect(source).toContain('--hero-pointer-x')
+    expect(source).toContain('gsap.quickTo')
+    expect(source).toContain("pin: '.story-intro'")
+    expect(source).toContain("window.matchMedia('(prefers-reduced-motion: reduce)')")
+    expect(source).toContain('@media (hover: none)')
+  })
 })

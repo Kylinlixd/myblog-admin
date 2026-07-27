@@ -36,7 +36,7 @@ describe('admin filter controls', () => {
     )
 
     expect(homeView).toContain('>探索技术<')
-    expect(homeView).toContain('>无限可能<')
+    expect(homeView).toContain('aria-label="探索技术，无限可能"')
     expect(homeView).not.toContain('持续构建，<br /><em>保持清醒。</em>')
     expect(layout).not.toContain('本地开发')
     expect(layout).not.toContain('API 已代理到 8000')

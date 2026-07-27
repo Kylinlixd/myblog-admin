@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-
 import { normalizeApiError } from './errors'
 import {
   clearSession,
