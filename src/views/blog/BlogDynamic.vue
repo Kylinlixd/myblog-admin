@@ -478,11 +478,6 @@ const submitComment = async (item) => {
   }
 }
 
-// 修改评论列表的显示逻辑
-const isCommentSectionVisible = (item) => {
-  return selectedDynamic.value && selectedDynamic.value.id === item.id
-}
-
 onMounted(() => {
   fetchDynamicList()
 })

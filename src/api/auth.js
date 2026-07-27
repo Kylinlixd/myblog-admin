@@ -51,8 +51,3 @@ export async function logout() {
     clearSession()
   }
 }
-
-export function toggleMockDataMode(enabled) {
-  localStorage.setItem('useMockData', enabled ? 'true' : 'false')
-  return enabled
-}
