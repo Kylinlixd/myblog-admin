@@ -2,48 +2,57 @@
   <main ref="homePage" class="home-page">
     <section class="hero app-container">
       <div class="hero-ambient" aria-hidden="true" />
-      <div class="hero-copy">
-        <h1 class="hero-title" aria-label="探索技术，无限可能">
-          <span class="hero-title__line">探索技术</span>
-          <span class="hero-title__line hero-title__line--accent">无限可能</span>
-        </h1>
-        <p>把开发经验、产品过程与值得记住的瞬间，连成一座可以反复进入的数字花园。</p>
-        <div class="hero-actions">
-          <router-link class="primary-action" to="/blog/blogdynamic">开始阅读 <arrow-right-outlined /></router-link>
-          <router-link class="secondary-action" to="/blog/about">认识作者</router-link>
+      <div class="hero-stage">
+        <div class="hero-copy">
+          <h1 class="hero-title" aria-label="探索技术，无限可能">
+            <span class="hero-title__line">探索技术</span>
+            <span class="hero-title__line hero-title__line--accent" aria-hidden="true">
+              <span>无限</span>
+              <span class="hero-title__portal">
+                <img v-if="featured && mediaUrl(featured)" :src="mediaUrl(featured)" alt="" />
+              </span>
+              <span>可能</span>
+            </span>
+          </h1>
+          <p>把开发经验、产品过程与值得记住的瞬间，连成一座可以反复进入的数字花园。</p>
+          <div class="hero-actions">
+            <router-link class="primary-action" to="/blog/blogdynamic">开始阅读 <arrow-right-outlined /></router-link>
+            <router-link class="secondary-action" to="/blog/about">认识作者</router-link>
+          </div>
+          <a class="hero-scroll-cue" href="#garden-signal">向下探索</a>
         </div>
-      </div>
 
-      <router-link
-        v-if="featured"
-        class="hero-feature group"
-        :to="`/blog/dynamics/${featured.id}`"
-      >
-        <img
-          v-if="mediaUrl(featured)"
-          :src="mediaUrl(featured)"
-          :alt="featured.title"
-          loading="eager"
-        />
-        <div class="hero-feature__ambient" aria-hidden="true" />
-        <div class="hero-feature__wash" />
-        <div class="hero-feature__copy">
-          <span>编辑精选</span>
-          <h2>{{ featured.title }}</h2>
-          <p>{{ readingMeta(featured) }}</p>
-        </div>
-      </router-link>
-      <div v-else class="hero-feature hero-feature--empty">
-        <div class="hero-feature__ambient" aria-hidden="true" />
-        <div class="hero-feature__copy">
-          <span>数字花园正在生长</span>
-          <h2>第一篇值得反复阅读的内容，很快会出现在这里。</h2>
+        <router-link
+          v-if="featured"
+          class="hero-feature group"
+          :to="`/blog/dynamics/${featured.id}`"
+        >
+          <img
+            v-if="mediaUrl(featured)"
+            :src="mediaUrl(featured)"
+            :alt="featured.title"
+            loading="eager"
+          />
+          <div class="hero-feature__ambient" aria-hidden="true" />
+          <div class="hero-feature__wash" />
+          <div class="hero-feature__copy">
+            <span>编辑精选</span>
+            <h2>{{ featured.title }}</h2>
+            <p>{{ readingMeta(featured) }}</p>
+          </div>
+        </router-link>
+        <div v-else class="hero-feature hero-feature--empty">
+          <div class="hero-feature__ambient" aria-hidden="true" />
+          <div class="hero-feature__copy">
+            <span>数字花园正在生长</span>
+            <h2>第一篇值得反复阅读的内容，很快会出现在这里。</h2>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="signal-section app-container" aria-label="数字花园理念">
-      <p class="signal-index">SCROLL TO EXPLORE · 01</p>
+    <section id="garden-signal" class="signal-section app-container" aria-label="数字花园理念">
+      <p class="signal-index">沿着问题继续</p>
       <h2 class="scrub-reveal">
         <span>技术不是孤立的答案，</span>
         <span>而是一条从问题、判断</span>
@@ -150,7 +159,7 @@
 
     <section class="manifesto-section app-container">
       <div class="manifesto-heading">
-        <span>CREATION PRINCIPLES · 03</span>
+        <span>创作方法</span>
         <p>这座数字花园如何保持真实、清晰和持续生长。</p>
       </div>
       <div class="manifesto-carousel cinematic-card" aria-live="polite">
