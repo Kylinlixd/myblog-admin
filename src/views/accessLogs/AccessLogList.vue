@@ -10,6 +10,7 @@
     </a-form>
     <DataTable :data="logs" :columns="columns" :loading="loading" row-key="id">
       <template #status_code="{ row }"><a-tag :color="row.status_code < 400 ? 'success' : 'error'">{{ row.status_code }}</a-tag></template>
+      <template #device="{ row }"><span class="device-cell"><strong>{{ deviceTypeLabel(row.device_type) }}</strong><small>{{ row.device_model || '未识别设备' }}</small></span></template>
       <template #created_at="{ row }">{{ formatDate(row.created_at) }}</template>
     </DataTable>
     <Pagination :total="total" :current-page="page" :page-size="pageSize" @current-change="changePage" @size-change="changeSize" />
@@ -25,10 +26,11 @@ import Pagination from '@/components/common/Pagination.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 const columns = [
   { label: '访问时间', prop: 'created_at', slot: 'created_at', width: '180px' }, { label: 'IP 地址', prop: 'ip_address', width: '150px' },
-  { label: '方法', prop: 'method', width: '90px' }, { label: '请求路径', prop: 'path' }, { label: '状态', prop: 'status_code', slot: 'status_code', width: '90px' }, { label: '用户', prop: 'username', width: '130px' }
+  { label: '方法', prop: 'method', width: '90px' }, { label: '请求路径', prop: 'path' }, { label: '访问设备', slot: 'device', width: '150px' }, { label: '状态', prop: 'status_code', slot: 'status_code', width: '90px' }, { label: '用户', prop: 'username', width: '130px' }
 ]
 const logs = ref([]); const loading = ref(false); const total = ref(0); const page = ref(1); const pageSize = ref(20)
 const filters = ref({ ip: '', status: undefined, path: '' })
+const deviceTypeLabel = (type) => ({ mobile: '手机', tablet: '平板', computer: '电脑', other: '其他' }[type] || '其他')
 const formatDate = (value) => value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-'
 async function load() { loading.value = true; try { const params = Object.fromEntries(Object.entries(filters.value).filter(([, value]) => value)); const response = await getAccessLogList({ page: page.value, pageSize: pageSize.value, ...params }); logs.value = response?.data?.list || []; total.value = response?.data?.total || 0 } catch (error) { message.error(error?.message || '访问日志加载失败') } finally { loading.value = false } }
 function applyFilters() { page.value = 1; load() }
@@ -40,4 +42,7 @@ onMounted(load)
 <style scoped>
 .access-log-note { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border: 1px solid #dbe5ff; border-radius: 10px; background: #f6f8ff; color: #52617a; font-size: 13px; }
 .access-log-filters { padding: 14px; border: 1px solid var(--color-border); border-radius: 12px; background: #fff; }
+.device-cell { display: grid; gap: 3px; }
+.device-cell strong { color: var(--color-text); font-size: 12px; }
+.device-cell small { overflow: hidden; color: var(--color-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 </style>
