@@ -6,6 +6,7 @@ const readSource = (file) => fs.readFileSync(path.join(process.cwd(), file), 'ut
 describe('deployment API URLs', () => {
   it('does not hard-code localhost backend URLs in browser code', () => {
     const browserSources = [
+      readSource('src/utils/apiBaseUrl.js'),
       readSource('src/utils/upload.js'),
       readSource('src/views/files/FileList.vue'),
       readSource('src/views/dynamics/DynamicEdit.vue')
