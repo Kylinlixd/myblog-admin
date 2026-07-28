@@ -1,7 +1,11 @@
 <template>
   <div class="profile-container">
     <div class="page-header">
-      <h2 class="page-title">个人资料</h2>
+      <div>
+        <span class="eyebrow">ACCOUNT SETTINGS</span>
+        <h2 class="page-title">个人资料</h2>
+        <p class="page-subtitle">管理公开信息与登录安全设置</p>
+      </div>
     </div>
     
     <a-card class="profile-card">
@@ -59,7 +63,8 @@
           ref="profileFormRef"
           :model="profileForm"
           :rules="profileRules"
-          label-width="100px"
+          :label-col="{ span: 4 }"
+          :wrapper-col="{ span: 18 }"
         >
           <a-form-item label="头像">
             <div class="avatar-upload">
@@ -87,11 +92,12 @@
           </a-form-item>
           
           <a-form-item label="个人简介" prop="bio">
-            <a-input
+            <a-textarea
               v-model="profileForm.bio"
-              type="textarea"
               :rows="4"
               placeholder="请输入个人简介"
+              show-count
+              :maxlength="200"
             />
           </a-form-item>
           
@@ -116,33 +122,28 @@
         ref="passwordFormRef"
         :model="passwordForm"
         :rules="passwordRules"
-        label-width="100px"
+        :label-col="{ span: 4 }"
+        :wrapper-col="{ span: 18 }"
         @submit.prevent="handlePasswordChange"
       >
         <a-form-item label="原密码" prop="oldPassword">
-          <a-input
+          <a-input-password
             v-model="passwordForm.oldPassword"
-            type="password"
             placeholder="请输入原密码"
-            show-password
           />
         </a-form-item>
         
         <a-form-item label="新密码" prop="newPassword">
-          <a-input
+          <a-input-password
             v-model="passwordForm.newPassword"
-            type="password"
             placeholder="请输入新密码"
-            show-password
           />
         </a-form-item>
         
         <a-form-item label="确认密码" prop="confirmPassword">
-          <a-input
+          <a-input-password
             v-model="passwordForm.confirmPassword"
-            type="password"
             placeholder="请再次输入新密码"
-            show-password
           />
         </a-form-item>
         
@@ -412,69 +413,34 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.profile-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.page-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.profile-card,
-.password-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.avatar-container {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.info-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.label {
-  font-weight: bold;
-}
-
-.value {
-  color: #666;
-}
-
-.profile-edit {
-  margin-top: 20px;
-}
-
-.avatar-upload {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.upload-btn {
-  margin-left: 10px;
+.profile-container { max-width: 920px; margin: 0 auto; padding: 12px 20px 40px; }
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
+.eyebrow { display: block; margin-bottom: 8px; color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.page-title { margin: 0; color: var(--color-text); font-size: 30px; font-weight: 780; letter-spacing: -.03em; }
+.page-subtitle { margin: 7px 0 0; color: var(--color-text-secondary); font-size: 13px; }
+.profile-card, .password-card { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
+.card-header { display: flex; align-items: center; justify-content: space-between; }
+.profile-info { display: grid; grid-template-columns: 160px 1fr; align-items: start; gap: 28px; }
+.profile-info .avatar-container { display: grid; min-height: 160px; margin: 0; place-items: center; border-radius: 14px; background: linear-gradient(145deg, #eef3ff, #f8faff); }
+.info-list { display: grid; gap: 0; padding-top: 4px; }
+.info-item { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
+.label { color: var(--color-text-secondary); font-weight: 650; }
+.value { min-width: 0; overflow-wrap: anywhere; color: var(--color-text); }
+.profile-edit { margin-top: 4px; max-width: 760px; }
+.profile-edit :deep(.ant-form-item), .password-card :deep(.ant-form-item) { margin-bottom: 18px; }
+.profile-edit :deep(.ant-form-item-label > label), .password-card :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-weight: 650; }
+.profile-edit :deep(.ant-input), .profile-edit :deep(.ant-input-affix-wrapper), .password-card :deep(.ant-input-affix-wrapper) { border-radius: 9px; }
+.password-card :deep(.ant-form) { max-width: 760px; padding: 4px 8px 0; }
+.password-card :deep(.ant-form-item-extra) { color: var(--color-text-muted); font-size: 12px; }
+.avatar-upload { display: flex; align-items: center; gap: 10px; }
+.upload-btn { margin-left: 10px; }
+@media (max-width: 640px) {
+  .profile-container { padding: 8px 14px 28px; }
+  .page-header { align-items: flex-start; }
+  .page-title { font-size: 26px; }
+  .profile-info { grid-template-columns: 1fr; }
+  .profile-info .avatar-container { min-height: 132px; }
+  .profile-edit :deep(.ant-form), .password-card :deep(.ant-form) { padding-inline: 0; }
+  .profile-edit :deep(.ant-form-item-label), .password-card :deep(.ant-form-item-label) { padding-bottom: 5px; text-align: left; }
 }
 </style>
