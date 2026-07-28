@@ -57,6 +57,11 @@
             <g class="trend-guides" aria-hidden="true">
               <line v-for="y in [36, 112, 188]" :key="y" x1="36" :y1="y" x2="664" :y2="y" />
             </g>
+            <g class="trend-axis" aria-hidden="true">
+              <text x="8" y="40">{{ maxDaily }}</text>
+              <text x="8" y="116">{{ Math.round(maxDaily / 2) }}</text>
+              <text x="8" y="192">0</text>
+            </g>
             <polygon class="trend-area" :points="trendAreaPoints" />
             <polyline class="trend-line" :points="trendLinePoints" />
             <g
@@ -68,6 +73,7 @@
               :aria-label="`${item.day}发布${item.count}篇`"
             >
               <circle :cx="item.x" :cy="item.y" r="5" />
+              <circle v-if="item.isPeak" class="trend-highlight" :cx="item.x" :cy="item.y" r="13" />
               <text class="trend-value" :x="item.x" :y="item.y - 14">{{ item.count }}</text>
               <text class="trend-day" :x="item.x" y="238">{{ item.day }}</text>
             </g>
@@ -257,12 +263,14 @@ onMounted(loadStats)
 .trend-line { fill: none; stroke: var(--color-primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 8px 12px rgb(49 91 234 / 16%)); }
 .trend-point { outline: 0; }
 .trend-point circle { fill: white; stroke: #7390ed; stroke-width: 4; transition: r var(--transition-fast), fill var(--transition-fast); }
+.trend-point .trend-highlight { fill: none; stroke: #315bea; stroke-width: 1.5; stroke-dasharray: 3 4; opacity: .72; }
 .trend-point--peak circle { fill: var(--color-primary); stroke: #dce5ff; }
 .trend-point:hover circle, .trend-point:focus-visible circle { r: 8; fill: var(--color-primary); }
 .trend-point:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 5px; }
 .trend-value, .trend-day { fill: #55647b; font-size: 11px; font-weight: 700; text-anchor: middle; }
 .trend-point--peak .trend-value { fill: var(--color-primary); }
 .trend-day { fill: var(--color-text-secondary); font-size: 10px; font-weight: 650; }
+.trend-axis text { fill: var(--color-text-muted); font-size: 10px; font-weight: 700; text-anchor: end; }
 .panel-empty { display: grid; min-height: 330px; place-content: center; justify-items: center; gap: 8px; color: var(--color-text-muted); text-align: center; }
 .panel-empty svg { margin-bottom: 6px; color: #a8b5c8; font-size: 28px; }
 .panel-empty strong { color: var(--color-text); }

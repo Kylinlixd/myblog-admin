@@ -347,11 +347,11 @@ const handlePasswordChange = async () => {
     })
     
     // 处理成功响应
-    if (result.status === 200 || result.status === 204) {
+    if (result?.code === 200 || result?.status === 200 || result?.status === 204) {
       AntMessage.success('密码修改成功')
       resetForm()
     } else {
-      AntMessage.error(result.message || '修改密码失败')
+      AntMessage.error(result?.message || '修改密码失败')
     }
   } catch (error) {
     console.error('修改密码失败:', error)

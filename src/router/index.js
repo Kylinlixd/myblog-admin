@@ -227,6 +227,12 @@ const routes = [
           title: '文件管理',
           requiresAuth: true
         }
+      },
+      {
+        path: 'access-logs',
+        name: 'AccessLogs',
+        component: () => import('@/views/accessLogs/AccessLogList.vue'),
+        meta: { title: '访问日志', requiresAuth: true }
       }
     ]
   },
@@ -289,7 +295,7 @@ router.beforeEach(async (to) => {
 router.afterEach((to) => {
   const appStore = useAppStore()
   appStore.endNavigation()
-  document.title = to.meta.title ? `${to.meta.title} · Kylin Blog` : 'Kylin Blog'
+  document.title = to.meta.title ? `${to.meta.title} · LiXD 的博客` : 'LiXD 的博客'
 })
 
 // 添加路由错误处理

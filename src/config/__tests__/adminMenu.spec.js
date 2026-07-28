@@ -8,7 +8,8 @@ describe('adminMenu', () => {
       '/dashboard/category',
       '/dashboard/tags',
       '/dashboard/comments',
-      '/dashboard/files'
+      '/dashboard/files',
+      '/dashboard/access-logs'
     ])
     expect(new Set(adminMenu.map((item) => item.key)).size).toBe(adminMenu.length)
   })
@@ -20,6 +21,7 @@ describe('adminMenu', () => {
       'content',
       'content',
       'community',
+      'system',
       'system'
     ])
     expect(adminMenu.every((item) => item.description && item.groupLabel)).toBe(true)

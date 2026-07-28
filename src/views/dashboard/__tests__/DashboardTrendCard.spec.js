@@ -26,6 +26,8 @@ describe('Dashboard operations workspace', () => {
     expect(source).toContain('totalDaily')
     expect(source).toContain('averageDaily')
     expect(source).toContain('maxDaily')
+    expect(source).toContain('trend-axis')
+    expect(source).toContain('trend-highlight')
   })
 
   it('uses real category and tag activity without invented growth data', () => {

@@ -31,6 +31,7 @@
             <menu-unfold-outlined />
           </button>
           <Breadcrumb />
+          <span class="workspace-context">内容工作台 <i /> {{ route.meta.title || '仪表盘' }}</span>
         </div>
         <div class="header-actions">
           <router-link class="blog-link" to="/blog"><home-outlined /> <span>查看博客</span></router-link>
@@ -63,7 +64,7 @@
 <script setup>
 import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined } from '@ant-design/icons-vue'
+import { CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import { adminMenu } from '@/config/adminMenu'
@@ -75,7 +76,7 @@ const userStore = useUserStore()
 const collapsed = ref(localStorage.getItem('admin.sidebarCollapsed') === 'true')
 const isMobile = ref(window.innerWidth < 992)
 const mobileOpen = ref(false)
-const iconMap = { dashboard: DashboardOutlined, content: ReadOutlined, category: FolderOutlined, tags: TagsOutlined, comments: CommentOutlined, files: FileOutlined }
+const iconMap = { dashboard: DashboardOutlined, content: ReadOutlined, category: FolderOutlined, tags: TagsOutlined, comments: CommentOutlined, files: FileOutlined, logs: HistoryOutlined }
 const selectedKey = computed(() => [...adminMenu].sort((a, b) => b.path.length - a.path.length).find((item) => route.path === item.path || route.path.startsWith(`${item.path}/`))?.key || 'dashboard')
 const userInitial = computed(() => (userStore.nickname || '管').slice(0, 1))
 const groupedMenu = computed(() => adminMenu.reduce((groups, item) => {
@@ -156,6 +157,8 @@ function handleLogout() {
 .workspace-header { position: sticky; z-index: 50; top: 0; display: flex; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: rgb(255 255 255 / 92%) !important; line-height: normal; backdrop-filter: blur(16px); }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
 .header-left { min-width: 0; gap: 16px; }
+.workspace-context { display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-muted); font-size: 12px; white-space: nowrap; }
+.workspace-context i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary); }
 .header-actions { gap: 16px; }
 .icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
@@ -172,4 +175,5 @@ function handleLogout() {
 .workspace-page-enter-from { opacity: 0; transform: translateY(5px); }
 .workspace-page-leave-to { opacity: 0; }
 @media (max-width: 720px) { .workspace-header { padding: 0 16px; } .workspace-content { padding: 18px 14px; } .blog-link span, .user-copy { display: none; } }
+@media (max-width: 900px) { .workspace-context { display: none; } }
 </style>

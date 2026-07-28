@@ -19,4 +19,10 @@ describe('CommentList batch management', () => {
     expect(source).toContain('Promise.allSettled')
     expect(source).toContain('failedIds')
   })
+
+  it('offers guarded batch approval for pending comments', () => {
+    expect(source).toContain('批量通过')
+    expect(source).toContain('batchApproving')
+    expect(source).toContain('approveComment')
+  })
 })

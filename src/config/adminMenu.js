@@ -52,5 +52,8 @@ export const adminMenu = [
     icon: 'files',
     group: 'system',
     groupLabel: '资源'
+  },
+  {
+    key: 'access-logs', label: '访问日志', description: 'IP 与接口访问记录', path: '/dashboard/access-logs', icon: 'logs', group: 'system', groupLabel: '资源'
   }
 ]

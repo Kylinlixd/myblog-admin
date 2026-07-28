@@ -297,7 +297,7 @@
   border-radius: 8px;
   background: #f8fafc;
   color: #475467;
-  box-shadow: none;
+  box-shadow: 0 3px 8px rgb(15 23 42 / 6%);
   font-size: 12px;
   line-height: 28px;
 }
@@ -312,6 +312,7 @@
   border-color: #dbe5ff;
   background: #eef3ff;
   color: #315bea;
+  box-shadow: 0 5px 12px rgb(49 91 234 / 15%);
 }
 
 .admin-page .row-action--primary.ant-btn:hover {
@@ -324,6 +325,7 @@
   border-color: #fee2e2;
   background: #fff5f5;
   color: #d92d20;
+  box-shadow: 0 5px 12px rgb(217 45 32 / 10%);
 }
 
 .admin-page .row-action--danger.ant-btn:hover {

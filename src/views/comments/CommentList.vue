@@ -27,15 +27,26 @@
         <strong>{{ selectedCommentIds.length }}</strong>
         {{ selectedCommentIds.length ? '条评论已选择' : '选择评论后可批量处理' }}
       </span>
-      <a-button
-        danger
-        :disabled="!selectedCommentIds.length"
-        :loading="batchDeleting"
-        @click="handleBatchDelete"
-      >
-        <template #icon><delete-outlined /></template>
-        批量删除
-      </a-button>
+          <a-space>
+            <a-button
+              type="primary"
+              :disabled="!selectedCommentIds.length"
+              :loading="batchApproving"
+              @click="handleBatchApprove"
+            >
+              <template #icon><check-outlined /></template>
+              批量通过
+            </a-button>
+            <a-button
+              danger
+              :disabled="!selectedCommentIds.length"
+              :loading="batchDeleting"
+              @click="handleBatchDelete"
+            >
+              <template #icon><delete-outlined /></template>
+              批量删除
+            </a-button>
+          </a-space>
     </div>
     
     <!-- 评论列表 -->
@@ -138,6 +149,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedCommentIds = ref([])
 const batchDeleting = ref(false)
+const batchApproving = ref(false)
 
 // 筛选表单
 const filterForm = reactive({
@@ -291,6 +303,38 @@ const handleBatchDelete = () => {
         await getComments()
       } finally {
         batchDeleting.value = false
+      }
+    }
+  })
+}
+
+const handleBatchApprove = () => {
+  if (!selectedCommentIds.value.length || batchApproving.value) return
+  Modal.confirm({
+    title: `通过选中的 ${selectedCommentIds.value.length} 条评论？`,
+    content: '通过后评论会显示在文章讨论区。',
+    okText: '确认通过',
+    cancelText: '取消',
+    async onOk() {
+      batchApproving.value = true
+      const ids = [...selectedCommentIds.value]
+      try {
+        const results = await Promise.allSettled(ids.map(async (id) => {
+          const response = await approveComment(id)
+          if (response?.code !== 200) throw new Error(response?.message || '审核失败')
+          return id
+        }))
+        const failedIds = results.reduce((failed, result, index) => {
+          if (result.status === 'rejected') failed.push(ids[index])
+          return failed
+        }, [])
+        const successCount = ids.length - failedIds.length
+        selectedCommentIds.value = failedIds
+        if (!failedIds.length) message.success(`已通过 ${successCount} 条评论`)
+        else message.warning(`已通过 ${successCount} 条，${failedIds.length} 条失败并保持选中`)
+        await getComments()
+      } finally {
+        batchApproving.value = false
       }
     }
   })
