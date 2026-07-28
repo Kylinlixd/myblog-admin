@@ -22,6 +22,8 @@ describe('DefaultLayout sidebar collapse control', () => {
     expect(sidebarMarkup).toContain('@click="toggleSidebar"')
     expect(headerMarkup).not.toContain('折叠导航')
     expect(headerMarkup).toContain('打开导航')
+    expect(source).toContain("'admin-shell--mobile': isMobile")
+    expect(source).toContain('.admin-shell--mobile { flex-direction: column !important; }')
     expect(source).toContain('top: 76px')
     expect(source).toContain('width: 100%')
   })

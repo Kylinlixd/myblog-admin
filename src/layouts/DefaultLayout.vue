@@ -1,5 +1,5 @@
 <template>
-  <a-layout class="admin-shell">
+  <a-layout class="admin-shell" :class="{ 'admin-shell--mobile': isMobile }">
     <a-layout-sider v-if="!isMobile" v-model:collapsed="collapsed" :trigger="null" collapsible :width="232" :collapsed-width="76" class="admin-sidebar">
       <router-link class="admin-brand" to="/dashboard">
         <span class="brand-mark">L</span><span v-if="!collapsed">LiXD Studio<small>内容工作台</small></span>
@@ -130,6 +130,7 @@ function handleLogout() {
 <style lang="scss">
 .admin-drawer .ant-drawer-body { padding: 0; background: #10182b; }
 .admin-shell { min-height: 100vh; background: var(--color-page); }
+.admin-shell--mobile { flex-direction: column !important; }
 .admin-sidebar { position: sticky !important; top: 0; height: 100vh; overflow: visible; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
 .admin-brand { display: flex; height: 76px; align-items: center; gap: 11px; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
 .admin-brand--drawer { padding-inline: 22px; }
@@ -174,6 +175,7 @@ function handleLogout() {
 .workspace-page-enter-active, .workspace-page-leave-active { transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .workspace-page-enter-from { opacity: 0; transform: translateY(5px); }
 .workspace-page-leave-to { opacity: 0; }
+@media (max-width: 992px) { .admin-shell--mobile > .workspace { width: 100%; } }
 @media (max-width: 720px) { .workspace-header { padding: 0 16px; } .workspace-content { padding: 18px 14px; } .blog-link span, .user-copy { display: none; } }
 @media (max-width: 900px) { .workspace-context { display: none; } }
 </style>
