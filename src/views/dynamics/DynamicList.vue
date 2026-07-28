@@ -111,61 +111,6 @@
         @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
-          <!-- 内容列 -->
-          <template v-if="column.dataIndex === 'content'">
-            <div class="content-cell">
-              <div class="content-text">{{ record.content }}</div>
-              <div v-if="record.mediaUrls?.length" class="media-preview">
-                <a-image-preview-group>
-                  <a-image
-                    v-for="(url, index) in record.mediaUrls"
-                    :key="index"
-                    :src="url"
-                    :width="40"
-                    :height="40"
-                    :preview="{
-                      src: url,
-                      mask: false
-                    }"
-                  />
-                </a-image-preview-group>
-              </div>
-            </div>
-          </template>
-
-          <!-- 媒体预览列 -->
-          <template v-if="column.dataIndex === 'mediaUrls'">
-            <template v-if="record.type === 'image' && record.mediaUrls && record.mediaUrls.length">
-              <a-image
-                :src="record.mediaUrls[0]"
-                :width="60"
-                :height="60"
-                fit="cover"
-                :preview="{
-                  src: record.mediaUrls[0],
-                  mask: '预览',
-                }"
-              />
-              <a-badge v-if="record.mediaUrls.length > 1" :count="record.mediaUrls.length" />
-            </template>
-            
-            <template v-else-if="record.type === 'audio' && record.mediaUrls && record.mediaUrls.length">
-              <a-button type="link" size="small" @click="previewMedia('audio', record.mediaUrls[0])">
-                <SoundOutlined /> 音频
-              </a-button>
-            </template>
-            
-            <template v-else-if="record.type === 'video' && record.mediaUrls && record.mediaUrls.length">
-              <a-button type="link" size="small" @click="previewMedia('video', record.mediaUrls[0])">
-                <VideoCameraOutlined /> 视频
-              </a-button>
-            </template>
-            
-            <template v-else>
-              <span>无媒体文件</span>
-            </template>
-          </template>
-          
           <!-- 分类列 -->
           <template v-if="column.dataIndex === 'category'">
             <a-tag color="blue">
@@ -242,64 +187,18 @@
       </div>
     </a-card>
     
-    <!-- 媒体预览对话框 -->
-    <a-modal
-      v-model:open="previewVisible"
-      :title="previewTitle"
-      :footer="null"
-      width="800px"
-      @cancel="previewVisible = false"
-    >
-      <div class="media-preview-container">
-        <img
-          v-if="previewType === 'image'"
-          :src="previewUrl"
-          alt="预览"
-          style="width: 100%; max-height: 600px; object-fit: contain;"
-        />
-        <audio
-          v-if="previewType === 'audio'"
-          :src="previewUrl"
-          controls
-          style="width: 100%"
-        ></audio>
-        <video
-          v-if="previewType === 'video'"
-          :src="previewUrl"
-          controls
-          style="width: 100%; max-height: 600px;"
-        ></video>
-      </div>
-    </a-modal>
-
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, h, resolveComponent, reactive } from 'vue'
-import { 
-  message, 
-  Button as AButton, 
-  Space as ASpace, 
-  Tag as ATag, 
-  Image as AImage, 
-  Badge as ABadge, 
-  Popconfirm as APopconfirm, 
-  Modal as AModal,
-  Form as AForm,
-  Input as AInput,
-  Select as ASelect,
-  Card as ACard,
-  Table as ATable
-} from 'ant-design-vue'
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { 
   PlusOutlined, 
   EditOutlined, 
   EyeOutlined, 
-  DeleteOutlined, 
-  SoundOutlined,
-  VideoCameraOutlined,
+  DeleteOutlined,
   SearchOutlined,
   ReloadOutlined
 } from '@ant-design/icons-vue'
@@ -430,12 +329,6 @@ const handleBatchDelete = async () => {
   }
 }
 
-// 媒体预览相关
-const previewVisible = ref(false)
-const previewUrl = ref('')
-const previewTitle = ref('')
-const previewType = ref('image')
-
 // 表格列定义
 const columns = [
   {
@@ -452,72 +345,6 @@ const columns = [
     width: 200,
     ellipsis: true,
     customRender: ({ text }) => text || '无标题'
-  },
-  {
-    title: '内容',
-    dataIndex: 'content',
-    key: 'content',
-    ellipsis: true,
-    width: 300
-  },
-  {
-    title: '媒体文件',
-    dataIndex: 'mediaUrls',
-    key: 'mediaUrls',
-    width: 120,
-    align: 'center',
-    customRender: ({ record }) => {
-      if (!record.mediaUrls || record.mediaUrls.length === 0) {
-        return '-';
-      }
-
-      const media = record.mediaUrls[0]; // 获取第一个媒体文件
-      const type = record.type;
-
-      if (type === 'image') {
-        return h('div', { class: 'media-preview' }, [
-          h('img', {
-            src: media.url || media.file_url,
-            alt: media.name,
-            style: {
-              width: '50px',
-              height: '50px',
-              objectFit: 'cover',
-              cursor: 'pointer'
-            },
-            onClick: () => previewMedia('image', media.url || media.file_url)
-          })
-        ]);
-      }
-
-      if (type === 'audio') {
-        return h('div', { class: 'media-preview' }, [
-          h(SoundOutlined, {
-            style: {
-              fontSize: '24px',
-              color: '#1890ff',
-              cursor: 'pointer'
-            },
-            onClick: () => previewMedia('audio', media.url || media.file_url)
-          })
-        ]);
-      }
-
-      if (type === 'video') {
-        return h('div', { class: 'media-preview' }, [
-          h(VideoCameraOutlined, {
-            style: {
-              fontSize: '24px',
-              color: '#1890ff',
-              cursor: 'pointer'
-            },
-            onClick: () => previewMedia('video', media.url || media.file_url)
-          })
-        ]);
-      }
-
-      return '-';
-    }
   },
   {
     title: '类型',
@@ -602,12 +429,6 @@ const columnsForMobile = [
     align: 'center'
   },
   {
-    title: '内容',
-    dataIndex: 'content',
-    key: 'content',
-    ellipsis: true
-  },
-  {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
@@ -679,14 +500,6 @@ const formatDate = (dateString) => {
     second: '2-digit',
     hour12: false
   })
-}
-
-// 媒体预览
-const previewMedia = (type, url) => {
-  previewType.value = type;
-  previewUrl.value = url;
-  previewTitle.value = type === 'image' ? '图片预览' : type === 'audio' ? '音频预览' : '视频预览';
-  previewVisible.value = true;
 }
 
 // 获取标签列表
@@ -788,25 +601,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.content-cell {
-  max-width: 300px;
-
-  .content-text {
-    display: -webkit-box;
-    overflow: hidden;
-    margin-bottom: 8px;
-    word-break: break-word;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
-  .media-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-}
-
 .content-table-scroll {
   width: 100%;
   max-width: 100%;
@@ -825,104 +619,6 @@ onUnmounted(() => {
 :deep(.content-table-scroll .ant-table-container),
 :deep(.content-table-scroll .ant-table-content) {
   overflow-x: visible !important;
-}
-
-:global(.ant-modal-content) {
-  .ant-modal-body {
-    padding: 24px;
-    max-height: 80vh;
-    overflow-y: auto;
-    background-color: #ffffff;
-
-    pre {
-      background-color: #1a1a1a !important;
-      padding: 16px;
-      border-radius: 4px;
-      overflow-x: auto;
-      margin: 16px 0;
-      border: 1px solid #333;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-
-      code {
-        color: #ffffff !important;
-        font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 14px;
-        line-height: 1.6;
-      }
-    }
-
-    .hljs {
-      background: #1a1a1a !important;
-      color: #ffffff !important;
-    }
-
-    .hljs-string,
-    .hljs-bullet,
-    .hljs-subst,
-    .hljs-title,
-    .hljs-section,
-    .hljs-emphasis,
-    .hljs-type,
-    .hljs-built_in,
-    .hljs-builtin-name,
-    .hljs-selector-attr,
-    .hljs-selector-pseudo,
-    .hljs-addition,
-    .hljs-variable,
-    .hljs-template-variable {
-      color: #ffeb3b !important;
-      font-weight: 700 !important;
-      text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
-    }
-
-    .language-json {
-      .hljs-string {
-        color: #ffeb3b !important;
-        font-weight: 700 !important;
-        text-shadow: 0 0 1px rgba(255, 235, 59, 0.5);
-      }
-
-      .hljs-property {
-        color: #64b5f6 !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-number {
-        color: #ffb74d !important;
-        font-weight: 700 !important;
-      }
-
-      .hljs-literal {
-        color: #f48fb1 !important;
-        font-weight: 700 !important;
-      }
-    }
-  }
-}
-
-.media-preview-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  background: #f5f5f5;
-  border-radius: 4px;
-  padding: 16px;
-}
-
-.media-preview {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  img {
-    border-radius: 4px;
-    transition: transform 0.3s;
-    
-    &:hover {
-      transform: scale(1.05);
-    }
-  }
 }
 
 // 添加代码高亮样式

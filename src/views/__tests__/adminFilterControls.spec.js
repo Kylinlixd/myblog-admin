@@ -47,6 +47,16 @@ describe('admin filter controls', () => {
     expect(readView('dynamics/DynamicList.vue')).toContain('min-width: 1120px')
   })
 
+  it('defers dynamic body and media loading to edit and preview views', () => {
+    const listView = readView('dynamics/DynamicList.vue')
+
+    expect(listView).not.toContain("dataIndex: 'content'")
+    expect(listView).not.toContain("dataIndex: 'mediaUrls'")
+    expect(listView).not.toContain('previewMedia(')
+    expect(readView('dynamics/DynamicEdit.vue')).toContain('getDynamicDetail')
+    expect(readView('dynamics/DynamicPreview.vue')).toContain('getDynamicDetail')
+  })
+
   it('lets shared admin filter styles size list-page inputs and selects', () => {
     const listViews = [
       readView('categories/CategoryList.vue'),
