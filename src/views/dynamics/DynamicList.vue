@@ -712,4 +712,44 @@ onUnmounted(() => {
 :deep(.hljs-attr) {
   color: #9cdcfe;
 }
+
+@media (max-width: 992px) {
+  .dynamic-list .admin-filter {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .dynamic-list .admin-filter .search-form-left,
+  .dynamic-list .admin-filter .search-form-right {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .dynamic-list .admin-filter .ant-form-item {
+    display: flex;
+    width: 100%;
+    margin: 0;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dynamic-list .admin-filter .search-form-right .ant-form-item:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .dynamic-list .admin-filter :deep(.ant-form-item-label) {
+    padding: 0 0 4px;
+    text-align: left;
+  }
+
+  .dynamic-list .admin-filter :deep(.ant-input),
+  .dynamic-list .admin-filter :deep(.ant-input-affix-wrapper),
+  .dynamic-list .admin-filter :deep(.ant-select),
+  .dynamic-list .admin-filter :deep(.ant-select-selector) {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
 </style>

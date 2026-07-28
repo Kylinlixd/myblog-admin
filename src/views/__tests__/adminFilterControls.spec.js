@@ -57,6 +57,14 @@ describe('admin filter controls', () => {
     expect(readView('dynamics/DynamicPreview.vue')).toContain('getDynamicDetail')
   })
 
+  it('keeps the dynamic filter panel compact when the sidebar is hidden', () => {
+    const listView = readView('dynamics/DynamicList.vue')
+
+    expect(listView).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))')
+    expect(listView).toContain('search-form-right .ant-form-item:last-child')
+    expect(listView).toContain('flex-direction: column')
+  })
+
   it('lets shared admin filter styles size list-page inputs and selects', () => {
     const listViews = [
       readView('categories/CategoryList.vue'),
