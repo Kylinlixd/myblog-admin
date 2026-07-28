@@ -1,37 +1,39 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-describe('Dashboard seven day trend card', () => {
+describe('Dashboard operations workspace', () => {
   const readDashboard = () =>
     fs.readFileSync(path.join(process.cwd(), 'src/views/Dashboard.vue'), 'utf8')
 
-  it('uses a polished chart layout with summary metrics and peak markers', () => {
+  it('uses an asymmetric wide-screen structure instead of four equal cards', () => {
     const source = readDashboard()
 
-    expect(source).toContain('trend-summary')
+    expect(source).toContain('metric-rail')
+    expect(source).toContain('operations-grid')
+    expect(source).toContain('grid-template-columns: minmax(0, 9fr) minmax(300px, 3fr)')
+    expect(source).not.toContain('stats-grid')
+  })
+
+  it('keeps the real seven-day trend with useful summary metrics', () => {
+    const source = readDashboard()
+
+    expect(source).toContain('content-pulse')
     expect(source).toContain('trend-chart')
-    expect(source).toContain('trend-column')
-    expect(source).toContain('trend-peak')
     expect(source).toContain('totalDaily')
     expect(source).toContain('averageDaily')
+    expect(source).toContain('maxDaily')
   })
 
-  it('builds a real-data spotlight and content composition panel', () => {
+  it('uses real category and tag activity without invented growth data', () => {
     const source = readDashboard()
 
-    expect(source).toContain('dashboard-spotlight')
-    expect(source).toContain('currentDate')
-    expect(source).toContain('totalEntities')
-    expect(source).toContain('contentBreakdown')
-    expect(source).toContain('composition-panel')
-    expect(source).toContain('metric-progress')
-  })
-
-  it('derives percentages from existing stats without invented growth data', () => {
-    const source = readDashboard()
-
-    expect(source).toContain('Math.round((Number(item.value || 0) / totalEntities.value) * 100)')
+    expect(source).toContain('taxonomy-list')
+    expect(source).toContain('dashboardData.categories')
+    expect(source).toContain('dashboardData.tags')
+    expect(source).toContain('mapDashboardData')
     expect(source).not.toContain('同比')
     expect(source).not.toContain('growthRate')
+    expect(source).not.toContain("color: '#d97706'")
+    expect(source).not.toContain("color: '#7c3aed'")
   })
 })

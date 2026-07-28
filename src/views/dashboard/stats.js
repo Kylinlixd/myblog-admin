@@ -10,3 +10,26 @@ export function mapDashboardStats(response) {
     comments: Number(total.comments) || 0
   }
 }
+
+function mapSeries(items, limit = 7) {
+  if (!Array.isArray(items)) return []
+  return items.slice(0, limit).map((item) => ({
+    name: String(item?.name || item?.day || ''),
+    count: Number(item?.dynamic_count ?? item?.count) || 0
+  }))
+}
+
+export function mapDashboardData(response) {
+  const payload = response?.data || response || {}
+  return {
+    total: mapDashboardStats(payload),
+    daily: Array.isArray(payload.daily)
+      ? payload.daily.slice(0, 7).map((item) => ({
+        day: String(item?.day || ''),
+        count: Number(item?.count) || 0
+      }))
+      : [],
+    categories: mapSeries(payload.categories, 5),
+    tags: mapSeries(payload.tags, 5)
+  }
+}
