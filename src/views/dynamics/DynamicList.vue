@@ -810,6 +810,8 @@ onUnmounted(() => {
 .content-table-scroll {
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;

@@ -15,7 +15,8 @@ describe('admin workspace styles', () => {
     expect(stylesheet).toContain('.admin-toolbar')
     expect(stylesheet).toContain('.admin-table-card')
     expect(stylesheet).toContain('--admin-table-min-width')
-    expect(stylesheet).toContain('overflow-x: auto')
+  expect(stylesheet).toContain('overflow-x: auto')
+  expect(stylesheet).toContain('overflow-x: hidden')
   })
 
   it('standardizes admin filter input and select control sizes', () => {
