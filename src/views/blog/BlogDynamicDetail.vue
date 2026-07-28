@@ -397,9 +397,9 @@ onMounted(fetchDynamicDetail)
   margin-inline: auto;
   margin-bottom: 3rem;
   padding: clamp(24px, 5vw, 54px);
-  background: #0a1525;
+  background: var(--blog-paper);
   border-radius: 18px;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+  box-shadow: 0 18px 50px rgb(92 65 37 / 9%);
   line-height: 1.9;
   color: var(--blog-reading-text);
   position: relative;

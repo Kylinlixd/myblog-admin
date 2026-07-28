@@ -18,6 +18,7 @@ describe('blog detail sanitization', () => {
     expect(source).toContain('line-height: 1.9')
     expect(source).toContain('color: var(--blog-reading-text)')
     expect(source).toContain('color: var(--blog-comment-text)')
+    expect(source).toContain('background: var(--blog-paper)')
     expect(source).toMatch(/:deep\(\.markdown-body\)\s*\{[\s\S]*?width: min\(100%, var\(--reading-width\)\)/)
     expect(source.match(/if \(!content\) return ''/g)).toHaveLength(1)
   })

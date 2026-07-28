@@ -33,7 +33,7 @@
           <strong>LiXD</strong>
           <p>Full-stack developer</p>
         </div>
-        <dl>
+        <dl class="profile-facts">
           <div><dt>当前关注</dt><dd>可靠的 Web 产品</dd></div>
           <div><dt>技术方向</dt><dd>Vue · Django · Java</dd></div>
           <div><dt>生活之外</dt><dd>阅读 · 旅行 · 摄影</dd></div>
@@ -228,7 +228,7 @@ const stack = [
 .profile-card dl { display: grid; gap: 0; margin: 28px 0 0; }
 .profile-card dl div { display: flex; justify-content: space-between; gap: 20px; padding: 15px 0; border-top: 1px solid var(--color-border); }
 .profile-card dt { color: var(--color-text-muted); }
-.profile-card dd { margin: 0; color: var(--color-text); font-weight: 650; text-align: right; }
+.profile-card dd { position: relative; z-index: 1; min-width: 0; margin: 0; color: #243041; font-weight: 680; overflow-wrap: anywhere; text-align: right; }
 
 .about-body { padding-bottom: clamp(72px, 10vw, 128px); }
 .section-heading { max-width: 700px; margin-bottom: 42px; }

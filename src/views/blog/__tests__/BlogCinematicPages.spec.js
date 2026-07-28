@@ -45,6 +45,9 @@ describe('cinematic public blog pages', () => {
 
     expect(theme).toContain('--blog-reading-text')
     expect(theme).toContain('--blog-comment-text')
+    expect(theme).toContain('--blog-bg: #f4efe5')
+    expect(theme).toContain('--blog-reading-text: #243041')
+    expect(theme).toContain('--blog-comment-text: #2f3947')
     expect(theme).toContain('.cinematic-page .comment-content')
     expect(theme).toContain('.cinematic-page .ant-form-item-label > label')
     expect(theme).toContain('.cinematic-page .ant-input::placeholder')
