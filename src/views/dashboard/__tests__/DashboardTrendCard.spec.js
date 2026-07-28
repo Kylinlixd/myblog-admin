@@ -14,11 +14,15 @@ describe('Dashboard operations workspace', () => {
     expect(source).not.toContain('stats-grid')
   })
 
-  it('keeps the real seven-day trend with useful summary metrics', () => {
+  it('keeps the real seven-day trend as an accessible line chart', () => {
     const source = readDashboard()
 
     expect(source).toContain('content-pulse')
-    expect(source).toContain('trend-chart')
+    expect(source).toContain('trend-line-chart')
+    expect(source).toContain('<svg')
+    expect(source).toContain('trendLinePoints')
+    expect(source).toContain('trendAreaPoints')
+    expect(source).not.toContain('trend-bar')
     expect(source).toContain('totalDaily')
     expect(source).toContain('averageDaily')
     expect(source).toContain('maxDaily')

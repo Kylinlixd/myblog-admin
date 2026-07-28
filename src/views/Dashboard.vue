@@ -44,21 +44,34 @@
           <div><span>单日峰值</span><strong>{{ maxDaily }}</strong><small>篇</small></div>
         </div>
 
-        <div v-if="daily.length" class="trend-chart" role="img" aria-label="近七天每日发布数量柱状图">
-          <span class="trend-gridline trend-gridline--top" />
-          <span class="trend-gridline trend-gridline--middle" />
-          <div
-            v-for="item in trendColumns"
-            :key="item.day"
-            class="trend-column"
-            :class="{ 'trend-column--peak': item.isPeak }"
-          >
-            <div class="trend-bar-track">
-              <span v-if="item.isPeak" class="trend-peak">峰值</span>
-              <div class="trend-bar" :style="{ height: item.height }"><strong>{{ item.count }}</strong></div>
-            </div>
-            <time>{{ item.day }}</time>
-          </div>
+        <div v-if="daily.length" class="trend-line-chart">
+          <svg viewBox="0 0 700 260" role="img" aria-labelledby="trend-chart-title trend-chart-description">
+            <title id="trend-chart-title">近七天每日发布数量折线图</title>
+            <desc id="trend-chart-description">七天共发布 {{ totalDaily }} 篇，峰值为 {{ maxDaily }} 篇。</desc>
+            <defs>
+              <linearGradient id="trend-area-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#315bea" stop-opacity=".24" />
+                <stop offset="1" stop-color="#315bea" stop-opacity=".02" />
+              </linearGradient>
+            </defs>
+            <g class="trend-guides" aria-hidden="true">
+              <line v-for="y in [36, 112, 188]" :key="y" x1="36" :y1="y" x2="664" :y2="y" />
+            </g>
+            <polygon class="trend-area" :points="trendAreaPoints" />
+            <polyline class="trend-line" :points="trendLinePoints" />
+            <g
+              v-for="item in trendPoints"
+              :key="item.day"
+              class="trend-point"
+              :class="{ 'trend-point--peak': item.isPeak }"
+              tabindex="0"
+              :aria-label="`${item.day}发布${item.count}篇`"
+            >
+              <circle :cx="item.x" :cy="item.y" r="5" />
+              <text class="trend-value" :x="item.x" :y="item.y - 14">{{ item.count }}</text>
+              <text class="trend-day" :x="item.x" y="238">{{ item.day }}</text>
+            </g>
+          </svg>
         </div>
         <div v-else-if="!loading" class="panel-empty">
           <read-outlined />
@@ -150,11 +163,28 @@ const averageDaily = computed(() => {
   const average = totalDaily.value / daily.value.length
   return Number.isInteger(average) ? String(average) : average.toFixed(1)
 })
-const trendColumns = computed(() => daily.value.map((item) => ({
-  ...item,
-  height: `${Math.max(item.count > 0 ? 16 : 4, (item.count / Math.max(maxDaily.value, 1)) * 100)}%`,
-  isPeak: item.count > 0 && item.count === maxDaily.value
-})))
+const trendPoints = computed(() => {
+  const left = 36
+  const right = 664
+  const top = 36
+  const bottom = 188
+  const divisor = Math.max(daily.value.length - 1, 1)
+  const peak = Math.max(maxDaily.value, 1)
+
+  return daily.value.map((item, index) => ({
+    ...item,
+    x: left + ((right - left) * index) / divisor,
+    y: bottom - ((bottom - top) * item.count) / peak,
+    isPeak: item.count > 0 && item.count === maxDaily.value
+  }))
+})
+const trendLinePoints = computed(() => trendPoints.value.map((item) => `${item.x},${item.y}`).join(' '))
+const trendAreaPoints = computed(() => {
+  if (!trendPoints.value.length) return ''
+  const first = trendPoints.value[0]
+  const last = trendPoints.value[trendPoints.value.length - 1]
+  return `${first.x},188 ${trendLinePoints.value} ${last.x},188`
+})
 const hasTaxonomy = computed(() => dashboardData.value.categories.length || dashboardData.value.tags.length)
 
 const quickActions = [
@@ -220,17 +250,19 @@ onMounted(loadStats)
 .trend-summary span { color: var(--color-text-secondary); font-size: 11px; font-weight: 650; }
 .trend-summary strong { font-size: clamp(25px, 3vw, 38px); letter-spacing: -.05em; line-height: 1; }
 .trend-summary small { color: var(--color-text-muted); font-size: 10px; }
-.trend-chart { position: relative; display: grid; min-height: 330px; grid-template-columns: repeat(7, minmax(0, 1fr)); align-items: end; gap: clamp(10px, 2vw, 26px); padding: 40px 10px 0; }
-.trend-gridline { position: absolute; right: 0; left: 0; height: 1px; background: #e9edf4; }
-.trend-gridline--top { top: 76px; }
-.trend-gridline--middle { top: 183px; }
-.trend-column { position: relative; z-index: 1; display: grid; min-width: 0; grid-template-rows: 1fr auto; align-self: stretch; gap: 12px; }
-.trend-bar-track { position: relative; display: flex; min-height: 278px; align-items: flex-end; justify-content: center; }
-.trend-bar { position: relative; width: min(56px, 58%); min-height: 6px; border-radius: 7px 7px 2px 2px; background: #b8c7f4; transition: height .2s ease; }
-.trend-bar strong { position: absolute; right: 50%; bottom: calc(100% + 8px); color: #41506a; font-size: 11px; transform: translateX(50%); }
-.trend-column--peak .trend-bar { background: var(--color-primary); box-shadow: 0 10px 24px rgb(49 91 234 / 22%); }
-.trend-peak { position: absolute; top: -8px; left: 50%; color: var(--color-primary); font-size: 9px; font-weight: 800; transform: translateX(-50%); }
-.trend-column time { overflow: hidden; color: var(--color-text-secondary); font-size: 11px; font-weight: 650; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.trend-line-chart { min-height: 330px; padding-top: 26px; }
+.trend-line-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.trend-guides line { stroke: #e8edf5; stroke-width: 1; stroke-dasharray: 4 7; }
+.trend-area { fill: url(#trend-area-fill); }
+.trend-line { fill: none; stroke: var(--color-primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 8px 12px rgb(49 91 234 / 16%)); }
+.trend-point { outline: 0; }
+.trend-point circle { fill: white; stroke: #7390ed; stroke-width: 4; transition: r var(--transition-fast), fill var(--transition-fast); }
+.trend-point--peak circle { fill: var(--color-primary); stroke: #dce5ff; }
+.trend-point:hover circle, .trend-point:focus-visible circle { r: 8; fill: var(--color-primary); }
+.trend-point:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 5px; }
+.trend-value, .trend-day { fill: #55647b; font-size: 11px; font-weight: 700; text-anchor: middle; }
+.trend-point--peak .trend-value { fill: var(--color-primary); }
+.trend-day { fill: var(--color-text-secondary); font-size: 10px; font-weight: 650; }
 .panel-empty { display: grid; min-height: 330px; place-content: center; justify-items: center; gap: 8px; color: var(--color-text-muted); text-align: center; }
 .panel-empty svg { margin-bottom: 6px; color: #a8b5c8; font-size: 28px; }
 .panel-empty strong { color: var(--color-text); }
@@ -263,5 +295,5 @@ onMounted(loadStats)
 .quick-action span { overflow: hidden; color: var(--color-text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 1180px) { .operations-grid { grid-template-columns: 1fr; } .operations-side { grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); } }
 @media (max-width: 820px) { .dashboard-intro { grid-template-columns: 1fr; align-items: start; } .intro-focus { min-width: 0; grid-template-columns: 1fr auto; align-items: center; justify-items: start; gap: 0 18px; } .intro-focus > strong { grid-row: span 2; margin: 0; } .create-button { grid-column: 1; } .metric-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metric-item:nth-child(2) { border-right: 0; } .metric-item:nth-child(-n + 2) { border-bottom: 1px solid var(--color-border); } .operations-side { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .dashboard-intro { min-height: 0; padding: 26px 22px; border-radius: 16px 16px 7px 7px; } .intro-copy h1 { font-size: 34px; } .intro-focus { grid-template-columns: 1fr; gap: 10px; } .intro-focus > strong { grid-row: auto; } .metric-rail { grid-template-columns: 1fr; } .metric-item, .metric-item:nth-child(2) { min-height: 88px; border-right: 0; border-bottom: 1px solid var(--color-border); } .metric-item:last-child { border-bottom: 0; } .content-pulse, .taxonomy-panel { padding: 20px; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 8px; } .trend-summary { grid-template-columns: 1fr; } .trend-summary div, .trend-summary div + div { padding: 13px 0; border-left: 0; border-bottom: 1px solid var(--color-border); } .trend-summary div:last-child { border-bottom: 0; } .trend-chart { min-height: 250px; gap: 7px; padding-inline: 0; } .trend-bar-track { min-height: 198px; } .trend-column time { font-size: 9px; } }
+@media (max-width: 640px) { .dashboard-intro { min-height: 0; padding: 26px 22px; border-radius: 16px 16px 7px 7px; } .intro-copy h1 { font-size: 34px; } .intro-focus { grid-template-columns: 1fr; gap: 10px; } .intro-focus > strong { grid-row: auto; } .metric-rail { grid-template-columns: 1fr; } .metric-item, .metric-item:nth-child(2) { min-height: 88px; border-right: 0; border-bottom: 1px solid var(--color-border); } .metric-item:last-child { border-bottom: 0; } .content-pulse, .taxonomy-panel { padding: 20px; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 8px; } .trend-summary { grid-template-columns: 1fr; } .trend-summary div, .trend-summary div + div { padding: 13px 0; border-left: 0; border-bottom: 1px solid var(--color-border); } .trend-summary div:last-child { border-bottom: 0; } .trend-line-chart { min-height: 220px; margin-inline: -8px; padding-top: 18px; } }
 </style>
