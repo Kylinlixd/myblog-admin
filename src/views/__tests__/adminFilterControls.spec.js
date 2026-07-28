@@ -42,6 +42,11 @@ describe('admin filter controls', () => {
     expect(layout).not.toContain('API 已代理到 8000')
   })
 
+  it('keeps the content table inside a touch-scroll viewport', () => {
+    expect(readView('dynamics/DynamicList.vue')).toContain('content-table-scroll')
+    expect(readView('dynamics/DynamicList.vue')).toContain('min-width: 1120px')
+  })
+
   it('lets shared admin filter styles size list-page inputs and selects', () => {
     const listViews = [
       readView('categories/CategoryList.vue'),

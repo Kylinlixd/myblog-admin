@@ -98,7 +98,8 @@
     </div>
 
     <a-card class="data-card admin-table-card">
-      <a-table
+      <div class="content-table-scroll">
+        <a-table
         :loading="loading"
         :columns="responsive ? columnsForMobile : columns"
         :data-source="dynamicList"
@@ -237,7 +238,8 @@
             </a-space>
           </template>
         </template>
-      </a-table>
+        </a-table>
+      </div>
     </a-card>
     
     <!-- 媒体预览对话框 -->
@@ -803,6 +805,23 @@ onUnmounted(() => {
     flex-wrap: wrap;
     gap: 4px;
   }
+}
+
+.content-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+:deep(.content-table-scroll .ant-table) {
+  min-width: 1120px;
+}
+
+:deep(.content-table-scroll .ant-table-container),
+:deep(.content-table-scroll .ant-table-content) {
+  overflow-x: visible !important;
 }
 
 :global(.ant-modal-content) {
