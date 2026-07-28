@@ -24,4 +24,14 @@ describe('global interaction feedback', () => {
     expect(css).toContain(':active')
     expect(css).toContain('@media (prefers-reduced-motion: reduce)')
   })
+
+  it('shows a safe-area-aware loading toast with reduced-motion support', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/App.vue'), 'utf8')
+
+    expect(source).toContain('<transition name="loading-toast">')
+    expect(source).toContain('class="loading-toast"')
+    expect(source).toContain('loading-toast__status')
+    expect(source).toContain('env(safe-area-inset-bottom)')
+    expect(source).toContain('@media (prefers-reduced-motion: reduce)')
+  })
 })
