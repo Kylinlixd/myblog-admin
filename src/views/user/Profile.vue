@@ -11,54 +11,15 @@
     <a-card class="profile-card">
       <template #header>
         <div class="card-header">
-          <span>基本信息</span>
-          <a-button 
-            type="primary" 
-            size="small" 
-            @click="isEditingProfile = true" 
-            v-if="!isEditingProfile"
-          >
-            编辑资料
-          </a-button>
+          <div>
+            <strong>基本信息</strong>
+            <small class="card-hint">昵称和个人简介会展示在博客公开页面</small>
+          </div>
+          <span class="edit-state">可编辑</span>
         </div>
       </template>
-      
-      <div class="profile-info" v-if="!isEditingProfile">
-        <div class="avatar-container">
-          <a-avatar :size="120" :src="userInfo.avatar || defaultAvatar">
-            {{ userInfo.nickname?.charAt(0) || userInfo.username?.charAt(0) }}
-          </a-avatar>
-        </div>
-        
-        <div class="info-list">
-          <div class="info-item">
-            <span class="label">用户名：</span>
-            <span class="value">{{ userInfo.username }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">昵称：</span>
-            <span class="value">{{ userInfo.nickname || '未设置' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">邮箱：</span>
-            <span class="value">{{ userInfo.email || '未设置' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">个人简介：</span>
-            <span class="value">{{ userInfo.bio || '未设置' }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">创建时间：</span>
-            <span class="value">{{ formatDate(userInfo.created_at) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="label">更新时间：</span>
-            <span class="value">{{ formatDate(userInfo.updated_at) }}</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="profile-edit" v-else>
+
+      <div class="profile-edit">
         <a-form
           ref="profileFormRef"
           :model="profileForm"
@@ -105,12 +66,10 @@
             />
           </a-form-item>
           
-          <a-form-item class="profile-actions">
-            <a-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">
-              保存资料
-            </a-button>
-            <a-button @click="cancelProfileEdit">取消</a-button>
-          </a-form-item>
+          <div class="form-actions profile-actions">
+            <a-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
+            <a-button @click="cancelProfileEdit">重置</a-button>
+          </div>
         </a-form>
       </div>
     </a-card>
@@ -155,12 +114,12 @@
           />
         </a-form-item>
         
-        <a-form-item class="password-actions">
+        <div class="form-actions password-actions">
           <a-button type="primary" :loading="loading" @click="handlePasswordChange">
             保存修改
           </a-button>
           <a-button @click="resetForm">重置</a-button>
-        </a-form-item>
+        </div>
       </a-form>
     </a-card>
   </div>
@@ -179,7 +138,6 @@ const passwordFormRef = ref(null)
 const profileFormRef = ref(null)
 const loading = ref(false)
 const profileLoading = ref(false)
-const isEditingProfile = ref(false)
 
 const userInfo = computed(() => userStore.userInfo || {})
 
@@ -210,7 +168,6 @@ const initProfileForm = () => {
 
 // 取消编辑个人资料
 const cancelProfileEdit = () => {
-  isEditingProfile.value = false
   initProfileForm()
 }
 
@@ -276,7 +233,7 @@ const handleProfileUpdate = async () => {
     await userStore.getUserInfo()
     
     AntMessage.success('个人资料更新成功')
-    isEditingProfile.value = false
+    initProfileForm()
   } catch (error) {
     console.error('更新个人资料失败:', error)
     AntMessage.error(error.message || '更新个人资料失败')
@@ -430,6 +387,7 @@ onMounted(() => {
 .card-header { display: flex; align-items: center; justify-content: space-between; }
 .card-header strong { display: block; color: var(--color-text); font-size: 15px; }
 .card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
+.edit-state { padding: 5px 10px; border-radius: 999px; color: var(--color-primary); background: var(--color-primary-soft); font-size: 12px; font-weight: 700; }
 .profile-info { display: grid; grid-template-columns: 160px 1fr; align-items: start; gap: 28px; }
 .profile-info .avatar-container { display: grid; min-height: 160px; margin: 0; place-items: center; border-radius: 14px; background: linear-gradient(145deg, #eef3ff, #f8faff); }
 .info-list { display: grid; gap: 0; padding-top: 4px; }
@@ -438,7 +396,7 @@ onMounted(() => {
 .value { min-width: 0; overflow-wrap: anywhere; color: var(--color-text); }
 .profile-edit { margin-top: 4px; max-width: 760px; }
 .profile-edit :deep(.ant-form-item), .password-card :deep(.ant-form-item) { margin-bottom: 18px; }
-.profile-actions :deep(.ant-form-item-control-input-content), .password-actions :deep(.ant-form-item-control-input-content) { display: flex; gap: 10px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--color-border); }
 .profile-edit :deep(.ant-form-item-label > label), .password-card :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-weight: 650; }
 .profile-edit :deep(.ant-input), .profile-edit :deep(.ant-input-affix-wrapper), .password-card :deep(.ant-input-affix-wrapper) { border-radius: 9px; }
 .password-card :deep(.ant-form) { max-width: 760px; padding: 4px 8px 0; }
@@ -453,7 +411,7 @@ onMounted(() => {
   .profile-info .avatar-container { min-height: 132px; }
   .profile-edit :deep(.ant-form), .password-card :deep(.ant-form) { padding-inline: 0; }
   .profile-edit :deep(.ant-form-item-label), .password-card :deep(.ant-form-item-label) { padding-bottom: 5px; text-align: left; }
-  .profile-actions :deep(.ant-form-item-control-input-content), .password-actions :deep(.ant-form-item-control-input-content) { width: 100%; }
-  .profile-actions :deep(.ant-btn), .password-actions :deep(.ant-btn) { flex: 1; }
+  .form-actions { justify-content: stretch; }
+  .form-actions .ant-btn { flex: 1; }
 }
 </style>
