@@ -202,6 +202,13 @@
     
     <!-- 搜索结果 -->
     <div class="search-results cinematic-card" v-if="searched">
+      <div class="search-result-heading">
+        <div>
+          <span class="search-result-kicker">SEARCH INDEX · 搜索索引</span>
+          <h2>与“<strong>{{ keyword }}</strong>”相关的内容</h2>
+        </div>
+        <span class="result-count">{{ loading ? '检索中' : `找到 ${total} 条` }}</span>
+      </div>
       <div v-if="loading" class="loading-state">
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" />
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
@@ -211,7 +218,8 @@
       
       <div v-else-if="!searchResults || searchResults.length === 0" class="no-results">
         <inbox-outlined />
-        <p>未找到相关结果</p>
+        <strong class="no-results__title">没有找到匹配的线索</strong>
+        <p>换一个更具体的词，或减少筛选条件后再试一次。</p>
         <a-button type="primary" @click="resetSearch">重新搜索</a-button>
       </div>
       
@@ -1342,4 +1350,48 @@ const debouncedSearch = debounce(handleSearch, 300)
     margin-top: 1rem;
   }
 }
+/* editorial search redesign */
+.blog-search-container { padding: clamp(42px, 7vw, 92px) 1rem 96px; }
+.search-hero { max-width: 980px; margin: 0 auto 30px; padding: 0 4px; text-align: left; }
+.search-hero h1 { max-width: 760px; margin: 0 0 16px; color: #253142; font-size: clamp(42px, 6vw, 76px); font-weight: 800; letter-spacing: -.065em; line-height: .95; text-wrap: balance; }
+.search-hero p { max-width: 560px; margin: 0; color: #697586; font-size: 15px; line-height: 1.7; }
+.search-box { max-width: 980px; margin: 0 auto 14px; gap: .65rem; }
+.search-input-wrapper { max-width: none; margin: 0; }
+.search-input :deep(.ant-input-affix-wrapper) { height: 58px; border: 1px solid #ead8c7; border-radius: 5px 16px 5px 16px; box-shadow: inset 0 1px rgb(255 255 255 / 70%), 0 14px 28px rgb(92 59 35 / 10%); }
+.search-input :deep(.ant-input-affix-wrapper:hover) { border-color: #c47747; box-shadow: 0 14px 34px rgb(92 59 35 / 15%); }
+.search-input :deep(.ant-input-affix-wrapper-focused) { border-color: #b85e2d; box-shadow: 0 0 0 3px rgb(184 94 45 / 14%); }
+.search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 58px; border-color: #b85e2d; border-radius: 0 15px 4px 0; background: #b85e2d; }
+.search-input :deep(.ant-btn:hover) { border-color: #a44e25; background: #a44e25; }
+.search-options { display: flex; justify-content: flex-end; }
+.search-options :deep(.ant-btn-link) { color: #a44e25; font-size: 12px; font-weight: 700; }
+.advanced-search-options { max-width: 980px; margin: 0 auto 14px; border: 1px solid #ead8c7; border-radius: 12px; background: rgb(255 250 242 / 82%); }
+.search-results { max-width: 980px; margin: 24px auto 0; padding: clamp(20px, 4vw, 38px); border-radius: 5px 24px 5px 24px; background: rgb(255 250 242 / 78%); box-shadow: 0 20px 48px rgb(92 59 35 / 10%); }
+.search-result-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid #ead8c7; }
+.search-result-kicker { color: #b85e2d; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+.search-result-heading h2 { margin: 8px 0 0; color: #253142; font-size: clamp(20px, 3vw, 30px); letter-spacing: -.04em; line-height: 1.1; }
+.search-result-heading h2 strong { color: #b85e2d; }
+.result-count { flex: 0 0 auto; color: #7d695c; font-size: 12px; font-weight: 700; }
+.search-history, .popular-searches { max-width: 980px; margin: 18px auto 0; padding: 14px 18px; border-bottom: 1px solid #ead8c7; }
+.history-header h3, .popular-header h3 { margin: 0; color: #536174; font-size: 12px; font-weight: 800; letter-spacing: .05em; }
+.history-items, .popular-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.history-item, .popular-item { cursor: pointer; }
+.view-mode-toggle { display: flex; justify-content: flex-end; margin: 18px 0 4px; }
+.no-results { min-height: 260px; padding: 48px 20px; color: #7d695c; }
+.no-results > svg { color: #c47747; font-size: 38px; }
+.no-results__title { color: #253142; font-size: 20px; }
+.no-results p { margin: 0; color: #697586; font-size: 13px; }
+.list-view :deep(.ant-list-item) { padding: 22px 8px; border-color: #ead8c7; border-radius: 0; background: transparent; box-shadow: none; }
+.list-view :deep(.ant-list-item:hover) { transform: none; border-color: #ead8c7; background: rgb(247 226 207 / 30%); }
+.result-title, .card-title { color: #253142; letter-spacing: -.025em; }
+.result-title:hover, .card-title:hover { color: #b85e2d; }
+.result-excerpt, .card-excerpt { color: #5b6672; line-height: 1.75; }
+.result-type, .card-type { border: 1px solid #ead8c7; border-radius: 4px; background: #f7e2cf; color: #a44e25; font-weight: 700; }
+.result-meta, .card-meta { border-color: #ead8c7; color: #7d695c; }
+.card-view { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.result-card { border: 1px solid #ead8c7; border-radius: 4px 20px 4px 20px; background: rgb(255 250 242 / 88%); box-shadow: 0 12px 26px rgb(92 59 35 / 8%); }
+.result-card:hover { border-color: #d8ad8b; box-shadow: 0 20px 38px rgb(92 59 35 / 14%); transform: translateY(-5px); }
+.card-content { padding: 22px; }
+.highlight { color: #a44e25; background: #f7e2cf; }
+@media (max-width: 768px) { .search-hero h1 { font-size: clamp(42px, 13vw, 64px); } .search-input :deep(.ant-input-affix-wrapper), .search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 48px; } .search-result-heading { align-items: flex-start; flex-direction: column; gap: 10px; } .search-results { margin-top: 16px; padding: 20px 16px; } }
+@media (prefers-reduced-motion: reduce) { .result-card, .list-view :deep(.ant-list-item), .search-input :deep(*) { transition: none !important; } }
 </style>
