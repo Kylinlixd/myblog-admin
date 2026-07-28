@@ -267,8 +267,16 @@ const rules = {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleString()
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+
+const normalizeTag = (item) => ({
+  ...item,
+  status: item.status || 'inactive',
+  useCount: Number(item.useCount ?? item.dynamicCount ?? 0) || 0
+})
 
 // 获取标签列表
 const fetchTags = async () => {
@@ -278,16 +286,10 @@ const fetchTags = async () => {
     
     if (result && result.results) {
       // 标准分页格式
-      tagList.value = (result.results || []).map(item => ({
-        ...item,
-        status: item.status || 'inactive' // 确保有默认状态
-      }));
+      tagList.value = (result.results || []).map(normalizeTag)
     } else if (result && Array.isArray(result)) {
       // 直接返回数组
-      tagList.value = result.map(item => ({
-        ...item,
-        status: item.status || 'inactive'
-      }));
+      tagList.value = result.map(normalizeTag)
     } else if (result && typeof result === 'object') {
       // 如果返回的是对象，尝试提取数据
       let items = [];
@@ -298,10 +300,7 @@ const fetchTags = async () => {
       } else if (result.data && result.data.items) {
         items = result.data.items;
       }
-      tagList.value = items.map(item => ({
-        ...item,
-        status: item.status || 'inactive'
-      }));
+      tagList.value = items.map(normalizeTag)
     } else {
       console.error('标签列表返回异常:', result);
       tagList.value = [];

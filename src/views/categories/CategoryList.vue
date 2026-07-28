@@ -75,7 +75,7 @@
       @change="handleTableChange"
       :expandable="false"
       :indent-size="0"
-      :scroll="{ x: '100%' }"
+      :scroll="{ x: 860 }"
       class="responsive-table"
     >
       <template #bodyCell="{ column, record }">
@@ -84,6 +84,11 @@
           <a-tag :color="record.status === 'active' ? 'success' : 'default'">
             {{ record.status === 'active' ? '启用' : '禁用' }}
           </a-tag>
+        </template>
+
+        <!-- 创建时间列 -->
+        <template v-else-if="column.dataIndex === 'createdAt'">
+          {{ formatDate(record.createdAt) }}
         </template>
 
         <!-- 操作列 -->
@@ -274,7 +279,9 @@ const rules = {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleString()
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 // 获取分类列表

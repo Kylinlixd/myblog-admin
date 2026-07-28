@@ -69,6 +69,10 @@
         </a-tag>
       </template>
       
+      <template #createTime="{ row }">
+        {{ formatDate(row.createTime) }}
+      </template>
+
       <template #actions="{ row }">
         <a-space class="table-row-actions">
           <a-button
@@ -137,7 +141,7 @@ const columns = [
   { label: '评论者', prop: 'nickname', width: '120px' },
   { label: '邮箱', prop: 'email', width: '180px' },
   { label: '状态', prop: 'status', slot: 'status', width: '100px' },
-  { label: '评论时间', prop: 'createTime', width: '180px' },
+  { label: '评论时间', prop: 'createTime', slot: 'createTime', width: '150px' },
   { label: '操作', slot: 'actions', width: '200px' }
 ]
 
@@ -362,17 +366,11 @@ const getStatusText = (status) => {
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) return ''
+  const pad = (value) => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 onMounted(() => {

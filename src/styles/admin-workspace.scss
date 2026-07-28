@@ -196,7 +196,7 @@
 .admin-table-card {
   --admin-table-min-width: 760px;
 
-  overflow: hidden;
+  overflow: visible;
 }
 
 .admin-page > .ant-table-wrapper,
@@ -222,7 +222,14 @@
 .admin-page .ant-table-content,
 .admin-page .ant-table-body,
 .admin-page .table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.admin-table-card .ant-table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-page .table-wrapper {
