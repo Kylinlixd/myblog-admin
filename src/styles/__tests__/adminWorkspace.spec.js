@@ -31,4 +31,14 @@ describe('admin workspace styles', () => {
     expect(stylesheet).toContain('.admin-filter .ant-input-affix-wrapper .ant-input')
     expect(stylesheet).toContain('background: transparent !important')
   })
+
+  it('keeps wrapped admin filters compact below the sidebar breakpoint', () => {
+    const stylesheet = fs.readFileSync(
+      path.join(process.cwd(), 'src/styles/admin-workspace.scss'),
+      'utf8'
+    )
+
+    expect(stylesheet).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))')
+    expect(stylesheet).toContain('.admin-filter .search-form-right .ant-form-item:last-child')
+  })
 })
