@@ -67,7 +67,7 @@
           :wrapper-col="{ span: 18 }"
         >
           <a-form-item label="用户名" prop="username">
-            <a-input v-model="profileForm.username" placeholder="请输入用户名" />
+            <a-input v-model:value="profileForm.username" placeholder="请输入用户名" />
           </a-form-item>
 
           <a-form-item label="头像">
@@ -88,16 +88,16 @@
           </a-form-item>
           
           <a-form-item label="昵称" prop="nickname">
-            <a-input v-model="profileForm.nickname" placeholder="请输入昵称" />
+            <a-input v-model:value="profileForm.nickname" placeholder="请输入昵称" />
           </a-form-item>
           
           <a-form-item label="邮箱" prop="email">
-            <a-input v-model="profileForm.email" placeholder="请输入邮箱" />
+            <a-input v-model:value="profileForm.email" placeholder="请输入邮箱" />
           </a-form-item>
           
           <a-form-item label="个人简介" prop="bio">
             <a-textarea
-              v-model="profileForm.bio"
+              v-model:value="profileForm.bio"
               :rows="4"
               placeholder="请输入个人简介"
               show-count
@@ -135,14 +135,14 @@
       >
         <a-form-item label="原密码" prop="oldPassword">
           <a-input-password
-            v-model="passwordForm.oldPassword"
+            v-model:value="passwordForm.oldPassword"
             placeholder="请输入原密码"
           />
         </a-form-item>
         
           <a-form-item label="新密码" prop="newPassword">
             <a-input-password
-              v-model="passwordForm.newPassword"
+              v-model:value="passwordForm.newPassword"
               placeholder="请输入新密码"
             />
             <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
@@ -150,7 +150,7 @@
         
         <a-form-item label="确认密码" prop="confirmPassword">
           <a-input-password
-            v-model="passwordForm.confirmPassword"
+            v-model:value="passwordForm.confirmPassword"
             placeholder="请再次输入新密码"
           />
         </a-form-item>

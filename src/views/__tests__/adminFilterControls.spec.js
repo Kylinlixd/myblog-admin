@@ -114,4 +114,14 @@ describe('admin filter controls', () => {
     expect(adminStyles).toContain('.table-row-actions')
     expect(adminStyles).toContain('flex-wrap: nowrap')
   })
+
+  it('binds profile and password controls to Ant Design Vue value models', () => {
+    const profileView = readView('user/Profile.vue')
+
+    expect(profileView).toContain('v-model:value="profileForm.nickname"')
+    expect(profileView).toContain('v-model:value="profileForm.bio"')
+    expect(profileView).toContain('v-model:value="passwordForm.oldPassword"')
+    expect(profileView).toContain('v-model:value="passwordForm.newPassword"')
+    expect(profileView).toContain('changePassword({')
+  })
 })
