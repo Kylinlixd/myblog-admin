@@ -4,6 +4,16 @@
       <table class="inspira-table">
         <thead>
           <tr>
+            <th v-if="selectable" class="selection-cell">
+              <input
+                type="checkbox"
+                aria-label="选择当前页全部数据"
+                :checked="allVisibleSelected"
+                :indeterminate="someVisibleSelected"
+                :disabled="!data.length"
+                @change="toggleVisibleRows"
+              />
+            </th>
             <th v-for="(column, index) in columns" :key="index" :style="column.width ? { width: column.width } : {}">
               {{ column.label }}
             </th>
@@ -13,6 +23,14 @@
           <slot v-if="$slots.default"></slot>
           <template v-else>
             <tr v-for="(row, rowIndex) in data" :key="getRowKey(row, rowIndex)">
+              <td v-if="selectable" class="selection-cell">
+                <input
+                  type="checkbox"
+                  :aria-label="`选择第 ${rowIndex + 1} 行`"
+                  :checked="isSelected(row, rowIndex)"
+                  @change="toggleRow(row, rowIndex, $event)"
+                />
+              </td>
               <td v-for="(column, colIndex) in columns" :key="colIndex">
                 <template v-if="column.slot">
                   <slot :name="column.slot" :row="row" :index="rowIndex"></slot>
@@ -27,7 +45,7 @@
             </tr>
           </template>
           <tr v-if="!loading && (!data || data.length === 0)">
-            <td :colspan="columns.length" class="empty-cell">
+            <td :colspan="columns.length + (selectable ? 1 : 0)" class="empty-cell">
               <div class="empty-data">
                 <i class="icon-empty"></i>
                 <span>{{ emptyText }}</span>
@@ -44,7 +62,7 @@
 </template>
 
 <script setup>
-import { defineEmits } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   data: {
@@ -66,8 +84,22 @@ const props = defineProps({
   emptyText: {
     type: String,
     default: '暂无数据'
+  },
+  selectable: {
+    type: Boolean,
+    default: false
+  },
+  selectedRowKeys: {
+    type: Array,
+    default: () => []
   }
 })
+
+const emit = defineEmits(['selection-change'])
+const visibleKeys = computed(() => props.data.map((row, index) => getRowKey(row, index)))
+const selectedSet = computed(() => new Set(props.selectedRowKeys))
+const allVisibleSelected = computed(() => visibleKeys.value.length > 0 && visibleKeys.value.every((key) => selectedSet.value.has(key)))
+const someVisibleSelected = computed(() => !allVisibleSelected.value && visibleKeys.value.some((key) => selectedSet.value.has(key)))
 
 // 按路径获取对象属性值，支持嵌套属性
 const getValueByPath = (object, path) => {
@@ -91,6 +123,23 @@ const getRowKey = (row, index) => {
     return row[props.rowKey]
   }
   return index
+}
+
+const isSelected = (row, index) => selectedSet.value.has(getRowKey(row, index))
+
+const toggleRow = (row, index, event) => {
+  const next = new Set(props.selectedRowKeys)
+  const key = getRowKey(row, index)
+  if (event.target.checked) next.add(key)
+  else next.delete(key)
+  emit('selection-change', [...next])
+}
+
+const toggleVisibleRows = (event) => {
+  const visible = new Set(visibleKeys.value)
+  const next = new Set(props.selectedRowKeys.filter((key) => !visible.has(key)))
+  if (event.target.checked) visibleKeys.value.forEach((key) => next.add(key))
+  emit('selection-change', [...next])
 }
 </script>
 
@@ -124,6 +173,19 @@ const getRowKey = (row, index) => {
     text-align: left;
     border-bottom: 1px solid #ebeef5;
     transition: all 0.3s;
+  }
+
+  .selection-cell {
+    width: 48px;
+    padding-inline: 16px 4px;
+    text-align: center;
+  }
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-primary);
+    cursor: pointer;
   }
   
   th {

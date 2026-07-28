@@ -5,7 +5,8 @@
     <!-- 搜索表单 -->
     <SearchForm 
       :form="filterForm" 
-      :default-values="{ status: 'approved' }"
+      :default-values="{ status: '' }"
+      :search-on-reset="false"
       @search="handleSearch" 
       @reset="resetFilter"
     >
@@ -20,13 +21,32 @@
         </a-select>
       </a-form-item>
     </SearchForm>
+
+    <div class="comment-batch-toolbar" :class="{ 'comment-batch-toolbar--active': selectedCommentIds.length }">
+      <span>
+        <strong>{{ selectedCommentIds.length }}</strong>
+        {{ selectedCommentIds.length ? '条评论已选择' : '选择评论后可批量处理' }}
+      </span>
+      <a-button
+        danger
+        :disabled="!selectedCommentIds.length"
+        :loading="batchDeleting"
+        @click="handleBatchDelete"
+      >
+        <template #icon><delete-outlined /></template>
+        批量删除
+      </a-button>
+    </div>
     
     <!-- 评论列表 -->
     <DataTable
       :data="comments"
       :columns="columns"
       :loading="loading"
+      selectable
+      :selected-row-keys="selectedCommentIds"
       row-key="id"
+      @selection-change="selectedCommentIds = $event"
     >
       <template #content="{ row }">
         <div class="content-cell">{{ row.content }}</div>
@@ -90,7 +110,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import { getCommentList, approveComment, rejectComment, deleteComment } from '../../api/comment'
 import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
@@ -116,11 +136,13 @@ const loading = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const selectedCommentIds = ref([])
+const batchDeleting = ref(false)
 
 // 筛选表单
 const filterForm = reactive({
   author: '',
-  status: 'approved'  // 默认设置为已通过状态
+  status: ''
 })
 
 // 获取评论列表
@@ -128,10 +150,13 @@ const getComments = async () => {
   loading.value = true
   
   try {
+    const activeFilters = Object.fromEntries(
+      Object.entries(filterForm).filter(([, value]) => value !== '' && value !== null && value !== undefined)
+    )
     const response = await getCommentList({
       page: currentPage.value,
       pageSize: pageSize.value,
-      ...filterForm
+      ...activeFilters
     })
     
     
@@ -225,6 +250,7 @@ const handleDelete = async (row) => {
     const response = await deleteComment(row.id)
     if (response.code === 200) {
       message.success('删除成功')
+      selectedCommentIds.value = selectedCommentIds.value.filter((id) => id !== row.id)
       getComments()
     } else {
       message.error(response.message || '删除失败')
@@ -233,6 +259,41 @@ const handleDelete = async (row) => {
     console.error('删除评论失败:', error)
     message.error('删除失败')
   }
+}
+
+const handleBatchDelete = () => {
+  if (!selectedCommentIds.value.length || batchDeleting.value) return
+
+  Modal.confirm({
+    title: `删除选中的 ${selectedCommentIds.value.length} 条评论？`,
+    content: '删除后无法恢复，请确认这些评论不再需要保留。',
+    okText: '确认删除',
+    cancelText: '取消',
+    okButtonProps: { danger: true },
+    async onOk() {
+      batchDeleting.value = true
+      const ids = [...selectedCommentIds.value]
+      try {
+        const results = await Promise.allSettled(ids.map(async (id) => {
+          const response = await deleteComment(id)
+          if (response?.code !== 200) throw new Error(response?.message || '删除失败')
+          return id
+        }))
+        const failedIds = results.reduce((failed, result, index) => {
+          if (result.status === 'rejected') failed.push(ids[index])
+          return failed
+        }, [])
+        const successCount = ids.length - failedIds.length
+        selectedCommentIds.value = failedIds
+
+        if (!failedIds.length) message.success(`已删除 ${successCount} 条评论`)
+        else message.warning(`已删除 ${successCount} 条，${failedIds.length} 条删除失败并保持选中`)
+        await getComments()
+      } finally {
+        batchDeleting.value = false
+      }
+    }
+  })
 }
 
 // 获取状态颜色
@@ -283,5 +344,32 @@ onMounted(() => {
   max-height: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.comment-batch-toolbar {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 0;
+  padding: 9px 12px 9px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: white;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.comment-batch-toolbar--active {
+  border-color: rgb(49 91 234 / 26%);
+  background: #f7f9ff;
+}
+
+.comment-batch-toolbar strong { margin-right: 4px; color: var(--color-primary); font-size: 17px; }
+
+@media (max-width: 560px) {
+  .comment-batch-toolbar { align-items: stretch; flex-direction: column; }
 }
 </style>
