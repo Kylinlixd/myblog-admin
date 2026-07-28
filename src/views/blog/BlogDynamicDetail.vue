@@ -37,7 +37,7 @@
       <!-- 评论列表 -->
       <div class="comment-section cinematic-card">
         <div class="comment-header">
-          <h3>评论 ({{ dynamic.comments || 0 }})</h3>
+          <h3>评论 ({{ commentTotal }})</h3>
         </div>
         
         <!-- 评论表单 -->
@@ -246,7 +246,6 @@ const submitComment = async () => {
       email.value = ''
       commentPage.value = 1
       await fetchComments()
-      dynamic.value.comments = (dynamic.value.comments || 0) + 1
     } else {
       message.error(result?.message || '评论失败')
     }
@@ -410,6 +409,8 @@ onMounted(fetchDynamicDetail)
 }
 
 .dynamic-footer {
+  width: min(100%, var(--reading-width));
+  margin-inline: auto;
   border-top: 1px solid #eee;
   padding-top: 1.5rem;
   margin-top: 2rem;
@@ -452,7 +453,7 @@ onMounted(fetchDynamicDetail)
   color: var(--blog-reading-text);
   word-wrap: break-word;
   padding: 0;
-  width: 100%;
+  width: min(100%, var(--reading-width));
   max-width: 100%;
   box-sizing: border-box;
   position: relative;
@@ -641,9 +642,9 @@ onMounted(fetchDynamicDetail)
     padding: 1.5rem;
   }
 
-  :deep(.markdown-body) {
-    padding: 0 1.5rem;
-    font-size: 15px;
+    :deep(.markdown-body) {
+      padding: 0;
+      font-size: 16px;
   }
 }
 
@@ -743,8 +744,9 @@ onMounted(fetchDynamicDetail)
 
 /* 评论区域样式 */
 .comment-section {
-  margin-top: 40px;
-  padding: 20px;
+  width: min(100%, var(--reading-width));
+  margin: 40px auto 0;
+  padding: clamp(20px, 4vw, 32px);
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);

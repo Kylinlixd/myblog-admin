@@ -140,6 +140,12 @@
   line-height: 1.75 !important;
 }
 
+.dynamic-detail-container .dynamic-header .dynamic-title {
+  max-width: 900px;
+  font-size: clamp(2.7rem, 5vw, 4.5rem) !important;
+  line-height: 1.02 !important;
+}
+
 .cinematic-card {
   border: 1px solid var(--blog-line) !important;
   border-radius: 22px !important;
@@ -198,6 +204,10 @@
 
 .cinematic-page .comment-user .time,
 .cinematic-page .ant-input-data-count {
+  color: #8fa2bf !important;
+}
+
+.cinematic-page .ant-input-textarea-show-count::after {
   color: #8fa2bf !important;
 }
 

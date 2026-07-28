@@ -9,6 +9,7 @@ describe('admin workspace styles', () => {
     )
 
     expect(stylesheet).toContain('.workspace-content')
+    expect(stylesheet).toContain('width: min(100%, 1660px)')
     expect(stylesheet).toContain('.admin-page')
     expect(stylesheet).toContain('.admin-filter')
     expect(stylesheet).toContain('.admin-toolbar')

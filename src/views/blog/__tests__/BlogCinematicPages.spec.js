@@ -48,6 +48,8 @@ describe('cinematic public blog pages', () => {
     expect(theme).toContain('.cinematic-page .comment-content')
     expect(theme).toContain('.cinematic-page .ant-form-item-label > label')
     expect(theme).toContain('.cinematic-page .ant-input::placeholder')
+    expect(theme).toContain('.cinematic-page .ant-input-textarea-show-count::after')
+    expect(theme).toContain('.dynamic-detail-container .dynamic-header .dynamic-title')
     expect(globalStyles).toContain('Geist, "Segoe UI", "PingFang SC", "Microsoft YaHei"')
   })
 })
