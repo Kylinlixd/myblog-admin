@@ -23,7 +23,7 @@
         </div>
       </header>
 
-      <div class="mobile-toc-panel">
+      <div v-if="tocItems.length" class="mobile-toc-panel">
         <button class="mobile-toc-trigger" type="button" @click="tocOpen = !tocOpen">
           <span>目录</span><span>{{ tocOpen ? '收起' : `${tocItems.length} 个章节` }}</span>
         </button>
@@ -32,7 +32,7 @@
         </nav>
       </div>
 
-      <div class="article-layout">
+      <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
         <main class="article-main-column">
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
 
@@ -51,13 +51,12 @@
           </div>
         </main>
 
-        <aside class="article-side-column">
+        <aside v-if="tocItems.length" class="article-side-column">
           <div class="article-toc">
             <div class="article-toc__label">ON THIS PAGE</div>
             <div class="article-toc__title">目录</div>
             <nav aria-label="文章目录">
               <button v-for="item in tocItems" :key="item.id" type="button" :class="`toc-level-${item.level}`" @click="scrollToHeading(item.id)">{{ item.text }}</button>
-              <span v-if="!tocItems.length" class="toc-empty">暂无章节目录</span>
             </nav>
           </div>
         </aside>
@@ -969,6 +968,10 @@ onBeforeUnmount(() => {
       gap: clamp(28px, 5vw, 72px);
       align-items: start;
       justify-content: center;
+    }
+
+    .article-layout--without-toc {
+      grid-template-columns: minmax(0, 780px);
     }
 
     .article-main-column { min-width: 0; }

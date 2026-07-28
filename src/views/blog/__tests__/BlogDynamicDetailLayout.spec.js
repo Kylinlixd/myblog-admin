@@ -16,6 +16,8 @@ test('文章详情包含目录与移动端折叠入口', () => {
   expect(source).toContain('article-toc')
   expect(source).toContain('目录')
   expect(source).toContain('tocOpen')
+  expect(source).toContain("v-if=\"tocItems.length\"")
+  expect(source).toContain('article-layout--without-toc')
 })
 
 test('文章详情包含移动端和 reduced motion 规则', () => {
