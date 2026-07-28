@@ -8,6 +8,8 @@
   --blog-text: #edf3ff;
   --blog-text-soft: #a0b0c8;
   --blog-text-muted: #71839d;
+  --blog-reading-text: #dbe6f7;
+  --blog-comment-text: #d6e1f2;
   --blog-accent: #789cff;
   --blog-accent-strong: #4b72f8;
   --blog-cyan: #5dd9e8;
@@ -174,6 +176,31 @@
   border-color: var(--blog-line) !important;
 }
 
+.cinematic-page .reading-frame,
+.cinematic-page .reading-frame :is(p, li, td) {
+  color: var(--blog-reading-text) !important;
+}
+
+.cinematic-page .reading-frame a {
+  color: #9bb5ff;
+  text-decoration-color: rgb(155 181 255 / 45%);
+  text-underline-offset: 3px;
+}
+
+.cinematic-page .comment-content {
+  color: var(--blog-comment-text) !important;
+}
+
+.cinematic-page .comment-user .nickname,
+.cinematic-page .ant-form-item-label > label {
+  color: var(--blog-text) !important;
+}
+
+.cinematic-page .comment-user .time,
+.cinematic-page .ant-input-data-count {
+  color: #8fa2bf !important;
+}
+
 .cinematic-page :is(.empty-state, .loading-state, .empty-container, .loading-container) {
   color: var(--blog-text-soft) !important;
 }
@@ -184,6 +211,12 @@
   border-color: var(--blog-line-strong) !important;
   background: rgb(7 16 29 / 76%) !important;
   color: var(--blog-text) !important;
+}
+
+.cinematic-page .ant-input::placeholder,
+.cinematic-page textarea.ant-input::placeholder {
+  color: #7f93b1 !important;
+  opacity: 1;
 }
 
 .cinematic-page .ant-pagination-item,

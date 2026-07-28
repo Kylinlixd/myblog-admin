@@ -808,9 +808,9 @@ onActivated(() => {
 }
 
 .comment-content {
-  color: #334155;
-  line-height: 1.6;
-  word-break: break-all;
+  color: var(--blog-comment-text);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .no-comments {

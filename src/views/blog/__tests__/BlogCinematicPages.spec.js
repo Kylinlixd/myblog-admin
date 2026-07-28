@@ -38,4 +38,16 @@ describe('cinematic public blog pages', () => {
     expect(dynamic).not.toContain('function useMockData')
     expect(dynamic).not.toContain('getMockDynamics')
   })
+
+  it('separates readable article and comment colors from muted metadata', () => {
+    const theme = fs.readFileSync(path.join(process.cwd(), 'src/styles/blog-cinematic.scss'), 'utf8')
+    const globalStyles = fs.readFileSync(path.join(process.cwd(), 'src/styles/global.scss'), 'utf8')
+
+    expect(theme).toContain('--blog-reading-text')
+    expect(theme).toContain('--blog-comment-text')
+    expect(theme).toContain('.cinematic-page .comment-content')
+    expect(theme).toContain('.cinematic-page .ant-form-item-label > label')
+    expect(theme).toContain('.cinematic-page .ant-input::placeholder')
+    expect(globalStyles).toContain('Geist, "Segoe UI", "PingFang SC", "Microsoft YaHei"')
+  })
 })

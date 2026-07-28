@@ -18,7 +18,7 @@
         </div>
       </div>
       
-      <div class="dynamic-body markdown-body" v-html="renderMarkdown(dynamic.content)"></div>
+      <div class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
       
       <div class="dynamic-footer">
         <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
@@ -325,7 +325,7 @@ onMounted(fetchDynamicDetail)
 
 .dynamic-content {
   width: 100%;
-  max-width: 900px;
+  max-width: 1040px;
   margin: 0 auto;
   padding: 0 2.5rem 30px;
   flex: 1;
@@ -394,17 +394,19 @@ onMounted(fetchDynamicDetail)
 }
 
 .dynamic-body {
+  width: min(100%, var(--reading-width));
+  margin-inline: auto;
   margin-bottom: 3rem;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  line-height: 1.8;
-  color: #334155;
+  padding: clamp(24px, 5vw, 54px);
+  background: #0a1525;
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%);
+  line-height: 1.9;
+  color: var(--blog-reading-text);
   position: relative;
   z-index: 2;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  border: 1px solid var(--blog-line);
 }
 
 .dynamic-footer {
@@ -444,12 +446,12 @@ onMounted(fetchDynamicDetail)
 
 /* Markdown 样式优化 */
 :deep(.markdown-body) {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.8;
-  color: #334155;
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 18px;
+  line-height: 1.9;
+  color: var(--blog-reading-text);
   word-wrap: break-word;
-  padding: 0 2rem;
+  padding: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -490,8 +492,8 @@ onMounted(fetchDynamicDetail)
 
 :deep(.markdown-body p) {
   margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #334155;
+  margin-bottom: 1.35em;
+  color: var(--blog-reading-text);
 }
 
 :deep(.markdown-body code) {
@@ -792,9 +794,9 @@ onMounted(fetchDynamicDetail)
 }
 
 .comment-content {
-  color: #666;
-  line-height: 1.6;
-  word-break: break-all;
+  color: var(--blog-comment-text);
+  line-height: 1.75;
+  overflow-wrap: anywhere;
 }
 
 .no-comments {
