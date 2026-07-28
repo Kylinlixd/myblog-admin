@@ -105,7 +105,7 @@
             />
           </a-form-item>
           
-          <a-form-item>
+          <a-form-item class="profile-actions">
             <a-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">
               保存资料
             </a-button>
@@ -155,7 +155,7 @@
           />
         </a-form-item>
         
-        <a-form-item>
+        <a-form-item class="password-actions">
           <a-button type="primary" :loading="loading" @click="handlePasswordChange">
             保存修改
           </a-button>
@@ -261,18 +261,19 @@ const handleProfileUpdate = async () => {
   if (!profileFormRef.value) return
   
   try {
-    await profileFormRef.value.validate()
+    const values = await profileFormRef.value.validate()
     
     profileLoading.value = true
     
     // 调用更新用户资料的API
     await userStore.updateProfile({
-      username: profileForm.username,
-      nickname: profileForm.nickname,
-      email: profileForm.email,
-      bio: profileForm.bio,
+      username: values.username,
+      nickname: values.nickname,
+      email: values.email,
+      bio: values.bio,
       avatar: profileForm.avatar
     })
+    await userStore.getUserInfo()
     
     AntMessage.success('个人资料更新成功')
     isEditingProfile.value = false
@@ -347,20 +348,11 @@ const handlePasswordChange = async () => {
   if (!passwordFormRef.value) return
   
   try {
-    // 验证表单
-    await passwordFormRef.value.validate()
-    
-    // 检查密码是否为空
-    if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
-      return
-    }
-    
     loading.value = true
-    
-    // 调用修改密码的API
+    const values = await passwordFormRef.value.validate()
     const result = await changePassword({
-      oldPassword: passwordForm.oldPassword,
-      newPassword: passwordForm.newPassword
+      oldPassword: values.oldPassword,
+      newPassword: values.newPassword
     })
     
     // 处理成功响应
@@ -446,6 +438,7 @@ onMounted(() => {
 .value { min-width: 0; overflow-wrap: anywhere; color: var(--color-text); }
 .profile-edit { margin-top: 4px; max-width: 760px; }
 .profile-edit :deep(.ant-form-item), .password-card :deep(.ant-form-item) { margin-bottom: 18px; }
+.profile-actions :deep(.ant-form-item-control-input-content), .password-actions :deep(.ant-form-item-control-input-content) { display: flex; gap: 10px; }
 .profile-edit :deep(.ant-form-item-label > label), .password-card :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-weight: 650; }
 .profile-edit :deep(.ant-input), .profile-edit :deep(.ant-input-affix-wrapper), .password-card :deep(.ant-input-affix-wrapper) { border-radius: 9px; }
 .password-card :deep(.ant-form) { max-width: 760px; padding: 4px 8px 0; }
@@ -460,5 +453,7 @@ onMounted(() => {
   .profile-info .avatar-container { min-height: 132px; }
   .profile-edit :deep(.ant-form), .password-card :deep(.ant-form) { padding-inline: 0; }
   .profile-edit :deep(.ant-form-item-label), .password-card :deep(.ant-form-item-label) { padding-bottom: 5px; text-align: left; }
+  .profile-actions :deep(.ant-form-item-control-input-content), .password-actions :deep(.ant-form-item-control-input-content) { width: 100%; }
+  .profile-actions :deep(.ant-btn), .password-actions :deep(.ant-btn) { flex: 1; }
 }
 </style>
