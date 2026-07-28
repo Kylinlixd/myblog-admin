@@ -9,18 +9,34 @@
       <p>文章不存在或已被删除</p>
     </div>
     
-    <div v-else class="dynamic-content cinematic-card">
-      <div class="dynamic-header cinematic-hero">
+    <div v-else class="article-reading-shell">
+      <div class="reading-progress" aria-hidden="true"><span :style="{ width: `${readingProgress}%` }"></span></div>
+      <header class="article-header">
+        <div class="article-kicker">{{ dynamic.type || 'TECH NOTE' }} · DIGITAL GARDEN</div>
         <h1 class="dynamic-title">{{ dynamic.title }}</h1>
+        <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
         <div class="dynamic-meta">
           <span class="dynamic-date">{{ formatDate(dynamic.createdAt) }}</span>
-          <span class="dynamic-views">{{ dynamic.views }} 阅读</span>
+          <span>{{ dynamic.views || 0 }} 阅读</span>
+          <span aria-label="阅读时长">{{ readingMinutes }} 分钟阅读</span>
+          <span v-if="dynamic.category?.name">{{ dynamic.category.name }}</span>
         </div>
+      </header>
+
+      <div class="mobile-toc-panel">
+        <button class="mobile-toc-trigger" type="button" @click="tocOpen = !tocOpen">
+          <span>目录</span><span>{{ tocOpen ? '收起' : `${tocItems.length} 个章节` }}</span>
+        </button>
+        <nav v-if="tocOpen" class="mobile-toc-list" aria-label="文章目录">
+          <button v-for="item in tocItems" :key="item.id" type="button" :class="`toc-level-${item.level}`" @click="scrollToHeading(item.id)">{{ item.text }}</button>
+        </nav>
       </div>
-      
-      <div class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
-      
-      <div class="dynamic-footer">
+
+      <div class="article-layout">
+        <main class="article-main-column">
+          <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
+
+          <div class="dynamic-footer">
         <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
           <span class="tag-label">标签：</span>
           <router-link 
@@ -32,6 +48,19 @@
             {{ tag.name }}
           </router-link>
         </div>
+          </div>
+        </main>
+
+        <aside class="article-side-column">
+          <div class="article-toc">
+            <div class="article-toc__label">ON THIS PAGE</div>
+            <div class="article-toc__title">目录</div>
+            <nav aria-label="文章目录">
+              <button v-for="item in tocItems" :key="item.id" type="button" :class="`toc-level-${item.level}`" @click="scrollToHeading(item.id)">{{ item.text }}</button>
+              <span v-if="!tocItems.length" class="toc-empty">暂无章节目录</span>
+            </nav>
+          </div>
+        </aside>
       </div>
 
       <!-- 评论列表 -->
@@ -117,7 +146,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
@@ -165,6 +194,11 @@ const route = useRoute()
 const appStore = useAppStore()
 const dynamic = ref(null)
 const loading = ref(true)
+const articleBodyRef = ref(null)
+const tocItems = ref([])
+const tocOpen = ref(false)
+const readingProgress = ref(0)
+const readingMinutes = ref(1)
 
 // 评论相关
 const commentForm = ref(null)
@@ -193,6 +227,31 @@ const commentRules = {
 
 const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
+}
+
+const syncArticleNavigation = async () => {
+  await nextTick()
+  if (!articleBodyRef.value) return
+  const headings = [...articleBodyRef.value.querySelectorAll('h2, h3')]
+  tocItems.value = headings.map((heading, index) => {
+    const id = `article-heading-${index + 1}`
+    heading.id = id
+    return { id, level: heading.tagName === 'H2' ? 2 : 3, text: heading.textContent?.trim() || `章节 ${index + 1}` }
+  })
+}
+
+const updateReadingProgress = () => {
+  const element = articleBodyRef.value
+  if (!element) return
+  const rect = element.getBoundingClientRect()
+  const total = Math.max(1, element.offsetHeight - window.innerHeight * 0.65)
+  const travelled = Math.min(total, Math.max(0, window.innerHeight * 0.35 - rect.top))
+  readingProgress.value = Math.round((travelled / total) * 100)
+}
+
+const scrollToHeading = (id) => {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  tocOpen.value = false
 }
 
 // 获取评论列表
@@ -275,8 +334,11 @@ const fetchDynamicDetail = async () => {
     const dynamicId = route.params.id
     const response = await getBlogDynamicDetail(dynamicId)
     
-    if (response.code === 200) {
-      dynamic.value = response.data
+        if (response.code === 200) {
+          dynamic.value = response.data
+          const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
+          readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
+          await syncArticleNavigation()
       // 增加阅读量
       await increaseDynamicView(dynamicId)
       // 加载评论列表
@@ -295,6 +357,14 @@ const fetchDynamicDetail = async () => {
 }
 
 onMounted(fetchDynamicDetail)
+onMounted(() => {
+  window.addEventListener('scroll', updateReadingProgress, { passive: true })
+  window.addEventListener('resize', updateReadingProgress)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateReadingProgress)
+  window.removeEventListener('resize', updateReadingProgress)
+})
 </script>
 
 <style scoped>
@@ -807,8 +877,256 @@ onMounted(fetchDynamicDetail)
   padding: 20px 0;
 }
 
-.comment-pagination {
-  text-align: center;
-  margin-top: 20px;
-}
+    .comment-pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .article-reading-shell {
+      --article-ink: #17263d;
+      --article-muted: #718096;
+      --article-paper: #fffdf8;
+      --article-line: #e9e3d8;
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 0 0 72px;
+      color: var(--article-ink);
+      position: relative;
+    }
+
+    .reading-progress {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 30;
+      height: 3px;
+      background: rgb(226 232 240 / 40%);
+    }
+
+    .reading-progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #d98b38, #2a7180);
+      transition: width .18s ease-out;
+    }
+
+    .article-header {
+      max-width: 880px;
+      margin: clamp(42px, 8vw, 92px) auto 44px;
+      padding: clamp(28px, 5vw, 64px);
+      border: 1px solid var(--article-line);
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at 90% 0%, rgb(42 113 128 / 13%), transparent 34%),
+        linear-gradient(135deg, #fffdf8, #f7efe4);
+      box-shadow: 0 26px 70px rgb(88 65 37 / 12%);
+      animation: article-enter .6s ease both;
+    }
+
+    .article-kicker,
+    .article-toc__label {
+      color: #a66b28;
+      font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .article-header .dynamic-title {
+      margin: 18px 0 16px;
+      color: var(--article-ink);
+      font-size: clamp(2.15rem, 5vw, 4.6rem);
+      font-weight: 780;
+      letter-spacing: -.055em;
+      line-height: 1.04;
+      text-shadow: none;
+      background: none;
+      -webkit-text-fill-color: currentColor;
+    }
+
+    .article-summary {
+      max-width: 680px;
+      margin: 0 0 24px;
+      color: #536277;
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      line-height: 1.75;
+    }
+
+    .article-header .dynamic-meta {
+      gap: 8px;
+      color: var(--article-muted);
+      font-size: 13px;
+    }
+
+    .article-header .dynamic-meta span {
+      padding: 7px 11px;
+      border: 1px solid rgb(127 147 151 / 22%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 62%);
+    }
+
+    .article-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 780px) 220px;
+      gap: clamp(28px, 5vw, 72px);
+      align-items: start;
+      justify-content: center;
+    }
+
+    .article-main-column { min-width: 0; }
+
+    .article-main-column .dynamic-body {
+      width: 100%;
+      margin: 0;
+      padding: clamp(28px, 5vw, 62px);
+      border: 1px solid var(--article-line);
+      border-radius: 22px;
+      background: var(--article-paper);
+      box-shadow: 0 20px 52px rgb(88 65 37 / 9%);
+    }
+
+    .article-main-column .dynamic-footer {
+      width: 100%;
+      margin-top: 22px;
+      border-top-color: var(--article-line);
+    }
+
+    .article-side-column {
+      position: sticky;
+      top: 34px;
+    }
+
+    .article-toc {
+      padding: 18px 0 18px 18px;
+      border-left: 1px solid var(--article-line);
+    }
+
+    .article-toc__title {
+      margin: 8px 0 16px;
+      font-size: 18px;
+      font-weight: 750;
+    }
+
+    .article-toc nav,
+    .mobile-toc-list {
+      display: grid;
+      gap: 4px;
+    }
+
+    .article-toc button,
+    .mobile-toc-list button {
+      width: 100%;
+      padding: 7px 8px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #748092;
+      cursor: pointer;
+      font-size: 12px;
+      line-height: 1.4;
+      text-align: left;
+      transition: color .2s ease, background .2s ease;
+    }
+
+    .article-toc button:hover,
+    .mobile-toc-list button:hover {
+      background: #f6eee3;
+      color: #a66b28;
+    }
+
+    .article-toc .toc-level-3,
+    .mobile-toc-list .toc-level-3 { padding-left: 20px; }
+
+    .toc-empty { color: #9aa5b1; font-size: 12px; }
+
+    .mobile-toc-panel { display: none; }
+
+    .article-main-column :deep(.markdown-body) {
+      width: 100%;
+      max-width: 100%;
+      font-size: clamp(16px, 1.35vw, 18px);
+      line-height: 1.95;
+      color: var(--article-ink);
+    }
+
+    .article-main-column :deep(.markdown-body h1),
+    .article-main-column :deep(.markdown-body h2),
+    .article-main-column :deep(.markdown-body h3),
+    .article-main-column :deep(.markdown-body h4) {
+      scroll-margin-top: 28px;
+      padding-left: 0;
+      border: 0;
+      color: var(--article-ink);
+      letter-spacing: -.025em;
+    }
+
+    .article-main-column :deep(.markdown-body h2) {
+      margin-top: 2.8em;
+      font-size: 1.55em;
+    }
+
+    .article-main-column :deep(.markdown-body h3) {
+      margin-top: 2.2em;
+      font-size: 1.22em;
+    }
+
+    .article-main-column :deep(.markdown-body p) { color: #26364d; }
+    .article-main-column :deep(.markdown-body a) { color: #176b79; text-underline-offset: 3px; }
+    .article-main-column :deep(.markdown-body blockquote) {
+      border-left: 3px solid #d98b38;
+      background: #fbf3e8;
+      color: #596779;
+    }
+    .article-main-column :deep(.markdown-body pre) {
+      border: 1px solid #263f5b;
+      border-radius: 14px;
+      box-shadow: 0 14px 30px rgb(25 47 72 / 15%);
+    }
+    .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; }
+    .article-main-column :deep(.markdown-body img) { display: block; margin-inline: auto; }
+
+    @keyframes article-enter {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .article-layout { grid-template-columns: minmax(0, 1fr); }
+      .article-side-column { display: none; }
+      .mobile-toc-panel {
+        display: block;
+        margin: 0 auto 20px;
+        max-width: 780px;
+        border: 1px solid var(--article-line);
+        border-radius: 13px;
+        background: var(--article-paper);
+      }
+      .mobile-toc-trigger {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        padding: 13px 16px;
+        border: 0;
+        background: transparent;
+        color: var(--article-ink);
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .mobile-toc-trigger span:last-child { color: var(--article-muted); font-size: 12px; font-weight: 500; }
+      .mobile-toc-list { padding: 0 12px 12px; }
+    }
+
+    @media (max-width: 768px) {
+      .article-reading-shell { width: min(100% - 20px, 780px); padding-bottom: 36px; }
+      .article-header { margin: 24px auto 20px; padding: 25px 20px; border-radius: 20px; }
+      .article-header .dynamic-title { font-size: clamp(2rem, 11vw, 3.1rem); }
+      .article-header .dynamic-meta span { padding: 6px 9px; }
+      .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
+      .comment-section { width: 100%; padding: 22px 18px; }
+      .comment-form .ant-input, .comment-form .ant-input-affix-wrapper, .comment-form textarea { max-width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .article-header { animation: none; }
+      .reading-progress span, .article-toc button, .mobile-toc-list button { transition: none; }
+      html { scroll-behavior: auto; }
+    }
 </style>
