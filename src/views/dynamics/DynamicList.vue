@@ -722,6 +722,7 @@ onUnmounted(() => {
   .dynamic-list .admin-filter .search-form-left,
   .dynamic-list .admin-filter .search-form-right {
     display: grid;
+    flex: 0 0 auto;
     width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;

@@ -39,6 +39,7 @@ describe('admin workspace styles', () => {
     )
 
     expect(stylesheet).toContain('grid-template-columns: repeat(2, minmax(0, 1fr))')
+    expect(stylesheet).toContain('flex: 0 0 auto')
     expect(stylesheet).toContain('.admin-filter .search-form-right .ant-form-item:last-child')
   })
 })
