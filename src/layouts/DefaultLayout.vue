@@ -136,9 +136,9 @@ function handleLogout() {
 .admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
 .admin-brand > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
-.admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow: hidden auto; gap: 16px; padding: 10px 12px 18px; }
-.sidebar-collapse-control { position: absolute; z-index: 4; top: 23px; right: 14px; display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgb(255 255 255 / 14%); border-radius: 9px; background: #18243a; color: #aebbd0; box-shadow: 0 6px 16px rgb(5 10 20 / 24%); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
-.sidebar-collapse-control:hover { background: #315bea; color: white; transform: translateY(-1px); }
+.admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow: hidden auto; gap: 16px; padding: 46px 12px 18px; }
+.sidebar-collapse-control { position: absolute; z-index: 4; top: 76px; right: 0; display: grid; width: 100%; height: 32px; place-items: center; border: 0; border-top: 1px solid rgb(255 255 255 / 8%); border-bottom: 1px solid rgb(255 255 255 / 8%); border-radius: 0 0 8px 8px; background: #18243a; color: #aebbd0; box-shadow: 0 6px 14px rgb(5 10 20 / 18%); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
+.sidebar-collapse-control:hover { background: #315bea; color: white; transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
 .nav-group { display: grid; gap: 5px; }
