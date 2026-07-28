@@ -131,15 +131,15 @@ function handleLogout() {
 .admin-drawer .ant-drawer-body { padding: 0; background: #10182b; }
 .admin-shell { min-height: 100vh; background: var(--color-page); }
 .admin-sidebar { position: sticky !important; top: 0; height: 100vh; overflow: visible; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
-.admin-brand { display: flex; height: 76px; align-items: center; gap: 11px; padding: 0 18px; color: white; white-space: nowrap; }
+.admin-brand { display: flex; height: 76px; align-items: center; gap: 11px; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
 .admin-brand--drawer { padding-inline: 22px; }
 .admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
 .admin-brand > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
 .admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow: hidden auto; gap: 16px; padding: 10px 12px 18px; }
-.sidebar-collapse-control { position: absolute; z-index: 4; top: 89px; right: -15px; display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgb(255 255 255 / 12%); border-radius: 9px; background: #18243a; color: #aebbd0; box-shadow: 0 8px 20px rgb(5 10 20 / 28%); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
-.sidebar-collapse-control:hover { background: #315bea; color: white; transform: translateX(2px); }
-.sidebar-collapse-control:active { transform: translateX(2px) scale(.96); }
+.sidebar-collapse-control { position: absolute; z-index: 4; top: 23px; right: 14px; display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgb(255 255 255 / 14%); border-radius: 9px; background: #18243a; color: #aebbd0; box-shadow: 0 6px 16px rgb(5 10 20 / 24%); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
+.sidebar-collapse-control:hover { background: #315bea; color: white; transform: translateY(-1px); }
+.sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
 .nav-group { display: grid; gap: 5px; }
 .nav-group__label { margin: 0 10px 4px; color: #66748d; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }

@@ -22,5 +22,7 @@ describe('DefaultLayout sidebar collapse control', () => {
     expect(sidebarMarkup).toContain('@click="toggleSidebar"')
     expect(headerMarkup).not.toContain('折叠导航')
     expect(headerMarkup).toContain('打开导航')
+    expect(source).toContain('top: 23px')
+    expect(source).toContain('right: 14px')
   })
 })
