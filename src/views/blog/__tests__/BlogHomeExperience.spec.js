@@ -3,7 +3,7 @@ import path from 'node:path'
 
 const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogHome.vue'), 'utf8')
 
-describe('night-blue blog homepage', () => {
+describe('warm technology blog homepage', () => {
   it('keeps the hero wide and the bento grid dense', () => {
     expect(source).toContain('hero-feature')
     expect(source).toContain('grid-auto-flow: dense')
@@ -57,5 +57,13 @@ describe('night-blue blog homepage', () => {
     expect(source).toContain('white-space: nowrap')
     expect(source).toContain("gsap.fromTo('.signal-path__progress'")
     expect(source).toContain('scaleX: 0')
+  })
+
+  it('uses bundled imagery and scroll-linked editorial reveals', () => {
+    expect(source).toContain('/warm-garden-visual.svg')
+    expect(source).toContain('visual-ribbon')
+    expect(source).toContain('image-reveal')
+    expect(source).toContain("gsap.to('.visual-ribbon__track'")
+    expect(source).toContain('clipPath')
   })
 })
