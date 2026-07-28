@@ -298,7 +298,11 @@ const submitComment = async () => {
     const result = await commentDynamic(dynamic.value.id, commentData)
     
     if (result && result.code === 200) {
-      message.success('评论成功')
+      if (result.data?.status === 'pending') {
+        message.info('评论已提交，需人工审核后展示，请耐心等待')
+      } else {
+        message.success('评论已发布')
+      }
       commentContent.value = ''
       nickname.value = ''
       email.value = ''
@@ -312,7 +316,7 @@ const submitComment = async () => {
       message.error('请检查评论内容')
     } else {
       console.error('评论失败:', error)
-      message.error(error.response?.data?.message || '评论失败，请稍后重试')
+      message.error(error.message || error.response?.data?.message || '评论失败，请稍后重试')
     }
   } finally {
     isSubmittingComment.value = false

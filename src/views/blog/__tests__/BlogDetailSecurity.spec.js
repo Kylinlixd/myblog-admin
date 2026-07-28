@@ -29,4 +29,12 @@ describe('blog detail sanitization', () => {
     expect(source).toContain('评论 ({{ commentTotal }})')
     expect(source).not.toContain('评论 ({{ dynamic.comments || 0 }})')
   })
+
+  it('distinguishes approved, pending-review, and rejected comment feedback', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'), 'utf8')
+
+    expect(source).toContain("result.data?.status === 'pending'")
+    expect(source).toContain('需人工审核后展示')
+    expect(source).toContain('error.message ||')
+  })
 })
