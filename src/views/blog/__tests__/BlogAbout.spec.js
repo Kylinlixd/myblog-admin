@@ -26,5 +26,7 @@ describe('BlogAbout', () => {
     expect(screen.getByText('Vue · Django · Java')).toBeVisible()
     expect(screen.getByText('阅读 · 旅行 · 摄影')).toBeVisible()
     expect(source).toContain('overflow-wrap: anywhere')
+    expect(source).toContain('.about-hero.cinematic-hero')
+    expect(source).toContain('max-width: none')
   })
 })

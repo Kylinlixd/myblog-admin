@@ -175,6 +175,10 @@
   -webkit-text-fill-color: currentcolor !important;
 }
 
+.cinematic-page .dynamic-title::after {
+  background: var(--blog-accent) !important;
+}
+
 .cinematic-page :is(.dynamic-meta, .dynamic-summary, .dynamic-excerpt, .category-desc, .tag-meta, .result-meta, .card-meta, .markdown-content, .markdown-body) {
   color: var(--blog-text-soft) !important;
 }

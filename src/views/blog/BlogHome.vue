@@ -253,7 +253,7 @@ let tiltY
 const featured = computed(() => latest.value.find((item) => mediaUrl(item)) || latest.value[0])
 const fallbackStories = [
   { title: '代码与自然一起生长', fallback: '/warm-garden-visual.svg' },
-  { title: '在生活里保留观察', fallback: '/about-avatar.jpg' },
+  { title: '在生活里保留观察', fallback: '/warm-garden-visual.svg' },
   { title: '把判断连接成路径', fallback: '/warm-garden-visual.svg' }
 ]
 const visualStories = computed(() => [

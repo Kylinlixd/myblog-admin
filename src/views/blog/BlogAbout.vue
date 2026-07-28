@@ -137,6 +137,14 @@ const stack = [
   padding-block: clamp(72px, 10vw, 128px);
 }
 
+.about-hero.cinematic-hero {
+  width: min(calc(100% - 40px), var(--content-width));
+  max-width: none;
+  margin-bottom: 0;
+}
+
+.about-hero.cinematic-hero::before { display: none; }
+
 .eyebrow {
   display: flex;
   align-items: center;
