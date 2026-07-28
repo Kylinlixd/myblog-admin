@@ -66,6 +66,10 @@
           :label-col="{ span: 4 }"
           :wrapper-col="{ span: 18 }"
         >
+          <a-form-item label="用户名" prop="username">
+            <a-input v-model="profileForm.username" placeholder="请输入用户名" />
+          </a-form-item>
+
           <a-form-item label="头像">
             <div class="avatar-upload">
               <a-avatar :size="100" :src="profileForm.avatar || defaultAvatar">
@@ -114,7 +118,10 @@
     <a-card class="password-card">
       <template #header>
         <div class="card-header">
-          <span>修改密码</span>
+          <div>
+            <strong>修改密码</strong>
+            <small class="card-hint">定期更新密码，保护管理账户安全</small>
+          </div>
         </div>
       </template>
       
@@ -178,6 +185,7 @@ const userInfo = computed(() => userStore.userInfo || {})
 
 // 资料表单
 const profileForm = reactive({
+  username: '',
   nickname: '',
   email: '',
   bio: '',
@@ -193,6 +201,7 @@ const passwordForm = reactive({
 
 // 初始化个人资料表单
 const initProfileForm = () => {
+  profileForm.username = userInfo.value.username || ''
   profileForm.nickname = userInfo.value.nickname || ''
   profileForm.email = userInfo.value.email || ''
   profileForm.bio = userInfo.value.bio || ''
@@ -258,6 +267,7 @@ const handleProfileUpdate = async () => {
     
     // 调用更新用户资料的API
     await userStore.updateProfile({
+      username: profileForm.username,
       nickname: profileForm.nickname,
       email: profileForm.email,
       bio: profileForm.bio,
@@ -276,6 +286,11 @@ const handleProfileUpdate = async () => {
 
 // 资料表单验证规则
 const profileRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 4, max: 20, message: '用户名长度为 4-20 个字符', trigger: 'blur' },
+    { pattern: /^[\w.@+-]+$/, message: '用户名仅支持字母、数字及 . @ + - _', trigger: 'blur' }
+  ],
   nickname: [
     { max: 20, message: '昵称不能超过20个字符', trigger: 'blur' }
   ],
@@ -421,6 +436,8 @@ onMounted(() => {
 .page-subtitle { margin: 7px 0 0; color: var(--color-text-secondary); font-size: 13px; }
 .profile-card, .password-card { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
 .card-header { display: flex; align-items: center; justify-content: space-between; }
+.card-header strong { display: block; color: var(--color-text); font-size: 15px; }
+.card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
 .profile-info { display: grid; grid-template-columns: 160px 1fr; align-items: start; gap: 28px; }
 .profile-info .avatar-container { display: grid; min-height: 160px; margin: 0; place-items: center; border-radius: 14px; background: linear-gradient(145deg, #eef3ff, #f8faff); }
 .info-list { display: grid; gap: 0; padding-top: 4px; }
