@@ -133,11 +133,12 @@
           />
         </a-form-item>
         
-        <a-form-item label="新密码" prop="newPassword">
-          <a-input-password
-            v-model="passwordForm.newPassword"
-            placeholder="请输入新密码"
-          />
+          <a-form-item label="新密码" prop="newPassword">
+            <a-input-password
+              v-model="passwordForm.newPassword"
+              placeholder="请输入新密码"
+            />
+            <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
         </a-form-item>
         
         <a-form-item label="确认密码" prop="confirmPassword">
@@ -293,14 +294,14 @@ const passwordRules = {
   ],
   newPassword: [
     { required: true, message: '请输入新密码', trigger: 'submit' },
-    { min: 6, message: '新密码长度不能少于6个字符', trigger: 'submit' },
+    { min: 8, message: '新密码长度不能少于8个字符', trigger: 'submit' },
     { 
       validator: (rule, value, callback) => {
         if (!value) {
           callback()
-        } else if (value.length < 6) {
-          callback(new Error('密码长度不能少于6个字符'))
-        } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/.test(value)) {
+        } else if (value.length < 8) {
+          callback(new Error('密码长度不能少于8个字符'))
+        } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)) {
           callback(new Error('密码必须包含大小写字母和数字'))
         } else {
           callback()
@@ -343,8 +344,8 @@ const handlePasswordChange = async () => {
     
     // 调用修改密码的API
     const result = await changePassword({
-      oldPassword: passwordForm.oldPassword.trim(),
-      newPassword: passwordForm.newPassword.trim()
+      oldPassword: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword
     })
     
     // 处理成功响应
