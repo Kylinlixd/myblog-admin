@@ -811,6 +811,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  contain: inline-size;
   box-sizing: border-box;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
