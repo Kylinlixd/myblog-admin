@@ -10,6 +10,13 @@ describe('global interaction feedback', () => {
     expect(source).toContain('NProgress.done()')
   })
 
+  it('clears the in-memory session before redirecting an expired login', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/main.js'), 'utf8')
+
+    expect(source).toContain("window.addEventListener('auth:expired'")
+    expect(source).toContain('useUserStore().clearUserData()')
+  })
+
   it('provides touch, focus, and reduced-motion fallbacks', () => {
     const css = fs.readFileSync(path.join(process.cwd(), 'src/styles/global.scss'), 'utf8')
 

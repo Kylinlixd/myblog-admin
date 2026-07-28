@@ -49,6 +49,7 @@ function clearLegacyServiceWorkers() {
 clearLegacyServiceWorkers()
 
 window.addEventListener('auth:expired', () => {
+  useUserStore().clearUserData()
   if (router.currentRoute.value.meta.requiresAuth) {
     router.replace({ name: 'Login', query: { redirect: router.currentRoute.value.fullPath } })
   }

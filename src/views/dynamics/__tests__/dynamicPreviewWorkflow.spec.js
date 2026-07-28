@@ -34,9 +34,11 @@ describe('dynamic preview workflow', () => {
 
   it('uses the canonical authenticated route for creating dynamics', () => {
     const listView = readView('DynamicList.vue')
+    const editView = readView('DynamicEdit.vue')
 
     expect(listView).toContain("name: 'CreateDynamic'")
     expect(listView).not.toContain("localStorage.getItem('accessToken')")
+    expect(editView).not.toContain("localStorage.getItem('accessToken')")
     expect(listView).not.toContain('query: { token: accessToken }')
   })
 

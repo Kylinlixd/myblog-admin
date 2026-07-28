@@ -52,8 +52,8 @@ export const useUserStore = defineStore('user', {
       if (this.accessToken && !window.location.pathname.startsWith('/blog')) {
         try {
           await this.getUserInfo()
-        } catch {
-          this.clearUserData()
+        } catch (error) {
+          if (error?.status === 401) this.clearUserData()
         }
       }
       this.initialized = true

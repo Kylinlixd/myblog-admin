@@ -537,14 +537,6 @@ const handleSave = async () => {
       return;
     }
     
-    // 获取访问 token
-    const accessToken = localStorage.getItem('accessToken')
-    if (!accessToken) {
-      message.error('登录已过期，请重新登录')
-      router.push('/login')
-      return
-    }
-    
     // 处理媒体文件 URL，移除前缀
     const processedMediaUrls = form.value.mediaUrls.map(url => {
       if (!url) return url;
