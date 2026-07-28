@@ -30,6 +30,7 @@ export function mapDashboardData(response) {
       }))
       : [],
     categories: mapSeries(payload.categories, 5),
-    tags: mapSeries(payload.tags, 5)
+    tags: mapSeries(payload.tags, 5),
+    access: { requests: Number(payload.access?.requests) || 0, uniqueIps: Number(payload.access?.unique_ips ?? payload.access?.uniqueIps) || 0 }
   }
 }

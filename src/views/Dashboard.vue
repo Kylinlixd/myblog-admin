@@ -31,6 +31,12 @@
       </router-link>
     </section>
 
+    <section class="access-overview" aria-label="访问概览">
+      <div><span>近七天接口访问</span><strong>{{ dashboardData.access.requests }}</strong><small>次</small></div>
+      <div><span>近七天独立 IP</span><strong>{{ dashboardData.access.uniqueIps }}</strong><small>个</small></div>
+      <router-link to="/dashboard/access-logs">查看访问日志 <right-outlined /></router-link>
+    </section>
+
     <section class="operations-grid">
       <article class="workspace-panel content-pulse">
         <header class="panel-heading">
@@ -244,6 +250,12 @@ onMounted(loadStats)
 .metric-item div strong { font-size: clamp(26px, 2.4vw, 36px); letter-spacing: -.04em; line-height: 1; }
 .metric-arrow { color: #aeb7c6; font-size: 11px; }
 .metric-skeleton { min-height: 112px; padding: 28px; border-right: 1px solid var(--color-border); }
+.access-overview { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 24px; margin-top: 16px; padding: 16px 22px; border: 1px solid #dbe5ff; border-radius: 14px; background: linear-gradient(105deg, #f8faff, #fff); }
+.access-overview div { display: flex; align-items: baseline; gap: 8px; }
+.access-overview span { color: var(--color-text-secondary); font-size: 11px; }
+.access-overview strong { color: var(--color-primary); font-size: 26px; letter-spacing: -.04em; }
+.access-overview small { color: var(--color-text-muted); font-size: 10px; }
+.access-overview a { display: inline-flex; align-items: center; gap: 6px; color: var(--color-primary); font-size: 12px; font-weight: 700; }
 .operations-grid { display: grid; grid-template-columns: minmax(0, 9fr) minmax(300px, 3fr); align-items: start; gap: 20px; margin-top: 20px; }
 .workspace-panel { border: 1px solid var(--color-border); border-radius: 16px; background: #fff; box-shadow: var(--shadow-card); }
 .content-pulse { min-width: 0; min-height: 570px; padding: clamp(24px, 3vw, 38px); }
@@ -303,5 +315,5 @@ onMounted(loadStats)
 .quick-action span { overflow: hidden; color: var(--color-text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 1180px) { .operations-grid { grid-template-columns: 1fr; } .operations-side { grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); } }
 @media (max-width: 820px) { .dashboard-intro { grid-template-columns: 1fr; align-items: start; } .intro-focus { min-width: 0; grid-template-columns: 1fr auto; align-items: center; justify-items: start; gap: 0 18px; } .intro-focus > strong { grid-row: span 2; margin: 0; } .create-button { grid-column: 1; } .metric-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metric-item:nth-child(2) { border-right: 0; } .metric-item:nth-child(-n + 2) { border-bottom: 1px solid var(--color-border); } .operations-side { grid-template-columns: 1fr; } }
-@media (max-width: 640px) { .dashboard-intro { min-height: 0; padding: 26px 22px; border-radius: 16px 16px 7px 7px; } .intro-copy h1 { font-size: 34px; } .intro-focus { grid-template-columns: 1fr; gap: 10px; } .intro-focus > strong { grid-row: auto; } .metric-rail { grid-template-columns: 1fr; } .metric-item, .metric-item:nth-child(2) { min-height: 88px; border-right: 0; border-bottom: 1px solid var(--color-border); } .metric-item:last-child { border-bottom: 0; } .content-pulse, .taxonomy-panel { padding: 20px; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 8px; } .trend-summary { grid-template-columns: 1fr; } .trend-summary div, .trend-summary div + div { padding: 13px 0; border-left: 0; border-bottom: 1px solid var(--color-border); } .trend-summary div:last-child { border-bottom: 0; } .trend-line-chart { min-height: 220px; margin-inline: -8px; padding-top: 18px; } }
+@media (max-width: 640px) { .dashboard-intro { min-height: 0; padding: 26px 22px; border-radius: 16px 16px 7px 7px; } .intro-copy h1 { font-size: 34px; } .intro-focus { grid-template-columns: 1fr; gap: 10px; } .intro-focus > strong { grid-row: auto; } .metric-rail { grid-template-columns: 1fr; } .metric-item, .metric-item:nth-child(2) { min-height: 88px; border-right: 0; border-bottom: 1px solid var(--color-border); } .metric-item:last-child { border-bottom: 0; } .access-overview { grid-template-columns: 1fr 1fr; gap: 12px; } .access-overview a { grid-column: 1 / -1; padding-top: 8px; } .content-pulse, .taxonomy-panel { padding: 20px; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 8px; } .trend-summary { grid-template-columns: 1fr; } .trend-summary div, .trend-summary div + div { padding: 13px 0; border-left: 0; border-bottom: 1px solid var(--color-border); } .trend-summary div:last-child { border-bottom: 0; } .trend-line-chart { min-height: 220px; margin-inline: -8px; padding-top: 18px; } }
 </style>

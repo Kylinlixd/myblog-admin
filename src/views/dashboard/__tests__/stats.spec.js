@@ -31,14 +31,20 @@ describe('mapDashboardStats', () => {
         { name: '分类4', count: 3 },
         { name: '分类5', count: 2 }
       ],
-      tags: [{ name: 'Vue', count: 7 }]
+      tags: [{ name: 'Vue', count: 7 }],
+      access: { requests: 0, uniqueIps: 0 }
     })
 
     expect(mapDashboardData(null)).toEqual({
       total: { dynamics: 0, categories: 0, tags: 0, comments: 0 },
       daily: [],
       categories: [],
-      tags: []
+      tags: [],
+      access: { requests: 0, uniqueIps: 0 }
     })
+  })
+
+  it('normalizes access overview without inventing values', () => {
+    expect(mapDashboardData({ data: { access: { requests: 12, unique_ips: 4 } } }).access).toEqual({ requests: 12, uniqueIps: 4 })
   })
 })
