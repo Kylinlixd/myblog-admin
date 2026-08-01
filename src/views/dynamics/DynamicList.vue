@@ -429,6 +429,28 @@ const columnsForMobile = [
     align: 'center'
   },
   {
+    title: '标题',
+    dataIndex: 'title',
+    key: 'title',
+    width: 180,
+    ellipsis: true,
+    customRender: ({ text }) => text || '无标题'
+  },
+  {
+    title: '分类',
+    dataIndex: 'category',
+    key: 'category',
+    width: 110,
+    align: 'center'
+  },
+  {
+    title: '状态',
+    dataIndex: 'status',
+    key: 'status',
+    width: 95,
+    align: 'center'
+  },
+  {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
@@ -611,6 +633,8 @@ onUnmounted(() => {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
+
+:deep(.content-table-scroll .ant-table-tbody > tr > td) { vertical-align: middle; }
 
 :deep(.content-table-scroll .ant-table) {
   min-width: 1120px;

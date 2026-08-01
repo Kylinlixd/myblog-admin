@@ -31,9 +31,13 @@
             <menu-unfold-outlined />
           </button>
           <Breadcrumb />
-          <span class="workspace-context">内容工作台 <i /> {{ route.meta.title || '仪表盘' }}</span>
+          <div class="workspace-title">
+            <span>CONTENT STUDIO</span>
+            <strong>{{ route.meta.title || '仪表盘' }}</strong>
+          </div>
         </div>
         <div class="header-actions">
+          <span class="workspace-status"><i /> 系统在线</span>
           <router-link class="blog-link" to="/blog"><home-outlined /> <span>查看博客</span></router-link>
           <a-dropdown trigger="click">
             <button class="user-button" type="button">
@@ -158,8 +162,11 @@ function handleLogout() {
 .workspace-header { position: sticky; z-index: 50; top: 0; display: flex; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: rgb(255 255 255 / 92%) !important; line-height: normal; backdrop-filter: blur(16px); }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
 .header-left { min-width: 0; gap: 16px; }
-.workspace-context { display: inline-flex; align-items: center; gap: 8px; color: var(--color-text-muted); font-size: 12px; white-space: nowrap; }
-.workspace-context i { width: 4px; height: 4px; border-radius: 50%; background: var(--color-primary); }
+.workspace-title { display: grid; gap: 3px; min-width: 150px; }
+.workspace-title span { color: var(--color-text-muted); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
+.workspace-title strong { color: var(--color-text); font-size: 15px; font-weight: 780; }
+.workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
+.workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { gap: 16px; }
 .icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
@@ -177,5 +184,6 @@ function handleLogout() {
 .workspace-page-leave-to { opacity: 0; }
 @media (max-width: 992px) { .admin-shell--mobile > .workspace { width: 100%; } }
 @media (max-width: 720px) { .workspace-header { padding: 0 16px; } .workspace-content { padding: 18px 14px; } .blog-link span, .user-copy { display: none; } }
-@media (max-width: 900px) { .workspace-context { display: none; } }
+@media (max-width: 900px) { .workspace-title { display: none; } }
+@media (max-width: 720px) { .workspace-status { display: none; } }
 </style>

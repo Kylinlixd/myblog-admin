@@ -43,8 +43,11 @@ describe('admin filter controls', () => {
   })
 
   it('keeps the content table inside a touch-scroll viewport', () => {
-    expect(readView('dynamics/DynamicList.vue')).toContain('content-table-scroll')
-    expect(readView('dynamics/DynamicList.vue')).toContain('min-width: 1120px')
+    const listView = readView('dynamics/DynamicList.vue')
+    expect(listView).toContain('content-table-scroll')
+    expect(listView).toContain('min-width: 1120px')
+    expect(listView).toContain("title: '标题'")
+    expect(listView).toContain("title: '分类'")
   })
 
   it('defers dynamic body and media loading to edit and preview views', () => {
@@ -123,5 +126,18 @@ describe('admin filter controls', () => {
     expect(profileView).toContain('v-model:value="passwordForm.oldPassword"')
     expect(profileView).toContain('v-model:value="passwordForm.newPassword"')
     expect(profileView).toContain('changePassword({')
+  })
+
+  it('keeps shared table loading geometry stable and editor metadata available', () => {
+    const table = fs.readFileSync(path.join(process.cwd(), 'src/components/common/DataTable.vue'), 'utf8')
+    const editor = readView('dynamics/DynamicEdit.vue')
+    const layout = fs.readFileSync(path.join(process.cwd(), 'src/layouts/DefaultLayout.vue'), 'utf8')
+
+    expect(table).toContain('min-height: 240px')
+    expect(editor).toContain('v-model:value="form.categoryId"')
+    expect(editor).toContain('v-model:value="form.tags"')
+    expect(editor).toContain('response?.data?.items')
+    expect(layout).toContain('workspace-title')
+    expect(layout).toContain('workspace-status')
   })
 })

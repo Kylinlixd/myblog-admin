@@ -152,6 +152,7 @@ const toggleVisibleRows = (event) => {
 .table-wrapper {
   position: relative;
   width: 100%;
+  min-height: 240px;
   overflow: auto;
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
@@ -227,6 +228,7 @@ const toggleVisibleRows = (event) => {
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.7);
+  min-height: 240px;
   z-index: 1;
 }
 
@@ -237,6 +239,7 @@ const toggleVisibleRows = (event) => {
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  will-change: transform;
 }
 
 @keyframes spin {

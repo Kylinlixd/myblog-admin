@@ -416,7 +416,8 @@ const fetchTags = async () => {
   try {
     const response = await getTagList()
     // 从响应中获取 results 数组
-    tags.value = response.results || []
+    const data = response?.results || response?.data?.items || response?.data || []
+    tags.value = Array.isArray(data) ? data : []
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
@@ -432,7 +433,8 @@ const fetchCategories = async () => {
   try {
     const response = await getCategoryList()
     // 从响应中获取 results 数组
-    categories.value = response.results || []
+    const data = response?.results || response?.data?.items || response?.data || []
+    categories.value = Array.isArray(data) ? data : []
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
