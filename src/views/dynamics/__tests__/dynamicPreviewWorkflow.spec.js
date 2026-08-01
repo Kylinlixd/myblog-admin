@@ -61,4 +61,14 @@ describe('dynamic preview workflow', () => {
     expect(listView).toContain('buildOptionText')
     expect(listView).toContain('${value}/页')
   })
+
+  it('allows creating taxonomy directly from the editor', () => {
+    const editView = readView('DynamicEdit.vue')
+
+    expect(editView).toContain('openTaxonomyModal(\'category\')')
+    expect(editView).toContain('openTaxonomyModal(\'tag\')')
+    expect(editView).toContain('createCategory({ name })')
+    expect(editView).toContain('createTag({ name })')
+    expect(editView).toContain('taxonomyModalVisible')
+  })
 })

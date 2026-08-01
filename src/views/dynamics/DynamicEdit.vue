@@ -34,24 +34,17 @@
       </a-form-item>
 
       <a-form-item class="editor-settings-field" label="分类" name="categoryId">
-        <a-select
-          v-model:value="form.categoryId"
-          placeholder="请选择分类"
-          :loading="categoriesLoading"
-          :options="categoryOptions"
-        >
-        </a-select>
+        <div class="taxonomy-control">
+          <a-select v-model:value="form.categoryId" placeholder="请选择分类" :loading="categoriesLoading" :options="categoryOptions" />
+          <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('category')">+ 新建</a-button>
+        </div>
       </a-form-item>
 
       <a-form-item class="editor-settings-field" label="标签" name="tags">
-        <a-select
-          v-model:value="form.tags"
-          mode="multiple"
-          placeholder="请选择标签"
-          :loading="tagsLoading"
-          :options="tagOptions"
-        >
-        </a-select>
+        <div class="taxonomy-control">
+          <a-select v-model:value="form.tags" mode="multiple" placeholder="请选择标签" :loading="tagsLoading" :options="tagOptions" />
+          <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('tag')">+ 新建</a-button>
+        </div>
       </a-form-item>
 
       <a-form-item class="editor-settings-field" label="内容类型" name="type">
@@ -280,6 +273,14 @@
         </div>
       </div>
     </a-modal>
+
+    <a-modal v-model:open="taxonomyModalVisible" :title="taxonomyModalType === 'category' ? '新建分类' : '新建标签'" :confirm-loading="taxonomySaving" ok-text="创建" cancel-text="取消" @ok="createTaxonomy">
+      <a-form layout="vertical">
+        <a-form-item :label="taxonomyModalType === 'category' ? '分类名称' : '标签名称'" required>
+          <a-input v-model:value="taxonomyName" :maxlength="30" show-count :placeholder="taxonomyModalType === 'category' ? '例如：前端工程' : '例如：Vue'" @press-enter="createTaxonomy" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
@@ -299,8 +300,8 @@ import {
 } from '@ant-design/icons-vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadImage, uploadAudio, uploadVideo, checkFileSize, checkFileType } from '../../utils/upload'
-import { getCategoryList } from '../../api/category'
-import { getTagList } from '../../api/tag'
+import { getCategoryList, createCategory } from '../../api/category'
+import { getTagList, createTag } from '../../api/tag'
 import { getFileList } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { buildApiUrl, stripApiBaseUrl } from '@/utils/apiBaseUrl'
@@ -350,6 +351,10 @@ const categories = ref([])
 const tags = ref([])
 const categoriesLoading = ref(false)
 const tagsLoading = ref(false)
+const taxonomyModalVisible = ref(false)
+const taxonomyModalType = ref('category')
+const taxonomyName = ref('')
+const taxonomySaving = ref(false)
 
 // 文件选择器相关状态
 const fileSelectorVisible = ref(false)
@@ -377,6 +382,42 @@ const categoryOptions = computed(() => {
     label: item.name
   }))
 })
+
+const openTaxonomyModal = (type) => {
+  taxonomyModalType.value = type
+  taxonomyName.value = ''
+  taxonomyModalVisible.value = true
+}
+
+const createTaxonomy = async () => {
+  const name = taxonomyName.value.trim()
+  if (!name) {
+    message.warning(`请输入${taxonomyModalType.value === 'category' ? '分类' : '标签'}名称`)
+    return
+  }
+  taxonomySaving.value = true
+  try {
+    const response = taxonomyModalType.value === 'category'
+      ? await createCategory({ name })
+      : await createTag({ name })
+    const created = response?.data || response
+    if (taxonomyModalType.value === 'category') {
+      await fetchCategories()
+      const id = created?.id || created?.data?.id
+      if (id) form.value.categoryId = id
+    } else {
+      await fetchTags()
+      const id = created?.id || created?.data?.id
+      if (id) form.value.tags = [...new Set([...(form.value.tags || []), id])]
+    }
+    taxonomyModalVisible.value = false
+    message.success('创建成功')
+  } catch (error) {
+    message.error(error?.message || '创建失败，请稍后重试')
+  } finally {
+    taxonomySaving.value = false
+  }
+}
 
 // 表单验证规则
 const rules = {
@@ -1069,6 +1110,20 @@ onBeforeUnmount(() => {
     font-size: 12px;
     color: #888;
     margin-top: 5px;
+  }
+
+  .taxonomy-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .taxonomy-add {
+    padding-inline: 4px;
+    color: #315bea;
+    font-size: 12px;
+    white-space: nowrap;
   }
   
   .media-preview {
