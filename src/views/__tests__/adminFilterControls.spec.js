@@ -137,7 +137,7 @@ describe('admin filter controls', () => {
     expect(editor).toContain('v-model:value="form.categoryId"')
     expect(editor).toContain('v-model:value="form.tags"')
     expect(editor).toContain('response?.data?.items')
-    expect(layout).toContain('workspace-title')
+    expect(layout).toContain('header-brand')
     expect(layout).toContain('workspace-status')
   })
 })

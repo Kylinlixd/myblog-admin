@@ -30,11 +30,10 @@
           <button v-if="isMobile" type="button" class="icon-button" aria-label="打开导航" @click="toggleSidebar">
             <menu-unfold-outlined />
           </button>
-          <Breadcrumb />
-          <div class="workspace-title">
-            <span>CONTENT STUDIO</span>
-            <strong>{{ route.meta.title || '仪表盘' }}</strong>
-          </div>
+          <router-link class="header-brand" to="/dashboard">
+            <span class="header-brand__mark">L</span>
+            <span><strong>LiXD Studio</strong><small>内容工作台</small></span>
+          </router-link>
         </div>
         <div class="header-actions">
           <span class="workspace-status"><i /> 系统在线</span>
@@ -70,7 +69,6 @@ import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } 
 import { useRoute, useRouter } from 'vue-router'
 import { CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
-import Breadcrumb from '@/components/Breadcrumb.vue'
 import { adminMenu } from '@/config/adminMenu'
 import { useUserStore } from '@/stores/user'
 
@@ -162,9 +160,11 @@ function handleLogout() {
 .workspace-header { position: sticky; z-index: 50; top: 0; display: flex; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: rgb(255 255 255 / 92%) !important; line-height: normal; backdrop-filter: blur(16px); }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
 .header-left { min-width: 0; gap: 16px; }
-.workspace-title { display: grid; gap: 3px; min-width: 150px; }
-.workspace-title span { color: var(--color-text-muted); font-size: 9px; font-weight: 800; letter-spacing: .14em; }
-.workspace-title strong { color: var(--color-text); font-size: 15px; font-weight: 780; }
+.header-brand { display: inline-flex; align-items: center; gap: 9px; color: var(--color-text); text-decoration: none; }
+.header-brand__mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: var(--color-primary); color: #fff; font-size: 16px; font-weight: 800; }
+.header-brand > span:last-child { display: grid; gap: 2px; }
+.header-brand strong { font-size: 13px; font-weight: 800; line-height: 1.1; }
+.header-brand small { color: var(--color-text-muted); font-size: 10px; line-height: 1.1; }
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { gap: 16px; }
@@ -184,6 +184,6 @@ function handleLogout() {
 .workspace-page-leave-to { opacity: 0; }
 @media (max-width: 992px) { .admin-shell--mobile > .workspace { width: 100%; } }
 @media (max-width: 720px) { .workspace-header { padding: 0 16px; } .workspace-content { padding: 18px 14px; } .blog-link span, .user-copy { display: none; } }
-@media (max-width: 900px) { .workspace-title { display: none; } }
+@media (max-width: 720px) { .header-brand > span:last-child { display: none; } }
 @media (max-width: 720px) { .workspace-status { display: none; } }
 </style>
