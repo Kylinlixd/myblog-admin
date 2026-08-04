@@ -34,24 +34,24 @@
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| GET | `/blog/dynamics/` | 已发布内容列表 |
-| GET | `/blog/dynamics/{id}/` | 内容详情 |
-| GET | `/blog/dynamics/hot/` | 热门内容，支持 `limit` |
-| GET | `/blog/dynamics/recent/` | 最近内容，支持 `limit` |
-| PUT | `/blog/dynamics/{id}/view/` | 增加阅读量 |
-| POST | `/blog/dynamics/{id}/like/` | 点赞 |
-| GET/POST | `/blog/comments/` | 查询已审核评论或提交评论 |
-| GET | `/blog/categories/` | 分类列表 |
-| GET | `/blog/categories/{id}/dynamics/` | 分类内容 |
-| GET | `/blog/tags/` | 标签列表 |
-| GET | `/blog/tags/{id}/dynamics/` | 标签内容 |
-| GET | `/blog/search/` | 搜索公开内容 |
+| GET | `/api/blog/dynamics/` | 已发布内容列表 |
+| GET | `/api/blog/dynamics/{id}/` | 内容详情 |
+| GET | `/api/blog/dynamics/hot/` | 热门内容，支持 `limit` |
+| GET | `/api/blog/dynamics/recent/` | 最近内容，支持 `limit` |
+| PUT | `/api/blog/dynamics/{id}/view/` | 增加阅读量 |
+| POST | `/api/blog/dynamics/{id}/like/` | 点赞 |
+| GET/POST | `/api/blog/comments/` | 查询已审核评论或提交评论 |
+| GET | `/api/blog/categories/` | 分类列表 |
+| GET | `/api/blog/categories/{id}/dynamics/` | 分类内容 |
+| GET | `/api/blog/tags/` | 标签列表 |
+| GET | `/api/blog/tags/{id}/dynamics/` | 标签内容 |
+| GET | `/api/blog/search/` | 搜索公开内容 |
 
 ## 管理端
 
 `/api/dynamics/`、`/api/categories/`、`/api/tags/`、`/api/comments/` 提供标准列表、创建、详情、更新和删除操作，全部需要登录。`/api/stats/` 返回管理仪表盘统计且必须登录。文件接口位于 `/api/upload/`。
 
-读取文章详情不会隐式增加阅读量；前端仅通过显式 `PUT /blog/dynamics/{id}/view/` 上报一次阅读。公开评论列表只展示审核通过的评论。
+读取文章详情不会隐式增加阅读量；前端仅通过显式 `PUT /api/blog/dynamics/{id}/view/` 上报一次阅读。公开评论列表只展示审核通过的评论。
 
 ## 错误处理
 

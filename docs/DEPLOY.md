@@ -1,6 +1,6 @@
 # 前端部署指南
 
-推荐使用 Nginx 提供静态文件，并把 `/api/`、`/blog/` 和 `/media/` 转发到 Django 服务。这样前端无需写入生产 API 域名，也不会产生跨域问题。
+推荐使用 Nginx 提供静态文件，并把 `/api/` 和 `/media/` 转发到 Django 服务。公开博客 API 统一在 `/api/blog/`，`/blog/` 仅作为前端 SPA 路由。这样前端无需写入生产 API 域名，也不会产生跨域问题。
 
 ## 1. 构建
 
@@ -35,14 +35,7 @@ server {
     }
 
     location /blog/ {
-        # /blog 同时承载 SPA 路由和公开 API；浏览器页面导航返回 index.html。
-        if ($http_accept ~* "text/html") {
-            rewrite ^ /index.html last;
-        }
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        try_files $uri $uri/ /index.html;
     }
 
     location /media/ {
@@ -55,7 +48,7 @@ server {
 }
 ```
 
-注意：`/blog/` 同时是前端路由和 API 前缀，因此必须按 `Accept: text/html` 区分页面导航与 XHR。上线前应实际验证文章详情刷新；长期建议将公开 API 迁移到 `/api/public/` 以彻底消除路径重叠。
+注意：公开 API 已统一迁移到 `/api/blog/`，`/blog/` 不再代理到 Django，避免前端路由与 API 前缀重叠。上线前应实际验证文章详情刷新。
 
 ## 3. 发布检查
 

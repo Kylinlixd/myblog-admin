@@ -42,9 +42,6 @@ export const getRecentDynamics = (params) =>
 export const getCategoryDynamics = (categoryId, params) =>
   request.get(createBlogApiUrl(`categories/${categoryId}/dynamics`), { params })
 
-export const searchBlogDynamics = (params) =>
-  request.get(createBlogApiUrl('search'), { params })
-
 export const getTagDynamics = (tagId, params) =>
   request.get(createBlogApiUrl(`tags/${tagId}/dynamics`), { params })
 
@@ -69,18 +66,6 @@ export const getDynamicComments = (id, params) =>
   request.get(createBlogApiUrl('comments'), {
     params: { ...params, dynamic_id: id }
   })
-
-export const deleteDynamicComment = (dynamicId, commentId) =>
-  request.delete(createBlogApiUrl(`dynamics/${dynamicId}/comments/${commentId}`))
-
-export const getBlogStats = () =>
-  request.get(createBlogApiUrl('stats'))
-
-export const getAboutInfo = () =>
-  request.get(createBlogApiUrl('about'))
-
-export const updateAboutInfo = (data) =>
-  request.put(createBlogApiUrl('about'), data)
 
 export const searchBlog = (params) =>
   request.get(createBlogApiUrl('search'), { params })

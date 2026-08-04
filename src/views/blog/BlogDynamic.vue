@@ -191,6 +191,7 @@
 <script setup>
 import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
+import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
 import { 
   getBlogDynamics, 
@@ -239,7 +240,7 @@ const renderMarkdown = (content) => {
   const plainText = content.replace(/<[^>]+>/g, '')
   // 截取前200个字符
   const truncatedText = plainText.length > 200 ? plainText.slice(0, 200) + '...' : plainText
-  return md.render(truncatedText)
+  return DOMPurify.sanitize(md.render(truncatedText))
 }
 
 // 格式化日期

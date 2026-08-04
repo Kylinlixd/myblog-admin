@@ -42,7 +42,7 @@ src/
 - Access/Refresh Token 只能通过 `services/http/tokenStorage.js` 读写。
 - 401 时请求层只执行一次并发刷新；刷新失败会清理会话并触发 `auth:expired`。
 - 错误统一为 `{ status, code, message, details }`，页面直接展示 `message`。
-- 公开 API 统一由 `api/blog.js` 生成 `/blog/.../` 路径，不提供静默模拟数据。
+- 公开 API 统一由 `api/blog.js` 生成 `/api/blog/.../` 路径，不提供静默模拟数据。
 
 ## 4. 页面与样式约定
 
