@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { unwrapApiResponse } from './response'
 
 export function buildDynamicParams(params = {}) {
   const search = new URLSearchParams()
@@ -38,21 +39,11 @@ function validateDynamicPayload(payload) {
   }
 }
 
-function normalizeDynamicResponse(response) {
-  if (!response || typeof response !== 'object' || !('data' in response)) {
-    return response
-  }
-  if (response.code !== undefined && response.code !== 200) {
-    throw new Error(response.message || '动态请求失败')
-  }
-  return response.data
-}
-
 export const getDynamicList = (params) =>
   request.get('/api/dynamics/', { params: buildDynamicParams(params) })
 
 export const getDynamicDetail = async (id) =>
-  normalizeDynamicResponse(await request.get(`/api/dynamics/${id}/`))
+  unwrapApiResponse(await request.get(`/api/dynamics/${id}/`), '动态请求失败')
 
 export const deleteDynamic = (id) =>
   request.delete(`/api/dynamics/${id}/`)
@@ -60,11 +51,11 @@ export const deleteDynamic = (id) =>
 export async function createDynamic(data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  return normalizeDynamicResponse(await request.post('/api/dynamics/', payload))
+  return unwrapApiResponse(await request.post('/api/dynamics/', payload), '动态请求失败')
 }
 
 export async function updateDynamic(id, data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  return normalizeDynamicResponse(await request.put(`/api/dynamics/${id}/`, payload))
+  return unwrapApiResponse(await request.put(`/api/dynamics/${id}/`, payload), '动态请求失败')
 }

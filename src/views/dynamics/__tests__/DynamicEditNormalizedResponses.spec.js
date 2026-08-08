@@ -2,8 +2,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DynamicEdit from '../DynamicEdit.vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '@/api/dynamic'
-import { getCategoryList } from '@/api/category'
-import { getTagList } from '@/api/tag'
+import { createCategory, getCategoryList } from '@/api/category'
+import { createTag, getTagList } from '@/api/tag'
 import { uploadImage } from '@/utils/upload'
 import { message } from 'ant-design-vue'
 
@@ -154,6 +154,43 @@ describe('DynamicEdit normalized API responses', () => {
     wrapper.unmount()
   })
 
+  it('consumes normalized taxonomy collection results directly', async () => {
+    getCategoryList.mockResolvedValueOnce({
+      count: 1,
+      results: [{ id: 3, name: 'Frontend' }]
+    })
+    getTagList.mockResolvedValueOnce({
+      count: 1,
+      results: [{ id: 5, name: 'Vue' }]
+    })
+
+    const wrapper = await mountEditor()
+
+    expect(wrapper.vm.categories).toEqual([{ id: 3, name: 'Frontend' }])
+    expect(wrapper.vm.tags).toEqual([{ id: 5, name: 'Vue' }])
+    wrapper.unmount()
+  })
+
+  it.each([
+    ['category', createCategory, { id: 9, name: 'New category' }],
+    ['tag', createTag, { id: 11, name: 'New tag' }]
+  ])('uses the normalized created %s item directly', async (type, create, created) => {
+    create.mockResolvedValueOnce(created)
+    const wrapper = await mountEditor()
+    wrapper.vm.taxonomyModalType = type
+    wrapper.vm.taxonomyName = created.name
+
+    await wrapper.vm.createTaxonomy()
+    await flushPromises()
+
+    if (type === 'category') {
+      expect(wrapper.vm.form.categoryId).toBe(created.id)
+    } else {
+      expect(wrapper.vm.form.tags).toContain(created.id)
+    }
+    wrapper.unmount()
+  })
+
   it.each([
     ['create', undefined, createDynamic, '动态创建成功'],
     ['update', '42', updateDynamic, '动态更新成功']
@@ -183,8 +220,9 @@ describe('DynamicEdit normalized API responses', () => {
     uploadImage.mockResolvedValueOnce({
       id: 19,
       name: 'photo.png',
-      file_type: 'image',
-      file_url: '/media/photo.png'
+      type: 'image',
+      size: 128,
+      url: '/media/photo.png'
     })
     const wrapper = await mountEditor()
     wrapper.vm.form.type = 'image'

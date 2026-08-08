@@ -61,7 +61,7 @@ describe('file API normalization', () => {
     })
   })
 
-  it('returns upload data without the legacy response envelope', async () => {
+  it('returns canonical upload fields while preserving useful backend fields', async () => {
     jest.spyOn(request, 'post').mockResolvedValueOnce({
       code: 200,
       message: 'success',
@@ -69,7 +69,9 @@ describe('file API normalization', () => {
         id: 9,
         name: 'audio.mp3',
         file_type: 'audio',
-        file_url: '/media/audio.mp3'
+        file_size: 2048,
+        file_url: '/media/audio.mp3',
+        checksum: 'abc123'
       }
     })
 
@@ -79,7 +81,12 @@ describe('file API normalization', () => {
       id: 9,
       name: 'audio.mp3',
       file_type: 'audio',
-      file_url: '/media/audio.mp3'
+      file_size: 2048,
+      file_url: '/media/audio.mp3',
+      checksum: 'abc123',
+      type: 'audio',
+      size: 2048,
+      url: '/media/audio.mp3'
     })
   })
 })

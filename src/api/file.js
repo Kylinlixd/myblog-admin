@@ -1,17 +1,22 @@
 import request from '@/utils/request'
 
 import { normalizeCollectionResponse } from './collections'
+import { unwrapApiResponse } from './response'
+
+function normalizeFileItem(item) {
+  return {
+    ...item,
+    type: item.type ?? item.file_type,
+    size: item.size ?? item.file_size,
+    url: item.url ?? item.file_url ?? null
+  }
+}
 
 function normalizeFileResponse(response) {
   const { count, results } = normalizeCollectionResponse(response)
   return {
     count,
-    results: results.map((item) => ({
-      ...item,
-      type: item.type ?? item.file_type,
-      size: item.size ?? item.file_size,
-      url: item.url ?? item.file_url ?? null
-    }))
+    results: results.map(normalizeFileItem)
   }
 }
 
@@ -30,11 +35,10 @@ export function buildUploadData(params) {
 }
 
 function normalizeUploadResponse(response) {
-  if (!response || typeof response !== 'object') return response
-  if (response.code !== undefined && response.code !== 200) {
-    throw new Error(response.message || '上传失败')
-  }
-  return response.data ?? response
+  const item = unwrapApiResponse(response, '上传失败')
+  return item && typeof item === 'object' && !Array.isArray(item)
+    ? normalizeFileItem(item)
+    : item
 }
 
 export const uploadFile = async (params) =>

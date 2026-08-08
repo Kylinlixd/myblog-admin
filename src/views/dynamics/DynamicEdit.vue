@@ -415,14 +415,14 @@ const createTaxonomy = async () => {
     const response = taxonomyModalType.value === 'category'
       ? await createCategory({ name })
       : await createTag({ name })
-    const created = response?.data || response
+    const created = response
     if (taxonomyModalType.value === 'category') {
       await fetchCategories()
-      const id = created?.id || created?.data?.id
+      const id = created?.id
       if (id) form.value.categoryId = id
     } else {
       await fetchTags()
-      const id = created?.id || created?.data?.id
+      const id = created?.id
       if (id) form.value.tags = [...new Set([...(form.value.tags || []), id])]
     }
     taxonomyModalVisible.value = false
@@ -470,10 +470,8 @@ const rules = {
 const fetchTags = async () => {
   tagsLoading.value = true
   try {
-    const response = await getTagList()
-    // 从响应中获取 results 数组
-    const data = response?.results || response?.data?.items || response?.data || []
-    tags.value = Array.isArray(data) ? data : []
+    const { results = [] } = (await getTagList()) || {}
+    tags.value = results
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
@@ -487,10 +485,8 @@ const fetchTags = async () => {
 const fetchCategories = async () => {
   categoriesLoading.value = true
   try {
-    const response = await getCategoryList()
-    // 从响应中获取 results 数组
-    const data = response?.results || response?.data?.items || response?.data || []
-    categories.value = Array.isArray(data) ? data : []
+    const { results = [] } = (await getCategoryList()) || {}
+    categories.value = results
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
@@ -699,7 +695,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       return
     }
     
-    if (!result || !result.file_url) {
+    if (!result || !result.url) {
       const error = new Error('上传结果无效')
       console.error('上传结果无效:', result)
       message.error('上传失败：服务器返回数据无效')
@@ -712,7 +708,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       form.value.mediaUrls = []
     }
     
-    const fileUrl = buildApiUrl(result.file_url)
+    const fileUrl = buildApiUrl(result.url)
     
     // 对于音频和视频，只保留一个文件
     if (form.value.type === 'audio' || form.value.type === 'video') {
@@ -733,7 +729,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       status: 'done',
       url: fileUrl,
       thumbUrl: fileUrl,
-      type: result.file_type,
+      type: result.type,
       id: result.id
     }
     
