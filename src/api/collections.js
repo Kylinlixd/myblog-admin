@@ -9,10 +9,10 @@ export function normalizeCollectionResponse(response) {
   }
 
   if (Array.isArray(payload?.list)) {
-    return { count: payload.total ?? payload.list.length, results: payload.list }
+    return { count: payload.count ?? payload.total ?? payload.list.length, results: payload.list }
   }
   if (Array.isArray(payload?.items)) {
-    return { count: payload.total ?? payload.items.length, results: payload.items }
+    return { count: payload.count ?? payload.total ?? payload.items.length, results: payload.items }
   }
 
   return { count: 0, results: [] }

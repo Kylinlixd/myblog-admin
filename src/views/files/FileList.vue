@@ -319,6 +319,27 @@ const paginationConfig = computed(() => ({
   }
 }))
 
+const normalizeFileForView = (item) => {
+  const url = buildApiUrl(item.url)
+
+  return {
+    ...item,
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    size: item.size,
+    url,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+    downloadCount: item.download_count,
+    isPublic: item.is_public,
+    description: item.description,
+    category: item.category,
+    tags: item.tags,
+    uploader: item.uploader
+  }
+}
+
 // 获取文件列表
 const fetchFiles = async () => {
   try {
@@ -327,26 +348,7 @@ const fetchFiles = async () => {
       page: currentPage.value,
       pageSize: pageSize.value
     })
-    fileList.value = response.results.map((item) => {
-      const url = buildApiUrl(item.url)
-
-      return {
-        ...item,
-        id: item.id,
-        name: item.name,
-        type: item.type,
-        size: item.size,
-        url,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-        downloadCount: item.download_count,
-        isPublic: item.is_public,
-        description: item.description,
-        category: item.category,
-        tags: item.tags,
-        uploader: item.uploader
-      }
-    })
+    fileList.value = response.results.map(normalizeFileForView)
     total.value = response.count
   } catch (error) {
     console.error('获取文件列表异常:', error)
@@ -368,26 +370,7 @@ const handleSearch = async () => {
       page: currentPage.value,
       pageSize: pageSize.value
     })
-    fileList.value = response.results.map((item) => {
-      const url = buildApiUrl(item.url)
-
-      return {
-        ...item,
-        id: item.id,
-        name: item.name,
-        type: item.type,
-        size: item.size,
-        url,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-        downloadCount: item.download_count,
-        isPublic: item.is_public,
-        description: item.description,
-        category: item.category,
-        tags: item.tags,
-        uploader: item.uploader
-      }
-    })
+    fileList.value = response.results.map(normalizeFileForView)
     total.value = response.count
   } catch (error) {
     console.error('搜索文件异常:', error)

@@ -6,7 +6,8 @@ describe('collection response normalization', () => {
     [{ count: 4, results: [{ id: 1 }] }, 4],
     [{ data: { count: 5, results: [{ id: 1 }] } }, 5],
     [{ data: { list: [{ id: 1 }], total: 6 } }, 6],
-    [{ data: { total: 8, items: [{ id: 1 }] } }, 8]
+    [{ data: { total: 8, items: [{ id: 1 }] } }, 8],
+    [{ data: { count: 42, items: [{ id: 1 }] } }, 42]
   ])('normalizes supported backend shape', (response, count) => {
     expect(normalizeCollectionResponse(response)).toEqual({
       count,
