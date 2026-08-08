@@ -135,6 +135,7 @@ describe('DynamicList mounted interactions', () => {
 
     const createButton = wrapper.find('.dynamic-empty [aria-label="新建动态"]')
     expect(createButton.exists()).toBe(true)
+    expect(wrapper.find('.content-table-scroll').exists()).toBe(false)
     await createButton.trigger('click')
     expect(mockRouterPush).toHaveBeenCalledWith({ name: 'CreateDynamic' })
     wrapper.unmount()
@@ -150,6 +151,7 @@ describe('DynamicList mounted interactions', () => {
 
     expect(wrapper.find('.dynamic-error').exists()).toBe(true)
     expect(wrapper.find('.dynamic-empty').exists()).toBe(false)
+    expect(wrapper.find('.content-table-scroll').exists()).toBe(false)
 
     await wrapper.find('.dynamic-error [aria-label="重试"]').trigger('click')
     await flushPromises()
@@ -157,6 +159,19 @@ describe('DynamicList mounted interactions', () => {
     expect(getDynamicList).toHaveBeenCalledTimes(2)
     expect(wrapper.find('.dynamic-error').exists()).toBe(false)
     expect(wrapper.vm.dynamicList).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('clears selected rows when a list request fails', async () => {
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.selectedRowKeys = [7]
+    getDynamicList.mockRejectedValueOnce(new Error('network unavailable'))
+    await wrapper.vm.fetchDynamics()
+
+    expect(wrapper.vm.dynamicList).toEqual([])
+    expect(wrapper.vm.selectedRowKeys).toEqual([])
     wrapper.unmount()
   })
 

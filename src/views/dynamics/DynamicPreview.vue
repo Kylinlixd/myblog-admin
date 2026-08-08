@@ -165,11 +165,11 @@ const fetchDynamicDetail = async () => {
   }
 
   try {
-    const res = await getDynamicDetail(route.params.id)
-    if (res.code === 200 && res.data) {
-      dynamic.value = res.data
+    const data = await getDynamicDetail(route.params.id)
+    if (data) {
+      dynamic.value = data
     } else {
-      throw new Error(res.message || '获取动态详情失败')
+      throw new Error('获取动态详情失败')
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)

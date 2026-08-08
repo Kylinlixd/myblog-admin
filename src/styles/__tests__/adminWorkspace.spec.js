@@ -66,7 +66,7 @@ describe('admin workspace styles', () => {
       'utf8'
     )
 
-    expect(dynamicList).toContain('<div class="content-table-scroll">')
+    expect(dynamicList).toContain('<div v-else class="content-table-scroll">')
     expect(dynamicList).toMatch(/\.content-table-scroll\s*\{[\s\S]*?overflow-x: auto;/)
     expect(stylesheet).toMatch(/\.admin-page \.ant-table-content,\s*\.admin-page \.ant-table-body,\s*\.admin-page \.table-wrapper\s*\{[\s\S]*?overflow-x: auto !important;/)
   })

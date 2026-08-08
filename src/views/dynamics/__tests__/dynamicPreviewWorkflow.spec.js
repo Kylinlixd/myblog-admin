@@ -62,6 +62,14 @@ describe('dynamic preview workflow', () => {
     expect(listView).toContain('${value}/页')
   })
 
+  it('keeps dynamic list request errors readable on narrow screens', () => {
+    const listView = readView('DynamicList.vue')
+
+    expect(listView).toContain('.dynamic-error')
+    expect(listView).toContain('overflow-wrap: anywhere')
+    expect(listView).toContain('@media (max-width: 576px)')
+  })
+
   it('allows creating taxonomy directly from the editor', () => {
     const editView = readView('DynamicEdit.vue')
 

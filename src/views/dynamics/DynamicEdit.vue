@@ -510,12 +510,11 @@ const fetchCategories = async () => {
 // 获取动态详情
 const fetchDynamicDetail = async () => {
   if (!isEdit.value) return
-  
+
+  isHydrating = true
   try {
     const data = await getDynamicDetail(route.params.id)
     if (data) {
-      isHydrating = true
-      
       // 处理 mediaUrls，确保是数组且包含前缀
       let mediaUrls = []
       if (data.mediaUrls) {
@@ -551,7 +550,6 @@ const fetchDynamicDetail = async () => {
           markdownEditorRef.value.setContent(form.value.content)
         }
       })
-      isHydrating = false
       window.clearTimeout(draftTimer)
       draftTimer = undefined
       dirty.value = false
@@ -561,6 +559,8 @@ const fetchDynamicDetail = async () => {
   } catch (error) {
     console.error('获取动态详情失败:', error)
     message.error('获取动态详情失败')
+  } finally {
+    isHydrating = false
   }
 }
 

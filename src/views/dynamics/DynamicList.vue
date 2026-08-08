@@ -112,7 +112,7 @@
           <PlusOutlined /> 新建动态
         </a-button>
       </div>
-      <div class="content-table-scroll">
+      <div v-else class="content-table-scroll">
         <a-table
         :loading="loading"
         :columns="responsive ? columnsForMobile : columns"
@@ -289,6 +289,7 @@ const fetchDynamics = async () => {
     console.error('获取动态列表失败:', error);
     dynamicList.value = [];
     total.value = 0;
+    selectedRowKeys.value = [];
     requestError.value = true;
     message.error('获取动态列表失败');
   } finally {
@@ -641,6 +642,21 @@ onUnmounted(() => {
 .dynamic-empty strong { color: var(--color-text); }
 .dynamic-empty .ant-btn { margin-top: 8px; }
 
+.dynamic-error {
+  display: grid;
+  min-height: 220px;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--color-text-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.dynamic-error strong { color: var(--color-text); }
+.dynamic-error .ant-btn { margin-top: 8px; }
+
 :deep(.content-table-scroll .ant-table-tbody > tr > td) { vertical-align: middle; }
 
 :deep(.content-table-scroll .ant-table) {
@@ -782,6 +798,16 @@ onUnmounted(() => {
   .dynamic-list .admin-filter :deep(.ant-select-selector) {
     width: 100% !important;
     min-width: 0 !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .dynamic-error {
+    padding: 24px 16px;
+  }
+
+  .dynamic-error .ant-btn {
+    width: 100%;
   }
 }
 </style>

@@ -159,6 +159,24 @@ describe('DynamicEdit normalized API responses', () => {
     wrapper.unmount()
   })
 
+  it('resets the hydration guard after a detail request fails', async () => {
+    routeParams.id = '42'
+    let rejectDetail
+    getDynamicDetail.mockReturnValueOnce(new Promise((resolve, reject) => {
+      rejectDetail = reject
+    }))
+
+    const wrapper = mount(DynamicEdit, { global: { stubs: globalStubs } })
+    await Promise.resolve()
+    expect(wrapper.vm.isHydrating).toBe(true)
+
+    rejectDetail(new Error('network unavailable'))
+    await flushPromises()
+
+    expect(wrapper.vm.isHydrating).toBe(false)
+    wrapper.unmount()
+  })
+
   it('does not mark initial detail hydration dirty or autosave it', async () => {
     routeParams.id = '42'
     jest.useFakeTimers()
