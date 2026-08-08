@@ -51,7 +51,12 @@
     <!-- 操作按钮 -->
     <div class="table-operations admin-toolbar">
       <a-space>
-        <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
+        <a-button
+          danger
+          :loading="batchDeleting"
+          :disabled="!selectedRowKeys.length || batchDeleting"
+          @click="handleBatchDelete"
+        >
           <DeleteOutlined />
           批量删除
         </a-button>
@@ -235,6 +240,7 @@ const pageSize = ref(10)
 const total = ref(0)
 const selectedRowKeys = ref([])
 const deletingIds = reactive(new Set())
+const batchDeleting = ref(false)
 
 // 搜索表单
 const searchForm = ref({
@@ -433,11 +439,13 @@ const onSelectChange = (keys) => {
 
 // 处理批量删除
 const handleBatchDelete = async () => {
-  if (!selectedRowKeys.value.length) {
+  if (batchDeleting.value || !selectedRowKeys.value.length) {
+    if (batchDeleting.value) return
     message.warning('请选择要删除的文件')
     return
   }
 
+  batchDeleting.value = true
   try {
     loading.value = true
     const ids = [...selectedRowKeys.value]
@@ -455,6 +463,7 @@ const handleBatchDelete = async () => {
     message.error('批量删除失败')
   } finally {
     loading.value = false
+    batchDeleting.value = false
   }
 }
 

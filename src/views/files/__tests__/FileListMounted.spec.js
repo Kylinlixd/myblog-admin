@@ -34,7 +34,11 @@ jest.mock('@ant-design/icons-vue', () => {
   }
 })
 
-const ButtonStub = { template: '<button v-bind="$attrs"><slot /></button>' }
+const ButtonStub = {
+  inheritAttrs: false,
+  props: { loading: Boolean, disabled: Boolean },
+  template: '<button v-bind="$attrs" :disabled="disabled" :data-loading="loading ? \'true\' : undefined"><slot /></button>'
+}
 const TableStub = {
   props: { dataSource: { type: Array, default: () => [] } },
   template: '<div class="table-stub"><slot v-for="record in dataSource" name="bodyCell" :column="{ dataIndex: \'preview\' }" :record="record" /></div>'
@@ -54,12 +58,12 @@ const globalStubs = {
   'a-input-search': true,
   'a-select': true,
   'a-select-option': true,
-  'a-space': true,
+  'a-space': { template: '<div><slot /></div>' },
   'a-table': TableStub,
   'a-tag': true,
   'a-upload': true,
   'a-image': true,
-  'a-popconfirm': true,
+  'a-popconfirm': { template: '<div><slot /></div>' },
   'a-modal': ModalStub
 }
 
@@ -129,6 +133,30 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     request.resolve()
     await promise
     expect(wrapper.vm.deletingIds).not.toContain(7)
+    wrapper.unmount()
+  })
+
+  it('guards the batch delete action while its requests are pending', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const request = deferred()
+    deleteFile.mockReturnValue(request.promise)
+    wrapper.vm.selectedRowKeys = [7, 8]
+
+    const firstBatch = wrapper.vm.handleBatchDelete()
+    await wrapper.vm.$nextTick()
+
+    const batchButton = wrapper.find('.admin-toolbar button')
+    expect(wrapper.vm.batchDeleting).toBe(true)
+    expect(batchButton.attributes('disabled')).toBeDefined()
+    expect(batchButton.attributes('data-loading')).toBe('true')
+
+    await wrapper.vm.handleBatchDelete()
+    expect(deleteFile).toHaveBeenCalledTimes(2)
+
+    request.resolve({})
+    await firstBatch
+    expect(wrapper.vm.batchDeleting).toBe(false)
     wrapper.unmount()
   })
 })

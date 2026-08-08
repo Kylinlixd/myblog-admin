@@ -52,14 +52,20 @@ const globalStubs = {
   'a-textarea': true,
   'a-select': true,
   'a-select-option': true,
-  'a-space': true,
+  'a-space': { template: '<div><slot /></div>' },
   'a-table': true,
   'a-tag': true,
-  'a-popconfirm': true,
+  'a-popconfirm': { template: '<div><slot /></div>' },
   'a-modal': true
 }
 
 const emptyResponse = { count: 0, results: [] }
+
+const deferred = () => {
+  let resolve
+  const promise = new Promise((res) => { resolve = res })
+  return { promise, resolve }
+}
 
 describe('CategoryList mounted states and taxonomy actions', () => {
   beforeEach(() => {
@@ -111,6 +117,30 @@ describe('CategoryList mounted states and taxonomy actions', () => {
 
     await wrapper.vm.handleDelete({ id: 7 })
     expect(deleteCategory).toHaveBeenCalledWith(7)
+    wrapper.unmount()
+  })
+
+  it('guards the batch delete action while its requests are pending', async () => {
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const request = deferred()
+    deleteCategory.mockReturnValue(request.promise)
+    wrapper.vm.selectedRowKeys = [7, 8]
+
+    const firstBatch = wrapper.vm.handleBatchDelete()
+    await wrapper.vm.$nextTick()
+
+    const batchButton = wrapper.find('.admin-toolbar button')
+    expect(wrapper.vm.batchDeleting).toBe(true)
+    expect(batchButton.attributes('disabled')).toBeDefined()
+    expect(batchButton.attributes('data-loading')).toBe('true')
+
+    await wrapper.vm.handleBatchDelete()
+    expect(deleteCategory).toHaveBeenCalledTimes(2)
+
+    request.resolve({})
+    await firstBatch
+    expect(wrapper.vm.batchDeleting).toBe(false)
     wrapper.unmount()
   })
 })

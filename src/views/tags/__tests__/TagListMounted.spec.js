@@ -37,7 +37,11 @@ jest.mock('@ant-design/icons-vue', () => {
 
 const globalStubs = {
   PageHeader: true,
-  'a-button': true,
+  'a-button': {
+    inheritAttrs: false,
+    props: { loading: Boolean, disabled: Boolean },
+    template: '<button v-bind="$attrs" :disabled="disabled" :data-loading="loading ? \'true\' : undefined"><slot /></button>'
+  },
   'a-card': true,
   'a-form': true,
   'a-form-item': true,
@@ -45,10 +49,10 @@ const globalStubs = {
   'a-textarea': true,
   'a-select': true,
   'a-select-option': true,
-  'a-space': true,
+  'a-space': { template: '<div><slot /></div>' },
   'a-table': true,
   'a-tag': true,
-  'a-popconfirm': true,
+  'a-popconfirm': { template: '<div><slot /></div>' },
   'a-modal': true
 }
 
@@ -91,6 +95,30 @@ describe('TagList mounted states and taxonomy actions', () => {
 
     await wrapper.vm.handleDelete({ id: 8 })
     expect(deleteTag).toHaveBeenCalledWith(8)
+    wrapper.unmount()
+  })
+
+  it('guards the batch delete action while its requests are pending', async () => {
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    let resolve
+    deleteTag.mockReturnValue(new Promise((res) => { resolve = res }))
+    wrapper.vm.selectedRowKeys = [8, 9]
+
+    const firstBatch = wrapper.vm.handleBatchDelete()
+    await wrapper.vm.$nextTick()
+
+    const batchButton = wrapper.find('.admin-toolbar button')
+    expect(wrapper.vm.batchDeleting).toBe(true)
+    expect(batchButton.attributes('disabled')).toBeDefined()
+    expect(batchButton.attributes('data-loading')).toBe('true')
+
+    await wrapper.vm.handleBatchDelete()
+    expect(deleteTag).toHaveBeenCalledTimes(2)
+
+    resolve({})
+    await firstBatch
+    expect(wrapper.vm.batchDeleting).toBe(false)
     wrapper.unmount()
   })
 })

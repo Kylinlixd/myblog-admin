@@ -11,8 +11,8 @@ export async function getTagList(params) {
 export const createTag = async (data) =>
   unwrapApiResponse(await request.post('/api/tags/', data), '标签创建失败')
 
-export const updateTag = (id, data) =>
-  request.put(`/api/tags/${id}/`, data)
+export const updateTag = async (id, data) =>
+  unwrapApiResponse(await request.put(`/api/tags/${id}/`, data), '标签更新失败')
 
-export const deleteTag = (id) =>
-  request.delete(`/api/tags/${id}/`)
+export const deleteTag = async (id) =>
+  unwrapApiResponse(await request.delete(`/api/tags/${id}/`), '标签删除失败')

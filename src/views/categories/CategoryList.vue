@@ -55,7 +55,11 @@
           cancel-text="取消"
           @confirm="handleBatchDelete"
         >
-          <a-button danger :disabled="!selectedRowKeys.length">
+          <a-button
+            danger
+            :loading="batchDeleting"
+            :disabled="!selectedRowKeys.length || batchDeleting"
+          >
             <template #icon><DeleteOutlined /></template>
             批量删除
           </a-button>
@@ -225,6 +229,7 @@ const errorMessage = ref('')
 const formLoading = ref(false)
 const formRef = ref(null)
 const deletingIds = reactive(new Set())
+const batchDeleting = ref(false)
 
 // 分页配置
 const pagination = reactive({
@@ -398,11 +403,13 @@ const isDeleting = (id) => deletingIds.has(id)
 
 // 批量删除
 const handleBatchDelete = async () => {
-  if (!selectedRowKeys.value.length) {
+  if (batchDeleting.value || !selectedRowKeys.value.length) {
+    if (batchDeleting.value) return
     message.warning('请选择要删除的分类')
     return
   }
 
+  batchDeleting.value = true
   try {
     const ids = [...selectedRowKeys.value]
     const results = await Promise.allSettled(ids.map((id) => deleteCategory(id)))
@@ -417,6 +424,8 @@ const handleBatchDelete = async () => {
   } catch (error) {
     console.error('批量删除失败:', error)
     message.error('批量删除失败，请重试')
+  } finally {
+    batchDeleting.value = false
   }
 }
 

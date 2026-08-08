@@ -11,8 +11,8 @@ export async function getCategoryList(params) {
 export const createCategory = async (data) =>
   unwrapApiResponse(await request.post('/api/categories/', data), '分类创建失败')
 
-export const updateCategory = (id, data) =>
-  request.put(`/api/categories/${id}/`, data)
+export const updateCategory = async (id, data) =>
+  unwrapApiResponse(await request.put(`/api/categories/${id}/`, data), '分类更新失败')
 
-export const deleteCategory = (id) =>
-  request.delete(`/api/categories/${id}/`)
+export const deleteCategory = async (id) =>
+  unwrapApiResponse(await request.delete(`/api/categories/${id}/`), '分类删除失败')

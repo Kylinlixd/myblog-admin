@@ -213,7 +213,7 @@ const beforeAvatarUpload = (file) => {
 
 // 头像上传成功的回调
 const handleAvatarSuccess = (res) => {
-  const avatarUrl = res?.url || res?.data?.url
+  const avatarUrl = res?.url
   if (avatarUrl) {
     profileForm.avatar = avatarUrl
     AntMessage.success('头像上传成功')

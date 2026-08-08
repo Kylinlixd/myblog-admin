@@ -79,4 +79,16 @@ describe('Profile mounted interactions', () => {
     expect(wrapper.find('.profile-form-stackable').attributes('data-mobile-stack')).toBe('true')
     wrapper.unmount()
   })
+
+  it('accepts the canonical top-level avatar URL without nested response fallback', async () => {
+    const wrapper = mount(Profile, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.handleAvatarSuccess({ data: { url: '/media/nested-avatar.png' } })
+    expect(wrapper.vm.profileForm.avatar).toBe('/media/avatar.png')
+
+    wrapper.vm.handleAvatarSuccess({ url: '/media/canonical-avatar.png' })
+    expect(wrapper.vm.profileForm.avatar).toBe('/media/canonical-avatar.png')
+    wrapper.unmount()
+  })
 })
