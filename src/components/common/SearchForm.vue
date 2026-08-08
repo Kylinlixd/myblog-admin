@@ -16,7 +16,6 @@
 </template>
 
 <script setup>
-import { defineEmits, watch } from 'vue'
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps({
@@ -45,7 +44,9 @@ const handleSearch = () => {
 const handleReset = () => {
   // 重置为默认值
   Object.keys(props.form).forEach(key => {
-    props.form[key] = props.defaultValues[key] || ''
+    props.form[key] = Object.prototype.hasOwnProperty.call(props.defaultValues, key)
+      ? props.defaultValues[key]
+      : ''
   })
   
   emit('reset')
@@ -96,16 +97,6 @@ const handleReset = () => {
       border-radius: 8px;
       font-weight: 650;
       font-size: 14px;
-      transition: all 0.3s ease;
-    }
-    .search-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
-    }
-    .reset-button:hover {
-      color: #40a9ff;
-      border-color: #40a9ff;
-      background: rgba(24, 144, 255, 0.05);
     }
   }
 }
@@ -126,13 +117,6 @@ const handleReset = () => {
       }
     }
 
-    .form-buttons {
-      .reset-button:hover {
-        color: #177ddc;
-        border-color: #177ddc;
-        background: rgba(23, 125, 220, 0.1);
-      }
-    }
   }
 }
 

@@ -1,21 +1,9 @@
 .workspace {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 76%) 0%, rgb(246 248 251 / 0%) 260px),
-    radial-gradient(circle at 96% -8%, rgb(49 91 234 / 10%), transparent 330px),
-    radial-gradient(circle at 36% -14%, rgb(15 159 117 / 8%), transparent 300px),
-    var(--color-page);
-}
-
-.workspace::before {
-  position: fixed;
-  z-index: 0;
-  inset: 72px 0 auto 232px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(49 91 234 / 22%), transparent);
-  content: '';
-  pointer-events: none;
+  background: var(--color-page);
 }
 
 .workspace-content {
@@ -23,6 +11,7 @@
   z-index: 1;
   width: min(100%, 1660px);
   margin-inline: auto;
+  overflow-x: hidden;
 }
 
 .admin-page {
@@ -44,8 +33,8 @@
   min-width: 0;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 24px;
-  padding: 2px 2px 8px;
+  gap: 20px;
+  padding: 2px 2px 4px;
 }
 
 .page-header__copy {
@@ -115,9 +104,8 @@
 .admin-page > .data-table {
   border: 1px solid rgb(226 231 239 / 90%);
   border-radius: var(--radius-md);
-  background: rgb(255 255 255 / 88%);
+  background: var(--color-surface);
   box-shadow: var(--shadow-card);
-  backdrop-filter: blur(14px);
 }
 
 .admin-filter {
@@ -207,7 +195,7 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .admin-page > .ant-table-wrapper,
@@ -275,6 +263,20 @@
 .admin-page .ant-table-tbody > tr:hover > td,
 .admin-page .inspira-table tr:hover td {
   background: #f8fbff !important;
+}
+
+.admin-page :where(button, a, input, textarea, select, .ant-select-selector, .ant-btn):focus-visible,
+.admin-filter :where(button, a, input, textarea, select, .ant-select-selector, .ant-btn):focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.admin-page .ant-btn:disabled,
+.admin-filter .ant-btn:disabled,
+.admin-page input:disabled,
+.admin-filter input:disabled {
+  cursor: not-allowed;
+  opacity: .55;
 }
 
 .admin-page .ant-pagination {
@@ -414,10 +416,6 @@
 }
 
 @media (max-width: 992px) {
-  .workspace::before {
-    left: 0;
-  }
-
   .admin-filter {
     gap: 10px;
     padding: 12px;
@@ -475,6 +473,10 @@
   .page-header__actions {
     width: 100%;
     flex-wrap: wrap;
+  }
+
+  .page-header__actions > * {
+    max-width: 100%;
   }
 
   .admin-filter,

@@ -1,5 +1,5 @@
 <template>
-  <div class="data-table admin-table-card">
+  <div class="data-table admin-table-card" :aria-busy="loading">
     <div class="table-wrapper" :class="{ 'is-loading': loading }">
       <table class="inspira-table">
         <thead>
@@ -54,8 +54,8 @@
           </tr>
         </tbody>
       </table>
-      <div v-if="loading" class="loading-overlay">
-        <div class="loading-spinner"></div>
+      <div v-if="loading" class="loading-overlay" role="status" aria-label="正在加载内容">
+        <div class="loading-skeleton" aria-hidden="true"><i /><i /><i /></div>
       </div>
     </div>
   </div>
@@ -146,7 +146,8 @@ const toggleVisibleRows = (event) => {
 <style lang="scss" scoped>
 .data-table {
   width: 100%;
-  overflow: auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .table-wrapper {
@@ -155,7 +156,7 @@ const toggleVisibleRows = (event) => {
   min-height: 240px;
   overflow: auto;
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   
   &.is-loading {
     .inspira-table {
@@ -173,7 +174,7 @@ const toggleVisibleRows = (event) => {
     padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid #ebeef5;
-    transition: all 0.3s;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
   }
 
   .selection-cell {
@@ -192,12 +193,12 @@ const toggleVisibleRows = (event) => {
   th {
     font-weight: 600;
     color: #606266;
-    background-color: #f5f7fa;
+    background-color: #f8faff;
     white-space: nowrap;
   }
   
   tr:hover td {
-    background-color: #f5f7fa;
+    background-color: #f8fbff;
   }
   
   .empty-cell {
@@ -227,28 +228,32 @@ const toggleVisibleRows = (event) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: var(--color-surface);
   min-height: 240px;
   z-index: 1;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #0096ff;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  will-change: transform;
+.loading-skeleton {
+  display: grid;
+  width: min(440px, 72%);
+  gap: 12px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.loading-skeleton i {
+  display: block;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--color-border);
+  animation: table-pulse 1.35s ease-in-out infinite;
 }
+
+.loading-skeleton i:nth-child(2) { width: 82%; }
+.loading-skeleton i:nth-child(3) { width: 64%; }
+@keyframes table-pulse { 50% { opacity: .48; } }
 
 :global([data-theme='dark']) {
   .table-wrapper {
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+    box-shadow: none;
   }
   
   .inspira-table {
@@ -267,7 +272,11 @@ const toggleVisibleRows = (event) => {
   }
   
   .loading-overlay {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: #141b2d;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-skeleton i { animation: none; }
 }
 </style>

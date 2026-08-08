@@ -22,9 +22,21 @@ describe('DefaultLayout sidebar collapse control', () => {
     expect(sidebarMarkup).toContain('@click="toggleSidebar"')
     expect(headerMarkup).not.toContain('折叠导航')
     expect(headerMarkup).toContain('打开导航')
+    expect(headerMarkup).toContain(':aria-expanded="mobileOpen"')
+    expect(headerMarkup).toContain('aria-controls="admin-mobile-navigation"')
     expect(source).toContain("'admin-shell--mobile': isMobile")
     expect(source).toContain('.admin-shell--mobile { flex-direction: column !important; }')
     expect(source).toContain('top: 76px')
     expect(source).toContain('width: 100%')
+  })
+
+  it('closes the mobile drawer after route navigation', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'src/layouts/DefaultLayout.vue'),
+      'utf8'
+    )
+
+    expect(source).toContain("watch(() => route.fullPath")
+    expect(source).toContain('mobileOpen.value = false')
   })
 })

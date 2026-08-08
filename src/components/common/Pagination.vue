@@ -44,8 +44,9 @@ const currentSize = ref(props.pageSize)
 const internalCurrentPage = ref(props.currentPage)
 
 // 监听外部属性变化
-watch(() => props.pageSize, (newVal) => {
+watch(() => props.pageSize, (newVal, oldVal) => {
   currentSize.value = newVal
+  if (newVal !== oldVal) internalCurrentPage.value = 1
 })
 
 watch(() => props.currentPage, (newVal) => {
@@ -83,4 +84,4 @@ const handleSizeChange = (current, size) => {
     align-items: center;
   }
 }
-</style> 
+</style>

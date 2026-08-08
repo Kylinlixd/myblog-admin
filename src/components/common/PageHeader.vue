@@ -1,5 +1,5 @@
 <template>
-  <div class="page-header">
+  <header class="page-header">
     <div class="page-header__copy">
       <div class="page-header__title">
         <slot name="icon">
@@ -12,7 +12,7 @@
     <div v-if="$slots.actions" class="page-header__actions">
       <slot name="actions"></slot>
     </div>
-  </div>
+  </header>
 </template>
 
 <script setup>

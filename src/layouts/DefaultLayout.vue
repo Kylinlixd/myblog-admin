@@ -17,7 +17,7 @@
       <AdminNavigation />
     </a-layout-sider>
 
-    <a-drawer v-model:open="mobileOpen" placement="left" :closable="false" :width="272" class="admin-drawer">
+    <a-drawer id="admin-mobile-navigation" v-model:open="mobileOpen" placement="left" :closable="false" :width="272" class="admin-drawer">
       <router-link class="admin-brand admin-brand--drawer" to="/dashboard" @click="mobileOpen = false">
         <span class="brand-mark">L</span><span>LiXD Studio<small>内容工作台</small></span>
       </router-link>
@@ -27,7 +27,7 @@
     <a-layout class="workspace">
       <a-layout-header class="workspace-header">
           <div class="header-left">
-          <button v-if="isMobile" type="button" class="icon-button" aria-label="打开导航" @click="toggleSidebar">
+          <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
           </button>
           <router-link class="header-brand" to="/dashboard">
@@ -111,8 +111,9 @@ const AdminNavigation = defineComponent({
 })
 
 function updateViewport() { isMobile.value = window.innerWidth < 992; if (!isMobile.value) mobileOpen.value = false }
-function toggleSidebar() { if (isMobile.value) mobileOpen.value = true; else collapsed.value = !collapsed.value }
+function toggleSidebar() { if (isMobile.value) mobileOpen.value = !mobileOpen.value; else collapsed.value = !collapsed.value }
 watch(collapsed, (value) => localStorage.setItem('admin.sidebarCollapsed', String(value)))
+watch(() => route.fullPath, () => { mobileOpen.value = false })
 onMounted(() => window.addEventListener('resize', updateViewport))
 onBeforeUnmount(() => window.removeEventListener('resize', updateViewport))
 
@@ -131,7 +132,7 @@ function handleLogout() {
 
 <style lang="scss">
 .admin-drawer .ant-drawer-body { padding: 0; background: #10182b; }
-.admin-shell { min-height: 100vh; background: var(--color-page); }
+.admin-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: hidden; background: var(--color-page); }
 .admin-shell--mobile { flex-direction: column !important; }
 .admin-sidebar { position: sticky !important; top: 0; height: 100vh; overflow: visible; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
 .admin-brand { display: flex; height: 76px; align-items: center; gap: 11px; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
@@ -156,10 +157,10 @@ function handleLogout() {
 .admin-navigation .nav-item--active { background: #315bea !important; color: white !important; box-shadow: 0 10px 22px rgb(49 91 234 / 24%); }
 .admin-navigation .nav-item--active .nav-item__icon { background: rgb(255 255 255 / 16%); }
 .admin-navigation .nav-item--active small { color: rgb(255 255 255 / 72%); }
-.workspace { min-width: 0; background: var(--color-page); }
-.workspace-header { position: sticky; z-index: 50; top: 0; display: flex; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: rgb(255 255 255 / 92%) !important; line-height: normal; backdrop-filter: blur(16px); }
+.workspace { min-width: 0; max-width: 100%; background: var(--color-page); }
+.workspace-header { position: sticky; z-index: 50; top: 0; display: flex; min-width: 0; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
-.header-left { min-width: 0; gap: 16px; }
+.header-left { min-width: 0; gap: 16px; overflow: hidden; }
 .header-brand { display: inline-flex; align-items: center; gap: 9px; color: var(--color-text); text-decoration: none; }
 .header-brand__mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: var(--color-primary); color: #fff; font-size: 16px; font-weight: 800; }
 .header-brand > span:last-child { display: grid; gap: 2px; }
@@ -167,7 +168,7 @@ function handleLogout() {
 .header-brand small { color: var(--color-text-muted); font-size: 10px; line-height: 1.1; }
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
-.header-actions { gap: 16px; }
+.header-actions { min-width: 0; gap: 16px; }
 .icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
 .user-button { min-height: 46px; gap: 10px; padding: 5px 7px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
@@ -175,7 +176,7 @@ function handleLogout() {
 .user-copy { display: flex; align-items: flex-start; flex-direction: column; justify-content: center; gap: 2px; line-height: 1.1; }
 .user-copy strong { display: block; color: var(--color-text); font-size: 13px; line-height: 1.2; }
 .user-copy small { display: block; color: var(--color-text-muted); font-size: 10px; line-height: 1.2; }
-.workspace-content { min-width: 0; padding: 30px; }
+.workspace-content { min-width: 0; max-width: 100%; padding: 30px; overflow-x: hidden; }
 .account-menu { min-width: 168px; }
 .logout-confirm .ant-modal-confirm-title { font-weight: 750; }
 .logout-confirm .ant-modal-confirm-content { color: var(--color-text-secondary); }
@@ -183,7 +184,11 @@ function handleLogout() {
 .workspace-page-enter-from { opacity: 0; transform: translateY(5px); }
 .workspace-page-leave-to { opacity: 0; }
 @media (max-width: 992px) { .admin-shell--mobile > .workspace { width: 100%; } }
-@media (max-width: 720px) { .workspace-header { padding: 0 16px; } .workspace-content { padding: 18px 14px; } .blog-link span, .user-copy { display: none; } }
-@media (max-width: 720px) { .header-brand > span:last-child { display: none; } }
-@media (max-width: 720px) { .workspace-status { display: none; } }
+@media (max-width: 720px) {
+  .workspace-header { height: auto; min-height: 64px; padding: 10px 16px; }
+  .workspace-content { padding: 18px 14px; }
+  .header-left { gap: 10px; }
+  .header-actions { gap: 8px; }
+  .blog-link span, .user-copy, .header-brand > span:last-child, .workspace-status { display: none; }
+}
 </style>

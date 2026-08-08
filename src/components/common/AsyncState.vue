@@ -1,5 +1,5 @@
 <template>
-  <div class="async-state" role="status">
+  <div class="async-state" role="status" :aria-busy="loading">
     <div v-if="loading" class="state-skeleton" aria-label="正在加载内容">
       <span />
       <span />
@@ -15,6 +15,7 @@
       <div class="state-icon state-icon--empty">○</div>
       <h3>{{ emptyTitle }}</h3>
       <p>{{ emptyDescription }}</p>
+      <a-button class="state-retry" @click="$emit('retry')">重新加载</a-button>
     </template>
   </div>
 </template>
@@ -51,10 +52,11 @@ defineEmits(['retry'])
 .async-state h3 { color: var(--color-text); }
 .state-icon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; background: #fff1f2; color: var(--color-danger); font-weight: 700; }
 .state-icon--empty { background: var(--color-primary-soft); color: var(--color-primary); }
+.state-retry { margin-top: 8px; }
 .state-skeleton { width: min(560px, 100%); }
-.state-skeleton span { display: block; height: 14px; margin: 12px auto; border-radius: 999px; background: linear-gradient(90deg, var(--color-surface-muted), var(--color-border), var(--color-surface-muted)); background-size: 200% 100%; animation: state-shimmer 1.35s linear infinite; }
+.state-skeleton span { display: block; height: 14px; margin: 12px auto; border-radius: 999px; background: var(--color-border); animation: state-pulse 1.35s ease-in-out infinite; }
 .state-skeleton span:nth-child(2) { width: 82%; }
 .state-skeleton span:nth-child(3) { width: 64%; }
-@keyframes state-shimmer { to { background-position: -200% 0; } }
+@keyframes state-pulse { 50% { opacity: .48; } }
 @media (prefers-reduced-motion: reduce) { .state-skeleton span { animation: none; } }
 </style>
