@@ -89,6 +89,7 @@ describe('DynamicEdit file selector responses', () => {
       }
     })
     await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
 
     await wrapper.vm.showFileSelector()
     await flushPromises()
@@ -106,6 +107,49 @@ describe('DynamicEdit file selector responses', () => {
     expect(wrapper.vm.fileTotal).toBe(normalizedFiles.count)
     expect(getFileList).toHaveBeenCalledTimes(3)
 
+    wrapper.unmount()
+  })
+
+  it('refreshes file data after confirming a file selection', async () => {
+    const wrapper = mount(DynamicEdit, {
+      global: {
+        stubs: {
+          'a-button': true,
+          'a-form': true,
+          'a-form-item': true,
+          'a-input': true,
+          'a-input-search': true,
+          'a-list': true,
+          'a-list-item': true,
+          'a-modal': true,
+          'a-radio': true,
+          'a-radio-group': true,
+          'a-select': true,
+          'a-select-option': true,
+          'a-spin': true,
+          'a-upload': true
+        },
+        config: {
+          compilerOptions: {
+            isCustomElement: (tag) => tag.startsWith('a-')
+          }
+        }
+      }
+    })
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+
+    await wrapper.vm.showFileSelector()
+    await flushPromises()
+    wrapper.vm.handleFileSelect(wrapper.vm.fileListData[0])
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.handleFileConfirm()
+    await flushPromises()
+
+    expect(wrapper.vm.form.mediaUrls).toEqual(['/media/cover.png'])
+    expect(wrapper.vm.form.fileIds).toEqual([7])
+    expect(getFileList).toHaveBeenCalledTimes(2)
+    expect(wrapper.vm.fileListData).toEqual(normalizedFiles.results)
     wrapper.unmount()
   })
 })

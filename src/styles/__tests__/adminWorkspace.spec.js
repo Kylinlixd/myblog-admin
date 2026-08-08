@@ -56,6 +56,21 @@ describe('admin workspace styles', () => {
     )
   })
 
+  it('contains wide tables in a horizontally scrolling wrapper', () => {
+    const stylesheet = fs.readFileSync(
+      path.join(process.cwd(), 'src/styles/admin-workspace.scss'),
+      'utf8'
+    )
+    const dynamicList = fs.readFileSync(
+      path.join(process.cwd(), 'src/views/dynamics/DynamicList.vue'),
+      'utf8'
+    )
+
+    expect(dynamicList).toContain('<div class="content-table-scroll">')
+    expect(dynamicList).toMatch(/\.content-table-scroll\s*\{[\s\S]*?overflow-x: auto;/)
+    expect(stylesheet).toMatch(/\.admin-page \.ant-table-content,\s*\.admin-page \.ant-table-body,\s*\.admin-page \.table-wrapper\s*\{[\s\S]*?overflow-x: auto !important;/)
+  })
+
   it('keeps workspace ownership shared and transitions explicit', () => {
     const stylesheet = fs.readFileSync(
       path.join(process.cwd(), 'src/styles/admin-workspace.scss'),

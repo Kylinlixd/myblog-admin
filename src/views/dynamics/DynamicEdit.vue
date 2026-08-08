@@ -624,6 +624,7 @@ const handleSave = async () => {
       await createDynamic(dynamicData);
     }
 
+    window.clearTimeout(draftTimer)
     clearEditorDraft(draftId.value)
     dirty.value = false
     message.success(isEdit.value ? '动态更新成功' : '动态创建成功');

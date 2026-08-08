@@ -57,6 +57,11 @@ describe('Dashboard mounted states', () => {
     await flushPromises()
 
     expect(wrapper.find('[aria-label="重试"]').exists()).toBe(true)
+    expect(wrapper.find('.dashboard-intro').exists()).toBe(true)
+    expect(wrapper.find('.metric-rail').exists()).toBe(true)
+    expect(wrapper.find('.operations-grid').exists()).toBe(true)
+    expect(wrapper.find('.content-pulse').exists()).toBe(true)
+    expect(wrapper.find('.taxonomy-panel').exists()).toBe(true)
 
     request.get.mockResolvedValueOnce({ data: {} })
     await wrapper.find('[aria-label="重试"]').trigger('click')

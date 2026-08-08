@@ -2,9 +2,10 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import DynamicEdit from '../DynamicEdit.vue'
 import { createDynamic } from '@/api/dynamic'
-import { getCategoryList } from '@/api/category'
-import { getTagList } from '@/api/tag'
+import { createCategory, getCategoryList } from '@/api/category'
+import { createTag, getTagList } from '@/api/tag'
 import { getFileList } from '@/api/file'
+import { loadEditorDraft } from '../editorDraft'
 
 jest.mock('@/api/dynamic', () => ({
   getDynamicDetail: jest.fn(),
@@ -66,8 +67,10 @@ const mountEditor = async () => {
   getTagList.mockResolvedValue({ count: 0, results: [] })
   getFileList.mockResolvedValue({ count: 0, results: [] })
   const wrapper = mount(DynamicEdit, { global: { stubs: globalStubs } })
-  wrapper.vm.formRef = { validate: jest.fn().mockResolvedValue(), validateFields: jest.fn().mockResolvedValue() }
+  const formMock = { validate: jest.fn().mockResolvedValue(), validateFields: jest.fn().mockResolvedValue() }
+  wrapper.vm.formRef = formMock
   await flushPromises()
+  wrapper.vm.formRef = formMock
   return wrapper
 }
 
@@ -120,6 +123,85 @@ describe('DynamicEdit mounted interactions', () => {
     expect(wrapper.vm.form.mediaUrls).toEqual([])
     expect(wrapper.vm.form.fileIds).toEqual([])
     expect(wrapper.vm.fileList).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('restores a stored draft and autosaves later edits', async () => {
+    jest.useFakeTimers()
+    localStorage.setItem('kylin:editor-draft:new', JSON.stringify({
+      title: 'Recovered title',
+      content: 'Recovered content',
+      type: 'text',
+      status: 'draft',
+      mediaUrls: [],
+      fileIds: [],
+      tags: []
+    }))
+
+    const wrapper = await mountEditor()
+    expect(wrapper.vm.form.title).toBe('Recovered title')
+    expect(wrapper.vm.form.content).toBe('Recovered content')
+
+    wrapper.vm.form.title = 'Autosaved title'
+    await wrapper.vm.$nextTick()
+    jest.advanceTimersByTime(700)
+    await wrapper.vm.$nextTick()
+    await flushPromises()
+
+    expect(loadEditorDraft('new')).toMatchObject({
+      title: 'Autosaved title',
+      content: 'Recovered content'
+    })
+    wrapper.unmount()
+    jest.useRealTimers()
+  })
+
+  it('clears the draft after a successful save', async () => {
+    localStorage.setItem('kylin:editor-draft:new', JSON.stringify({ title: 'Old draft', content: 'Old body' }))
+    const wrapper = await mountEditor()
+    wrapper.vm.form.title = 'Saved title'
+    wrapper.vm.form.content = 'Saved body'
+
+    await wrapper.vm.handleSave()
+
+    expect(createDynamic).toHaveBeenCalled()
+    expect(loadEditorDraft('new')).toBeNull()
+    wrapper.unmount()
+  })
+
+  it('refreshes categories and selects a newly created category', async () => {
+    createCategory.mockResolvedValueOnce({ id: 9, name: 'Frontend' })
+    getCategoryList
+      .mockResolvedValueOnce({ count: 0, results: [] })
+      .mockResolvedValueOnce({ count: 1, results: [{ id: 9, name: 'Frontend' }] })
+    const wrapper = await mountEditor()
+    wrapper.vm.taxonomyModalType = 'category'
+    wrapper.vm.taxonomyName = 'Frontend'
+
+    await wrapper.vm.createTaxonomy()
+    await flushPromises()
+
+    expect(getCategoryList).toHaveBeenCalledTimes(2)
+    expect(wrapper.vm.categories).toEqual([{ id: 9, name: 'Frontend' }])
+    expect(wrapper.vm.form.categoryId).toBe(9)
+    wrapper.unmount()
+  })
+
+  it('refreshes tags and selects a newly created tag', async () => {
+    createTag.mockResolvedValueOnce({ id: 11, name: 'Vue' })
+    getTagList
+      .mockResolvedValueOnce({ count: 0, results: [] })
+      .mockResolvedValueOnce({ count: 1, results: [{ id: 11, name: 'Vue' }] })
+    const wrapper = await mountEditor()
+    wrapper.vm.taxonomyModalType = 'tag'
+    wrapper.vm.taxonomyName = 'Vue'
+
+    await wrapper.vm.createTaxonomy()
+    await flushPromises()
+
+    expect(getTagList).toHaveBeenCalledTimes(2)
+    expect(wrapper.vm.tags).toEqual([{ id: 11, name: 'Vue' }])
+    expect(wrapper.vm.form.tags).toContain(11)
     wrapper.unmount()
   })
 })
