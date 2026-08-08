@@ -174,18 +174,8 @@ const getComments = async () => {
       pageSize: pageSize.value,
       ...activeFilters
     })
-    
-    
-    if (response && response.code === 200 && response.data) {
-      // 使用标准响应格式
-      comments.value = response.data.list || [];
-      total.value = response.data.total || 0;
-    } else {
-      console.error('评论数据为空或格式不正确:', response);
-      message.error('获取评论列表失败: 响应格式异常');
-      comments.value = [];
-      total.value = 0;
-    }
+    comments.value = response.results
+    total.value = response.count
   } catch (error) {
     console.error('获取评论列表失败:', error);
     
@@ -231,13 +221,9 @@ const handleCurrentChange = (page) => {
 // 通过评论
 const handleApprove = async (row) => {
   try {
-    const response = await approveComment(row.id)
-    if (response.code === 200) {
-      message.success('评论已通过')
-      getComments()
-    } else {
-      message.error(response.message || '操作失败')
-    }
+    await approveComment(row.id)
+    message.success('评论已通过')
+    getComments()
   } catch (error) {
     console.error('审核评论失败:', error)
     message.error('操作失败')
@@ -247,13 +233,9 @@ const handleApprove = async (row) => {
 // 拒绝评论
 const handleReject = async (row) => {
   try {
-    const response = await rejectComment(row.id)
-    if (response.code === 200) {
-      message.success('评论已拒绝')
-      getComments()
-    } else {
-      message.error(response.message || '操作失败')
-    }
+    await rejectComment(row.id)
+    message.success('评论已拒绝')
+    getComments()
   } catch (error) {
     console.error('拒绝评论失败:', error)
     message.error('操作失败')
@@ -263,14 +245,10 @@ const handleReject = async (row) => {
 // 删除评论
 const handleDelete = async (row) => {
   try {
-    const response = await deleteComment(row.id)
-    if (response.code === 200) {
-      message.success('删除成功')
-      selectedCommentIds.value = selectedCommentIds.value.filter((id) => id !== row.id)
-      getComments()
-    } else {
-      message.error(response.message || '删除失败')
-    }
+    await deleteComment(row.id)
+    message.success('删除成功')
+    selectedCommentIds.value = selectedCommentIds.value.filter((id) => id !== row.id)
+    getComments()
   } catch (error) {
     console.error('删除评论失败:', error)
     message.error('删除失败')
@@ -291,8 +269,7 @@ const handleBatchDelete = () => {
       const ids = [...selectedCommentIds.value]
       try {
         const results = await Promise.allSettled(ids.map(async (id) => {
-          const response = await deleteComment(id)
-          if (response?.code !== 200) throw new Error(response?.message || '删除失败')
+          await deleteComment(id)
           return id
         }))
         const failedIds = results.reduce((failed, result, index) => {
@@ -324,8 +301,7 @@ const handleBatchApprove = () => {
       const ids = [...selectedCommentIds.value]
       try {
         const results = await Promise.allSettled(ids.map(async (id) => {
-          const response = await approveComment(id)
-          if (response?.code !== 200) throw new Error(response?.message || '审核失败')
+          await approveComment(id)
           return id
         }))
         const failedIds = results.reduce((failed, result, index) => {

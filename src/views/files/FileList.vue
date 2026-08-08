@@ -327,38 +327,27 @@ const fetchFiles = async () => {
       page: currentPage.value,
       pageSize: pageSize.value
     })
-    
-    
-    if (response && response.code === 200 && response.data) {
-      // 确保数据格式正确
-      fileList.value = response.data.items.map(item => {
-        const url = buildApiUrl(item.file_url)
-        
-        return {
-          ...item,
-          id: item.id,
-          name: item.name,
-          type: item.file_type,
-          size: item.file_size,
-          url: url,
-          createdAt: item.created_at,
-          updatedAt: item.updated_at,
-          downloadCount: item.download_count,
-          isPublic: item.is_public,
-          description: item.description,
-          category: item.category,
-          tags: item.tags,
-          uploader: item.uploader
-        }
-      })
-      total.value = response.data.total
-    } else {
-      fileList.value = []
-      total.value = 0
-      const errorMsg = response?.message || '获取文件列表失败'
-      console.error('获取文件列表失败:', errorMsg)
-      message.error(errorMsg)
-    }
+    fileList.value = response.results.map((item) => {
+      const url = buildApiUrl(item.url)
+
+      return {
+        ...item,
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        size: item.size,
+        url,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        downloadCount: item.download_count,
+        isPublic: item.is_public,
+        description: item.description,
+        category: item.category,
+        tags: item.tags,
+        uploader: item.uploader
+      }
+    })
+    total.value = response.count
   } catch (error) {
     console.error('获取文件列表异常:', error)
     fileList.value = []
@@ -379,38 +368,27 @@ const handleSearch = async () => {
       page: currentPage.value,
       pageSize: pageSize.value
     })
-    
-    
-    if (response && response.code === 200 && response.data) {
-      // 确保数据格式正确
-      fileList.value = response.data.items.map(item => {
-        const url = buildApiUrl(item.file_url)
-        
-        return {
-          ...item,
-          id: item.id,
-          name: item.name,
-          type: item.file_type,
-          size: item.file_size,
-          url: url,
-          createdAt: item.created_at,
-          updatedAt: item.updated_at,
-          downloadCount: item.download_count,
-          isPublic: item.is_public,
-          description: item.description,
-          category: item.category,
-          tags: item.tags,
-          uploader: item.uploader
-        }
-      })
-      total.value = response.data.total
-    } else {
-      fileList.value = []
-      total.value = 0
-      const errorMsg = response?.message || '搜索文件失败'
-      console.error('搜索文件失败:', errorMsg)
-      message.error(errorMsg)
-    }
+    fileList.value = response.results.map((item) => {
+      const url = buildApiUrl(item.url)
+
+      return {
+        ...item,
+        id: item.id,
+        name: item.name,
+        type: item.type,
+        size: item.size,
+        url,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
+        downloadCount: item.download_count,
+        isPublic: item.is_public,
+        description: item.description,
+        category: item.category,
+        tags: item.tags,
+        uploader: item.uploader
+      }
+    })
+    total.value = response.count
   } catch (error) {
     console.error('搜索文件异常:', error)
     fileList.value = []

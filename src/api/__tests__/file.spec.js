@@ -1,4 +1,4 @@
-import { getFileList } from '../file'
+import { getFileList, searchFiles } from '../file'
 import request from '@/utils/request'
 
 describe('file API normalization', () => {
@@ -21,8 +21,9 @@ describe('file API normalization', () => {
 
     const response = await getFileList()
 
-    expect(response.data).toEqual({
-      items: [{
+    expect(response).toEqual({
+      count: 1,
+      results: [{
         id: 7,
         file_type: 'image',
         file_size: 0,
@@ -30,8 +31,33 @@ describe('file API normalization', () => {
         type: 'image',
         size: 0,
         url: '/media/image.png'
-      }],
-      total: 1
+      }]
+    })
+  })
+
+  it('normalizes search results without returning the legacy envelope', async () => {
+    jest.spyOn(request, 'get').mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        total: 2,
+        list: [{
+          id: 8,
+          type: 'video',
+          size: 12,
+          url: '/media/video.mp4'
+        }]
+      }
+    })
+
+    await expect(searchFiles({ q: 'video' })).resolves.toEqual({
+      count: 2,
+      results: [{
+        id: 8,
+        type: 'video',
+        size: 12,
+        url: '/media/video.mp4'
+      }]
     })
   })
 })

@@ -2,6 +2,19 @@ import request from '@/utils/request'
 
 import { normalizeCollectionResponse } from './collections'
 
+function normalizeFileResponse(response) {
+  const { count, results } = normalizeCollectionResponse(response)
+  return {
+    count,
+    results: results.map((item) => ({
+      ...item,
+      type: item.type ?? item.file_type,
+      size: item.size ?? item.file_size,
+      url: item.url ?? item.file_url ?? null
+    }))
+  }
+}
+
 export function buildUploadData(params) {
   const formData = new FormData()
   formData.append('file', params.file)
@@ -28,26 +41,11 @@ export async function getFileList(params = {}) {
       file_type: params.type || undefined
     }
   })
-  const { count, results } = normalizeCollectionResponse(response)
-  const normalizedItems = results.map((item) => ({
-    ...item,
-    type: item.file_type ?? item.type,
-    size: item.file_size ?? item.size,
-    url: item.file_url || item.url || null
-  }))
-
-  return {
-    code: 200,
-    data: {
-      items: normalizedItems,
-      total: count
-    },
-    message: 'success'
-  }
+  return normalizeFileResponse(response)
 }
 
-export const searchFiles = (params) =>
-  request.get('/api/upload/files/search/', {
+export async function searchFiles(params) {
+  const response = await request.get('/api/upload/files/search/', {
     params: {
       q: params.q,
       type: params.type,
@@ -57,6 +55,8 @@ export const searchFiles = (params) =>
       pageSize: params.pageSize || 10
     }
   })
+  return normalizeFileResponse(response)
+}
 
 export const downloadFile = (fileId) =>
   request.post(`/api/upload/files/${fileId}/download/`, null, { responseType: 'blob' })

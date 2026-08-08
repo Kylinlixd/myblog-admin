@@ -1,7 +1,11 @@
 import request from '@/utils/request'
 
-export const getCommentList = (params) =>
-  request.get('/api/comments/', { params })
+import { normalizeCollectionResponse } from './collections'
+
+export async function getCommentList(params) {
+  const response = await request.get('/api/comments/', { params })
+  return normalizeCollectionResponse(response)
+}
 
 export const approveComment = (id) =>
   request.put(`/api/comments/${id}/approve/`)
