@@ -24,6 +24,8 @@
           ref="profileFormRef"
           :model="profileForm"
           :rules="profileRules"
+          class="profile-form-stackable"
+          data-mobile-stack="true"
           :label-col="{ span: 4 }"
           :wrapper-col="{ span: 18 }"
         >
@@ -70,6 +72,7 @@
             <a-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
             <a-button @click="cancelProfileEdit">重置</a-button>
           </div>
+          <p v-if="profileError" data-testid="profile-save-error" class="form-error" role="alert">{{ profileError }}</p>
         </a-form>
       </div>
     </a-card>
@@ -88,6 +91,8 @@
         ref="passwordFormRef"
         :model="passwordForm"
         :rules="passwordRules"
+        class="profile-form-stackable"
+        data-mobile-stack="true"
         :label-col="{ span: 4 }"
         :wrapper-col="{ span: 18 }"
         @submit.prevent="handlePasswordChange"
@@ -120,6 +125,7 @@
           </a-button>
           <a-button @click="resetForm">重置</a-button>
         </div>
+        <p v-if="passwordError" class="form-error" role="alert">{{ passwordError }}</p>
       </a-form>
     </a-card>
   </div>
@@ -138,6 +144,8 @@ const passwordFormRef = ref(null)
 const profileFormRef = ref(null)
 const loading = ref(false)
 const profileLoading = ref(false)
+const profileError = ref('')
+const passwordError = ref('')
 
 const userInfo = computed(() => userStore.userInfo || {})
 
@@ -205,11 +213,12 @@ const beforeAvatarUpload = (file) => {
 
 // 头像上传成功的回调
 const handleAvatarSuccess = (res) => {
-  if (res.code === 200 && res.data) {
-    profileForm.avatar = res.data.url
+  const avatarUrl = res?.url || res?.data?.url
+  if (avatarUrl) {
+    profileForm.avatar = avatarUrl
     AntMessage.success('头像上传成功')
   } else {
-    AntMessage.error(res.message || '头像上传失败')
+    AntMessage.error(res?.message || '头像上传失败')
   }
 }
 
@@ -218,6 +227,7 @@ const handleProfileUpdate = async () => {
   if (!profileFormRef.value) return
   
   try {
+    profileError.value = ''
     const values = await profileFormRef.value.validate()
     
     profileLoading.value = true
@@ -236,6 +246,7 @@ const handleProfileUpdate = async () => {
     initProfileForm()
   } catch (error) {
     console.error('更新个人资料失败:', error)
+    profileError.value = error.message || '更新个人资料失败'
     AntMessage.error(error.message || '更新个人资料失败')
   } finally {
     profileLoading.value = false
@@ -305,20 +316,15 @@ const handlePasswordChange = async () => {
   if (!passwordFormRef.value) return
   
   try {
+    passwordError.value = ''
     loading.value = true
     const values = await passwordFormRef.value.validate()
-    const result = await changePassword({
+    await changePassword({
       oldPassword: values.oldPassword,
       newPassword: values.newPassword
     })
-    
-    // 处理成功响应
-    if (result?.code === 200 || result?.status === 200 || result?.status === 204) {
-      AntMessage.success('密码修改成功')
-      resetForm()
-    } else {
-      AntMessage.error(result?.message || '修改密码失败')
-    }
+    AntMessage.success('密码修改成功')
+    resetForm()
   } catch (error) {
     console.error('修改密码失败:', error)
     
@@ -327,35 +333,8 @@ const handlePasswordChange = async () => {
       return
     }
     
-    // 处理后端返回的错误
-    if (error.response?.data) {
-      const errorData = error.response.data
-      
-      // 处理数组格式的验证错误
-      if (Array.isArray(errorData)) {
-        const errorMessages = errorData.map(item => {
-          const fieldName = item.name?.[0] || ''
-          const errorMsg = item.errors?.[0] || ''
-          return `${fieldName}: ${errorMsg}`
-        }).join('\n')
-        
-        if (errorMessages) {
-          AntMessage.error(errorMessages)
-          return
-        }
-      }
-      
-      // 处理对象格式的错误
-      if (errorData.message) {
-        AntMessage.error(errorData.message)
-      } else if (errorData.detail) {
-        AntMessage.error(errorData.detail)
-      } else {
-        AntMessage.error('修改密码失败，请检查输入')
-      }
-    } else {
-      AntMessage.error('修改密码失败，请稍后重试')
-    }
+    passwordError.value = error.message || '修改密码失败，请稍后重试'
+    AntMessage.error(passwordError.value)
   } finally {
     loading.value = false
   }
@@ -397,6 +376,7 @@ onMounted(() => {
 .profile-edit { margin-top: 4px; max-width: 760px; }
 .profile-edit :deep(.ant-form-item), .password-card :deep(.ant-form-item) { margin-bottom: 18px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.form-error { margin: 12px 0 0; color: var(--color-danger); font-size: 13px; white-space: pre-wrap; }
 .profile-edit :deep(.ant-form-item-label > label), .password-card :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-weight: 650; }
 .profile-edit :deep(.ant-input), .profile-edit :deep(.ant-input-affix-wrapper), .password-card :deep(.ant-input-affix-wrapper) { border-radius: 9px; }
 .password-card :deep(.ant-form) { max-width: 760px; padding: 4px 8px 0; }
@@ -411,6 +391,8 @@ onMounted(() => {
   .profile-info .avatar-container { min-height: 132px; }
   .profile-edit :deep(.ant-form), .password-card :deep(.ant-form) { padding-inline: 0; }
   .profile-edit :deep(.ant-form-item-label), .password-card :deep(.ant-form-item-label) { padding-bottom: 5px; text-align: left; }
+  .profile-form-stackable :deep(.ant-form-item) { display: block; }
+  .profile-form-stackable :deep(.ant-form-item-label), .profile-form-stackable :deep(.ant-form-item-control) { width: 100%; max-width: none; text-align: left; }
   .form-actions { justify-content: stretch; }
   .form-actions .ant-btn { flex: 1; }
 }

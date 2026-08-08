@@ -50,7 +50,19 @@
     </div>
     
     <!-- 评论列表 -->
+    <AsyncState
+      v-if="loading || errorMessage || !comments.length"
+      data-testid="comment-async-state"
+      :loading="loading"
+      :error="errorMessage"
+      :empty="!loading && !errorMessage"
+      empty-title="暂无评论"
+      empty-description="当前筛选条件下没有评论。"
+      @retry="getComments"
+    />
+
     <DataTable
+      v-else
       :data="comments"
       :columns="columns"
       :loading="loading"
@@ -60,7 +72,7 @@
       @selection-change="selectedCommentIds = $event"
     >
       <template #content="{ row }">
-        <div class="content-cell">{{ row.content }}</div>
+        <div class="content-cell content-cell--wrapping">{{ row.content }}</div>
       </template>
       
       <template #status="{ row }">
@@ -80,6 +92,9 @@
             type="text"
             size="small"
             class="row-action row-action--primary"
+            :data-testid="`approve-comment-${row.id}`"
+            :loading="isActionPending(row.id, 'approve')"
+            :disabled="isCommentPending(row.id)"
             @click="handleApprove(row)"
           >
             <template #icon><check-outlined /></template>通过
@@ -89,6 +104,9 @@
             type="text"
             size="small"
             class="row-action"
+            :data-testid="`reject-comment-${row.id}`"
+            :loading="isActionPending(row.id, 'reject')"
+            :disabled="isCommentPending(row.id)"
             @click="handleReject(row)"
           >
             <template #icon><close-outlined /></template>拒绝
@@ -104,6 +122,9 @@
               size="small"
               class="row-action row-action--danger"
               danger
+              :data-testid="`delete-comment-${row.id}`"
+              :loading="isActionPending(row.id, 'delete')"
+              :disabled="isCommentPending(row.id)"
             >
               <template #icon><delete-outlined /></template>删除
             </a-button>
@@ -114,6 +135,7 @@
     
     <!-- 分页 -->
     <Pagination
+      v-if="!loading && !errorMessage && comments.length"
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
@@ -134,6 +156,7 @@ import DataTable from '../../components/common/DataTable.vue'
 import Pagination from '../../components/common/Pagination.vue'
 import PageHeader from '../../components/common/PageHeader.vue'
 import SearchForm from '../../components/common/SearchForm.vue'
+import AsyncState from '../../components/common/AsyncState.vue'
 
 // 表格列配置
 const columns = [
@@ -154,6 +177,8 @@ const pageSize = ref(10)
 const selectedCommentIds = ref([])
 const batchDeleting = ref(false)
 const batchApproving = ref(false)
+const errorMessage = ref('')
+const pendingActions = reactive({})
 
 // 筛选表单
 const filterForm = reactive({
@@ -164,6 +189,7 @@ const filterForm = reactive({
 // 获取评论列表
 const getComments = async () => {
   loading.value = true
+  errorMessage.value = ''
   
   try {
     const activeFilters = Object.fromEntries(
@@ -178,6 +204,7 @@ const getComments = async () => {
     total.value = response.count
   } catch (error) {
     console.error('获取评论列表失败:', error);
+    errorMessage.value = error.message || '获取评论列表失败'
     
     // 检查是否是认证错误
     if (error.message && (
@@ -220,40 +247,55 @@ const handleCurrentChange = (page) => {
 
 // 通过评论
 const handleApprove = async (row) => {
+  const key = `${row.id}:approve`
+  pendingActions[key] = true
   try {
     await approveComment(row.id)
     message.success('评论已通过')
-    getComments()
+    await getComments()
   } catch (error) {
     console.error('审核评论失败:', error)
-    message.error('操作失败')
+    message.error(error.message || '操作失败')
+  } finally {
+    delete pendingActions[key]
   }
 }
 
 // 拒绝评论
 const handleReject = async (row) => {
+  const key = `${row.id}:reject`
+  pendingActions[key] = true
   try {
     await rejectComment(row.id)
     message.success('评论已拒绝')
-    getComments()
+    await getComments()
   } catch (error) {
     console.error('拒绝评论失败:', error)
-    message.error('操作失败')
+    message.error(error.message || '操作失败')
+  } finally {
+    delete pendingActions[key]
   }
 }
 
 // 删除评论
 const handleDelete = async (row) => {
+  const key = `${row.id}:delete`
+  pendingActions[key] = true
   try {
     await deleteComment(row.id)
     message.success('删除成功')
     selectedCommentIds.value = selectedCommentIds.value.filter((id) => id !== row.id)
-    getComments()
+    await getComments()
   } catch (error) {
     console.error('删除评论失败:', error)
-    message.error('删除失败')
+    message.error(error.message || '删除失败')
+  } finally {
+    delete pendingActions[key]
   }
 }
+
+const isActionPending = (id, action) => Boolean(pendingActions[`${id}:${action}`])
+const isCommentPending = (id) => ['approve', 'reject', 'delete'].some((action) => isActionPending(id, action))
 
 const handleBatchDelete = () => {
   if (!selectedCommentIds.value.length || batchDeleting.value) return
@@ -363,6 +405,8 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.content-cell--wrapping { overflow-wrap: anywhere; }
 
 .comment-batch-toolbar {
   display: flex;

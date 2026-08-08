@@ -9,7 +9,7 @@
       <div class="state-icon">!</div>
       <h3>内容暂时无法加载</h3>
       <p>{{ error }}</p>
-      <a-button type="primary" @click="$emit('retry')">重新加载</a-button>
+      <a-button type="primary" class="state-retry" @click="$emit('retry')">重新加载</a-button>
     </template>
     <template v-else-if="empty">
       <div class="state-icon state-icon--empty">○</div>

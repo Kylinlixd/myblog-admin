@@ -58,7 +58,18 @@
       </a-space>
     </div>
 
-    <a-card class="data-card admin-table-card">
+    <AsyncState
+      v-if="loading || errorMessage || !fileList.length"
+      data-testid="file-async-state"
+      :loading="loading"
+      :error="errorMessage"
+      :empty="!loading && !errorMessage"
+      empty-title="暂无文件"
+      empty-description="上传一个文件来开始管理资源。"
+      @retry="fetchFiles"
+    />
+
+    <a-card v-else class="data-card admin-table-card">
       <a-table
         :loading="loading"
         :columns="columns"
@@ -74,7 +85,7 @@
           <!-- 预览列 -->
           <template v-if="column.dataIndex === 'preview'">
             <template v-if="record.type === 'image'">
-              <div class="image-preview-container">
+              <div class="image-preview-container preview-frame--stable">
                 <a-image
                   :src="record.url"
                   :width="60"
@@ -149,7 +160,14 @@
                 cancel-text="取消"
                 @confirm="handleDelete(record.id)"
               >
-                <a-button type="text" danger size="small" class="row-action row-action--danger">
+                <a-button
+                  type="text"
+                  danger
+                  size="small"
+                  class="row-action row-action--danger"
+                  :loading="isDeleting(record.id)"
+                  :disabled="isDeleting(record.id)"
+                >
                   <DeleteOutlined />
                   删除
                 </a-button>
@@ -168,7 +186,7 @@
       width="800px"
       @cancel="handlePreviewClose"
     >
-      <div class="media-preview-container">
+      <div class="media-preview-container media-preview-container--stable">
         <audio
           v-if="previewType === 'audio'"
           :src="previewUrl"
@@ -191,7 +209,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   UploadOutlined,
@@ -207,13 +225,16 @@ import {
 import { uploadFile, getFileList, searchFiles, deleteFile, downloadFile } from '@/api/file'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import PageHeader from '@/components/common/PageHeader.vue'
+import AsyncState from '@/components/common/AsyncState.vue'
 
 const loading = ref(false)
+const errorMessage = ref('')
 const fileList = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const selectedRowKeys = ref([])
+const deletingIds = reactive(new Set())
 
 // 搜索表单
 const searchForm = ref({
@@ -344,6 +365,7 @@ const normalizeFileForView = (item) => {
 const fetchFiles = async () => {
   try {
     loading.value = true
+    errorMessage.value = ''
     const response = await getFileList({
       page: currentPage.value,
       pageSize: pageSize.value
@@ -352,6 +374,7 @@ const fetchFiles = async () => {
     total.value = response.count
   } catch (error) {
     console.error('获取文件列表异常:', error)
+    errorMessage.value = error.message || '获取文件列表失败'
     fileList.value = []
     total.value = 0
     message.error(error.message || '获取文件列表失败')
@@ -364,6 +387,7 @@ const fetchFiles = async () => {
 const handleSearch = async () => {
   try {
     loading.value = true
+    errorMessage.value = ''
     const response = await searchFiles({
       q: searchForm.value.name,
       type: searchForm.value.type,
@@ -374,6 +398,7 @@ const handleSearch = async () => {
     total.value = response.count
   } catch (error) {
     console.error('搜索文件异常:', error)
+    errorMessage.value = error.message || '搜索文件失败'
     fileList.value = []
     total.value = 0
     message.error(error.message || '搜索文件失败')
@@ -415,10 +440,16 @@ const handleBatchDelete = async () => {
 
   try {
     loading.value = true
-    await Promise.all(selectedRowKeys.value.map(id => deleteFile(id)))
-    message.success('批量删除成功')
-    selectedRowKeys.value = []
-    fetchFiles()
+    const ids = [...selectedRowKeys.value]
+    const results = await Promise.allSettled(ids.map((id) => deleteFile(id)))
+    const failedIds = results.reduce((failed, result, index) => {
+      if (result.status === 'rejected') failed.push(ids[index])
+      return failed
+    }, [])
+    selectedRowKeys.value = failedIds
+    if (failedIds.length) message.warning(`${failedIds.length} 个文件删除失败并保持选中`)
+    else message.success('批量删除成功')
+    await fetchFiles()
   } catch (error) {
     console.error('批量删除失败:', error)
     message.error('批量删除失败')
@@ -429,18 +460,20 @@ const handleBatchDelete = async () => {
 
 // 处理单个删除
 const handleDelete = async (id) => {
+  deletingIds.add(id)
   try {
-    loading.value = true
     await deleteFile(id)
     message.success('删除成功')
-    fetchFiles()
+    await fetchFiles()
   } catch (error) {
     console.error('删除文件失败:', error)
     message.error(error.message || '删除失败')
   } finally {
-    loading.value = false
+    deletingIds.delete(id)
   }
 }
+
+const isDeleting = (id) => deletingIds.has(id)
 
 // 上传前检查
 const beforeUpload = (file) => {
@@ -632,6 +665,18 @@ onMounted(() => {
   padding: 16px;
 }
 
+.media-preview-container--stable {
+  aspect-ratio: 16 / 9;
+  width: min(100%, 720px);
+  margin: 0 auto;
+}
+
+.media-preview-container--stable audio,
+.media-preview-container--stable video {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .image-preview-container {
   position: relative;
   width: 60px;
@@ -647,4 +692,6 @@ onMounted(() => {
     color: #999;
   }
 }
+
+.preview-frame--stable { aspect-ratio: 1; }
 </style>

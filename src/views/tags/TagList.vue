@@ -56,7 +56,18 @@
     </div>
 
     <!-- 数据表格 -->
-    <a-card class="admin-table-card">
+    <AsyncState
+      v-if="loading || errorMessage || !tagList.length"
+      data-testid="tag-async-state"
+      :loading="loading"
+      :error="errorMessage"
+      :empty="!loading && !errorMessage"
+      empty-title="暂无标签"
+      empty-description="创建一个标签来连接相关内容。"
+      @retry="fetchTags"
+    />
+
+    <a-card v-else class="admin-table-card">
       <a-table
       :columns="columns"
       :data-source="tagList"
@@ -102,7 +113,14 @@
               cancel-text="取消"
               @confirm="handleDelete(record)"
             >
-              <a-button type="text" danger size="small" class="row-action row-action--danger">
+              <a-button
+                type="text"
+                danger
+                size="small"
+                class="row-action row-action--danger"
+                :loading="isDeleting(record.id)"
+                :disabled="isDeleting(record.id)"
+              >
                 <template #icon><DeleteOutlined /></template>
                 删除
               </a-button>
@@ -158,6 +176,7 @@ import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Inp
 import { getTagList, createTag, updateTag, deleteTag } from '@/api/tag'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import AsyncState from '@/components/common/AsyncState.vue'
 
 // 表格列配置
 const columns = [
@@ -210,8 +229,29 @@ const columns = [
 // 数据列表
 const tagList = ref([])
 const loading = ref(false)
+const errorMessage = ref('')
 const formLoading = ref(false)
 const formRef = ref(null)
+const deletingIds = reactive(new Set())
+
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total) => `共 ${total} 条`,
+  onChange: (page, pageSize) => {
+    pagination.current = page
+    pagination.pageSize = pageSize
+    fetchTags()
+  },
+  onShowSizeChange: (_current, size) => {
+    pagination.current = 1
+    pagination.pageSize = size
+    fetchTags()
+  }
+})
 
 // 表格选择相关
 const selectedRowKeys = ref([])
@@ -281,34 +321,19 @@ const normalizeTag = (item) => ({
 // 获取标签列表
 const fetchTags = async () => {
   loading.value = true
+  errorMessage.value = ''
   try {
-    const result = await getTagList()
-    
-    if (result && result.results) {
-      // 标准分页格式
-      tagList.value = (result.results || []).map(normalizeTag)
-    } else if (result && Array.isArray(result)) {
-      // 直接返回数组
-      tagList.value = result.map(normalizeTag)
-    } else if (result && typeof result === 'object') {
-      // 如果返回的是对象，尝试提取数据
-      let items = [];
-      if (Array.isArray(result.data)) {
-        items = result.data;
-      } else if (result.data && Array.isArray(result.data.results)) {
-        items = result.data.results;
-      } else if (result.data && result.data.items) {
-        items = result.data.items;
-      }
-      tagList.value = items.map(normalizeTag)
-    } else {
-      console.error('标签列表返回异常:', result);
-      tagList.value = [];
-    }
+    const { count, results } = await getTagList({
+      name: searchForm.name || undefined,
+      status: searchForm.status
+    })
+    tagList.value = results.map(normalizeTag)
+    pagination.total = count
   } catch (error) {
     console.error('获取标签列表失败:', error)
-    message.error('获取标签列表失败')
-    tagList.value = [];
+    errorMessage.value = error.message || '获取标签列表失败'
+    tagList.value = []
+    pagination.total = 0
   } finally {
     loading.value = false
   }
@@ -337,7 +362,7 @@ const handleEdit = (record) => {
 // 处理表单提交
 const handleSubmit = async () => {
   try {
-    if (formRef.value) {
+    if (formRef.value?.validate) {
       await formRef.value.validate()
     }
     
@@ -357,7 +382,7 @@ const handleSubmit = async () => {
     }
     
     // 刷新标签列表
-    fetchTags()
+    await fetchTags()
     dialogVisible.value = false
   } catch (error) {
     console.error('保存标签失败:', error)
@@ -369,18 +394,20 @@ const handleSubmit = async () => {
 
 // 删除标签
 const handleDelete = async (record) => {
+  deletingIds.add(record.id)
   try {
-    loading.value = true
     await deleteTag(record.id)
     message.success('标签删除成功')
-    fetchTags()
+    await fetchTags()
   } catch (error) {
     console.error('删除标签失败:', error)
     message.error('删除失败，请重试')
   } finally {
-    loading.value = false
+    deletingIds.delete(record.id)
   }
 }
+
+const isDeleting = (id) => deletingIds.has(id)
 
 // 批量删除
 const handleBatchDelete = async () => {
@@ -390,16 +417,19 @@ const handleBatchDelete = async () => {
   }
 
   try {
-    loading.value = true
-    await Promise.all(selectedRowKeys.value.map(id => deleteTag(id)))
-    message.success('批量删除成功')
-    selectedRowKeys.value = []
-    fetchTags()
+    const ids = [...selectedRowKeys.value]
+    const results = await Promise.allSettled(ids.map((id) => deleteTag(id)))
+    const failedIds = results.reduce((failed, result, index) => {
+      if (result.status === 'rejected') failed.push(ids[index])
+      return failed
+    }, [])
+    selectedRowKeys.value = failedIds
+    if (failedIds.length) message.warning(`${failedIds.length} 个标签删除失败并保持选中`)
+    else message.success('批量删除成功')
+    await fetchTags()
   } catch (error) {
     console.error('批量删除失败:', error)
     message.error('批量删除失败，请重试')
-  } finally {
-    loading.value = false
   }
 }
 
