@@ -1,0 +1,1397 @@
+<template>
+  <div class="blog-search-container cinematic-page">
+    <header class="search-hero cinematic-hero">
+      <h1>搜索数字花园</h1>
+      <p>从文章、分类和标签中，找到与你当前问题最接近的线索。</p>
+    </header>
+    <div class="search-section">
+      <!-- 搜索框 -->
+      <div class="search-box cinematic-card">
+        <div class="search-input-wrapper">
+          <a-input-search
+            v-model:value="keyword"
+            placeholder="搜索文章、标签或关键词..."
+            enter-button
+            size="large"
+            :loading="loading"
+            @search="debouncedSearch"
+            @press-enter="debouncedSearch"
+            class="search-input"
+          >
+            <template #prefix>
+              <search-outlined class="search-icon" />
+            </template>
+          </a-input-search>
+        </div>
+        
+        <!-- 高级搜索选项 -->
+        <div class="search-options">
+          <a-button type="link" @click="toggleAdvancedSearch">
+            {{ showAdvancedSearch ? '收起' : '高级搜索' }}
+            <template #icon>
+              <component :is="showAdvancedSearch ? 'up-outlined' : 'down-outlined'" />
+            </template>
+          </a-button>
+        </div>
+      </div>
+      
+      <!-- 高级搜索选项 -->
+      <div v-show="showAdvancedSearch" class="advanced-search-options cinematic-card">
+        <a-form layout="inline" :model="advancedOptions">
+          <!-- 内容类型筛选 -->
+          <a-form-item label="内容类型">
+            <a-radio-group v-model:value="advancedOptions.type" @change="debouncedSearch">
+              <a-radio value="">全部</a-radio>
+              <a-radio value="note">笔记</a-radio>
+              <a-radio value="share">分享</a-radio>
+            </a-radio-group>
+          </a-form-item>
+          
+          <!-- 分类筛选 -->
+          <a-form-item label="分类">
+            <a-select
+              v-model:value="advancedOptions.category"
+              placeholder="选择分类"
+              style="width: 200px"
+              allowClear
+              @change="debouncedSearch"
+            >
+              <a-select-option
+                v-for="category in categories" 
+                :key="category.id" 
+                :value="category.id"
+              >
+                {{ category.name }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+          
+          <!-- 标签筛选 -->
+          <a-form-item label="标签">
+            <a-select
+              v-model:value="advancedOptions.tag"
+              placeholder="选择标签"
+              allowClear
+              @change="debouncedSearch"
+              style="width: 200px"
+            >
+              <a-select-option
+                v-for="tag in tags" 
+                :key="tag.id" 
+                :value="tag.id"
+              >
+                {{ tag.name }}
+              </a-select-option>
+            </a-select>
+          </a-form-item>
+          
+          <!-- 时间筛选 -->
+          <a-form-item label="发布时间">
+            <a-select
+              v-model:value="advancedOptions.time"
+              placeholder="选择时间范围"
+              allowClear
+              @change="debouncedSearch"
+              style="width: 200px"
+            >
+              <a-select-option value="week">最近一周</a-select-option>
+              <a-select-option value="month">最近一月</a-select-option>
+              <a-select-option value="quarter">最近三月</a-select-option>
+              <a-select-option value="year">最近一年</a-select-option>
+            </a-select>
+          </a-form-item>
+          
+          <!-- 排序方式 -->
+          <a-form-item label="排序方式">
+            <a-select
+              v-model:value="advancedOptions.sortBy"
+              placeholder="排序方式"
+              @change="debouncedSearch"
+              style="width: 200px"
+            >
+              <a-select-option value="time_desc">最新发布</a-select-option>
+              <a-select-option value="time_asc">最早发布</a-select-option>
+              <a-select-option value="likes_desc">最多点赞</a-select-option>
+              <a-select-option value="comments_desc">最多评论</a-select-option>
+              <a-select-option value="views_desc">最多浏览</a-select-option>
+            </a-select>
+          </a-form-item>
+          
+          <!-- 媒体类型筛选 -->
+          <a-form-item>
+            <a-checkbox v-model:checked="advancedOptions.hasMedia" @change="debouncedSearch">
+              包含多媒体
+            </a-checkbox>
+          </a-form-item>
+          
+          <a-form-item>
+            <a-button type="primary" @click="debouncedSearch">搜索</a-button>
+            <a-button style="margin-left: 8px" @click="resetAdvancedOptions">重置</a-button>
+          </a-form-item>
+        </a-form>
+      </div>
+      
+      <!-- 搜索历史 -->
+      <div class="search-history" v-if="searchHistory.length > 0 && !searchPerformed">
+        <div class="history-header">
+          <h3>搜索历史</h3>
+          <a-button type="link" @click="clearSearchHistory">清空</a-button>
+        </div>
+        <div class="history-items">
+          <a-tag 
+            v-for="(item, index) in searchHistory" 
+            :key="index"
+            :color="getRandomColor()"
+            @click="useHistoryItem(item)"
+            class="history-item"
+            closable
+            @close="removeHistoryItem(index)"
+          >
+            {{ item }}
+          </a-tag>
+        </div>
+      </div>
+      
+      <!-- 热门搜索 -->
+      <div class="popular-searches" v-if="popularSearches.length > 0 && !searchPerformed">
+        <div class="popular-header">
+          <h3>热门搜索</h3>
+        </div>
+        <div class="popular-items">
+          <a-tag 
+            v-for="(item, index) in popularSearches" 
+            :key="index"
+            color="blue"
+            @click="useHistoryItem(item)"
+            class="popular-item"
+          >
+            {{ item }}
+          </a-tag>
+        </div>
+      </div>
+      
+      <!-- 显示模式切换 -->
+      <div class="view-mode-toggle" v-if="searchPerformed && searchResults.length > 0">
+        <a-radio-group v-model:value="viewMode" button-style="solid">
+          <a-radio-button value="list">
+            <unordered-list-outlined />
+            列表
+          </a-radio-button>
+          <a-radio-button value="card">
+            <appstore-outlined />
+            卡片
+          </a-radio-button>
+        </a-radio-group>
+      </div>
+      
+      <!-- 搜索建议 -->
+      <div v-if="showSuggestions && suggestions.length > 0" class="search-suggestions">
+        <ul class="suggestions-list">
+          <li 
+            v-for="(suggestion, index) in suggestions" 
+            :key="index" 
+            class="suggestion-item"
+            @click="useSuggestion(suggestion)"
+          >
+            <search-outlined />
+            <span v-html="highlightKeyword(suggestion.title)"></span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- 搜索结果 -->
+    <div class="search-results cinematic-card" v-if="searched">
+      <div class="search-result-heading">
+        <div>
+          <span class="search-result-kicker">SEARCH INDEX · 搜索索引</span>
+          <h2>与“<strong>{{ keyword }}</strong>”相关的内容</h2>
+        </div>
+        <span class="result-count">{{ loading ? '检索中' : `找到 ${total} 条` }}</span>
+      </div>
+      <div v-if="loading" class="loading-state">
+        <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" />
+        <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
+        <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
+        <p style="margin-top:2rem; color:#888;">搜索中...</p>
+      </div>
+      
+      <div v-else-if="!searchResults || searchResults.length === 0" class="no-results">
+        <inbox-outlined />
+        <strong class="no-results__title">没有找到匹配的线索</strong>
+        <p>换一个更具体的词，或减少筛选条件后再试一次。</p>
+        <a-button type="primary" @click="resetSearch">重新搜索</a-button>
+      </div>
+      
+      <div v-else class="results-content">
+        <!-- 列表视图 -->
+        <div v-if="viewMode === 'list'" class="list-view">
+          <a-list
+            :data-source="searchResults"
+            :pagination="false"
+            :virtual="true"
+            :item-height="100"
+            :height="500"
+          >
+            <template #renderItem="{ item }">
+              <a-list-item>
+                <div class="result-content">
+                  <div class="result-header">
+                    <span class="result-type">{{ getItemType(item) }}</span>
+                    <router-link :to="getItemLink(item)" class="result-link">
+                      <h3 class="result-title" v-html="highlightKeyword(item.title || item.name)"></h3>
+                    </router-link>
+                  </div>
+                  <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
+                  <div class="result-meta">
+                    <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
+                    <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
+                    <span v-if="item.category" class="result-category">
+                      <folder-outlined /> {{ item.category.name }}
+                    </span>
+                    <span v-if="item.tags && item.tags.length" class="result-tags">
+                      <tag-outlined /> 
+                      <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
+                        {{ tag.name }}
+                      </a-tag>
+                    </span>
+                  </div>
+                </div>
+              </a-list-item>
+            </template>
+          </a-list>
+        </div>
+        
+        <!-- 卡片视图 -->
+        <div v-else class="card-view">
+          <div v-for="(item, index) in searchResults" :key="item.id || index" class="result-card cinematic-card">
+            <router-link :to="getItemLink(item)" class="card-link">
+              <div class="card-image" v-if="item.cover">
+                <img :src="item.cover" :alt="item.title || item.name" loading="lazy">
+              </div>
+              <div class="card-content">
+                <h3 class="card-title" v-html="highlightKeyword(item.title || item.name)"></h3>
+                <p v-if="item.excerpt" class="card-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
+                <div class="card-meta">
+                  <span class="card-type">{{ getItemType(item) }}</span>
+                  <span v-if="item.createdAt" class="card-date">{{ formatDate(item.createdAt) }}</span>
+                  <span v-if="item.views" class="card-views">{{ item.views }} 阅读</span>
+                  <span v-if="item.category" class="card-category">
+                    <folder-outlined /> {{ item.category.name }}
+                  </span>
+                  <span v-if="item.tags && item.tags.length" class="card-tags">
+                    <tag-outlined /> 
+                    <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
+                      {{ tag.name }}
+                    </a-tag>
+                  </span>
+                </div>
+              </div>
+            </router-link>
+          </div>
+        </div>
+        
+        <!-- 分页 -->
+        <div class="pagination" v-if="total > 0">
+          <a-pagination
+            v-model:current="currentPage"
+            :total="total"
+            :pageSize="pageSize"
+            show-quick-jumper
+            show-size-changer
+            :pageSizeOptions="['10', '20', '50', '100']"
+            :showTotal="(total) => `共 ${total} 条`"
+            @change="handlePageChange"
+            @showSizeChange="handleSizeChange"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { 
+  SearchOutlined, 
+  CloseCircleOutlined, 
+  EyeOutlined, 
+  LikeOutlined, 
+  CommentOutlined, 
+  CloseOutlined, 
+  UnorderedListOutlined, 
+  AppstoreOutlined, 
+  ShareAltOutlined, 
+  BookOutlined, 
+  WarningOutlined, 
+  DownOutlined, 
+  UpOutlined,
+  InboxOutlined,
+  FolderOutlined,
+  TagOutlined
+} from '@ant-design/icons-vue'
+import { message, Empty, Skeleton, List } from 'ant-design-vue'
+import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
+import { normalizeCollectionResponse } from '@/api/collections'
+import { debounce, showError } from '@/utils/performance'
+
+const route = useRoute()
+const router = useRouter()
+
+// 搜索相关
+const keyword = ref('')
+const loading = ref(false)
+const searched = ref(false)
+const searchPerformed = ref(false)
+const searchResults = ref([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 高级搜索
+const showAdvancedSearch = ref(false)
+const advancedOptions = ref({
+  type: '',
+  category: undefined,
+  tag: undefined,
+  time: undefined,
+  sortBy: 'time_desc',
+  hasMedia: false
+})
+
+// 视图模式
+const viewMode = ref('list')
+
+// 分类和标签
+const categories = ref([])
+const tags = ref([])
+
+// 搜索历史
+const searchHistory = ref([])
+
+// 热门搜索
+const popularSearches = ref([
+  'Vue3',
+  'React',
+  'TypeScript',
+  'Node.js',
+  'Python'
+])
+
+// 搜索建议
+const showSuggestions = ref(false)
+const suggestions = ref([])
+
+// 计算过滤后的结果
+const filteredResults = computed(() => {
+  return searchResults.value
+})
+
+// 格式化日期
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return d.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+// 重置搜索
+const resetSearch = () => {
+  keyword.value = ''
+  searchResults.value = []
+  total.value = 0
+  currentPage.value = 1
+  searched.value = false
+  searchPerformed.value = false
+  showSuggestions.value = false
+  suggestions.value = []
+}
+
+// 处理分页变化
+const handlePageChange = (page) => {
+  currentPage.value = page
+  handleSearch()
+}
+
+// 处理每页数量变化
+const handleSizeChange = (current, size) => {
+  // 从"10/页"格式中提取数字
+  const sizeNumber = parseInt(size)
+  pageSize.value = sizeNumber
+  currentPage.value = 1
+  handleSearch()
+}
+
+// 使用搜索建议
+const useSuggestion = (suggestion) => {
+  keyword.value = suggestion.title
+  handleSearch()
+}
+
+// 处理来自布局搜索框的搜索请求
+const handleUpdateSearch = (event) => {
+  // 更新搜索参数
+  keyword.value = event.detail.keyword
+  
+  // 更新高级搜索选项
+  // 要特别注意，这里我们只将event.detail中的字段更新到advancedOptions.value中存在的相应属性
+  if (event.detail.type !== undefined) {
+    advancedOptions.value.type = event.detail.type
+  }
+  
+  if (event.detail.sortBy !== undefined) {
+    advancedOptions.value.sortBy = event.detail.sortBy
+  }
+  
+  // 执行搜索
+  // 延迟一下，确保参数更新完成
+  setTimeout(() => {
+    handleSearch()
+  }, 0)
+}
+
+// 处理搜索
+const handleSearch = async () => {
+  if (!keyword.value.trim()) {
+    message.warning('请输入搜索关键词')
+    return
+  }
+  
+  loading.value = true
+  searched.value = true
+  searchPerformed.value = true
+  
+  try {
+    const params = {
+      keyword: keyword.value.trim(),
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      ...advancedOptions.value
+    }
+    
+    const res = await searchBlog(params)
+    
+    // 检查响应格式
+    if (res && res.code === 200 && res.data) {
+      searchResults.value = res.data.items || []
+      total.value = res.data.total || 0
+      currentPage.value = res.data.page || 1
+      pageSize.value = res.data.pageSize || 10
+      
+      // 如果没有搜索结果，显示提示
+      if (searchResults.value.length === 0) {
+        message.info('未找到相关结果，请尝试其他关键词')
+      }
+      
+    } else {
+      console.error('[Search] 搜索结果格式错误:', res)
+      searchResults.value = []
+      total.value = 0
+      message.info('未找到相关结果，请尝试其他关键词')
+    }
+    
+    // 保存搜索历史
+    saveSearchHistory(keyword.value.trim())
+    
+  } catch (error) {
+    console.error('[Search] 搜索失败:', error)
+    // 如果是网络错误，显示网络错误提示
+    if (error.message === '网络连接失败') {
+      showError('网络连接失败，请检查网络设置')
+    } else {
+      showError('未找到相关结果，请尝试其他关键词')
+    }
+    searchResults.value = []
+    total.value = 0
+  } finally {
+    loading.value = false
+  }
+}
+
+// 监听路由参数变化
+watch(() => route.query, (newQuery) => {
+  if (newQuery.keyword && newQuery.keyword !== keyword.value) {
+    keyword.value = newQuery.keyword
+    handleSearch()
+  }
+}, { immediate: true })
+
+// 初始化数据
+onMounted(async () => {
+  // 从路由参数获取搜索关键词
+  if (route.query.keyword) {
+    keyword.value = route.query.keyword
+    await handleSearch()
+  }
+  
+  // 加载分类和标签
+  try {
+    const [categoryRes, tagRes] = await Promise.all([
+      getBlogCategoryList(),
+      getBlogTagList()
+    ])
+    
+    categories.value = normalizeCollectionResponse(categoryRes).results
+    tags.value = normalizeCollectionResponse(tagRes).results
+    
+  } catch (error) {
+    console.error('[Search] 加载分类和标签失败:', error)
+    // 设置默认值，避免UI错误
+    categories.value = []
+    tags.value = []
+  }
+  
+  // 加载搜索历史
+  loadSearchHistory()
+  
+  // 添加事件监听器，响应顶部搜索框的请求
+  window.addEventListener('update-search', handleUpdateSearch)
+})
+
+// 组件卸载前移除事件监听器
+onBeforeUnmount(() => {
+  window.removeEventListener('update-search', handleUpdateSearch)
+})
+
+// 加载搜索历史
+const loadSearchHistory = () => {
+  try {
+    const history = localStorage.getItem('search_history')
+    if (history) {
+      searchHistory.value = JSON.parse(history)
+    }
+  } catch (error) {
+    console.error('加载搜索历史失败:', error)
+    searchHistory.value = []
+  }
+}
+
+// 保存搜索历史
+const saveSearchHistory = (keyword) => {
+  if (!keyword.trim()) return
+  
+  // 移除相同的关键词并添加到最前面
+  searchHistory.value = searchHistory.value.filter(item => item !== keyword)
+  searchHistory.value.unshift(keyword)
+  
+  // 限制历史记录数量
+  if (searchHistory.value.length > 10) {
+    searchHistory.value = searchHistory.value.slice(0, 10)
+  }
+  
+  // 保存到localStorage
+  try {
+    localStorage.setItem('search_history', JSON.stringify(searchHistory.value))
+  } catch (error) {
+    console.error('保存搜索历史失败:', error)
+  }
+}
+
+// 使用历史记录项
+const useHistoryItem = (item) => {
+  keyword.value = item
+  handleSearch()
+}
+
+// 移除历史记录项
+const removeHistoryItem = (index) => {
+  searchHistory.value.splice(index, 1)
+  localStorage.setItem('search_history', JSON.stringify(searchHistory.value))
+}
+
+// 清空搜索历史
+const clearSearchHistory = () => {
+  searchHistory.value = []
+  localStorage.removeItem('search_history')
+}
+
+// 切换高级搜索
+const toggleAdvancedSearch = () => {
+  showAdvancedSearch.value = !showAdvancedSearch.value
+}
+
+// 重置高级搜索选项
+const resetAdvancedOptions = () => {
+  advancedOptions.value = {
+    type: '',
+    category: undefined,
+    tag: undefined,
+    time: undefined,
+    sortBy: 'time_desc',
+    hasMedia: false
+  }
+  handleSearch()
+}
+
+// 获取随机颜色
+const getRandomColor = () => {
+  const colors = ['blue', 'green', 'red', 'orange', 'purple', 'cyan']
+  return colors[Math.floor(Math.random() * colors.length)]
+}
+
+// 高亮关键词
+const highlightKeyword = (text) => {
+  if (!keyword.value) return text
+  const regex = new RegExp(keyword.value, 'gi')
+  return text.replace(regex, match => `<span class="highlight">${match}</span>`)
+}
+
+// 获取项目链接
+const getItemLink = (item) => {
+  if (item.type === 'dynamic') {
+    return `/blog/dynamics/${item.id}`
+  } else if (item.type === 'category') {
+    return `/blog/categories/${item.id}`
+  } else if (item.type === 'tag') {
+    return `/blog/tags/${item.id}`
+  }
+  return '#'
+}
+
+// 获取项目类型
+const getItemType = (item) => {
+  switch (item.type) {
+    case 'dynamic':
+      return '动态'
+    case 'category':
+      return '分类'
+    case 'tag':
+      return '标签'
+    default:
+      return '未知'
+  }
+}
+
+// 创建防抖函数
+const debouncedSearch = debounce(handleSearch, 300)
+</script>
+
+<style scoped>
+.blog-search-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.search-section {
+  margin-bottom: 2rem;
+}
+
+.search-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.search-input-wrapper {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+}
+
+.search-input :deep(.ant-input-affix-wrapper) {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: 48px;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.search-input :deep(.ant-input-affix-wrapper:hover) {
+  border-color: #40a9ff;
+  box-shadow: 0 2px 12px rgba(24, 144, 255, 0.1);
+}
+
+.search-input :deep(.ant-input-affix-wrapper-focused) {
+  border-color: #40a9ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.search-input :deep(.ant-input) {
+  font-size: 1.1rem;
+  padding: 8px 12px;
+  height: 100%;
+}
+
+.search-input :deep(.ant-input-prefix) {
+  margin-right: 8px;
+  color: #bfbfbf;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input :deep(.ant-input-suffix) {
+  margin-left: 8px;
+}
+
+.search-input :deep(.ant-btn) {
+  height: 48px;
+  border-radius: 0 8px 8px 0;
+  padding: 0 24px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.search-input :deep(.ant-btn:hover) {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.search-input :deep(.ant-btn-primary) {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.search-input :deep(.ant-btn-primary:hover) {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.search-input :deep(.ant-input-search-button) {
+  height: 48px;
+  border-radius: 0 8px 8px 0;
+  padding: 0 24px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+.search-input :deep(.ant-input-search-button:hover) {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.search-options {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.search-options :deep(.ant-btn-link) {
+  color: #666;
+  font-size: 14px;
+  padding: 4px 8px;
+}
+
+.search-options :deep(.ant-btn-link:hover) {
+  color: #1890ff;
+}
+
+.advanced-search-options {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.advanced-search-options :deep(.ant-form) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.advanced-search-options :deep(.ant-form-item) {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.advanced-search-options :deep(.ant-form-item-label) {
+  text-align: left;
+  padding-bottom: 4px;
+}
+
+.advanced-search-options :deep(.ant-form-item-label > label) {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.advanced-search-options :deep(.ant-select),
+.advanced-search-options :deep(.ant-radio-group) {
+  width: 100%;
+}
+
+.advanced-search-options :deep(.ant-radio-group) {
+  display: flex;
+  gap: 1rem;
+}
+
+.advanced-search-options :deep(.ant-checkbox-wrapper) {
+  margin-top: 8px;
+}
+
+.advanced-search-options :deep(.ant-form-item:last-child) {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e8e8e8;
+}
+
+.advanced-search-options :deep(.ant-form-item:last-child .ant-btn) {
+  min-width: 120px;
+  height: 40px;
+}
+
+.search-history,
+.popular-searches {
+  margin-top: 2rem;
+}
+
+.history-header,
+.popular-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.history-header h3,
+.popular-header h3 {
+  font-size: 1.2rem;
+  color: #333;
+  margin: 0;
+}
+
+.history-items,
+.popular-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.history-item,
+.popular-item {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.history-item:hover,
+.popular-item:hover {
+  transform: translateY(-2px);
+}
+
+.view-mode-toggle {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: 0.5rem;
+}
+
+.suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.suggestion-item {
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.suggestion-item:hover {
+  background-color: #f5f5f5;
+}
+
+.search-results {
+  margin-top: 2rem;
+}
+
+.loading-state,
+.no-results {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.results-content {
+  margin-top: 2rem;
+}
+
+/* 列表视图样式 */
+.list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.list-view :deep(.ant-list-item) {
+  padding: 1.5rem 2.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.list-view :deep(.ant-list-item:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #e6f7ff;
+}
+
+.result-content {
+  width: 100%;
+}
+
+.result-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.result-type {
+  background: #e6f7ff;
+  color: #1890ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.result-link {
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+}
+
+.result-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.result-excerpt {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: #888;
+  font-size: 0.9rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.result-date {
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.result-date::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.result-views {
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.result-views::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.result-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #52c41a;
+}
+
+.result-category::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.result-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.result-tags::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.result-tags :deep(.ant-tag) {
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* 卡片视图样式 */
+.card-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.result-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #e6f7ff;
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.result-card:hover .card-image img {
+  transform: scale(1.05);
+}
+
+.card-content {
+  padding: 1.5rem 2.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #1a1a1a;
+  line-height: 1.4;
+}
+
+.card-excerpt {
+  color: #666;
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: #888;
+  font-size: 0.9rem;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.card-type {
+  background: #e6f7ff;
+  color: #1890ff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.card-date {
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-date::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.card-views {
+  color: #8c8c8c;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.card-views::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.card-category {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #52c41a;
+}
+
+.card-category::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.card-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-tags::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: #d9d9d9;
+  border-radius: 50%;
+}
+
+.card-tags :deep(.ant-tag) {
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+/* 高亮样式优化 */
+.highlight {
+  color: #1890ff;
+  font-weight: 600;
+  background: rgba(24, 144, 255, 0.1);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* 响应式布局优化 */
+@media (max-width: 768px) {
+  .list-view :deep(.ant-list-item) {
+    padding: 1rem 1.5rem;
+  }
+
+  .card-view {
+    grid-template-columns: 1fr;
+  }
+
+  .card-image {
+    height: 180px;
+  }
+
+  .card-content {
+    padding: 1rem 1.5rem;
+  }
+
+  .result-meta,
+  .card-meta {
+    gap: 0.75rem;
+  }
+}
+
+.pagination {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+  .blog-search-container {
+    padding: 1rem;
+  }
+
+  .search-input-wrapper {
+    max-width: 100%;
+  }
+
+  .search-input :deep(.ant-input-affix-wrapper) {
+    height: 40px;
+  }
+
+  .search-input :deep(.ant-input) {
+    font-size: 1rem;
+  }
+
+  .search-input :deep(.ant-btn) {
+    height: 40px;
+  }
+
+  .advanced-search-options {
+    padding: 1rem;
+  }
+
+  .advanced-search-options :deep(.ant-form) {
+    grid-template-columns: 1fr;
+  }
+
+  .advanced-search-options :deep(.ant-form-item) {
+    margin-bottom: 1rem;
+  }
+
+  .card-view {
+    grid-template-columns: 1fr;
+  }
+
+  .result-card {
+    padding: 1rem;
+  }
+
+  .pagination {
+    margin-top: 1rem;
+  }
+}
+/* editorial search redesign */
+.blog-search-container { padding: clamp(42px, 7vw, 92px) 1rem 96px; }
+.search-hero { max-width: 980px; margin: 0 auto 30px; padding: 0 4px; text-align: left; }
+.search-hero h1 { max-width: 760px; margin: 0 0 16px; color: #253142; font-size: clamp(42px, 6vw, 76px); font-weight: 800; letter-spacing: -.065em; line-height: .95; text-wrap: balance; }
+.search-hero p { max-width: 560px; margin: 0; color: #697586; font-size: 15px; line-height: 1.7; }
+.search-box { max-width: 980px; margin: 0 auto 14px; gap: .65rem; }
+.search-input-wrapper { max-width: none; margin: 0; }
+.search-input :deep(.ant-input-affix-wrapper) { height: 58px; border: 1px solid #ead8c7; border-radius: 5px 16px 5px 16px; box-shadow: inset 0 1px rgb(255 255 255 / 70%), 0 14px 28px rgb(92 59 35 / 10%); }
+.search-input :deep(.ant-input-affix-wrapper:hover) { border-color: #c47747; box-shadow: 0 14px 34px rgb(92 59 35 / 15%); }
+.search-input :deep(.ant-input-affix-wrapper-focused) { border-color: #b85e2d; box-shadow: 0 0 0 3px rgb(184 94 45 / 14%); }
+.search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 58px; border-color: #b85e2d; border-radius: 0 15px 4px 0; background: #b85e2d; }
+.search-input :deep(.ant-btn:hover) { border-color: #a44e25; background: #a44e25; }
+.search-options { display: flex; justify-content: flex-end; }
+.search-options :deep(.ant-btn-link) { color: #a44e25; font-size: 12px; font-weight: 700; }
+.advanced-search-options { max-width: 980px; margin: 0 auto 14px; border: 1px solid #ead8c7; border-radius: 12px; background: rgb(255 250 242 / 82%); }
+.search-results { max-width: 980px; margin: 24px auto 0; padding: clamp(20px, 4vw, 38px); border-radius: 5px 24px 5px 24px; background: rgb(255 250 242 / 78%); box-shadow: 0 20px 48px rgb(92 59 35 / 10%); }
+.search-result-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid #ead8c7; }
+.search-result-kicker { color: #b85e2d; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
+.search-result-heading h2 { margin: 8px 0 0; color: #253142; font-size: clamp(20px, 3vw, 30px); letter-spacing: -.04em; line-height: 1.1; }
+.search-result-heading h2 strong { color: #b85e2d; }
+.result-count { flex: 0 0 auto; color: #7d695c; font-size: 12px; font-weight: 700; }
+.search-history, .popular-searches { max-width: 980px; margin: 18px auto 0; padding: 14px 18px; border-bottom: 1px solid #ead8c7; }
+.history-header h3, .popular-header h3 { margin: 0; color: #536174; font-size: 12px; font-weight: 800; letter-spacing: .05em; }
+.history-items, .popular-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.history-item, .popular-item { cursor: pointer; }
+.view-mode-toggle { display: flex; justify-content: flex-end; margin: 18px 0 4px; }
+.no-results { min-height: 260px; padding: 48px 20px; color: #7d695c; }
+.no-results > svg { color: #c47747; font-size: 38px; }
+.no-results__title { color: #253142; font-size: 20px; }
+.no-results p { margin: 0; color: #697586; font-size: 13px; }
+.list-view :deep(.ant-list-item) { padding: 22px 8px; border-color: #ead8c7; border-radius: 0; background: transparent; box-shadow: none; }
+.list-view :deep(.ant-list-item:hover) { transform: none; border-color: #ead8c7; background: rgb(247 226 207 / 30%); }
+.result-title, .card-title { color: #253142; letter-spacing: -.025em; }
+.result-title:hover, .card-title:hover { color: #b85e2d; }
+.result-excerpt, .card-excerpt { color: #5b6672; line-height: 1.75; }
+.result-type, .card-type { border: 1px solid #ead8c7; border-radius: 4px; background: #f7e2cf; color: #a44e25; font-weight: 700; }
+.result-meta, .card-meta { border-color: #ead8c7; color: #7d695c; }
+.card-view { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.result-card { border: 1px solid #ead8c7; border-radius: 4px 20px 4px 20px; background: rgb(255 250 242 / 88%); box-shadow: 0 12px 26px rgb(92 59 35 / 8%); }
+.result-card:hover { border-color: #d8ad8b; box-shadow: 0 20px 38px rgb(92 59 35 / 14%); transform: translateY(-5px); }
+.card-content { padding: 22px; }
+.highlight { color: #a44e25; background: #f7e2cf; }
+@media (max-width: 768px) { .search-hero h1 { font-size: clamp(42px, 13vw, 64px); } .search-input :deep(.ant-input-affix-wrapper), .search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 48px; } .search-result-heading { align-items: flex-start; flex-direction: column; gap: 10px; } .search-results { margin-top: 16px; padding: 20px 16px; } }
+@media (prefers-reduced-motion: reduce) { .result-card, .list-view :deep(.ant-list-item), .search-input :deep(*) { transition: none !important; } }
+</style>

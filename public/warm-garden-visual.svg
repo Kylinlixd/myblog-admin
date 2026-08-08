@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" role="img" aria-labelledby="title desc">
+  <title id="title">温暖数字花园</title>
+  <desc id="desc">暖色晨光、抽象山丘、代码窗口与连接轨迹组成的技术插画</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#f8d6a6"/>
+      <stop offset=".48" stop-color="#e9b877"/>
+      <stop offset="1" stop-color="#76998e"/>
+    </linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#536f69"/>
+      <stop offset="1" stop-color="#213d3e"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fffaf2" stop-opacity=".94"/>
+      <stop offset="1" stop-color="#f4e6d3" stop-opacity=".72"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="32" stdDeviation="34" flood-color="#553721" flood-opacity=".28"/>
+    </filter>
+    <filter id="grain">
+      <feTurbulence baseFrequency=".72" numOctaves="3" seed="9" type="fractalNoise"/>
+      <feColorMatrix values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 .16 0"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#sky)"/>
+  <circle cx="1230" cy="205" r="138" fill="#fff3d8" opacity=".82"/>
+  <circle cx="1230" cy="205" r="194" fill="none" stroke="#fff5de" stroke-opacity=".38" stroke-width="2"/>
+  <path d="M0 652C210 540 335 580 494 502c181-89 307-68 461 29 176 110 342 94 645-31v500H0Z" fill="#6f8f84"/>
+  <path d="M0 735c240-134 403-75 589-9 200 72 379 61 564-32 154-77 295-75 447-31v337H0Z" fill="url(#land)"/>
+  <g fill="none" stroke="#fff5e5" stroke-opacity=".42" stroke-width="2">
+    <path d="M92 181c252 26 327 199 579 218 256 20 346-140 694-99"/>
+    <path d="M94 227c254 25 323 194 572 212 258 20 360-136 700-93" stroke-dasharray="8 14"/>
+    <circle cx="94" cy="181" r="8" fill="#fff5e5"/>
+    <circle cx="671" cy="399" r="8" fill="#fff5e5"/>
+    <circle cx="1365" cy="300" r="8" fill="#fff5e5"/>
+  </g>
+  <g transform="translate(264 184)" filter="url(#shadow)">
+    <rect width="760" height="500" rx="38" fill="url(#glass)" stroke="#fff8ed" stroke-width="3"/>
+    <rect x="40" y="42" width="680" height="54" rx="18" fill="#f2ddc3"/>
+    <circle cx="74" cy="69" r="7" fill="#c86f37"/>
+    <circle cx="99" cy="69" r="7" fill="#d9a15d"/>
+    <circle cx="124" cy="69" r="7" fill="#73988b"/>
+    <g transform="translate(52 136)">
+      <rect width="300" height="310" rx="22" fill="#1d3238"/>
+      <path d="M34 55h132M34 91h214M34 127h172M34 199h218M34 235h154" stroke="#97b5a9" stroke-linecap="round" stroke-width="13"/>
+      <path d="M34 163h82" stroke="#e1a465" stroke-linecap="round" stroke-width="13"/>
+    </g>
+    <g transform="translate(392 136)">
+      <rect width="316" height="142" rx="22" fill="#f1c88f"/>
+      <circle cx="247" cy="47" r="20" fill="#fff0d4"/>
+      <path d="M26 110c58-67 104-48 144-4 42-51 83-45 120 4" fill="#718f84"/>
+      <rect y="174" width="316" height="136" rx="22" fill="#fff8ed" stroke="#d8c0a2"/>
+      <path d="M30 217h150M30 250h236M30 281h104" stroke="#775d48" stroke-linecap="round" stroke-width="11" opacity=".66"/>
+    </g>
+  </g>
+  <g fill="#f7e8cf" opacity=".78">
+    <circle cx="110" cy="824" r="8"/><circle cx="147" cy="861" r="5"/><circle cx="201" cy="823" r="4"/>
+    <circle cx="1422" cy="783" r="7"/><circle cx="1480" cy="838" r="5"/><circle cx="1376" cy="866" r="4"/>
+  </g>
+  <rect width="1600" height="1000" filter="url(#grain)" opacity=".13"/>
+</svg>
