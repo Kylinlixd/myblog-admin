@@ -147,6 +147,7 @@ describe('CategoryList mounted states and taxonomy actions', () => {
   it('sends the current page and page size and resets to page one for search and reset', async () => {
     const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
     await flushPromises()
+    getCategoryList.mockResolvedValue({ count: 1, results: [{ id: 1, name: 'Frontend' }] })
 
     wrapper.vm.pagination.onChange(3, 20)
     await flushPromises()
@@ -171,6 +172,24 @@ describe('CategoryList mounted states and taxonomy actions', () => {
     wrapper.vm.resetSearch()
     await flushPromises()
     expect(wrapper.vm.pagination.current).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('resets an empty out-of-range page once while keeping the current filters', async () => {
+    getCategoryList.mockResolvedValueOnce({ count: 1, results: [{ id: 1, name: 'Frontend' }] })
+      .mockResolvedValueOnce({ count: 0, results: [] })
+      .mockResolvedValueOnce({ count: 1, results: [{ id: 1, name: 'Frontend' }] })
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    wrapper.vm.searchForm.name = 'Front'
+    wrapper.vm.pagination.current = 2
+
+    await wrapper.vm.fetchCategories()
+    expect(wrapper.vm.pagination.current).toBe(1)
+    expect(getCategoryList).toHaveBeenLastCalledWith({
+      page: 1, pageSize: 10, name: 'Front', status: undefined
+    })
+    expect(wrapper.vm.categoryList).toHaveLength(1)
     wrapper.unmount()
   })
 

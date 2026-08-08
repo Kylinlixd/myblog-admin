@@ -314,7 +314,7 @@ const formatDate = (dateString) => {
 }
 
 // 获取分类列表
-const fetchCategories = async () => {
+const fetchCategories = async (allowPageReset = true) => {
   const generation = ++requestGeneration
   loading.value = true
   errorMessage.value = ''
@@ -326,6 +326,10 @@ const fetchCategories = async () => {
       status: searchForm.status
     })
     if (generation !== requestGeneration) return
+    if (allowPageReset && pagination.current > 1 && results.length === 0) {
+      pagination.current = 1
+      return fetchCategories(false)
+    }
     categoryList.value = results.map((item) => ({ ...item, status: item.status || 'inactive' }))
     pagination.total = count
   } catch (error) {

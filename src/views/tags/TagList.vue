@@ -327,7 +327,7 @@ const normalizeTag = (item) => ({
 })
 
 // 获取标签列表
-const fetchTags = async () => {
+const fetchTags = async (allowPageReset = true) => {
   const generation = ++requestGeneration
   loading.value = true
   errorMessage.value = ''
@@ -339,6 +339,10 @@ const fetchTags = async () => {
       status: searchForm.status
     })
     if (generation !== requestGeneration) return
+    if (allowPageReset && pagination.current > 1 && results.length === 0) {
+      pagination.current = 1
+      return fetchTags(false)
+    }
     tagList.value = results.map(normalizeTag)
     pagination.total = count
   } catch (error) {

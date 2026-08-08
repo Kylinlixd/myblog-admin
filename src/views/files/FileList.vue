@@ -84,7 +84,6 @@
         row-key="id"
         bordered
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
-        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
           <!-- 预览列 -->
@@ -370,7 +369,7 @@ const normalizeFileForView = (item) => {
 }
 
 // 获取文件列表
-const fetchFiles = async () => {
+const fetchFiles = async (allowPageReset = true) => {
   const generation = ++requestGeneration
   try {
     loading.value = true
@@ -388,6 +387,10 @@ const fetchFiles = async () => {
           pageSize: pageSize.value
         })
     if (generation !== requestGeneration) return
+    if (allowPageReset && currentPage.value > 1 && response.results.length === 0) {
+      currentPage.value = 1
+      return fetchFiles(false)
+    }
     fileList.value = response.results.map(normalizeFileForView)
     total.value = response.count
   } catch (error) {
@@ -415,15 +418,6 @@ const resetSearch = () => {
     type: undefined
   }
   currentPage.value = 1
-  fetchFiles()
-}
-
-// 处理表格变化
-const handleTableChange = (pagination, filters, sorter) => {
-  if (pagination) {
-    currentPage.value = pagination.current
-    pageSize.value = pagination.pageSize
-  }
   fetchFiles()
 }
 

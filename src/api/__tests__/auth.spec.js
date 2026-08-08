@@ -46,4 +46,11 @@ describe('authentication API contract', () => {
     await expect(uploadAvatar(file)).resolves.toEqual(expect.objectContaining({ url }))
     expect(request.post).toHaveBeenCalledWith('/api/upload/avatar', expect.any(FormData))
   })
+
+  it('rejects avatar uploads without a usable URL', async () => {
+    jest.spyOn(request, 'post').mockResolvedValueOnce({ data: { message: '上传失败' } })
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' })
+
+    await expect(uploadAvatar(file)).rejects.toThrow('头像上传响应缺少可用 URL')
+  })
 })

@@ -188,7 +188,7 @@ const filterForm = reactive({
 })
 
 // 获取评论列表
-const getComments = async () => {
+const getComments = async (allowPageReset = true) => {
   const generation = ++requestGeneration
   loading.value = true
   errorMessage.value = ''
@@ -203,6 +203,10 @@ const getComments = async () => {
       ...activeFilters
     })
     if (generation !== requestGeneration) return
+    if (allowPageReset && currentPage.value > 1 && response.results.length === 0) {
+      currentPage.value = 1
+      return getComments(false)
+    }
     comments.value = response.results
     total.value = response.count
   } catch (error) {

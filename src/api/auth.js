@@ -46,13 +46,20 @@ export async function uploadAvatar(file) {
     '头像上传失败'
   )
 
-  if (typeof payload === 'string') return { url: payload }
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload
+  if (typeof payload === 'string') {
+    if (!payload) throw new TypeError('头像上传响应缺少可用 URL')
+    return { url: payload }
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw new TypeError('头像上传响应缺少可用 URL')
+  }
 
-  return {
+  const result = {
     ...payload,
     url: payload.url ?? payload.avatar_url ?? payload.avatar ?? null
   }
+  if (!result.url) throw new TypeError('头像上传响应缺少可用 URL')
+  return result
 }
 
 export async function refreshToken() {

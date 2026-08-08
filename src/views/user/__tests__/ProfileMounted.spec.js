@@ -97,4 +97,23 @@ describe('Profile mounted interactions', () => {
     expect(onError).not.toHaveBeenCalled()
     wrapper.unmount()
   })
+
+  it('reports avatar uploads without a URL as failures', async () => {
+    const wrapper = mount(Profile, { global: { stubs: globalStubs } })
+    await flushPromises()
+    uploadAvatar.mockResolvedValueOnce({ message: '上传失败' })
+    const onSuccess = jest.fn()
+    const onError = jest.fn()
+
+    await wrapper.vm.handleAvatarUpload({
+      file: new File(['avatar'], 'avatar.png', { type: 'image/png' }),
+      onSuccess,
+      onError
+    })
+
+    expect(onSuccess).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledWith(expect.any(Error))
+    expect(wrapper.vm.profileForm.avatar).toBe('/media/avatar.png')
+    wrapper.unmount()
+  })
 })

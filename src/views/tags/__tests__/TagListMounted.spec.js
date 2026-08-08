@@ -131,6 +131,7 @@ describe('TagList mounted states and taxonomy actions', () => {
   it('sends the current page and page size and resets to page one for search and reset', async () => {
     const wrapper = mount(TagList, { global: { stubs: globalStubs } })
     await flushPromises()
+    getTagList.mockResolvedValue({ count: 1, results: [{ id: 1, name: 'Vue' }] })
 
     wrapper.vm.pagination.onChange(3, 20)
     await flushPromises()
@@ -155,6 +156,24 @@ describe('TagList mounted states and taxonomy actions', () => {
     wrapper.vm.resetSearch()
     await flushPromises()
     expect(wrapper.vm.pagination.current).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('resets an empty out-of-range page once while keeping the current filters', async () => {
+    getTagList.mockResolvedValueOnce({ count: 1, results: [{ id: 1, name: 'Vue' }] })
+      .mockResolvedValueOnce({ count: 0, results: [] })
+      .mockResolvedValueOnce({ count: 1, results: [{ id: 1, name: 'Vue' }] })
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    wrapper.vm.searchForm.name = 'Vu'
+    wrapper.vm.pagination.current = 2
+
+    await wrapper.vm.fetchTags()
+    expect(wrapper.vm.pagination.current).toBe(1)
+    expect(getTagList).toHaveBeenLastCalledWith({
+      page: 1, pageSize: 10, name: 'Vu', status: undefined
+    })
+    expect(wrapper.vm.tagList).toHaveLength(1)
     wrapper.unmount()
   })
 

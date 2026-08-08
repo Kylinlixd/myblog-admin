@@ -161,6 +161,24 @@ describe('CommentList mounted states and actions', () => {
     wrapper.unmount()
   })
 
+  it('resets an empty out-of-range page once while keeping the current filters', async () => {
+    getCommentList.mockResolvedValueOnce(commentsResponse)
+      .mockResolvedValueOnce({ count: 0, results: [] })
+      .mockResolvedValueOnce(commentsResponse)
+    const wrapper = mount(CommentList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    wrapper.vm.filterForm.author = 'Reader'
+    wrapper.vm.currentPage = 2
+
+    await wrapper.vm.getComments()
+    expect(wrapper.vm.currentPage).toBe(1)
+    expect(getCommentList).toHaveBeenLastCalledWith({
+      page: 1, pageSize: 10, author: 'Reader'
+    })
+    expect(wrapper.vm.comments).toHaveLength(1)
+    wrapper.unmount()
+  })
+
   it('keeps a newer comment response and loading state when requests finish out of order', async () => {
     const first = deferred()
     const second = deferred()

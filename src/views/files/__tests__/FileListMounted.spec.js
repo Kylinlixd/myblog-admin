@@ -189,6 +189,37 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     wrapper.unmount()
   })
 
+  it('resets an empty out-of-range page once while keeping active filters', async () => {
+    getFileList.mockResolvedValueOnce(fileResponse)
+    searchFiles.mockResolvedValueOnce({ count: 0, results: [] })
+      .mockResolvedValueOnce(fileResponse)
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    wrapper.vm.searchForm.name = 'cover'
+    wrapper.vm.searchForm.type = 'image'
+    wrapper.vm.currentPage = 2
+
+    await wrapper.vm.fetchFiles()
+    expect(wrapper.vm.currentPage).toBe(1)
+    expect(searchFiles).toHaveBeenNthCalledWith(2, {
+      q: 'cover', type: 'image', page: 1, pageSize: 10
+    })
+    expect(wrapper.vm.fileList).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('uses one pagination request path when the table emits a pagination change', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getFileList.mockClear()
+
+    wrapper.vm.paginationConfig.onChange(2, 20)
+    await flushPromises()
+
+    expect(getFileList).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
   it('keeps the newest file response and loading state when requests finish out of order', async () => {
     const first = deferred()
     const second = deferred()

@@ -216,15 +216,20 @@ const handleAvatarSuccess = (res) => {
   if (avatarUrl) {
     profileForm.avatar = avatarUrl
     AntMessage.success('头像上传成功')
+    return true
   } else {
     AntMessage.error(res?.message || '头像上传失败')
+    return false
   }
 }
 
 const handleAvatarUpload = async ({ file, onSuccess, onError }) => {
   try {
     const result = await uploadAvatar(file)
-    handleAvatarSuccess(result)
+    if (!handleAvatarSuccess(result)) {
+      onError?.(new TypeError('头像上传响应缺少可用 URL'))
+      return
+    }
     onSuccess?.(result)
   } catch (error) {
     AntMessage.error(error.message || '头像上传失败')
