@@ -453,7 +453,7 @@ const handleDelete = async (id) => {
     fetchFiles()
   } catch (error) {
     console.error('删除文件失败:', error)
-    message.error('删除失败')
+    message.error(error.message || '删除失败')
   } finally {
     loading.value = false
   }
