@@ -90,7 +90,7 @@
     <!-- 操作按钮 -->
     <div class="table-operations admin-toolbar">
       <a-space size="middle">
-        <a-button danger :disabled="!selectedRowKeys.length" @click="handleBatchDelete">
+        <a-button danger :disabled="!selectedRowKeys.length || deleting" :loading="deleting" @click="handleBatchDelete">
           <DeleteOutlined />
           批量删除
         </a-button>
@@ -98,6 +98,13 @@
     </div>
 
     <a-card class="data-card admin-table-card">
+      <div v-if="!loading && !dynamicList.length" class="dynamic-empty">
+        <strong>还没有内容</strong>
+        <span>创建第一条动态，开始整理你的内容。</span>
+        <a-button type="primary" aria-label="新建动态" @click="navigateToCreate">
+          <PlusOutlined /> 新建动态
+        </a-button>
+      </div>
       <div class="content-table-scroll">
         <a-table
         :loading="loading"
@@ -214,6 +221,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const responsive = ref(false)
+const deleting = ref(false)
 
 // 添加表格选择相关变量
 const selectedRowKeys = ref([])
@@ -259,22 +267,15 @@ const fetchDynamics = async () => {
       }
     });
     
-    const response = await getDynamicList(params);
-    
-    if (response && response.code === 200 && response.data) {
-      dynamicList.value = response.data.items.map(item => ({
-        ...item,
-        mediaUrls: item.mediaUrls || [],
-        category: item.category || null,
-        like_count: item.likes || 0,
-        title: item.title || '无标题'
-      }));
-      total.value = response.data.total || 0;
-    } else {
-      dynamicList.value = [];
-      total.value = 0;
-      message.error('获取动态列表失败: 响应格式异常');
-    }
+    const { count = 0, results = [] } = (await getDynamicList(params)) || {}
+    dynamicList.value = results.map(item => ({
+      ...item,
+      mediaUrls: item.mediaUrls || [],
+      category: item.category || null,
+      like_count: item.like_count ?? item.likes ?? 0,
+      title: item.title || '无标题'
+    }))
+    total.value = count
   } catch (error) {
     console.error('获取动态列表失败:', error);
     dynamicList.value = [];
@@ -289,8 +290,9 @@ const fetchDynamics = async () => {
 const handleSearch = () => {
   // 重置页码
   currentPage.value = 1;
+  selectedRowKeys.value = []
   // 重新获取数据
-  fetchDynamics();
+  return fetchDynamics();
 }
 
 // 重置搜索
@@ -304,8 +306,9 @@ const resetSearch = () => {
   searchForm.type = undefined;
   // 重置页码
   currentPage.value = 1;
+  selectedRowKeys.value = []
   // 重新获取数据
-  fetchDynamics();
+  return fetchDynamics();
 }
 
 // 处理批量删除
@@ -316,16 +319,16 @@ const handleBatchDelete = async () => {
   }
 
   try {
-    loading.value = true
+    deleting.value = true
     await Promise.all(selectedRowKeys.value.map(id => deleteAdminDynamic(id)))
     message.success('批量删除成功')
     selectedRowKeys.value = []
-    fetchDynamics()
+    await fetchDynamics()
   } catch (error) {
     console.error('批量删除失败:', error)
     message.error('批量删除失败，请重试')
   } finally {
-    loading.value = false
+    deleting.value = false
   }
 }
 
@@ -488,20 +491,8 @@ const tags = ref([])
 // 获取分类列表
 const fetchCategories = async () => {
   try {
-    const response = await getCategoryList()
-    
-    if (response && response.results) {
-      // 处理 {count: number, results: Array} 格式
-      categories.value = response.results
-    } else if (response && response.code === 200 && response.data) {
-      categories.value = response.data.items || []
-    } else if (Array.isArray(response)) {
-      categories.value = response
-    } else if (response && response.data) {
-      categories.value = Array.isArray(response.data) ? response.data : [response.data]
-    } else {
-      categories.value = []
-    }
+    const { results = [] } = (await getCategoryList()) || {}
+    categories.value = results
   } catch (error) {
     console.error('获取分类列表失败:', error)
     message.error('获取分类列表失败')
@@ -527,17 +518,8 @@ const formatDate = (dateString) => {
 // 获取标签列表
 const fetchTags = async () => {
   try {
-    const response = await getTagList()
-    
-    if (response && response.results) {
-      tags.value = response.results
-    } else if (Array.isArray(response)) {
-      tags.value = response
-    } else if (response && response.data) {
-      tags.value = Array.isArray(response.data) ? response.data : [response.data]
-    } else {
-      tags.value = []
-    }
+    const { results = [] } = (await getTagList()) || {}
+    tags.value = results
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
@@ -551,6 +533,7 @@ const handleTableChange = (pagination, filters, sorter) => {
   if (pagination) {
     currentPage.value = pagination.current;
     pageSize.value = pagination.pageSize;
+    selectedRowKeys.value = []
   }
   
   // 更新排序信息
@@ -585,16 +568,17 @@ const editDynamic = (record) => {
 
 // 删除动态
 const handleDelete = async (id) => {
+  if (deleting.value) return
   try {
-    loading.value = true
+    deleting.value = true
     await deleteAdminDynamic(id)
     message.success('删除成功')
-    fetchDynamics() // 重新加载列表
+    await fetchDynamics()
   } catch (error) {
     console.error('删除动态失败:', error)
     message.error('删除失败，请重试')
   } finally {
-    loading.value = false
+    deleting.value = false
   }
 }
 
@@ -633,6 +617,19 @@ onUnmounted(() => {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
 }
+
+.dynamic-empty {
+  display: grid;
+  min-height: 220px;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.dynamic-empty strong { color: var(--color-text); }
+.dynamic-empty .ant-btn { margin-top: 8px; }
 
 :deep(.content-table-scroll .ant-table-tbody > tr > td) { vertical-align: middle; }
 

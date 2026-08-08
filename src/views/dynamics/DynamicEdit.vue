@@ -3,7 +3,7 @@
     <div class="edit-header">
       <h2>{{ isEdit ? '编辑动态' : '新建动态' }}</h2>
       <div class="header-actions">
-        <a-button @click="handlePreview" v-if="form.content">
+        <a-button aria-label="预览" :disabled="!form.content.trim()" @click="handlePreview">
           <template #icon><eye-outlined /></template>预览
         </a-button>
         <a-button @click="handleSave" type="primary" :loading="saving" :disabled="saving">
@@ -317,6 +317,7 @@ const isEdit = computed(() => route.params.id !== undefined)
 const draftId = computed(() => String(route.params.id || 'new'))
 const saving = ref(false)
 const dirty = ref(false)
+let mediaTypeReady = false
 let draftTimer
 
 // 表单数据 - 修改为使用 mediaUrls 统一存储媒体文件
@@ -336,6 +337,14 @@ watch(form, () => {
   window.clearTimeout(draftTimer)
   draftTimer = window.setTimeout(() => saveEditorDraft(draftId.value, form.value), 700)
 }, { deep: true })
+
+watch(() => form.value.type, (type, previousType) => {
+  if (!mediaTypeReady || !previousType || type === previousType) return
+  form.value.mediaUrls = []
+  form.value.fileIds = []
+  fileList.value = []
+  selectedFiles.value = []
+}, { flush: 'sync' })
 
 // 文件列表 - 上传组件使用
 const fileList = ref([])
@@ -638,7 +647,7 @@ const handleSave = async () => {
 
 // 预览
 const handlePreview = () => {
-  if (!form.value.content) {
+  if (!form.value.content.trim()) {
     message.warning('请先输入内容')
     return
   }
@@ -951,6 +960,7 @@ const handleFileConfirm = () => {
   
   // 触发表单验证
   formRef.value?.validateFields(['mediaUrls', 'type'])
+  fetchFileList()
 }
 
 // 格式化文件大小
@@ -988,6 +998,7 @@ function guardUnsavedChanges(event) {
 onMounted(async () => {
   await Promise.all([fetchDynamicDetail(), fetchCategories(), fetchTags()])
   restoreLocalDraft()
+  mediaTypeReady = true
   window.addEventListener('beforeunload', guardUnsavedChanges)
 })
 
@@ -1115,7 +1126,7 @@ onBeforeUnmount(() => {
         border-radius: 4px;
         padding: 8px;
         cursor: pointer;
-        transition: all 0.3s;
+        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
         
         &:hover {
           border-color: #1890ff;

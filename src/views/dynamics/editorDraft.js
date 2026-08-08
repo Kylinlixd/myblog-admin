@@ -7,7 +7,11 @@ export function saveEditorDraft(id, value) {
       .filter((field) => value[field] !== undefined)
       .map((field) => [field, value[field]])
   )
-  localStorage.setItem(draftKey(id), JSON.stringify({ ...draft, savedAt: Date.now() }))
+  try {
+    localStorage.setItem(draftKey(id), JSON.stringify({ ...draft, savedAt: Date.now() }))
+  } catch {
+    // Draft persistence must never prevent editing or saving the current form.
+  }
 }
 
 export function loadEditorDraft(id) {
@@ -19,5 +23,9 @@ export function loadEditorDraft(id) {
 }
 
 export function clearEditorDraft(id) {
-  localStorage.removeItem(draftKey(id))
+  try {
+    localStorage.removeItem(draftKey(id))
+  } catch {
+    // Clearing a stale draft is best-effort and should not interrupt navigation.
+  }
 }

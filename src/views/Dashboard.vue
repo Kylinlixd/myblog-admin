@@ -16,7 +16,7 @@
     </section>
 
     <a-alert v-if="error" type="error" show-icon :message="error" class="dashboard-alert">
-      <template #action><a-button size="small" @click="loadStats">重试</a-button></template>
+      <template #action><a-button size="small" aria-label="重试" @click="loadStats">重试</a-button></template>
     </a-alert>
 
     <section class="metric-rail" aria-label="内容统计">
