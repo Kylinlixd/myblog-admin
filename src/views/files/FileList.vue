@@ -340,10 +340,9 @@ const paginationConfig = computed(() => ({
     if (size) pageSize.value = size
     fetchFiles()
   },
-  onShowSizeChange: (current, size) => {
+  onShowSizeChange: (_current, size) => {
     pageSize.value = size
     currentPage.value = 1
-    fetchFiles()
   }
 }))
 

@@ -220,6 +220,22 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     wrapper.unmount()
   })
 
+  it('requests once when a page-size change emits both pagination callbacks', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getFileList.mockClear()
+
+    wrapper.vm.paginationConfig.onShowSizeChange(3, 20)
+    wrapper.vm.paginationConfig.onChange(1, 20)
+    await flushPromises()
+
+    expect(wrapper.vm.currentPage).toBe(1)
+    expect(wrapper.vm.pageSize).toBe(20)
+    expect(getFileList).toHaveBeenCalledTimes(1)
+    expect(getFileList).toHaveBeenCalledWith({ page: 1, pageSize: 20 })
+    wrapper.unmount()
+  })
+
   it('keeps the newest file response and loading state when requests finish out of order', async () => {
     const first = deferred()
     const second = deferred()
