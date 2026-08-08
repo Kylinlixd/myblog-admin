@@ -1,47 +1,44 @@
-import fs from 'node:fs'
-import path from 'node:path'
 import { mount } from '@vue/test-utils'
 
 import AsyncState from '../AsyncState.vue'
 
-describe('AsyncState', () => {
-  const source = fs.readFileSync(path.join(process.cwd(), 'src/components/common/AsyncState.vue'), 'utf8')
+const globalStubs = {
+  'a-button': {
+    emits: ['click'],
+    template: '<button @click="$emit(\'click\')"><slot /></button>'
+  }
+}
 
-  it('uses a skeleton while loading and keeps retry feedback', () => {
-    expect(source).toContain('state-skeleton')
-    expect(source).toContain("$emit('retry')")
+describe('AsyncState', () => {
+  it('renders a loading skeleton without error or empty content', () => {
+    const wrapper = mount(AsyncState, {
+      props: { loading: true },
+      global: { stubs: globalStubs }
+    })
+
+    expect(wrapper.attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('.state-skeleton').exists()).toBe(true)
+    expect(wrapper.find('.state-skeleton').findAll('span')).toHaveLength(3)
+    expect(wrapper.find('h3').exists()).toBe(false)
+    expect(wrapper.find('button').exists()).toBe(false)
   })
 
-  it('offers retry from the error state', async () => {
+  it('renders error and empty states with retry actions', async () => {
     const wrapper = mount(AsyncState, {
       props: { error: '网络暂不可用' },
-      global: {
-        stubs: {
-          'a-button': {
-            emits: ['click'],
-            template: '<button @click="$emit(\'click\')"><slot /></button>'
-          }
-        }
-      }
+      global: { stubs: globalStubs }
     })
 
+    expect(wrapper.text()).toContain('内容暂时无法加载')
+    expect(wrapper.text()).toContain('网络暂不可用')
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('retry')).toHaveLength(1)
-  })
 
-  it('offers retry from the empty state', () => {
-    const wrapper = mount(AsyncState, {
-      props: { empty: true },
-      global: {
-        stubs: {
-          'a-button': {
-            emits: ['click'],
-            template: '<button @click="$emit(\'click\')"><slot /></button>'
-          }
-        }
-      }
-    })
+    await wrapper.setProps({ error: '', empty: true })
 
-    expect(wrapper.find('button').exists()).toBe(true)
+    expect(wrapper.text()).toContain('暂时没有内容')
+    expect(wrapper.text()).toContain('新的内容正在路上')
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.emitted('retry')).toHaveLength(2)
   })
 })

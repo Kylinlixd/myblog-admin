@@ -3,6 +3,38 @@ import { mount } from '@vue/test-utils'
 import DataTable from '../DataTable.vue'
 
 describe('DataTable row selection', () => {
+  it('shows a loading overlay and hides the empty state while loading', () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [{ label: '名称', prop: 'name' }],
+        loading: true,
+        emptyText: '没有匹配结果'
+      }
+    })
+
+    expect(wrapper.attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('.table-wrapper').classes()).toContain('is-loading')
+    expect(wrapper.find('.loading-overlay').exists()).toBe(true)
+    expect(wrapper.find('.loading-overlay').attributes('aria-label')).toBe('正在加载内容')
+    expect(wrapper.find('.empty-cell').exists()).toBe(false)
+  })
+
+  it('shows the configured empty text after loading finishes', async () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [{ label: '名称', prop: 'name' }],
+        loading: true,
+        emptyText: '没有匹配结果'
+      }
+    })
+
+    await wrapper.setProps({ loading: false })
+
+    expect(wrapper.find('.table-wrapper').classes()).not.toContain('is-loading')
+    expect(wrapper.find('.loading-overlay').exists()).toBe(false)
+    expect(wrapper.find('.empty-cell').text()).toContain('没有匹配结果')
+  })
+
   it('selects every visible row from the header checkbox', async () => {
     const wrapper = mount(DataTable, {
       props: {
