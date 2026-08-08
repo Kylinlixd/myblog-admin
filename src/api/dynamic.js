@@ -38,23 +38,33 @@ function validateDynamicPayload(payload) {
   }
 }
 
+function normalizeDynamicResponse(response) {
+  if (!response || typeof response !== 'object' || !('data' in response)) {
+    return response
+  }
+  if (response.code !== undefined && response.code !== 200) {
+    throw new Error(response.message || '动态请求失败')
+  }
+  return response.data
+}
+
 export const getDynamicList = (params) =>
   request.get('/api/dynamics/', { params: buildDynamicParams(params) })
 
-export const getDynamicDetail = (id) =>
-  request.get(`/api/dynamics/${id}/`)
+export const getDynamicDetail = async (id) =>
+  normalizeDynamicResponse(await request.get(`/api/dynamics/${id}/`))
 
 export const deleteDynamic = (id) =>
   request.delete(`/api/dynamics/${id}/`)
 
-export function createDynamic(data) {
+export async function createDynamic(data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  return request.post('/api/dynamics/', payload)
+  return normalizeDynamicResponse(await request.post('/api/dynamics/', payload))
 }
 
-export function updateDynamic(id, data) {
+export async function updateDynamic(id, data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  return request.put(`/api/dynamics/${id}/`, payload)
+  return normalizeDynamicResponse(await request.put(`/api/dynamics/${id}/`, payload))
 }

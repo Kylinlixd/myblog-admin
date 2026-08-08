@@ -29,8 +29,16 @@ export function buildUploadData(params) {
   return formData
 }
 
-export const uploadFile = (params) =>
-  request.post('/api/upload/upload/', buildUploadData(params))
+function normalizeUploadResponse(response) {
+  if (!response || typeof response !== 'object') return response
+  if (response.code !== undefined && response.code !== 200) {
+    throw new Error(response.message || '上传失败')
+  }
+  return response.data ?? response
+}
+
+export const uploadFile = async (params) =>
+  normalizeUploadResponse(await request.post('/api/upload/upload/', buildUploadData(params)))
 
 export async function getFileList(params = {}) {
   const response = await request.get('/api/upload/files/', {

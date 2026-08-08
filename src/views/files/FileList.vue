@@ -480,13 +480,14 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
                  file.type.startsWith('video/') ? 'video' : 'other'
     })
     
-    if (result && result.code === 200) {
+    if (result) {
       message.success('上传成功')
       onSuccess(result)
       fetchFiles() // 刷新列表
     } else {
-      message.error(result?.message || '上传失败')
-      onError(new Error(result?.message || '上传失败'))
+      const error = new Error('上传失败')
+      message.error(error.message)
+      onError(error)
     }
   } catch (error) {
     console.error('上传失败:', error)

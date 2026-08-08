@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 
 import FileList from '../FileList.vue'
-import { deleteFile, getFileList } from '@/api/file'
+import { deleteFile, getFileList, uploadFile } from '@/api/file'
 import { message } from 'ant-design-vue'
 
 jest.mock('@/api/file', () => ({
@@ -91,6 +91,39 @@ describe('FileList delete handling', () => {
 
     expect(message.error).toHaveBeenCalledWith('删除权限不足')
     expect(wrapper.vm.loading).toBe(false)
+    wrapper.unmount()
+  })
+})
+
+describe('FileList upload handling', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    getFileList.mockResolvedValue(fileListResponse)
+  })
+
+  it('accepts a resolved normalized upload result', async () => {
+    const uploadResult = {
+      id: 12,
+      name: 'new-cover.png',
+      file_type: 'image',
+      file_url: '/media/new-cover.png'
+    }
+    uploadFile.mockResolvedValueOnce(uploadResult)
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    const file = { name: 'new-cover.png', type: 'image/png' }
+    const onSuccess = jest.fn()
+    const onError = jest.fn()
+
+    await wrapper.vm.handleCustomUpload({ file, onSuccess, onError })
+    await flushPromises()
+
+    expect(uploadFile).toHaveBeenCalledWith({ file, file_type: 'image' })
+    expect(onSuccess).toHaveBeenCalledWith(uploadResult)
+    expect(onError).not.toHaveBeenCalled()
+    expect(message.success).toHaveBeenCalledWith('上传成功')
+    expect(getFileList).toHaveBeenCalledTimes(2)
     wrapper.unmount()
   })
 })

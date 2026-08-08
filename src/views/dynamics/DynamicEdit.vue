@@ -505,9 +505,8 @@ const fetchDynamicDetail = async () => {
   if (!isEdit.value) return
   
   try {
-    const response = await getDynamicDetail(route.params.id)
-    if (response && response.code === 200 && response.data) {
-      const data = response.data
+    const data = await getDynamicDetail(route.params.id)
+    if (data) {
       
       // 处理 mediaUrls，确保是数组且包含前缀
       let mediaUrls = []
@@ -545,7 +544,7 @@ const fetchDynamicDetail = async () => {
         }
       })
     } else {
-      message.error(response?.message || '获取动态详情失败')
+      message.error('获取动态详情失败')
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
@@ -614,24 +613,16 @@ const handleSave = async () => {
     };
     
     // 根据是否编辑模式选择API
-    let response;
     if (isEdit.value) {
-      response = await updateDynamic(route.params.id, dynamicData);
+      await updateDynamic(route.params.id, dynamicData);
     } else {
-      response = await createDynamic(dynamicData);
+      await createDynamic(dynamicData);
     }
-    
-    // 处理响应
-    if (response.code === 200) {
-      clearEditorDraft(draftId.value)
-      dirty.value = false
-      message.success(isEdit.value ? '动态更新成功' : '动态创建成功');
-      router.push('/dashboard/dynamics');
-    } else {
-      // 显示API返回的具体错误信息
-      message.error(response.message || (isEdit.value ? '更新失败' : '创建失败'));
-      console.error('动态保存失败:', response.error || response.message);
-    }
+
+    clearEditorDraft(draftId.value)
+    dirty.value = false
+    message.success(isEdit.value ? '动态更新成功' : '动态创建成功');
+    router.push('/dashboard/dynamics');
   } catch (error) {
     console.error('表单验证或保存过程中出错:', error);
     
@@ -708,7 +699,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       return
     }
     
-    if (!result || !result.data || !result.data.file_url) {
+    if (!result || !result.file_url) {
       const error = new Error('上传结果无效')
       console.error('上传结果无效:', result)
       message.error('上传失败：服务器返回数据无效')
@@ -721,29 +712,29 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       form.value.mediaUrls = []
     }
     
-    const fileUrl = buildApiUrl(result.data.file_url)
+    const fileUrl = buildApiUrl(result.file_url)
     
     // 对于音频和视频，只保留一个文件
     if (form.value.type === 'audio' || form.value.type === 'video') {
       form.value.mediaUrls = [fileUrl]
-      form.value.fileIds = [result.data.id]
+      form.value.fileIds = [result.id]
     } else {
       form.value.mediaUrls.push(fileUrl)
       if (!form.value.fileIds) {
         form.value.fileIds = []
       }
-      form.value.fileIds.push(result.data.id)
+      form.value.fileIds.push(result.id)
     }
     
     // 更新文件列表
     const fileInfo = {
       uid: file.uid,
-      name: result.data.name,
+      name: result.name,
       status: 'done',
       url: fileUrl,
       thumbUrl: fileUrl,
-      type: result.data.file_type,
-      id: result.data.id
+      type: result.file_type,
+      id: result.id
     }
     
     if (form.value.type === 'audio' || form.value.type === 'video') {

@@ -1,4 +1,4 @@
-import { getFileList, searchFiles } from '../file'
+import { getFileList, searchFiles, uploadFile } from '../file'
 import request from '@/utils/request'
 
 describe('file API normalization', () => {
@@ -58,6 +58,28 @@ describe('file API normalization', () => {
         size: 12,
         url: '/media/video.mp4'
       }]
+    })
+  })
+
+  it('returns upload data without the legacy response envelope', async () => {
+    jest.spyOn(request, 'post').mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        id: 9,
+        name: 'audio.mp3',
+        file_type: 'audio',
+        file_url: '/media/audio.mp3'
+      }
+    })
+
+    const file = new File(['audio'], 'audio.mp3', { type: 'audio/mpeg' })
+
+    await expect(uploadFile({ file, file_type: 'audio' })).resolves.toEqual({
+      id: 9,
+      name: 'audio.mp3',
+      file_type: 'audio',
+      file_url: '/media/audio.mp3'
     })
   })
 })
