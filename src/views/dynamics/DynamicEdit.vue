@@ -367,6 +367,21 @@ const filePageSize = ref(12)
 const fileTotal = ref(0)
 const selectedFiles = ref([])
 
+const applyFileListResponse = ({ count, results }) => {
+  fileListData.value = results.map(file => ({
+    id: file.id,
+    name: file.name,
+    type: file.type,
+    url: file.url,
+    size: file.size ?? 0,
+    created_at: file.created_at,
+    updated_at: file.updated_at,
+    description: file.description,
+    is_public: file.is_public
+  }))
+  fileTotal.value = count
+}
+
 // 添加计算属性来处理标签选项
 const tagOptions = computed(() => {
   return (tags.value || []).map(item => ({
@@ -816,27 +831,7 @@ const fetchFileList = async () => {
       type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
     }
     
-    const response = await getFileList(params)
-    
-    if (response.code === 200 && response.data) {
-      // 处理文件列表数据
-      fileListData.value = response.data.items.map(file => ({
-        id: file.id,
-        name: file.name,
-        type: file.type,
-        url: file.url,
-        size: file.size || 0,
-        created_at: file.created_at,
-        updated_at: file.updated_at,
-        description: file.description,
-        is_public: file.is_public
-      }))
-      fileTotal.value = response.data.total
-    } else {
-      message.error('获取文件列表失败')
-      fileListData.value = []
-      fileTotal.value = 0
-    }
+    applyFileListResponse(await getFileList(params))
   } catch (error) {
     console.error('获取文件列表失败:', error)
     message.error('获取文件列表失败')
@@ -861,26 +856,7 @@ const handleFileSearch = async (value) => {
       type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
     }
     
-    const response = await getFileList(params)
-    
-    if (response.code === 200 && response.data) {
-      fileListData.value = response.data.items.map(file => ({
-        id: file.id,
-        name: file.name,
-        type: file.type,
-        url: file.url,
-        size: file.size || 0,
-        created_at: file.created_at,
-        updated_at: file.updated_at,
-        description: file.description,
-        is_public: file.is_public
-      }))
-      fileTotal.value = response.data.total
-    } else {
-      message.error('搜索文件失败')
-      fileListData.value = []
-      fileTotal.value = 0
-    }
+    applyFileListResponse(await getFileList(params))
   } catch (error) {
     console.error('搜索文件失败:', error)
     message.error('搜索文件失败')
@@ -905,26 +881,7 @@ const handleFileTypeChange = async (value) => {
       type: value === 'all' ? undefined : value
     }
     
-    const response = await getFileList(params)
-    
-    if (response.code === 200 && response.data) {
-      fileListData.value = response.data.items.map(file => ({
-        id: file.id,
-        name: file.name,
-        type: file.type,
-        url: file.url,
-        size: file.size || 0,
-        created_at: file.created_at,
-        updated_at: file.updated_at,
-        description: file.description,
-        is_public: file.is_public
-      }))
-      fileTotal.value = response.data.total
-    } else {
-      message.error('获取文件列表失败')
-      fileListData.value = []
-      fileTotal.value = 0
-    }
+    applyFileListResponse(await getFileList(params))
   } catch (error) {
     console.error('获取文件列表失败:', error)
     message.error('获取文件列表失败')
