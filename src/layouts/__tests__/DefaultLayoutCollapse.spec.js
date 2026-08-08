@@ -97,4 +97,17 @@ describe('DefaultLayout navigation controls', () => {
     expect(menuButton.attributes('aria-expanded')).toBe('false')
     expect(wrapper.find('.drawer-stub').attributes('data-open')).toBe('false')
   })
+
+  it('exposes desktop sidebar state and the active page to assistive technology', async () => {
+    window.innerWidth = 1024
+    const wrapper = mountLayout()
+    const collapseButton = wrapper.find('.sidebar-collapse-control')
+
+    expect(collapseButton.attributes('aria-expanded')).toBe('true')
+    expect(wrapper.find('.nav-item--active').attributes('aria-current')).toBe('page')
+
+    await collapseButton.trigger('click')
+
+    expect(collapseButton.attributes('aria-expanded')).toBe('false')
+  })
 })

@@ -8,6 +8,7 @@
         type="button"
         class="sidebar-collapse-control"
         :aria-label="collapsed ? '展开导航' : '折叠导航'"
+        :aria-expanded="!collapsed"
         :title="collapsed ? '展开导航' : '折叠导航'"
         @click="toggleSidebar"
       >
@@ -98,6 +99,7 @@ const AdminNavigation = defineComponent({
           h('button', {
             type: 'button',
             class: ['nav-item', { 'nav-item--active': selectedKey.value === item.key }],
+            'aria-current': selectedKey.value === item.key ? 'page' : undefined,
             title: collapsed.value && !isMobile.value ? `${item.label} · ${item.description}` : undefined,
             onClick: () => { router.push(item.path); emit('navigate') }
           }, [
@@ -141,13 +143,13 @@ function handleLogout() {
 .admin-brand > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
 .admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow: hidden auto; gap: 16px; padding: 46px 12px 18px; }
-.sidebar-collapse-control { position: absolute; z-index: 4; top: 76px; right: 0; display: grid; width: 100%; height: 32px; place-items: center; border: 0; border-top: 1px solid rgb(255 255 255 / 8%); border-bottom: 1px solid rgb(255 255 255 / 8%); border-radius: 0 0 8px 8px; background: #18243a; color: #aebbd0; box-shadow: 0 6px 14px rgb(5 10 20 / 18%); cursor: pointer; transition: color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
+.sidebar-collapse-control { position: absolute; z-index: 4; top: 76px; right: 0; display: grid; width: 100%; height: 32px; place-items: center; border: 0; border-top: 1px solid rgb(255 255 255 / 8%); border-bottom: 1px solid rgb(255 255 255 / 8%); border-radius: 0 0 8px 8px; background: #18243a; color: #aebbd0; box-shadow: 0 6px 14px rgb(5 10 20 / 18%); cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .sidebar-collapse-control:hover { background: #315bea; color: white; transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
 .nav-group { display: grid; gap: 5px; }
 .nav-group__label { margin: 0 10px 4px; color: #66748d; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-.admin-navigation .nav-item { display: flex; width: 100%; min-height: 50px; align-items: center; gap: 11px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; color: #9daac1; cursor: pointer; text-align: left; transition: var(--transition-fast); }
+.admin-navigation .nav-item { display: flex; width: 100%; min-height: 50px; align-items: center; gap: 11px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; color: #9daac1; cursor: pointer; text-align: left; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .nav-item__icon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: rgb(255 255 255 / 5%); }
 .nav-item__copy { display: flex; min-width: 0; flex-direction: column; line-height: 1.25; }
 .nav-item__copy strong { overflow: hidden; color: inherit; font-size: 13px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
@@ -157,7 +159,6 @@ function handleLogout() {
 .admin-navigation .nav-item--active { background: #315bea !important; color: white !important; box-shadow: 0 10px 22px rgb(49 91 234 / 24%); }
 .admin-navigation .nav-item--active .nav-item__icon { background: rgb(255 255 255 / 16%); }
 .admin-navigation .nav-item--active small { color: rgb(255 255 255 / 72%); }
-.workspace { min-width: 0; max-width: 100%; background: var(--color-page); }
 .workspace-header { position: sticky; z-index: 50; top: 0; display: flex; min-width: 0; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
 .header-left { min-width: 0; gap: 16px; overflow: hidden; }

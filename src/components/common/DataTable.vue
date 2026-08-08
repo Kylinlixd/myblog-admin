@@ -174,7 +174,7 @@ const toggleVisibleRows = (event) => {
     padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid #ebeef5;
-    transition: background-color var(--transition-fast), color var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast), opacity var(--transition-fast);
   }
 
   .selection-cell {
