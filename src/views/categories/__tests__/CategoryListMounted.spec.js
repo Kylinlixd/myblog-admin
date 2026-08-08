@@ -152,7 +152,7 @@ describe('CategoryList mounted states and taxonomy actions', () => {
     wrapper.vm.pagination.onChange(3, 20)
     await flushPromises()
     expect(getCategoryList).toHaveBeenLastCalledWith({
-      page: 3,
+      page: 1,
       pageSize: 20,
       name: undefined,
       status: undefined
@@ -172,6 +172,21 @@ describe('CategoryList mounted states and taxonomy actions', () => {
     wrapper.vm.resetSearch()
     await flushPromises()
     expect(wrapper.vm.pagination.current).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('requests once when the pagination component emits both page-size callbacks', async () => {
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getCategoryList.mockClear()
+
+    expect(wrapper.vm.pagination.onShowSizeChange).toBeUndefined()
+    wrapper.vm.pagination.onChange(1, 20)
+    await flushPromises()
+
+    expect(wrapper.vm.pagination.current).toBe(1)
+    expect(wrapper.vm.pagination.pageSize).toBe(20)
+    expect(getCategoryList).toHaveBeenCalledTimes(1)
     wrapper.unmount()
   })
 

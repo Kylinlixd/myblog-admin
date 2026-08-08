@@ -136,7 +136,7 @@ describe('TagList mounted states and taxonomy actions', () => {
     wrapper.vm.pagination.onChange(3, 20)
     await flushPromises()
     expect(getTagList).toHaveBeenLastCalledWith({
-      page: 3,
+      page: 1,
       pageSize: 20,
       name: undefined,
       status: undefined
@@ -156,6 +156,21 @@ describe('TagList mounted states and taxonomy actions', () => {
     wrapper.vm.resetSearch()
     await flushPromises()
     expect(wrapper.vm.pagination.current).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('requests once when the pagination component emits both page-size callbacks', async () => {
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getTagList.mockClear()
+
+    expect(wrapper.vm.pagination.onShowSizeChange).toBeUndefined()
+    wrapper.vm.pagination.onChange(1, 20)
+    await flushPromises()
+
+    expect(wrapper.vm.pagination.current).toBe(1)
+    expect(wrapper.vm.pagination.pageSize).toBe(20)
+    expect(getTagList).toHaveBeenCalledTimes(1)
     wrapper.unmount()
   })
 

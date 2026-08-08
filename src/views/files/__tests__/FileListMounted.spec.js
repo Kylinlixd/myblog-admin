@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import FileList from '../FileList.vue'
 import { deleteFile, getFileList, searchFiles } from '@/api/file'
+import { message } from 'ant-design-vue'
 
 jest.mock('@/api/file', () => ({
   uploadFile: jest.fn(),
@@ -254,6 +255,19 @@ describe('FileList mounted states, batch behavior, and previews', () => {
 
     expect(wrapper.vm.fileList[0].id).toBe(2)
     expect(wrapper.vm.loading).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('shows a failure message instead of throwing when clipboard is unavailable', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const originalClipboard = navigator.clipboard
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
+
+    await expect(wrapper.vm.copyFileUrl('/media/cover.png')).resolves.toBeUndefined()
+    expect(message.error).toHaveBeenCalledWith('复制失败，请手动复制')
+
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: originalClipboard })
     wrapper.unmount()
   })
 

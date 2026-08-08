@@ -30,7 +30,7 @@
           <a-space>
             <a-button
               type="primary"
-              :disabled="!selectedCommentIds.length"
+              :disabled="!selectedCommentIds.length || batchActionPending !== ''"
               :loading="batchApproving"
               @click="handleBatchApprove"
             >
@@ -39,7 +39,7 @@
             </a-button>
             <a-button
               danger
-              :disabled="!selectedCommentIds.length"
+              :disabled="!selectedCommentIds.length || batchActionPending !== ''"
               :loading="batchDeleting"
               @click="handleBatchDelete"
             >
@@ -175,8 +175,9 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedCommentIds = ref([])
-const batchDeleting = ref(false)
-const batchApproving = ref(false)
+const batchActionPending = ref('')
+const batchDeleting = computed(() => batchActionPending.value === 'delete')
+const batchApproving = computed(() => batchActionPending.value === 'approve')
 const errorMessage = ref('')
 const pendingActions = reactive({})
 let requestGeneration = 0
@@ -306,7 +307,9 @@ const isActionPending = (id, action) => Boolean(pendingActions[`${id}:${action}`
 const isCommentPending = (id) => ['approve', 'reject', 'delete'].some((action) => isActionPending(id, action))
 
 const handleBatchDelete = () => {
-  if (!selectedCommentIds.value.length || batchDeleting.value) return
+  if (!selectedCommentIds.value.length || batchActionPending.value) return
+
+  batchActionPending.value = 'delete'
 
   Modal.confirm({
     title: `删除选中的 ${selectedCommentIds.value.length} 条评论？`,
@@ -314,8 +317,10 @@ const handleBatchDelete = () => {
     okText: '确认删除',
     cancelText: '取消',
     okButtonProps: { danger: true },
+    onCancel() {
+      if (batchActionPending.value === 'delete') batchActionPending.value = ''
+    },
     async onOk() {
-      batchDeleting.value = true
       const ids = [...selectedCommentIds.value]
       try {
         const results = await Promise.allSettled(ids.map(async (id) => {
@@ -333,21 +338,25 @@ const handleBatchDelete = () => {
         else message.warning(`已删除 ${successCount} 条，${failedIds.length} 条删除失败并保持选中`)
         await getComments()
       } finally {
-        batchDeleting.value = false
+        if (batchActionPending.value === 'delete') batchActionPending.value = ''
       }
     }
   })
 }
 
 const handleBatchApprove = () => {
-  if (!selectedCommentIds.value.length || batchApproving.value) return
+  if (!selectedCommentIds.value.length || batchActionPending.value) return
+
+  batchActionPending.value = 'approve'
   Modal.confirm({
     title: `通过选中的 ${selectedCommentIds.value.length} 条评论？`,
     content: '通过后评论会显示在文章讨论区。',
     okText: '确认通过',
     cancelText: '取消',
+    onCancel() {
+      if (batchActionPending.value === 'approve') batchActionPending.value = ''
+    },
     async onOk() {
-      batchApproving.value = true
       const ids = [...selectedCommentIds.value]
       try {
         const results = await Promise.allSettled(ids.map(async (id) => {
@@ -364,7 +373,7 @@ const handleBatchApprove = () => {
         else message.warning(`已通过 ${successCount} 条，${failedIds.length} 条失败并保持选中`)
         await getComments()
       } finally {
-        batchApproving.value = false
+        if (batchActionPending.value === 'approve') batchActionPending.value = ''
       }
     }
   })

@@ -247,14 +247,10 @@ const pagination = reactive({
   showSizeChanger: true,
   showQuickJumper: true,
   showTotal: (total) => `共 ${total} 条`,
-  onChange: (page, pageSize) => {
-    pagination.current = page
-    pagination.pageSize = pageSize
-    fetchTags()
-  },
-  onShowSizeChange: (_current, size) => {
-    pagination.current = 1
-    pagination.pageSize = size
+  onChange: (page, nextPageSize) => {
+    const sizeChanged = nextPageSize !== pagination.pageSize
+    pagination.pageSize = nextPageSize
+    pagination.current = sizeChanged ? 1 : page
     fetchTags()
   }
 })

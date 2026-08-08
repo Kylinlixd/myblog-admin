@@ -69,7 +69,6 @@ const handleSizeChange = (current, size) => {
   // 切换每页条数时，通常回到第一页
   internalCurrentPage.value = 1
   emit('size-change', size)
-  emit('current-change', 1)
 }
 </script>
 

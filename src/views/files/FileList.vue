@@ -545,17 +545,24 @@ const previewMedia = (type, url) => {
 }
 
 // 复制文件链接
-const copyFileUrl = (url) => {
+const copyFileUrl = async (url) => {
   if (!url) {
     message.error('无效的文件链接');
     return;
   }
-  
-  navigator.clipboard.writeText(url).then(() => {
+
+  const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined
+  if (!clipboard || typeof clipboard.writeText !== 'function') {
+    message.error('复制失败，请手动复制')
+    return
+  }
+
+  try {
+    await clipboard.writeText(url)
     message.success('链接已复制到剪贴板');
-  }).catch(() => {
+  } catch {
     message.error('复制失败，请手动复制');
-  });
+  }
 }
 
 // 获取类型名称

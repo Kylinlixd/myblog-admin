@@ -31,4 +31,25 @@ describe('Pagination page-size changes', () => {
 
     expect(pagination.props('current')).toBe(1)
   })
+
+  it('emits only the size-change event for a page-size change', async () => {
+    const wrapper = mount(Pagination, {
+      props: { total: 100, currentPage: 3, pageSize: 10 },
+      global: {
+        stubs: {
+          'a-pagination': {
+            name: 'APagination',
+            props: ['current', 'pageSize'],
+            emits: ['change', 'showSizeChange', 'update:current'],
+            template: '<button data-page-size @click="$emit(\'showSizeChange\', current, 20)">size</button>'
+          }
+        }
+      }
+    })
+
+    await wrapper.findComponent({ name: 'APagination' }).trigger('click')
+
+    expect(wrapper.emitted('size-change')).toEqual([[20]])
+    expect(wrapper.emitted('current-change')).toBeUndefined()
+  })
 })

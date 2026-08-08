@@ -199,4 +199,22 @@ describe('CommentList mounted states and actions', () => {
     expect(wrapper.vm.loading).toBe(false)
     wrapper.unmount()
   })
+
+  it('does not allow batch approval and deletion to run concurrently', async () => {
+    const wrapper = await mountList()
+    wrapper.vm.selectedCommentIds = [1, 2]
+    const approvalRequest = deferred()
+    approveComment.mockReturnValue(approvalRequest.promise)
+
+    wrapper.vm.handleBatchApprove()
+    const approvalPromise = confirmAction()
+    await nextTick()
+    expect(wrapper.vm.batchApproving).toBe(true)
+    wrapper.vm.handleBatchDelete()
+
+    expect(deleteComment).not.toHaveBeenCalled()
+    approvalRequest.resolve()
+    await approvalPromise
+    wrapper.unmount()
+  })
 })

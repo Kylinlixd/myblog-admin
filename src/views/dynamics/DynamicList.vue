@@ -122,7 +122,6 @@
         row-key="id"
         bordered
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
-        @change="handleTableChange"
       >
         <template #bodyCell="{ column, record }">
           <!-- 分类列 -->
@@ -230,6 +229,7 @@ const total = ref(0)
 const responsive = ref(false)
 const deleting = ref(false)
 const requestError = ref(false)
+let requestGeneration = 0
 
 // 添加表格选择相关变量
 const selectedRowKeys = ref([])
@@ -252,14 +252,16 @@ const searchForm = reactive({
 })
 
 // 获取动态列表
-const fetchDynamics = async () => {
+const fetchDynamics = async (allowPageReset = true) => {
+  const generation = ++requestGeneration
+  const requestedPage = currentPage.value
   try {
     loading.value = true;
     requestError.value = false;
     
     // 构造搜索参数
     const params = {
-      page: currentPage.value,
+      page: requestedPage,
       pageSize: pageSize.value,
       type: searchForm.type,
       status: searchForm.status,
@@ -277,6 +279,11 @@ const fetchDynamics = async () => {
     });
     
     const { count = 0, results = [] } = (await getDynamicList(params)) || {}
+    if (generation !== requestGeneration) return
+    if (allowPageReset && requestedPage > 1 && results.length === 0) {
+      currentPage.value = 1
+      return fetchDynamics(false)
+    }
     dynamicList.value = results.map(item => ({
       ...item,
       mediaUrls: item.mediaUrls || [],
@@ -286,6 +293,7 @@ const fetchDynamics = async () => {
     }))
     total.value = count
   } catch (error) {
+    if (generation !== requestGeneration) return
     console.error('获取动态列表失败:', error);
     dynamicList.value = [];
     total.value = 0;
@@ -293,7 +301,7 @@ const fetchDynamics = async () => {
     requestError.value = true;
     message.error('获取动态列表失败');
   } finally {
-    loading.value = false;
+    if (generation === requestGeneration) loading.value = false;
   }
 }
 
@@ -492,13 +500,10 @@ const paginationConfig = computed(() => ({
   buildOptionText: ({ value }) => `${value}/页`,
   showQuickJumper: true,
   showTotal: (total) => `共 ${total} 条`,
-  onChange: (page, pageSize) => {
-    currentPage.value = page
-    fetchDynamics()
-  },
-  onShowSizeChange: (current, size) => {
-    pageSize.value = size
-    currentPage.value = 1
+  onChange: (page, nextPageSize) => {
+    const sizeChanged = nextPageSize !== pageSize.value
+    pageSize.value = nextPageSize
+    currentPage.value = sizeChanged ? 1 : page
     fetchDynamics()
   }
 }))
@@ -544,25 +549,6 @@ const fetchTags = async () => {
     message.error('获取标签列表失败')
     tags.value = []
   }
-}
-
-// 表格变化处理
-const handleTableChange = (pagination, filters, sorter) => {
-  // 更新分页信息
-  if (pagination) {
-    currentPage.value = pagination.current;
-    pageSize.value = pagination.pageSize;
-    selectedRowKeys.value = []
-  }
-  
-  // 更新排序信息
-  if (sorter) {
-    sortField.value = sorter.field;
-    sortOrder.value = sorter.order;
-  }
-  
-  // 重新获取数据
-  fetchDynamics();
 }
 
 // 跳转到创建动态页面

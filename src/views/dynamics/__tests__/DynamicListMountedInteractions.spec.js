@@ -62,6 +62,12 @@ const globalStubs = {
   'router-link': { template: '<a><slot /></a>' }
 }
 
+const deferred = () => {
+  let resolve
+  const promise = new Promise((res) => { resolve = res })
+  return { promise, resolve }
+}
+
 describe('DynamicList mounted interactions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -217,6 +223,63 @@ describe('DynamicList mounted interactions', () => {
     await wrapper.vm.handleBatchDelete()
 
     expect(wrapper.vm.selectedRowKeys).toEqual([8])
+    wrapper.unmount()
+  })
+
+  it('uses one pagination request and retries an empty out-of-range page once', async () => {
+    getDynamicList.mockResolvedValueOnce({ count: 2, results: [{ id: 7, title: 'First' }] })
+      .mockResolvedValueOnce({ count: 2, results: [] })
+      .mockResolvedValueOnce({ count: 1, results: [{ id: 9, title: 'Recovered' }] })
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getDynamicList.mockClear()
+
+    wrapper.vm.searchForm.title = 'post'
+    wrapper.vm.currentPage = 3
+    await wrapper.vm.fetchDynamics()
+
+    expect(wrapper.vm.currentPage).toBe(1)
+    expect(getDynamicList).toHaveBeenCalledTimes(2)
+    expect(getDynamicList).toHaveBeenLastCalledWith(expect.objectContaining({
+      page: 1,
+      title: 'post'
+    }))
+    wrapper.unmount()
+  })
+
+  it('does not fetch twice when a page-size change also emits a table change', async () => {
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getDynamicList.mockClear()
+
+    wrapper.vm.paginationConfig.onChange(1, 20)
+    await flushPromises()
+
+    expect(getDynamicList).toHaveBeenCalledTimes(1)
+    wrapper.unmount()
+  })
+
+  it('keeps the newest response when dynamic requests finish out of order', async () => {
+    getDynamicList.mockResolvedValue({ count: 1, results: [{ id: 7, title: 'initial' }] })
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    const first = deferred()
+    const second = deferred()
+    getDynamicList.mockReset()
+    getDynamicList.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+
+    const olderRequest = wrapper.vm.fetchDynamics()
+    const newerRequest = wrapper.vm.fetchDynamics()
+
+    second.resolve({ count: 1, results: [{ id: 2, title: 'new' }] })
+    await newerRequest
+    first.resolve({ count: 1, results: [{ id: 1, title: 'old' }] })
+    await olderRequest
+    await flushPromises()
+
+    expect(wrapper.vm.dynamicList).toEqual([expect.objectContaining({ id: 2, title: 'new' })])
+    expect(wrapper.vm.loading).toBe(false)
     wrapper.unmount()
   })
 })
