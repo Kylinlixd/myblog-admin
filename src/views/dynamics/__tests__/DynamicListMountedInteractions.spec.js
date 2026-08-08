@@ -191,4 +191,32 @@ describe('DynamicList mounted interactions', () => {
     await request
     wrapper.unmount()
   })
+
+  it('removes a successfully deleted row from the selection', async () => {
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.selectedRowKeys = [7, 8]
+    deleteDynamic.mockResolvedValueOnce(undefined)
+    await wrapper.vm.handleDelete(7)
+
+    expect(wrapper.vm.selectedRowKeys).toEqual([8])
+    wrapper.unmount()
+  })
+
+  it('retains only failed rows after a partially failed batch delete', async () => {
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.selectedRowKeys = [7, 8, 9]
+    deleteDynamic
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('delete failed'))
+      .mockResolvedValueOnce(undefined)
+
+    await wrapper.vm.handleBatchDelete()
+
+    expect(wrapper.vm.selectedRowKeys).toEqual([8])
+    wrapper.unmount()
+  })
 })

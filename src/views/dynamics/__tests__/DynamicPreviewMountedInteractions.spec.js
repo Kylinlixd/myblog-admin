@@ -5,12 +5,13 @@ import { getDynamicDetail } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
 
 const mockRouterPush = jest.fn()
+const routeParams = { id: '42' }
 
 jest.mock('@/api/dynamic', () => ({ getDynamicDetail: jest.fn() }))
 jest.mock('@/api/category', () => ({ getCategoryList: jest.fn() }))
 
 jest.mock('vue-router', () => ({
-  useRoute: () => ({ params: { id: '42' } }),
+  useRoute: () => ({ params: routeParams }),
   useRouter: () => ({ push: mockRouterPush, back: jest.fn() })
 }))
 
@@ -56,5 +57,48 @@ describe('DynamicPreview mounted interactions', () => {
     expect(wrapper.find('.content-text').text()).toContain('Loaded preview')
     expect(wrapper.find('.preview-card').exists()).toBe(true)
     wrapper.unmount()
+  })
+
+  it('renders backend created_at and nested category detail fields', async () => {
+    getDynamicDetail.mockResolvedValueOnce({
+      id: 42,
+      type: 'text',
+      content: 'Backend-shaped preview',
+      mediaUrls: [],
+      status: 'published',
+      category: { id: 3, name: 'Backend' },
+      tags: [],
+      created_at: '2026-08-08T12:34:56Z'
+    })
+
+    const wrapper = mount(DynamicPreview, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.find('.preview-time').text()).toContain('2026')
+    expect(wrapper.find('.category').text()).toContain('Backend')
+    wrapper.unmount()
+  })
+
+  it('renders a draft preview using backend-shaped date and category fields', async () => {
+    routeParams.id = 'draft'
+    localStorage.setItem('dynamicPreview', JSON.stringify({
+      id: 'draft',
+      type: 'text',
+      content: 'Draft preview',
+      mediaUrls: [],
+      status: 'draft',
+      category: { id: 9, name: 'Drafts' },
+      tags: [],
+      created_at: '2026-08-08T09:10:11Z'
+    }))
+
+    const wrapper = mount(DynamicPreview, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(getDynamicDetail).not.toHaveBeenCalled()
+    expect(wrapper.find('.preview-time').text()).toContain('2026')
+    expect(wrapper.find('.category').text()).toContain('Drafts')
+    wrapper.unmount()
+    routeParams.id = '42'
   })
 })

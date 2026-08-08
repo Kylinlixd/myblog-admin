@@ -119,15 +119,27 @@ const route = useRoute()
 const router = useRouter()
 
 // 动态数据
-const dynamic = ref({
+const defaultDynamic = {
   id: '',
   type: 'text',
   content: '',
   mediaUrls: [],
   status: 'draft',
   categoryId: null,
+  category: null,
   tags: [],
   createdAt: ''
+}
+
+const dynamic = ref({ ...defaultDynamic })
+
+const normalizeDynamic = (data = {}) => ({
+  ...defaultDynamic,
+  ...data,
+  mediaUrls: data.mediaUrls ?? data.media_urls ?? [],
+  tags: data.tags ?? [],
+  categoryId: data.categoryId ?? data.category?.id ?? null,
+  createdAt: data.createdAt ?? data.created_at ?? ''
 })
 
 // 分类数据
@@ -155,7 +167,7 @@ const fetchDynamicDetail = async () => {
     }
 
     try {
-      dynamic.value = JSON.parse(cachedPreview)
+      dynamic.value = normalizeDynamic(JSON.parse(cachedPreview))
       return
     } catch (error) {
       console.error('读取预览内容失败:', error)
@@ -167,7 +179,7 @@ const fetchDynamicDetail = async () => {
   try {
     const data = await getDynamicDetail(route.params.id)
     if (data) {
-      dynamic.value = data
+      dynamic.value = normalizeDynamic(data)
     } else {
       throw new Error('获取动态详情失败')
     }
@@ -190,6 +202,7 @@ const fetchCategories = async () => {
 
 // 获取分类名称
 const getCategoryName = (categoryId) => {
+  if (dynamic.value.category?.name) return dynamic.value.category.name
   const category = categories.value.find(c => c.id === categoryId)
   return category ? category.name : '未知分类'
 }
@@ -268,7 +281,7 @@ onMounted(async () => {
     h2 {
       margin: 0;
       font-size: 24px;
-      color: var(--text-primary);
+      color: var(--color-text);
     }
   }
   
@@ -282,7 +295,7 @@ onMounted(async () => {
     }
     
     .preview-time {
-      color: var(--text-secondary);
+      color: var(--color-text-secondary);
       font-size: 14px;
     }
   }
@@ -291,7 +304,7 @@ onMounted(async () => {
     .content-text {
       font-size: 16px;
       line-height: 1.8;
-      color: var(--text-primary);
+      color: var(--color-text);
       margin-bottom: 24px;
       white-space: pre-wrap;
       word-break: break-all;
@@ -413,7 +426,7 @@ onMounted(async () => {
       margin-bottom: 12px;
       
       .label {
-        color: var(--text-secondary);
+        color: var(--color-text-secondary);
         margin-right: 8px;
       }
     }

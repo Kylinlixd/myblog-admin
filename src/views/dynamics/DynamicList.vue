@@ -331,10 +331,18 @@ const handleBatchDelete = async () => {
 
   try {
     deleting.value = true
-    await Promise.all(selectedRowKeys.value.map(id => deleteAdminDynamic(id)))
-    message.success('批量删除成功')
-    selectedRowKeys.value = []
+    const selectedIds = [...selectedRowKeys.value]
+    const results = await Promise.allSettled(selectedIds.map(id => deleteAdminDynamic(id)))
+    const failedIds = selectedIds.filter((_, index) => results[index].status === 'rejected')
+
+    if (failedIds.length) {
+      message.error('批量删除失败，请重试')
+    } else {
+      message.success('批量删除成功')
+    }
+
     await fetchDynamics()
+    selectedRowKeys.value = failedIds
   } catch (error) {
     console.error('批量删除失败:', error)
     message.error('批量删除失败，请重试')
@@ -584,6 +592,7 @@ const handleDelete = async (id) => {
     deleting.value = true
     await deleteAdminDynamic(id)
     message.success('删除成功')
+    selectedRowKeys.value = selectedRowKeys.value.filter((key) => key !== id)
     await fetchDynamics()
   } catch (error) {
     console.error('删除动态失败:', error)
