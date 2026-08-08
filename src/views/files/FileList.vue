@@ -241,6 +241,7 @@ const total = ref(0)
 const selectedRowKeys = ref([])
 const deletingIds = reactive(new Set())
 const batchDeleting = ref(false)
+let requestGeneration = 0
 
 // 搜索表单
 const searchForm = ref({
@@ -335,8 +336,9 @@ const paginationConfig = computed(() => ({
   pageSizeOptions: ['10', '20', '50', '100'],
   showQuickJumper: true,
   showTotal: (total) => `共 ${total} 条`,
-  onChange: (page, pageSize) => {
+  onChange: (page, size) => {
     currentPage.value = page
+    if (size) pageSize.value = size
     fetchFiles()
   },
   onShowSizeChange: (current, size) => {
@@ -369,48 +371,41 @@ const normalizeFileForView = (item) => {
 
 // 获取文件列表
 const fetchFiles = async () => {
+  const generation = ++requestGeneration
   try {
     loading.value = true
     errorMessage.value = ''
-    const response = await getFileList({
-      page: currentPage.value,
-      pageSize: pageSize.value
-    })
+    const hasFilters = Boolean(searchForm.value.name || searchForm.value.type)
+    const response = hasFilters
+      ? await searchFiles({
+          q: searchForm.value.name,
+          type: searchForm.value.type,
+          page: currentPage.value,
+          pageSize: pageSize.value
+        })
+      : await getFileList({
+          page: currentPage.value,
+          pageSize: pageSize.value
+        })
+    if (generation !== requestGeneration) return
     fileList.value = response.results.map(normalizeFileForView)
     total.value = response.count
   } catch (error) {
+    if (generation !== requestGeneration) return
     console.error('获取文件列表异常:', error)
     errorMessage.value = error.message || '获取文件列表失败'
     fileList.value = []
     total.value = 0
     message.error(error.message || '获取文件列表失败')
   } finally {
-    loading.value = false
+    if (generation === requestGeneration) loading.value = false
   }
 }
 
 // 处理搜索
 const handleSearch = async () => {
-  try {
-    loading.value = true
-    errorMessage.value = ''
-    const response = await searchFiles({
-      q: searchForm.value.name,
-      type: searchForm.value.type,
-      page: currentPage.value,
-      pageSize: pageSize.value
-    })
-    fileList.value = response.results.map(normalizeFileForView)
-    total.value = response.count
-  } catch (error) {
-    console.error('搜索文件异常:', error)
-    errorMessage.value = error.message || '搜索文件失败'
-    fileList.value = []
-    total.value = 0
-    message.error(error.message || '搜索文件失败')
-  } finally {
-    loading.value = false
-  }
+  currentPage.value = 1
+  return fetchFiles()
 }
 
 // 重置搜索
@@ -446,15 +441,21 @@ const handleBatchDelete = async () => {
   }
 
   batchDeleting.value = true
+  const selectedIds = [...selectedRowKeys.value]
+  const ids = selectedIds.filter((id) => !deletingIds.has(id))
+  if (!ids.length) {
+    batchDeleting.value = false
+    return
+  }
+  ids.forEach((id) => deletingIds.add(id))
   try {
-    loading.value = true
-    const ids = [...selectedRowKeys.value]
     const results = await Promise.allSettled(ids.map((id) => deleteFile(id)))
     const failedIds = results.reduce((failed, result, index) => {
       if (result.status === 'rejected') failed.push(ids[index])
       return failed
     }, [])
-    selectedRowKeys.value = failedIds
+    const skippedIds = selectedIds.filter((id) => !ids.includes(id))
+    selectedRowKeys.value = [...skippedIds, ...failedIds]
     if (failedIds.length) message.warning(`${failedIds.length} 个文件删除失败并保持选中`)
     else message.success('批量删除成功')
     await fetchFiles()
@@ -462,13 +463,14 @@ const handleBatchDelete = async () => {
     console.error('批量删除失败:', error)
     message.error('批量删除失败')
   } finally {
-    loading.value = false
+    ids.forEach((id) => deletingIds.delete(id))
     batchDeleting.value = false
   }
 }
 
 // 处理单个删除
 const handleDelete = async (id) => {
+  if (deletingIds.has(id)) return
   deletingIds.add(id)
   try {
     await deleteFile(id)

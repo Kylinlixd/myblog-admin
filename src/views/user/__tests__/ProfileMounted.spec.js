@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 
 import Profile from '../Profile.vue'
-import { changePassword } from '@/api/auth'
+import { changePassword, uploadAvatar } from '@/api/auth'
 
 const mockUserStore = {
   userInfo: {
@@ -20,7 +20,8 @@ jest.mock('@/stores/user', () => ({
 }))
 
 jest.mock('@/api/auth', () => ({
-  changePassword: jest.fn()
+  changePassword: jest.fn(),
+  uploadAvatar: jest.fn()
 }))
 
 jest.mock('ant-design-vue', () => ({
@@ -54,6 +55,7 @@ describe('Profile mounted interactions', () => {
     mockUserStore.updateProfile.mockResolvedValue(mockUserStore.userInfo)
     mockUserStore.getUserInfo.mockResolvedValue(mockUserStore.userInfo)
     changePassword.mockResolvedValue({})
+    uploadAvatar.mockResolvedValue({ url: '/media/uploaded-avatar.png' })
   })
 
   it('keeps edited profile fields when saving fails', async () => {
@@ -80,15 +82,19 @@ describe('Profile mounted interactions', () => {
     wrapper.unmount()
   })
 
-  it('accepts the canonical top-level avatar URL without nested response fallback', async () => {
+  it('consumes the canonical avatar result from the API upload boundary', async () => {
     const wrapper = mount(Profile, { global: { stubs: globalStubs } })
     await flushPromises()
 
-    wrapper.vm.handleAvatarSuccess({ data: { url: '/media/nested-avatar.png' } })
-    expect(wrapper.vm.profileForm.avatar).toBe('/media/avatar.png')
+    const onSuccess = jest.fn()
+    const onError = jest.fn()
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' })
+    await wrapper.vm.handleAvatarUpload({ file, onSuccess, onError })
 
-    wrapper.vm.handleAvatarSuccess({ url: '/media/canonical-avatar.png' })
-    expect(wrapper.vm.profileForm.avatar).toBe('/media/canonical-avatar.png')
+    expect(uploadAvatar).toHaveBeenCalledWith(file)
+    expect(wrapper.vm.profileForm.avatar).toBe('/media/uploaded-avatar.png')
+    expect(onSuccess).toHaveBeenCalledWith({ url: '/media/uploaded-avatar.png' })
+    expect(onError).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

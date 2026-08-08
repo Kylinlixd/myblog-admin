@@ -230,6 +230,7 @@ const formLoading = ref(false)
 const formRef = ref(null)
 const deletingIds = reactive(new Set())
 const batchDeleting = ref(false)
+let requestGeneration = 0
 
 // 分页配置
 const pagination = reactive({
@@ -270,6 +271,7 @@ const searchForm = reactive({
 
 // 处理搜索
 const handleSearch = () => {
+  pagination.current = 1
   fetchCategories()
 }
 
@@ -277,6 +279,7 @@ const handleSearch = () => {
 const resetSearch = () => {
   searchForm.name = ''
   searchForm.status = undefined
+  pagination.current = 1
   fetchCategories()
 }
 
@@ -312,22 +315,27 @@ const formatDate = (dateString) => {
 
 // 获取分类列表
 const fetchCategories = async () => {
+  const generation = ++requestGeneration
   loading.value = true
   errorMessage.value = ''
   try {
     const { count, results } = await getCategoryList({
+      page: pagination.current,
+      pageSize: pagination.pageSize,
       name: searchForm.name || undefined,
       status: searchForm.status
     })
+    if (generation !== requestGeneration) return
     categoryList.value = results.map((item) => ({ ...item, status: item.status || 'inactive' }))
     pagination.total = count
   } catch (error) {
+    if (generation !== requestGeneration) return
     console.error('获取分类列表失败:', error)
     errorMessage.value = error.message || '获取分类列表失败'
     categoryList.value = []
     pagination.total = 0
   } finally {
-    loading.value = false
+    if (generation === requestGeneration) loading.value = false
   }
 }
 
@@ -386,6 +394,7 @@ const handleSubmit = async () => {
 
 // 删除分类
 const handleDelete = async (record) => {
+  if (deletingIds.has(record.id)) return
   deletingIds.add(record.id)
   try {
     await deleteCategory(record.id)
@@ -410,14 +419,21 @@ const handleBatchDelete = async () => {
   }
 
   batchDeleting.value = true
+  const selectedIds = [...selectedRowKeys.value]
+  const ids = selectedIds.filter((id) => !deletingIds.has(id))
+  if (!ids.length) {
+    batchDeleting.value = false
+    return
+  }
+  ids.forEach((id) => deletingIds.add(id))
   try {
-    const ids = [...selectedRowKeys.value]
     const results = await Promise.allSettled(ids.map((id) => deleteCategory(id)))
     const failedIds = results.reduce((failed, result, index) => {
       if (result.status === 'rejected') failed.push(ids[index])
       return failed
     }, [])
-    selectedRowKeys.value = failedIds
+    const skippedIds = selectedIds.filter((id) => !ids.includes(id))
+    selectedRowKeys.value = [...skippedIds, ...failedIds]
     if (failedIds.length) message.warning(`${failedIds.length} 个分类删除失败并保持选中`)
     else message.success('批量删除成功')
     await fetchCategories()
@@ -425,6 +441,7 @@ const handleBatchDelete = async () => {
     console.error('批量删除失败:', error)
     message.error('批量删除失败，请重试')
   } finally {
+    ids.forEach((id) => deletingIds.delete(id))
     batchDeleting.value = false
   }
 }

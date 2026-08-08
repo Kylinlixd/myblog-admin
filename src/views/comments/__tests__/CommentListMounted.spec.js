@@ -160,4 +160,25 @@ describe('CommentList mounted states and actions', () => {
     expect(wrapper.find('.content-cell').classes()).toContain('content-cell--wrapping')
     wrapper.unmount()
   })
+
+  it('keeps a newer comment response and loading state when requests finish out of order', async () => {
+    const first = deferred()
+    const second = deferred()
+    getCommentList.mockReset()
+    getCommentList.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+
+    const wrapper = mount(CommentList, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    const newerRequest = wrapper.vm.getComments()
+    await wrapper.vm.$nextTick()
+
+    second.resolve({ count: 1, results: [{ ...commentsResponse.results[0], id: 2, content: 'new' }] })
+    await newerRequest
+    first.resolve({ count: 1, results: [{ ...commentsResponse.results[0], id: 1, content: 'old' }] })
+    await flushPromises()
+
+    expect(wrapper.vm.comments).toEqual([{ ...commentsResponse.results[0], id: 2, content: 'new' }])
+    expect(wrapper.vm.loading).toBe(false)
+    wrapper.unmount()
+  })
 })

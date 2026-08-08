@@ -40,9 +40,8 @@
               </a-avatar>
               <a-upload
                 class="upload-btn"
-                action="/api/upload/avatar"
+                :custom-request="handleAvatarUpload"
                 :show-file-list="false"
-                :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload"
               >
                 <a-button type="primary" size="small">更换头像</a-button>
@@ -135,7 +134,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { message as AntMessage } from 'ant-design-vue'
 import { useUserStore } from '../../stores/user'
-import { changePassword } from '../../api/auth'
+import { changePassword, uploadAvatar } from '../../api/auth'
 
 const defaultAvatar = '/default-avatar.png'
 
@@ -219,6 +218,17 @@ const handleAvatarSuccess = (res) => {
     AntMessage.success('头像上传成功')
   } else {
     AntMessage.error(res?.message || '头像上传失败')
+  }
+}
+
+const handleAvatarUpload = async ({ file, onSuccess, onError }) => {
+  try {
+    const result = await uploadAvatar(file)
+    handleAvatarSuccess(result)
+    onSuccess?.(result)
+  } catch (error) {
+    AntMessage.error(error.message || '头像上传失败')
+    onError?.(error)
   }
 }
 

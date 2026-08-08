@@ -179,6 +179,7 @@ const batchDeleting = ref(false)
 const batchApproving = ref(false)
 const errorMessage = ref('')
 const pendingActions = reactive({})
+let requestGeneration = 0
 
 // 筛选表单
 const filterForm = reactive({
@@ -188,6 +189,7 @@ const filterForm = reactive({
 
 // 获取评论列表
 const getComments = async () => {
+  const generation = ++requestGeneration
   loading.value = true
   errorMessage.value = ''
   
@@ -200,9 +202,11 @@ const getComments = async () => {
       pageSize: pageSize.value,
       ...activeFilters
     })
+    if (generation !== requestGeneration) return
     comments.value = response.results
     total.value = response.count
   } catch (error) {
+    if (generation !== requestGeneration) return
     console.error('获取评论列表失败:', error);
     errorMessage.value = error.message || '获取评论列表失败'
     
@@ -217,7 +221,7 @@ const getComments = async () => {
       message.error('获取评论列表失败: ' + (error.message || '未知错误'));
     }
   } finally {
-    loading.value = false;
+    if (generation === requestGeneration) loading.value = false;
   }
 }
 

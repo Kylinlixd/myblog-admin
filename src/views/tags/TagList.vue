@@ -238,6 +238,7 @@ const formLoading = ref(false)
 const formRef = ref(null)
 const deletingIds = reactive(new Set())
 const batchDeleting = ref(false)
+let requestGeneration = 0
 
 const pagination = reactive({
   current: 1,
@@ -277,6 +278,7 @@ const searchForm = reactive({
 
 // 处理搜索
 const handleSearch = () => {
+  pagination.current = 1
   fetchTags()
 }
 
@@ -284,6 +286,7 @@ const handleSearch = () => {
 const resetSearch = () => {
   searchForm.name = ''
   searchForm.status = undefined
+  pagination.current = 1
   fetchTags()
 }
 
@@ -325,22 +328,27 @@ const normalizeTag = (item) => ({
 
 // 获取标签列表
 const fetchTags = async () => {
+  const generation = ++requestGeneration
   loading.value = true
   errorMessage.value = ''
   try {
     const { count, results } = await getTagList({
+      page: pagination.current,
+      pageSize: pagination.pageSize,
       name: searchForm.name || undefined,
       status: searchForm.status
     })
+    if (generation !== requestGeneration) return
     tagList.value = results.map(normalizeTag)
     pagination.total = count
   } catch (error) {
+    if (generation !== requestGeneration) return
     console.error('获取标签列表失败:', error)
     errorMessage.value = error.message || '获取标签列表失败'
     tagList.value = []
     pagination.total = 0
   } finally {
-    loading.value = false
+    if (generation === requestGeneration) loading.value = false
   }
 }
 
@@ -399,6 +407,7 @@ const handleSubmit = async () => {
 
 // 删除标签
 const handleDelete = async (record) => {
+  if (deletingIds.has(record.id)) return
   deletingIds.add(record.id)
   try {
     await deleteTag(record.id)
@@ -423,14 +432,21 @@ const handleBatchDelete = async () => {
   }
 
   batchDeleting.value = true
+  const selectedIds = [...selectedRowKeys.value]
+  const ids = selectedIds.filter((id) => !deletingIds.has(id))
+  if (!ids.length) {
+    batchDeleting.value = false
+    return
+  }
+  ids.forEach((id) => deletingIds.add(id))
   try {
-    const ids = [...selectedRowKeys.value]
     const results = await Promise.allSettled(ids.map((id) => deleteTag(id)))
     const failedIds = results.reduce((failed, result, index) => {
       if (result.status === 'rejected') failed.push(ids[index])
       return failed
     }, [])
-    selectedRowKeys.value = failedIds
+    const skippedIds = selectedIds.filter((id) => !ids.includes(id))
+    selectedRowKeys.value = [...skippedIds, ...failedIds]
     if (failedIds.length) message.warning(`${failedIds.length} 个标签删除失败并保持选中`)
     else message.success('批量删除成功')
     await fetchTags()
@@ -438,6 +454,7 @@ const handleBatchDelete = async () => {
     console.error('批量删除失败:', error)
     message.error('批量删除失败，请重试')
   } finally {
+    ids.forEach((id) => deletingIds.delete(id))
     batchDeleting.value = false
   }
 }

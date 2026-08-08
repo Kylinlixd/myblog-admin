@@ -1,4 +1,4 @@
-import { persistAuthResponse, refreshToken } from '../auth'
+import { persistAuthResponse, refreshToken, uploadAvatar } from '../auth'
 import request from '@/services/http/client'
 import { getAccessToken, getRefreshToken } from '@/services/http/tokenStorage'
 
@@ -34,5 +34,16 @@ describe('authentication API contract', () => {
 
     expect(getAccessToken()).toBe('fresh-access')
     expect(getRefreshToken()).toBe('fresh-refresh')
+  })
+
+  it.each([
+    [{ url: '/media/top-level.png', width: 100 }, '/media/top-level.png'],
+    [{ data: { url: '/media/wrapped.png', width: 200 } }, '/media/wrapped.png']
+  ])('normalizes avatar upload responses to a canonical URL', async (response, url) => {
+    jest.spyOn(request, 'post').mockResolvedValueOnce(response)
+    const file = new File(['avatar'], 'avatar.png', { type: 'image/png' })
+
+    await expect(uploadAvatar(file)).resolves.toEqual(expect.objectContaining({ url }))
+    expect(request.post).toHaveBeenCalledWith('/api/upload/avatar', expect.any(FormData))
   })
 })

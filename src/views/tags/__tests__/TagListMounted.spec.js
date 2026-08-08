@@ -56,6 +56,12 @@ const globalStubs = {
   'a-modal': true
 }
 
+const deferred = () => {
+  let resolve
+  const promise = new Promise((res) => { resolve = res })
+  return { promise, resolve }
+}
+
 describe('TagList mounted states and taxonomy actions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
@@ -119,6 +125,84 @@ describe('TagList mounted states and taxonomy actions', () => {
     resolve({})
     await firstBatch
     expect(wrapper.vm.batchDeleting).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('sends the current page and page size and resets to page one for search and reset', async () => {
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.pagination.onChange(3, 20)
+    await flushPromises()
+    expect(getTagList).toHaveBeenLastCalledWith({
+      page: 3,
+      pageSize: 20,
+      name: undefined,
+      status: undefined
+    })
+
+    wrapper.vm.handleSearch()
+    await flushPromises()
+    expect(wrapper.vm.pagination.current).toBe(1)
+    expect(getTagList).toHaveBeenLastCalledWith({
+      page: 1,
+      pageSize: 20,
+      name: undefined,
+      status: undefined
+    })
+
+    wrapper.vm.pagination.current = 4
+    wrapper.vm.resetSearch()
+    await flushPromises()
+    expect(wrapper.vm.pagination.current).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('keeps a newer request loading and prevents an older response from committing', async () => {
+    const first = deferred()
+    const second = deferred()
+    getTagList.mockReset()
+    getTagList.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    const newerRequest = wrapper.vm.fetchTags()
+    await wrapper.vm.$nextTick()
+
+    first.resolve({ count: 1, results: [{ id: 1, name: 'old' }] })
+    await flushPromises()
+    expect(wrapper.vm.loading).toBe(true)
+    expect(wrapper.vm.tagList).toEqual([])
+
+    second.resolve({ count: 1, results: [{ id: 2, name: 'new' }] })
+    await newerRequest
+    expect(wrapper.vm.tagList).toEqual([{ id: 2, name: 'new', status: 'inactive', useCount: 0 }])
+    expect(wrapper.vm.loading).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('does not let a batch delete repeat a row delete already in progress', async () => {
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    let resolveRow
+    let resolveBatch
+    deleteTag.mockImplementation((id) => id === 8
+      ? new Promise((resolve) => { resolveRow = resolve })
+      : new Promise((resolve) => { resolveBatch = resolve }))
+
+    const rowPromise = wrapper.vm.handleDelete({ id: 8 })
+    await wrapper.vm.$nextTick()
+    wrapper.vm.selectedRowKeys = [8, 9]
+    const batchPromise = wrapper.vm.handleBatchDelete()
+    await wrapper.vm.$nextTick()
+
+    expect(deleteTag).toHaveBeenCalledTimes(2)
+    expect(deleteTag).toHaveBeenNthCalledWith(1, 8)
+    expect(deleteTag).toHaveBeenNthCalledWith(2, 9)
+
+    resolveRow({})
+    resolveBatch({})
+    await Promise.all([rowPromise, batchPromise])
     wrapper.unmount()
   })
 })

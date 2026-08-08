@@ -159,4 +159,77 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     expect(wrapper.vm.batchDeleting).toBe(false)
     wrapper.unmount()
   })
+
+  it('preserves active name and type filters while paginating and starts new searches on page one', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    wrapper.vm.searchForm.name = 'cover'
+    wrapper.vm.searchForm.type = 'image'
+    wrapper.vm.currentPage = 3
+
+    wrapper.vm.paginationConfig.onChange(4, 20)
+    await flushPromises()
+    expect(searchFiles).toHaveBeenLastCalledWith({
+      q: 'cover',
+      type: 'image',
+      page: 4,
+      pageSize: 20
+    })
+
+    wrapper.vm.currentPage = 5
+    wrapper.vm.handleSearch()
+    await flushPromises()
+    expect(wrapper.vm.currentPage).toBe(1)
+    expect(searchFiles).toHaveBeenLastCalledWith({
+      q: 'cover',
+      type: 'image',
+      page: 1,
+      pageSize: 20
+    })
+    wrapper.unmount()
+  })
+
+  it('keeps the newest file response and loading state when requests finish out of order', async () => {
+    const first = deferred()
+    const second = deferred()
+    getFileList.mockReset()
+    getFileList.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    const newerRequest = wrapper.vm.fetchFiles()
+    await wrapper.vm.$nextTick()
+
+    second.resolve({ count: 1, results: [{ id: 2, name: 'new.png', type: 'image', size: 1, url: '/new.png' }] })
+    await newerRequest
+    first.resolve({ count: 1, results: [{ id: 1, name: 'old.png', type: 'image', size: 1, url: '/old.png' }] })
+    await flushPromises()
+
+    expect(wrapper.vm.fileList[0].id).toBe(2)
+    expect(wrapper.vm.loading).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('does not let a batch delete repeat a row delete already in progress', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const rowRequest = deferred()
+    const batchRequest = deferred()
+    deleteFile.mockImplementation((id) => id === 7 ? rowRequest.promise : batchRequest.promise)
+
+    const rowPromise = wrapper.vm.handleDelete(7)
+    await wrapper.vm.$nextTick()
+    wrapper.vm.selectedRowKeys = [7, 8]
+    const batchPromise = wrapper.vm.handleBatchDelete()
+    await wrapper.vm.$nextTick()
+
+    expect(deleteFile).toHaveBeenCalledTimes(2)
+    expect(deleteFile).toHaveBeenNthCalledWith(1, 7)
+    expect(deleteFile).toHaveBeenNthCalledWith(2, 8)
+
+    rowRequest.resolve({})
+    batchRequest.resolve({})
+    await Promise.all([rowPromise, batchPromise])
+    wrapper.unmount()
+  })
 })

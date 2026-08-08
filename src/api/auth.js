@@ -5,6 +5,8 @@ import {
   saveSession
 } from '@/services/http/tokenStorage'
 
+import { unwrapApiResponse } from './response'
+
 export function persistAuthResponse(response) {
   const session = response?.data?.data || response?.data || response
   if (!session?.access) {
@@ -33,6 +35,25 @@ export const changePassword = ({ oldPassword, newPassword }) =>
   })
 
 export const updateUserProfile = (data) => request.put('/api/auth/profile/', data)
+
+export async function uploadAvatar(file) {
+  if (!file) throw new TypeError('缺少头像文件')
+
+  const formData = new FormData()
+  formData.append('file', file)
+  const payload = unwrapApiResponse(
+    await request.post('/api/upload/avatar', formData),
+    '头像上传失败'
+  )
+
+  if (typeof payload === 'string') return { url: payload }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload
+
+  return {
+    ...payload,
+    url: payload.url ?? payload.avatar_url ?? payload.avatar ?? null
+  }
+}
 
 export async function refreshToken() {
   const refresh = getRefreshToken()

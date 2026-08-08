@@ -143,4 +143,80 @@ describe('CategoryList mounted states and taxonomy actions', () => {
     expect(wrapper.vm.batchDeleting).toBe(false)
     wrapper.unmount()
   })
+
+  it('sends the current page and page size and resets to page one for search and reset', async () => {
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.pagination.onChange(3, 20)
+    await flushPromises()
+    expect(getCategoryList).toHaveBeenLastCalledWith({
+      page: 3,
+      pageSize: 20,
+      name: undefined,
+      status: undefined
+    })
+
+    wrapper.vm.handleSearch()
+    await flushPromises()
+    expect(wrapper.vm.pagination.current).toBe(1)
+    expect(getCategoryList).toHaveBeenLastCalledWith({
+      page: 1,
+      pageSize: 20,
+      name: undefined,
+      status: undefined
+    })
+
+    wrapper.vm.pagination.current = 4
+    wrapper.vm.resetSearch()
+    await flushPromises()
+    expect(wrapper.vm.pagination.current).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('keeps a newer request loading and prevents an older response from committing', async () => {
+    const first = deferred()
+    const second = deferred()
+    getCategoryList.mockReset()
+    getCategoryList.mockReturnValueOnce(first.promise).mockReturnValueOnce(second.promise)
+
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    const newerRequest = wrapper.vm.fetchCategories()
+    await wrapper.vm.$nextTick()
+
+    first.resolve({ count: 1, results: [{ id: 1, name: 'old' }] })
+    await flushPromises()
+    expect(wrapper.vm.loading).toBe(true)
+    expect(wrapper.vm.categoryList).toEqual([])
+
+    second.resolve({ count: 1, results: [{ id: 2, name: 'new' }] })
+    await newerRequest
+    expect(wrapper.vm.categoryList).toEqual([{ id: 2, name: 'new', status: 'inactive' }])
+    expect(wrapper.vm.loading).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('does not let a batch delete repeat a row delete already in progress', async () => {
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const rowRequest = deferred()
+    const batchRequest = deferred()
+    deleteCategory.mockImplementation((id) => id === 7 ? rowRequest.promise : batchRequest.promise)
+
+    const rowPromise = wrapper.vm.handleDelete({ id: 7 })
+    await wrapper.vm.$nextTick()
+    wrapper.vm.selectedRowKeys = [7, 8]
+    const batchPromise = wrapper.vm.handleBatchDelete()
+    await wrapper.vm.$nextTick()
+
+    expect(deleteCategory).toHaveBeenCalledTimes(2)
+    expect(deleteCategory).toHaveBeenNthCalledWith(1, 7)
+    expect(deleteCategory).toHaveBeenNthCalledWith(2, 8)
+
+    rowRequest.resolve({})
+    batchRequest.resolve({})
+    await Promise.all([rowPromise, batchPromise])
+    wrapper.unmount()
+  })
 })
