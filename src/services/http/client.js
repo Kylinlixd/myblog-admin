@@ -1,5 +1,6 @@
 import axios from 'axios'
 
+import { getApiBaseUrl } from '@/utils/apiBaseUrl'
 import { normalizeApiError } from './errors'
 import {
   clearSession,
@@ -10,7 +11,7 @@ import {
 
 export function createHttpClient(options = {}) {
   const client = axios.create({
-    baseURL: '',
+    baseURL: getApiBaseUrl(),
     timeout: 15000,
     withCredentials: true,
     ...options
@@ -22,7 +23,10 @@ export function createHttpClient(options = {}) {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    config.headers['X-Request-ID'] = crypto.randomUUID()
+    const method = (config.method || 'get').toLowerCase()
+    if (!['get', 'head', 'options'].includes(method)) {
+      config.headers['X-Request-ID'] = crypto.randomUUID()
+    }
 
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type']
@@ -39,11 +43,16 @@ export function createHttpClient(options = {}) {
 
       if (canRefresh) {
         original._retry = true
+        const apiBaseUrl = String(client.defaults.baseURL || '').replace(/\/$/, '')
         refreshPromise ||= axios
-          .post('/api/token/refresh/', { refresh }, { withCredentials: true })
+          .post(`${apiBaseUrl}/api/token/refresh/`, { refresh }, { withCredentials: true })
           .then(({ data }) => {
-            saveSession({ access: data.access, refresh: data.refresh || refresh })
-            return data.access
+            const session = data?.data || data
+            saveSession({
+              access: session.access,
+              refresh: session.refresh || refresh
+            })
+            return session.access
           })
           .finally(() => {
             refreshPromise = null

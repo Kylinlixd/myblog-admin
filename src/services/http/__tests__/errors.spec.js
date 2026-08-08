@@ -27,4 +27,14 @@ describe('normalizeApiError', () => {
     expect(error.status).toBe(0)
     expect(error.message).toBe('网络连接失败，请稍后重试')
   })
+
+  it('never stringifies a structured message as [object Object]', () => {
+    const error = new ApiError({
+      status: 400,
+      message: { detail: '输入有误' }
+    })
+
+    expect(error.message).toBe('请求处理失败')
+    expect(error.message).not.toBe('[object Object]')
+  })
 })

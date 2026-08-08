@@ -1,4 +1,5 @@
-import { persistAuthResponse } from '../auth'
+import { persistAuthResponse, refreshToken } from '../auth'
+import request from '@/services/http/client'
 import { getAccessToken, getRefreshToken } from '@/services/http/tokenStorage'
 
 describe('authentication API contract', () => {
@@ -19,5 +20,19 @@ describe('authentication API contract', () => {
     expect(() => persistAuthResponse({ code: 200, data: {} })).toThrow(
       '登录响应缺少 access token'
     )
+  })
+
+  it('unwraps an envelope returned by the explicit refresh API', async () => {
+    localStorage.setItem('blog.refreshToken', 'refresh-value')
+    jest.spyOn(request, 'post').mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: { access: 'fresh-access', refresh: 'fresh-refresh' }
+    })
+
+    await refreshToken()
+
+    expect(getAccessToken()).toBe('fresh-access')
+    expect(getRefreshToken()).toBe('fresh-refresh')
   })
 })

@@ -6,7 +6,7 @@ import {
 } from '@/services/http/tokenStorage'
 
 export function persistAuthResponse(response) {
-  const session = response?.data || response
+  const session = response?.data?.data || response?.data || response
   if (!session?.access) {
     throw new TypeError('登录响应缺少 access token')
   }
@@ -39,7 +39,7 @@ export async function refreshToken() {
   if (!refresh) throw new TypeError('缺少 refresh token')
 
   const response = await request.post('/api/token/refresh/', { refresh })
-  const session = response?.data || response
+  const session = response?.data?.data || response?.data || response
   saveSession({ access: session.access, refresh: session.refresh || refresh })
   return response
 }

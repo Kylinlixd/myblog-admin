@@ -1,6 +1,6 @@
 export class ApiError extends Error {
   constructor({ status = 0, code = status, message, fieldErrors = null, requestId = null }) {
-    super(message)
+    super(typeof message === 'string' ? message : '请求处理失败')
     this.name = 'ApiError'
     this.status = status
     this.code = code

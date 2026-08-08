@@ -1,5 +1,7 @@
 import request from '@/utils/request'
 
+import { normalizeCollectionResponse } from './collections'
+
 export function buildUploadData(params) {
   const formData = new FormData()
   formData.append('file', params.file)
@@ -26,11 +28,11 @@ export async function getFileList(params = {}) {
       file_type: params.type || undefined
     }
   })
-  const items = response?.results || response?.data?.items || []
-  const normalizedItems = items.map((item) => ({
+  const { count, results } = normalizeCollectionResponse(response)
+  const normalizedItems = results.map((item) => ({
     ...item,
-    type: item.file_type || item.type,
-    size: item.file_size || item.size,
+    type: item.file_type ?? item.type,
+    size: item.file_size ?? item.size,
     url: item.file_url || item.url || null
   }))
 
@@ -38,7 +40,7 @@ export async function getFileList(params = {}) {
     code: 200,
     data: {
       items: normalizedItems,
-      total: response?.count ?? response?.data?.total ?? normalizedItems.length
+      total: count
     },
     message: 'success'
   }

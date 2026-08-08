@@ -1,5 +1,5 @@
 export function getApiBaseUrl() {
-  return (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+  return (process.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
 }
 
 export function buildApiUrl(url) {
