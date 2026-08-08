@@ -319,6 +319,7 @@ const saving = ref(false)
 const dirty = ref(false)
 let mediaTypeReady = false
 let draftTimer
+let isHydrating = false
 
 // 表单数据 - 修改为使用 mediaUrls 统一存储媒体文件
 const form = ref({
@@ -333,10 +334,11 @@ const form = ref({
 })
 
 watch(form, () => {
+  if (isHydrating) return
   dirty.value = true
   window.clearTimeout(draftTimer)
   draftTimer = window.setTimeout(() => saveEditorDraft(draftId.value, form.value), 700)
-}, { deep: true })
+}, { deep: true, flush: 'sync' })
 
 watch(() => form.value.type, (type, previousType) => {
   if (!mediaTypeReady || !previousType || type === previousType) return
@@ -512,6 +514,7 @@ const fetchDynamicDetail = async () => {
   try {
     const data = await getDynamicDetail(route.params.id)
     if (data) {
+      isHydrating = true
       
       // 处理 mediaUrls，确保是数组且包含前缀
       let mediaUrls = []
@@ -548,6 +551,10 @@ const fetchDynamicDetail = async () => {
           markdownEditorRef.value.setContent(form.value.content)
         }
       })
+      isHydrating = false
+      window.clearTimeout(draftTimer)
+      draftTimer = undefined
+      dirty.value = false
     } else {
       message.error('获取动态详情失败')
     }
@@ -985,9 +992,17 @@ const getFullUrl = (url) => {
 function restoreLocalDraft() {
   const draft = loadEditorDraft(draftId.value)
   if (!draft) return
-  Object.assign(form.value, draft)
-  updateFileList()
-  message.info('已恢复本机保存的草稿')
+  isHydrating = true
+  try {
+    Object.assign(form.value, draft)
+    updateFileList()
+    message.info('已恢复本机保存的草稿')
+  } finally {
+    isHydrating = false
+    window.clearTimeout(draftTimer)
+    draftTimer = undefined
+    dirty.value = false
+  }
 }
 
 function guardUnsavedChanges(event) {
@@ -1005,6 +1020,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.clearTimeout(draftTimer)
+  draftTimer = undefined
   window.removeEventListener('beforeunload', guardUnsavedChanges)
 })
 </script>

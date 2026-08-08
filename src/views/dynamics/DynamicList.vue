@@ -98,7 +98,14 @@
     </div>
 
     <a-card class="data-card admin-table-card">
-      <div v-if="!loading && !dynamicList.length" class="dynamic-empty">
+      <div v-if="requestError" class="dynamic-error" role="alert">
+        <strong>内容加载失败</strong>
+        <span>请检查网络后重试。</span>
+        <a-button type="primary" aria-label="重试" @click="fetchDynamics">
+          <ReloadOutlined /> 重试
+        </a-button>
+      </div>
+      <div v-else-if="!loading && !dynamicList.length" class="dynamic-empty">
         <strong>还没有内容</strong>
         <span>创建第一条动态，开始整理你的内容。</span>
         <a-button type="primary" aria-label="新建动态" @click="navigateToCreate">
@@ -222,6 +229,7 @@ const pageSize = ref(10)
 const total = ref(0)
 const responsive = ref(false)
 const deleting = ref(false)
+const requestError = ref(false)
 
 // 添加表格选择相关变量
 const selectedRowKeys = ref([])
@@ -247,6 +255,7 @@ const searchForm = reactive({
 const fetchDynamics = async () => {
   try {
     loading.value = true;
+    requestError.value = false;
     
     // 构造搜索参数
     const params = {
@@ -280,6 +289,7 @@ const fetchDynamics = async () => {
     console.error('获取动态列表失败:', error);
     dynamicList.value = [];
     total.value = 0;
+    requestError.value = true;
     message.error('获取动态列表失败');
   } finally {
     loading.value = false;

@@ -2,6 +2,7 @@ import request from '@/utils/request'
 import {
   buildDynamicParams,
   createDynamic,
+  getDynamicList,
   getDynamicDetail,
   normalizeDynamicPayload,
   updateDynamic
@@ -36,6 +37,26 @@ describe('dynamic API helpers', () => {
       categoryId: 2,
       tags: [4]
     })
+  })
+
+  it('normalizes backend collection envelopes for dynamic lists', async () => {
+    jest.spyOn(request, 'get').mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        count: 3,
+        items: [{ id: 42, title: 'Resolved dynamic' }]
+      }
+    })
+
+    await expect(getDynamicList({ page: 2 })).resolves.toEqual({
+      count: 3,
+      results: [{ id: 42, title: 'Resolved dynamic' }]
+    })
+    expect(request.get).toHaveBeenCalledWith(
+      '/api/dynamics/',
+      { params: expect.any(URLSearchParams) }
+    )
   })
 
   it.each([

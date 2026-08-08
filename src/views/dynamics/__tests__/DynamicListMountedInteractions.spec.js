@@ -21,8 +21,9 @@ jest.mock('@/api/category', () => ({ getCategoryList: jest.fn() }))
 jest.mock('@/api/tag', () => ({ getTagList: jest.fn() }))
 
 const ButtonStub = {
+  inheritAttrs: false,
   props: ['disabled', 'loading'],
-  template: '<button :disabled="disabled || loading" :data-loading="loading ? \'true\' : undefined" v-bind="$attrs" @click="$emit(\'click\')"><slot /></button>'
+  template: '<button :disabled="disabled || loading" :data-loading="loading ? \'true\' : undefined" :aria-label="$attrs[\'aria-label\']" @click="$emit(\'click\')"><slot /></button>'
 }
 
 const TableStub = {
@@ -136,6 +137,26 @@ describe('DynamicList mounted interactions', () => {
     expect(createButton.exists()).toBe(true)
     await createButton.trigger('click')
     expect(mockRouterPush).toHaveBeenCalledWith({ name: 'CreateDynamic' })
+    wrapper.unmount()
+  })
+
+  it('keeps request failures separate from the empty create state and retries', async () => {
+    getDynamicList
+      .mockRejectedValueOnce(new Error('network unavailable'))
+      .mockResolvedValueOnce({ count: 1, results: [{ id: 9, title: 'Recovered' }] })
+
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.find('.dynamic-error').exists()).toBe(true)
+    expect(wrapper.find('.dynamic-empty').exists()).toBe(false)
+
+    await wrapper.find('.dynamic-error [aria-label="重试"]').trigger('click')
+    await flushPromises()
+
+    expect(getDynamicList).toHaveBeenCalledTimes(2)
+    expect(wrapper.find('.dynamic-error').exists()).toBe(false)
+    expect(wrapper.vm.dynamicList).toHaveLength(1)
     wrapper.unmount()
   })
 

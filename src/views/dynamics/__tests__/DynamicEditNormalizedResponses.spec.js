@@ -6,6 +6,7 @@ import { createCategory, getCategoryList } from '@/api/category'
 import { createTag, getTagList } from '@/api/tag'
 import { uploadImage } from '@/utils/upload'
 import { message } from 'ant-design-vue'
+import { loadEditorDraft } from '../editorDraft'
 
 const routeParams = {}
 const mockRouterPush = jest.fn()
@@ -121,6 +122,10 @@ describe('DynamicEdit normalized API responses', () => {
     getTagList.mockResolvedValue({ count: 0, results: [] })
   })
 
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
   it('uses a normalized detail result to populate the form', async () => {
     routeParams.id = '42'
     getDynamicDetail.mockResolvedValueOnce({
@@ -151,6 +156,18 @@ describe('DynamicEdit normalized API responses', () => {
       url: '/media/cover.png',
       status: 'done'
     })
+    wrapper.unmount()
+  })
+
+  it('does not mark initial detail hydration dirty or autosave it', async () => {
+    routeParams.id = '42'
+    jest.useFakeTimers()
+
+    const wrapper = await mountEditor()
+    jest.advanceTimersByTime(700)
+
+    expect(wrapper.vm.dirty).toBe(false)
+    expect(loadEditorDraft('42')).toBeNull()
     wrapper.unmount()
   })
 

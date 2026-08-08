@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { normalizeCollectionResponse } from './collections'
 import { unwrapApiResponse } from './response'
 
 export function buildDynamicParams(params = {}) {
@@ -39,8 +40,10 @@ function validateDynamicPayload(payload) {
   }
 }
 
-export const getDynamicList = (params) =>
-  request.get('/api/dynamics/', { params: buildDynamicParams(params) })
+export const getDynamicList = async (params) => {
+  const response = await request.get('/api/dynamics/', { params: buildDynamicParams(params) })
+  return normalizeCollectionResponse(response)
+}
 
 export const getDynamicDetail = async (id) =>
   unwrapApiResponse(await request.get(`/api/dynamics/${id}/`), '动态请求失败')

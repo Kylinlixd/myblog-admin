@@ -84,6 +84,7 @@ describe('DynamicEdit mounted interactions', () => {
 
   afterEach(() => {
     console.error.mockRestore()
+    jest.useRealTimers()
   })
 
   it('retains title and content after a failed save and shows saving on both save buttons', async () => {
@@ -153,7 +154,18 @@ describe('DynamicEdit mounted interactions', () => {
       content: 'Recovered content'
     })
     wrapper.unmount()
-    jest.useRealTimers()
+  })
+
+  it('cancels a pending autosave when unmounted', async () => {
+    jest.useFakeTimers()
+    const wrapper = await mountEditor()
+
+    wrapper.vm.form.title = 'Should not persist after unmount'
+    await wrapper.vm.$nextTick()
+    wrapper.unmount()
+    jest.advanceTimersByTime(700)
+
+    expect(loadEditorDraft('new')).toBeNull()
   })
 
   it('clears the draft after a successful save', async () => {
