@@ -84,6 +84,22 @@ describe('TagList mounted states and taxonomy actions', () => {
     wrapper.unmount()
   })
 
+  it('uses readable fixed widths and sortable metadata columns', async () => {
+    getTagList.mockResolvedValueOnce({
+      count: 1,
+      results: [{ id: 8, name: 'Vue', description: '前端开发相关主题', useCount: 12 }]
+    })
+    const wrapper = mount(TagList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'name').width).toBe(180)
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'description').width).toBe(280)
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'useCount').sorter({ useCount: 1 }, { useCount: 2 })).toBeLessThan(0)
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'createdAt').sorter).toEqual(expect.any(Function))
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'updatedAt').sorter).toEqual(expect.any(Function))
+    wrapper.unmount()
+  })
+
   it('creates, edits, and deletes a tag through normalized APIs', async () => {
     const wrapper = mount(TagList, { global: { stubs: globalStubs } })
     await flushPromises()

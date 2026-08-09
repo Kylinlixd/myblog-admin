@@ -205,7 +205,13 @@ const columns = [
     title: '排序',
     dataIndex: 'sort',
     key: 'sort',
-    width: '10%'
+    width: 100,
+    align: 'center',
+    defaultSortOrder: 'ascend',
+    sorter: (a, b) => {
+      const sortDifference = Number(a.sort || 0) - Number(b.sort || 0)
+      return sortDifference || Number(a.id || 0) - Number(b.id || 0)
+    }
   },
   {
     title: '创建时间',
@@ -309,6 +315,17 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+const normalizeCategory = (item) => ({
+  ...item,
+  sort: Number(item.sort ?? 0) || 0,
+  status: item.status || 'inactive'
+})
+
+const compareCategories = (left, right) => {
+  const sortDifference = left.sort - right.sort
+  return sortDifference || Number(left.id || 0) - Number(right.id || 0)
+}
+
 // 获取分类列表
 const fetchCategories = async (allowPageReset = true) => {
   const generation = ++requestGeneration
@@ -326,7 +343,7 @@ const fetchCategories = async (allowPageReset = true) => {
       pagination.current = 1
       return fetchCategories(false)
     }
-    categoryList.value = results.map((item) => ({ ...item, status: item.status || 'inactive' }))
+    categoryList.value = results.map(normalizeCategory).sort(compareCategories)
     pagination.total = count
   } catch (error) {
     if (generation !== requestGeneration) return

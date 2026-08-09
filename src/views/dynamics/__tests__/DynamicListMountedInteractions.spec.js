@@ -110,6 +110,17 @@ describe('DynamicList mounted interactions', () => {
     wrapper.unmount()
   })
 
+  it('shows a pagination sequence instead of the internal dynamic id', async () => {
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.vm.dynamicList.map((item) => item.serialNo)).toEqual([1, 2])
+    expect(wrapper.vm.columns[0]).toMatchObject({ title: '序号', dataIndex: 'serialNo' })
+    expect(wrapper.vm.columnsForMobile[0]).toMatchObject({ title: '序号', dataIndex: 'serialNo' })
+    expect(wrapper.vm.columns.some((column) => column.dataIndex === 'id')).toBe(false)
+    wrapper.unmount()
+  })
+
   it('resets page and selection for filtering and reset', async () => {
     const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
     await flushPromises()
