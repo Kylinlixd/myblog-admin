@@ -278,7 +278,9 @@ function nextManifesto() {
 }
 
 function mediaUrl(article) {
-  const media = article?.mediaUrls || article?.files || []
+  const mediaUrls = article?.mediaUrls
+  const hasMediaUrls = Array.isArray(mediaUrls) ? mediaUrls.length > 0 : Boolean(mediaUrls)
+  const media = hasMediaUrls ? mediaUrls : article?.files || []
   const first = Array.isArray(media) ? media[0] : media
   return buildApiUrl(typeof first === 'string' ? first : first?.url || first?.file_url || '')
 }
