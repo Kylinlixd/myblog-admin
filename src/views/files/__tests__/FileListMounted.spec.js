@@ -278,6 +278,23 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     wrapper.unmount()
   })
 
+  it('copies a public file URL with the current site origin', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const originalClipboard = navigator.clipboard
+    const writeText = jest.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+
+    await wrapper.vm.copyFileUrl('/api/upload/public/45/')
+
+    expect(writeText).toHaveBeenCalledWith(
+      new URL('/api/upload/public/45/', window.location.origin).toString()
+    )
+
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: originalClipboard })
+    wrapper.unmount()
+  })
+
   it('does not let a batch delete repeat a row delete already in progress', async () => {
     const wrapper = mount(FileList, { global: { stubs: globalStubs } })
     await flushPromises()
