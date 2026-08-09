@@ -66,4 +66,9 @@ describe('warm technology blog homepage', () => {
     expect(source).toContain("gsap.to('.visual-ribbon__track'")
     expect(source).toContain('clipPath')
   })
+
+  it('uses attached files when the legacy media URL list is empty', () => {
+    expect(source).toContain('Array.isArray(mediaUrls) ? mediaUrls.length > 0 : Boolean(mediaUrls)')
+    expect(source).toContain('article?.files || []')
+  })
 })
