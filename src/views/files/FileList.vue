@@ -695,7 +695,11 @@ const copyFileUrl = async (url) => {
   }
 
   try {
-    await clipboard.writeText(url)
+    const resolvedUrl = buildApiUrl(url)
+    const publicUrl = typeof window !== 'undefined' && resolvedUrl && !/^https?:\/\//i.test(resolvedUrl)
+      ? new URL(resolvedUrl, window.location.origin).toString()
+      : resolvedUrl
+    await clipboard.writeText(publicUrl)
     message.success('链接已复制到剪贴板');
   } catch {
     message.error('复制失败，请手动复制');
