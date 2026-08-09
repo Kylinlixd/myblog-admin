@@ -89,4 +89,29 @@ describe('file API normalization', () => {
       url: '/media/audio.mp3'
     })
   })
+
+  it('forwards upload progress and preserves storage diagnostics', async () => {
+    jest.spyOn(request, 'post').mockImplementationOnce((_url, _data, options) => {
+      options.onUploadProgress({ loaded: 5, total: 10 })
+      return Promise.resolve({
+        code: 200,
+        data: {
+          id: 10,
+          file_type: 'document',
+          file_size: 10,
+          file_url: '/api/upload/public/10/',
+          storage_backend: 'xion',
+          checksum: 'abc'
+        }
+      })
+    })
+    const onProgress = jest.fn()
+    const file = new File(['document'], 'guide.pdf', { type: 'application/pdf' })
+
+    const result = await uploadFile({ file, file_type: 'document', onProgress })
+
+    expect(onProgress).toHaveBeenCalledWith(50)
+    expect(result.storage_backend).toBe('xion')
+    expect(result.url).toBe('/api/upload/public/10/')
+  })
 })

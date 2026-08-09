@@ -41,8 +41,19 @@ function normalizeUploadResponse(response) {
     : item
 }
 
-export const uploadFile = async (params) =>
-  normalizeUploadResponse(await request.post('/api/upload/upload/', buildUploadData(params)))
+export const uploadFile = async (params) => {
+  const options = params.onProgress
+    ? {
+        onUploadProgress: ({ loaded, total }) => {
+          if (!total) return
+          params.onProgress(Math.min(100, Math.round((loaded / total) * 100)))
+        }
+      }
+    : undefined
+  return normalizeUploadResponse(
+    await request.post('/api/upload/upload/', buildUploadData(params), options)
+  )
+}
 
 export async function getFileList(params = {}) {
   const response = await request.get('/api/upload/files/', {

@@ -12,6 +12,8 @@ dist
 dist-ssr
 .worktrees/
 .superpowers/
+.playwright-cli/
+output/playwright/
 *.local
 
 # Editor directories and files
