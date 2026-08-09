@@ -58,5 +58,25 @@ server {
 - `/assets/` 使用长期缓存，`index.html` 不使用长期缓存
 - HTTPS、压缩、访问日志和错误日志已开启
 - 与后端的 `CORS_ALLOWED_ORIGINS`、主机名和 Cookie 安全配置一致
+- 管理端文件中心能打开“使用教程”，桌面和 390px 移动布局无横向溢出
+- PNG、PDF、DOCX、TXT 上传显示进度并被正确分类，下载保留原文件名
+- 新文件显示 Xion 存储状态，历史 `/media/` 文件仍可预览或下载
+
+前端不需要、也禁止配置 `XION_SERVICE_TOKEN` 或 Xion 内部地址。存储开关与服务端凭据全部由 Django 生产环境管理。
+
+## 4. 原子发布
+
+为每次构建创建独立目录，再切换 `current` 软链接：
+
+```bash
+release="/var/www/myblog-admin/releases/<commit>"
+sudo mkdir -p "$release"
+sudo tar -xzf myblog-admin-dist.tar.gz -C "$release"
+sudo ln -sfn "$release" /var/www/myblog-admin/current
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+至少保留上一 release。回滚只需把 `current` 指回旧目录并再次执行 `nginx -t` 与 reload；不要在回滚时删除博客媒体或 Xion 数据。
 
 回滚时保留上一版 `dist` 目录，通过原子切换软链接恢复，再 reload Nginx。
