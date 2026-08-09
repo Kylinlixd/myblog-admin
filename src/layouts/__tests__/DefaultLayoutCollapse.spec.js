@@ -130,4 +130,12 @@ describe('DefaultLayout navigation controls', () => {
     expect(layoutSource).toContain('max-height: none')
     expect(layoutSource).toContain('overflow-y: auto')
   })
+
+  it('keeps the desktop sidebar fixed while the workspace scrolls independently', () => {
+    expect(layoutSource).toContain("'admin-shell--sidebar-collapsed': collapsed && !isMobile")
+    expect(layoutSource).toContain('position: fixed !important')
+    expect(layoutSource).toContain('.admin-shell:not(.admin-shell--mobile)')
+    expect(layoutSource).toContain('padding-left: 232px')
+    expect(layoutSource).toContain('padding-left: 76px')
+  })
 })

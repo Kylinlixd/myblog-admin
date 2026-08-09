@@ -1,5 +1,5 @@
 <template>
-  <a-layout class="admin-shell" :class="{ 'admin-shell--mobile': isMobile }">
+  <a-layout class="admin-shell" :class="{ 'admin-shell--mobile': isMobile, 'admin-shell--sidebar-collapsed': collapsed && !isMobile }">
     <a-layout-sider v-if="!isMobile" v-model:collapsed="collapsed" :trigger="null" collapsible :width="232" :collapsed-width="76" class="admin-sidebar">
       <div class="admin-brand">
         <router-link class="admin-brand__link" to="/dashboard">
@@ -136,9 +136,11 @@ function handleLogout() {
 
 <style lang="scss">
 .admin-drawer .ant-drawer-body { padding: 0; background: #10182b; }
-.admin-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: hidden; background: var(--color-page); }
-.admin-shell--mobile { flex-direction: column !important; }
-.admin-sidebar { position: sticky !important; top: 0; display: flex !important; height: 100dvh !important; min-height: 100dvh; max-height: 100dvh; flex-direction: column; overflow: hidden !important; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
+.admin-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: clip; background: var(--color-page); transition: padding-left var(--transition-fast); }
+.admin-shell:not(.admin-shell--mobile) { padding-left: 232px; }
+.admin-shell.admin-shell--sidebar-collapsed { padding-left: 76px; }
+.admin-shell--mobile { flex-direction: column !important; padding-left: 0 !important; }
+.admin-sidebar { position: fixed !important; inset: 0 auto 0 0; z-index: 60; display: flex !important; height: 100dvh !important; min-height: 100dvh; max-height: 100dvh; flex-direction: column; overflow: hidden !important; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
 .admin-sidebar .ant-layout-sider-children { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; }
 .admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
 .admin-brand__link { display: flex; min-width: 0; align-items: center; gap: 11px; color: inherit; text-decoration: none; }
