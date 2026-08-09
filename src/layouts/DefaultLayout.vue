@@ -5,17 +5,6 @@
         <router-link class="admin-brand__link" to="/dashboard">
           <span class="brand-mark">L</span><span v-if="!collapsed">LiXD Studio<small>内容工作台</small></span>
         </router-link>
-        <button
-          type="button"
-          class="sidebar-collapse-control"
-          :aria-label="collapsed ? '展开导航' : '折叠导航'"
-          :aria-expanded="!collapsed"
-          :title="collapsed ? '展开导航' : '折叠导航'"
-          @click="toggleSidebar"
-        >
-          <menu-unfold-outlined v-if="collapsed" />
-          <menu-fold-outlined v-else />
-        </button>
       </div>
       <AdminNavigation />
     </a-layout-sider>
@@ -29,11 +18,23 @@
 
     <a-layout class="workspace">
       <a-layout-header class="workspace-header">
-          <div class="header-left">
+        <div class="header-left">
+          <button
+            v-if="!isMobile"
+            type="button"
+            class="sidebar-collapse-control workspace-sidebar-toggle"
+            :aria-label="collapsed ? '展开导航' : '折叠导航'"
+            :aria-expanded="!collapsed"
+            :title="collapsed ? '展开导航' : '折叠导航'"
+            @click="toggleSidebar"
+          >
+            <menu-unfold-outlined v-if="collapsed" />
+            <menu-fold-outlined v-else />
+          </button>
           <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
           </button>
-          <router-link class="header-brand" to="/dashboard">
+          <router-link v-if="isMobile" class="header-brand" to="/dashboard">
             <span class="header-brand__mark">L</span>
             <span><strong>LiXD Studio</strong><small>内容工作台</small></span>
           </router-link>
@@ -137,12 +138,12 @@ function handleLogout() {
 <style lang="scss">
 .admin-drawer .ant-drawer-body { padding: 0; background: #10182b; }
 .admin-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: clip; background: var(--color-page); transition: padding-left var(--transition-fast); }
-.admin-shell:not(.admin-shell--mobile) { padding-left: 232px; }
-.admin-shell.admin-shell--sidebar-collapsed { padding-left: 76px; }
+.admin-shell:not(.admin-shell--mobile) { --admin-sidebar-width: 232px; padding-left: var(--admin-sidebar-width); }
+.admin-shell.admin-shell--sidebar-collapsed { --admin-sidebar-width: 76px; padding-left: var(--admin-sidebar-width); }
 .admin-shell--mobile { flex-direction: column !important; padding-left: 0 !important; }
 .admin-sidebar { position: fixed !important; inset: 0 auto 0 0; z-index: 60; display: flex !important; height: 100dvh !important; min-height: 100dvh; max-height: 100dvh; flex-direction: column; overflow: hidden !important; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
 .admin-sidebar .ant-layout-sider-children { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; }
-.admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
+.admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 18px; color: white; white-space: nowrap; }
 .admin-brand__link { display: flex; min-width: 0; align-items: center; gap: 11px; color: inherit; text-decoration: none; }
 .admin-brand--drawer { padding-inline: 22px; }
 .admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
@@ -150,13 +151,13 @@ function handleLogout() {
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
 .admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow-x: hidden; overflow-y: auto; gap: 16px; padding: 46px 12px 18px; }
 .admin-sidebar .admin-navigation { min-height: 0; max-height: none; flex: 1 1 auto; overscroll-behavior: contain; scrollbar-color: rgb(174 187 208 / 38%) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
-.sidebar-collapse-control { position: absolute; z-index: 4; top: 22px; right: 12px; display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid rgb(255 255 255 / 12%); border-radius: 8px; background: rgb(255 255 255 / 4%); color: #aebbd0; cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
+.sidebar-collapse-control { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border: 1px solid rgb(255 255 255 / 12%); border-radius: 8px; background: rgb(255 255 255 / 4%); color: #aebbd0; cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
+.workspace-sidebar-toggle { position: relative; z-index: 1; }
 .sidebar-collapse-control:hover { background: #315bea; color: white; transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
-.admin-sidebar.ant-layout-sider-collapsed .admin-brand { padding-left: 6px; padding-right: 46px; }
-.admin-sidebar.ant-layout-sider-collapsed .admin-brand__link { transform: translateX(-2px); }
-.admin-sidebar.ant-layout-sider-collapsed .sidebar-collapse-control { right: 8px; width: 28px; height: 28px; }
+.admin-sidebar.ant-layout-sider-collapsed .admin-brand { justify-content: center; padding-inline: 0; }
+.admin-sidebar.ant-layout-sider-collapsed .admin-brand__link { transform: none; }
 .nav-group { display: grid; gap: 5px; }
 .nav-group__label { margin: 0 10px 4px; color: #66748d; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .admin-navigation .nav-item { display: flex; width: 100%; min-height: 50px; align-items: center; gap: 11px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; color: #9daac1; cursor: pointer; text-align: left; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
@@ -169,9 +170,10 @@ function handleLogout() {
 .admin-navigation .nav-item--active { background: #315bea !important; color: white !important; box-shadow: 0 10px 22px rgb(49 91 234 / 24%); }
 .admin-navigation .nav-item--active .nav-item__icon { background: rgb(255 255 255 / 16%); }
 .admin-navigation .nav-item--active small { color: rgb(255 255 255 / 72%); }
-.workspace-header { position: sticky; z-index: 50; top: 0; display: flex; min-width: 0; height: 72px; padding: 0 28px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
+.admin-shell:not(.admin-shell--mobile) .workspace { padding-top: 72px; }
+.workspace-header { position: fixed; z-index: 50; top: 0; right: 0; left: var(--admin-sidebar-width); display: flex; box-sizing: border-box; min-width: 0; height: 72px; padding: 0 28px 0 16px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
-.header-left { min-width: 0; gap: 16px; overflow: hidden; }
+.header-left { min-width: 0; gap: 12px; overflow: hidden; }
 .header-brand { display: inline-flex; align-items: center; gap: 9px; color: var(--color-text); text-decoration: none; }
 .header-brand__mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: var(--color-primary); color: #fff; font-size: 16px; font-weight: 800; }
 .header-brand > span:last-child { display: grid; gap: 2px; }
@@ -194,7 +196,10 @@ function handleLogout() {
 .workspace-page-enter-active, .workspace-page-leave-active { transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .workspace-page-enter-from { opacity: 0; transform: translateY(5px); }
 .workspace-page-leave-to { opacity: 0; }
-@media (max-width: 992px) { .admin-shell--mobile > .workspace { width: 100%; } }
+@media (max-width: 992px) {
+  .admin-shell--mobile > .workspace { width: 100%; }
+  .admin-shell--mobile .workspace-header { position: sticky; right: auto; left: auto; }
+}
 @media (max-width: 720px) {
   .workspace-header { height: auto; min-height: 64px; padding: 10px 16px; }
   .workspace-content { padding: 18px 14px; }

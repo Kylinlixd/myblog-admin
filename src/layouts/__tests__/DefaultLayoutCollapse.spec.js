@@ -115,12 +115,25 @@ describe('DefaultLayout navigation controls', () => {
     expect(collapseButton.attributes('aria-expanded')).toBe('false')
   })
 
-  it('places the desktop collapse control inside the sidebar brand header', () => {
+  it('places the desktop collapse control in the fixed workspace header', () => {
     window.innerWidth = 1024
     const wrapper = mountLayout()
 
-    expect(wrapper.find('.admin-brand .sidebar-collapse-control').exists()).toBe(true)
-    expect(wrapper.find('.admin-sidebar > .sidebar-collapse-control').exists()).toBe(false)
+    expect(wrapper.find('.workspace-header .sidebar-collapse-control').exists()).toBe(true)
+    expect(wrapper.find('.admin-brand .sidebar-collapse-control').exists()).toBe(false)
+  })
+
+  it('does not duplicate the sidebar brand beside the desktop collapse control', () => {
+    window.innerWidth = 1024
+    const desktopWrapper = mountLayout()
+    expect(desktopWrapper.find('.workspace-header .header-brand').exists()).toBe(false)
+
+    window.innerWidth = 768
+    const mobileWrapper = mountLayout()
+    expect(mobileWrapper.find('.workspace-header .header-brand').exists()).toBe(true)
+
+    desktopWrapper.unmount()
+    mobileWrapper.unmount()
   })
 
   it('keeps a long desktop navigation inside a full-height scrolling sidebar', () => {
@@ -135,7 +148,16 @@ describe('DefaultLayout navigation controls', () => {
     expect(layoutSource).toContain("'admin-shell--sidebar-collapsed': collapsed && !isMobile")
     expect(layoutSource).toContain('position: fixed !important')
     expect(layoutSource).toContain('.admin-shell:not(.admin-shell--mobile)')
-    expect(layoutSource).toContain('padding-left: 232px')
-    expect(layoutSource).toContain('padding-left: 76px')
+    expect(layoutSource).toContain('--admin-sidebar-width: 232px')
+    expect(layoutSource).toContain('--admin-sidebar-width: 76px')
+    expect(layoutSource).toContain('padding-left: var(--admin-sidebar-width)')
+  })
+
+  it('keeps the desktop workspace header fixed beside the sidebar', () => {
+    expect(layoutSource).toContain('--admin-sidebar-width: 232px')
+    expect(layoutSource).toContain('--admin-sidebar-width: 76px')
+    expect(layoutSource).toContain('position: fixed')
+    expect(layoutSource).toContain('left: var(--admin-sidebar-width)')
+    expect(layoutSource).toContain('padding-top: 72px')
   })
 })
