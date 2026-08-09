@@ -31,7 +31,10 @@ jest.mock('@ant-design/icons-vue', () => {
     VideoCameraOutlined: Icon,
     CopyOutlined: Icon,
     DownloadOutlined: Icon,
-    LoadingOutlined: Icon
+    LoadingOutlined: Icon,
+    QuestionCircleOutlined: Icon,
+    CloudServerOutlined: Icon,
+    FileTextOutlined: Icon
   }
 })
 
@@ -48,8 +51,10 @@ const fileListResponse = {
 
 const globalStubs = {
   PageHeader: true,
+  'a-alert': true,
   'a-button': true,
   'a-card': true,
+  'a-drawer': true,
   'a-form': true,
   'a-form-item': true,
   'a-input': true,
@@ -60,9 +65,12 @@ const globalStubs = {
   'a-table': true,
   'a-tag': true,
   'a-upload': true,
+  'a-upload-dragger': { template: '<div><slot /></div>' },
   'a-image': true,
   'a-popconfirm': true,
-  'a-modal': true
+  'a-modal': true,
+  'a-progress': true,
+  FileTutorialDrawer: true
 }
 
 describe('FileList delete handling', () => {
@@ -119,11 +127,56 @@ describe('FileList upload handling', () => {
     await wrapper.vm.handleCustomUpload({ file, onSuccess, onError })
     await flushPromises()
 
-    expect(uploadFile).toHaveBeenCalledWith({ file, file_type: 'image' })
+    expect(uploadFile).toHaveBeenCalledWith({
+      file,
+      file_type: 'image',
+      onProgress: expect.any(Function)
+    })
     expect(onSuccess).toHaveBeenCalledWith(uploadResult)
     expect(onError).not.toHaveBeenCalled()
     expect(message.success).toHaveBeenCalledWith('上传成功')
     expect(getFileList).toHaveBeenCalledTimes(2)
+    wrapper.unmount()
+  })
+
+  it('recognizes document extensions and enforces the shared 50 MB limit', async () => {
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.vm.inferFileType({ name: 'guide.pdf', type: 'application/pdf' })).toBe('document')
+    expect(wrapper.vm.inferFileType({ name: 'checklist.docx', type: '' })).toBe('document')
+    expect(wrapper.vm.beforeUpload({ name: 'large.pdf', size: 51 * 1024 * 1024 })).toBe(false)
+    expect(message.error).toHaveBeenCalledWith('文件大小不能超过 50 MB')
+    wrapper.unmount()
+  })
+
+  it('shows live progress and exposes the tutorial drawer action', async () => {
+    let finishUpload
+    uploadFile.mockImplementationOnce(({ onProgress }) => {
+      onProgress(42)
+      return new Promise((resolve) => { finishUpload = resolve })
+    })
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    const onSuccess = jest.fn()
+    const onError = jest.fn()
+
+    const uploadPromise = wrapper.vm.handleCustomUpload({
+      file: { name: 'guide.pdf', type: 'application/pdf' },
+      onSuccess,
+      onError
+    })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.vm.uploadProgress).toBe(42)
+    expect(wrapper.vm.uploadingName).toBe('guide.pdf')
+    wrapper.vm.openTutorial()
+    expect(wrapper.vm.tutorialOpen).toBe(true)
+
+    finishUpload({ id: 13, name: 'guide.pdf' })
+    await uploadPromise
+    expect(onSuccess).toHaveBeenCalled()
+    expect(wrapper.vm.uploadingName).toBe('')
     wrapper.unmount()
   })
 })

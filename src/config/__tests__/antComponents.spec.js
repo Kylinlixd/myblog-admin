@@ -13,6 +13,7 @@ describe('Ant Design component registry', () => {
       'AInput',
       'ALayout',
       'AModal',
+      'AProgress',
       'ATable'
     ]))
     expect(componentNames).not.toContain('Antd')
