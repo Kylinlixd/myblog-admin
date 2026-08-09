@@ -138,14 +138,16 @@ function handleLogout() {
 .admin-drawer .ant-drawer-body { padding: 0; background: #10182b; }
 .admin-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: hidden; background: var(--color-page); }
 .admin-shell--mobile { flex-direction: column !important; }
-.admin-sidebar { position: sticky !important; top: 0; height: 100vh; overflow: visible; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
+.admin-sidebar { position: sticky !important; top: 0; display: flex !important; height: 100dvh !important; min-height: 100dvh; max-height: 100dvh; flex-direction: column; overflow: hidden !important; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
+.admin-sidebar .ant-layout-sider-children { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; }
 .admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
 .admin-brand__link { display: flex; min-width: 0; align-items: center; gap: 11px; color: inherit; text-decoration: none; }
 .admin-brand--drawer { padding-inline: 22px; }
 .admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
 .admin-brand__link > span:last-child, .admin-brand--drawer > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
-.admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow: hidden auto; gap: 16px; padding: 46px 12px 18px; }
+.admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow-x: hidden; overflow-y: auto; gap: 16px; padding: 46px 12px 18px; }
+.admin-sidebar .admin-navigation { min-height: 0; max-height: none; flex: 1 1 auto; overscroll-behavior: contain; scrollbar-color: rgb(174 187 208 / 38%) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
 .sidebar-collapse-control { position: absolute; z-index: 4; top: 22px; right: 12px; display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid rgb(255 255 255 / 12%); border-radius: 8px; background: rgb(255 255 255 / 4%); color: #aebbd0; cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .sidebar-collapse-control:hover { background: #315bea; color: white; transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }

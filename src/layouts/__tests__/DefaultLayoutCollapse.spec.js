@@ -1,8 +1,12 @@
 import { createTestingPinia } from '@pinia/testing'
 import { mount } from '@vue/test-utils'
 import { reactive } from 'vue'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import DefaultLayout from '../DefaultLayout.vue'
+
+const layoutSource = fs.readFileSync(path.join(process.cwd(), 'src/layouts/DefaultLayout.vue'), 'utf8')
 
 var mockRoute
 var mockRouter
@@ -117,5 +121,13 @@ describe('DefaultLayout navigation controls', () => {
 
     expect(wrapper.find('.admin-brand .sidebar-collapse-control').exists()).toBe(true)
     expect(wrapper.find('.admin-sidebar > .sidebar-collapse-control').exists()).toBe(false)
+  })
+
+  it('keeps a long desktop navigation inside a full-height scrolling sidebar', () => {
+    expect(layoutSource).toContain('height: 100dvh !important')
+    expect(layoutSource).toContain('.admin-sidebar .ant-layout-sider-children')
+    expect(layoutSource).toContain('.admin-sidebar .admin-navigation')
+    expect(layoutSource).toContain('max-height: none')
+    expect(layoutSource).toContain('overflow-y: auto')
   })
 })
