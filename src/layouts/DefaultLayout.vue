@@ -1,20 +1,22 @@
 <template>
   <a-layout class="admin-shell" :class="{ 'admin-shell--mobile': isMobile }">
     <a-layout-sider v-if="!isMobile" v-model:collapsed="collapsed" :trigger="null" collapsible :width="232" :collapsed-width="76" class="admin-sidebar">
-      <router-link class="admin-brand" to="/dashboard">
-        <span class="brand-mark">L</span><span v-if="!collapsed">LiXD Studio<small>内容工作台</small></span>
-      </router-link>
-      <button
-        type="button"
-        class="sidebar-collapse-control"
-        :aria-label="collapsed ? '展开导航' : '折叠导航'"
-        :aria-expanded="!collapsed"
-        :title="collapsed ? '展开导航' : '折叠导航'"
-        @click="toggleSidebar"
-      >
-        <menu-unfold-outlined v-if="collapsed" />
-        <menu-fold-outlined v-else />
-      </button>
+      <div class="admin-brand">
+        <router-link class="admin-brand__link" to="/dashboard">
+          <span class="brand-mark">L</span><span v-if="!collapsed">LiXD Studio<small>内容工作台</small></span>
+        </router-link>
+        <button
+          type="button"
+          class="sidebar-collapse-control"
+          :aria-label="collapsed ? '展开导航' : '折叠导航'"
+          :aria-expanded="!collapsed"
+          :title="collapsed ? '展开导航' : '折叠导航'"
+          @click="toggleSidebar"
+        >
+          <menu-unfold-outlined v-if="collapsed" />
+          <menu-fold-outlined v-else />
+        </button>
+      </div>
       <AdminNavigation />
     </a-layout-sider>
 
@@ -137,16 +139,20 @@ function handleLogout() {
 .admin-shell { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: hidden; background: var(--color-page); }
 .admin-shell--mobile { flex-direction: column !important; }
 .admin-sidebar { position: sticky !important; top: 0; height: 100vh; overflow: visible; border-right: 1px solid rgb(255 255 255 / 6%); background: #10182b !important; }
-.admin-brand { display: flex; height: 76px; align-items: center; gap: 11px; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
+.admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 58px 0 18px; color: white; white-space: nowrap; }
+.admin-brand__link { display: flex; min-width: 0; align-items: center; gap: 11px; color: inherit; text-decoration: none; }
 .admin-brand--drawer { padding-inline: 22px; }
 .admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
-.admin-brand > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
+.admin-brand__link > span:last-child, .admin-brand--drawer > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
 .admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow: hidden auto; gap: 16px; padding: 46px 12px 18px; }
-.sidebar-collapse-control { position: absolute; z-index: 4; top: 76px; right: 0; display: grid; width: 100%; height: 32px; place-items: center; border: 0; border-top: 1px solid rgb(255 255 255 / 8%); border-bottom: 1px solid rgb(255 255 255 / 8%); border-radius: 0 0 8px 8px; background: #18243a; color: #aebbd0; box-shadow: 0 6px 14px rgb(5 10 20 / 18%); cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
+.sidebar-collapse-control { position: absolute; z-index: 4; top: 22px; right: 12px; display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid rgb(255 255 255 / 12%); border-radius: 8px; background: rgb(255 255 255 / 4%); color: #aebbd0; cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .sidebar-collapse-control:hover { background: #315bea; color: white; transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
+.admin-sidebar.ant-layout-sider-collapsed .admin-brand { padding-left: 6px; padding-right: 46px; }
+.admin-sidebar.ant-layout-sider-collapsed .admin-brand__link { transform: translateX(-2px); }
+.admin-sidebar.ant-layout-sider-collapsed .sidebar-collapse-control { right: 8px; width: 28px; height: 28px; }
 .nav-group { display: grid; gap: 5px; }
 .nav-group__label { margin: 0 10px 4px; color: #66748d; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 .admin-navigation .nav-item { display: flex; width: 100%; min-height: 50px; align-items: center; gap: 11px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; color: #9daac1; cursor: pointer; text-align: left; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }

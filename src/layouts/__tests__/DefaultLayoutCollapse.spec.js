@@ -110,4 +110,12 @@ describe('DefaultLayout navigation controls', () => {
 
     expect(collapseButton.attributes('aria-expanded')).toBe('false')
   })
+
+  it('places the desktop collapse control inside the sidebar brand header', () => {
+    window.innerWidth = 1024
+    const wrapper = mountLayout()
+
+    expect(wrapper.find('.admin-brand .sidebar-collapse-control').exists()).toBe(true)
+    expect(wrapper.find('.admin-sidebar > .sidebar-collapse-control').exists()).toBe(false)
+  })
 })
