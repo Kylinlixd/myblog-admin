@@ -160,6 +160,7 @@ import AsyncState from '../../components/common/AsyncState.vue'
 
 // 表格列配置
 const columns = [
+  { label: '序号', prop: 'serialNo', width: '72px' },
   { label: '评论内容', prop: 'content', slot: 'content', width: '300px' },
   { label: '评论者', prop: 'nickname', width: '120px' },
   { label: '邮箱', prop: 'email', width: '180px' },
@@ -191,6 +192,8 @@ const filterForm = reactive({
 // 获取评论列表
 const getComments = async (allowPageReset = true) => {
   const generation = ++requestGeneration
+  const requestedPage = currentPage.value
+  const requestedPageSize = pageSize.value
   loading.value = true
   errorMessage.value = ''
   
@@ -199,16 +202,19 @@ const getComments = async (allowPageReset = true) => {
       Object.entries(filterForm).filter(([, value]) => value !== '' && value !== null && value !== undefined)
     )
     const response = await getCommentList({
-      page: currentPage.value,
-      pageSize: pageSize.value,
+      page: requestedPage,
+      pageSize: requestedPageSize,
       ...activeFilters
     })
     if (generation !== requestGeneration) return
-    if (allowPageReset && currentPage.value > 1 && response.results.length === 0) {
+    if (allowPageReset && requestedPage > 1 && response.results.length === 0) {
       currentPage.value = 1
       return getComments(false)
     }
-    comments.value = response.results
+    comments.value = response.results.map((comment, index) => ({
+      ...comment,
+      serialNo: (requestedPage - 1) * requestedPageSize + index + 1
+    }))
     total.value = response.count
   } catch (error) {
     if (generation !== requestGeneration) return

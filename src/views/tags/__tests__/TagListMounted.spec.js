@@ -226,7 +226,7 @@ describe('TagList mounted states and taxonomy actions', () => {
 
     second.resolve({ count: 1, results: [{ id: 2, name: 'new' }] })
     await newerRequest
-    expect(wrapper.vm.tagList).toEqual([{ id: 2, name: 'new', status: 'inactive', useCount: 0 }])
+    expect(wrapper.vm.tagList).toEqual([{ id: 2, name: 'new', serialNo: 1, status: 'inactive', useCount: 0 }])
     expect(wrapper.vm.loading).toBe(false)
     wrapper.unmount()
   })

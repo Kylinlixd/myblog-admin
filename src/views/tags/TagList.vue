@@ -88,8 +88,13 @@
       class="responsive-table tag-table"
     >
       <template #bodyCell="{ column, record }">
+        <!-- 序号列 -->
+        <template v-if="column.dataIndex === 'serialNo'">
+          {{ record.serialNo }}
+        </template>
+
         <!-- 描述列 -->
-        <template v-if="column.dataIndex === 'description'">
+        <template v-else-if="column.dataIndex === 'description'">
           <span class="tag-description" :title="record.description || '暂无描述'">
             {{ record.description || '暂无描述' }}
           </span>
@@ -192,6 +197,13 @@ import AsyncState from '@/components/common/AsyncState.vue'
 
 // 表格列配置
 const columns = [
+  {
+    title: '序号',
+    dataIndex: 'serialNo',
+    key: 'serialNo',
+    width: 72,
+    align: 'center'
+  },
   {
     title: '标签名称',
     dataIndex: 'name',
@@ -353,7 +365,10 @@ const fetchTags = async (allowPageReset = true) => {
       pagination.current = 1
       return fetchTags(false)
     }
-    tagList.value = results.map(normalizeTag)
+    tagList.value = results.map((item, index) => ({
+      ...normalizeTag(item),
+      serialNo: (pagination.current - 1) * pagination.pageSize + index + 1
+    }))
     pagination.total = count
   } catch (error) {
     if (generation !== requestGeneration) return

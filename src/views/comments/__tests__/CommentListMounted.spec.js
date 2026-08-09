@@ -161,6 +161,18 @@ describe('CommentList mounted states and actions', () => {
     wrapper.unmount()
   })
 
+  it('shows a pagination sequence instead of the internal comment id', async () => {
+    const wrapper = await mountList({
+      count: 2,
+      results: [commentsResponse.results[0], { ...commentsResponse.results[0], id: 2, nickname: 'Another reader' }]
+    })
+
+    expect(wrapper.vm.comments.map((comment) => comment.serialNo)).toEqual([1, 2])
+    expect(wrapper.vm.columns[0]).toEqual({ label: '序号', prop: 'serialNo', width: '72px' })
+    expect(wrapper.vm.columns.some((column) => column.prop === 'id')).toBe(false)
+    wrapper.unmount()
+  })
+
   it('resets an empty out-of-range page once while keeping the current filters', async () => {
     getCommentList.mockResolvedValueOnce(commentsResponse)
       .mockResolvedValueOnce({ count: 0, results: [] })
@@ -195,7 +207,7 @@ describe('CommentList mounted states and actions', () => {
     first.resolve({ count: 1, results: [{ ...commentsResponse.results[0], id: 1, content: 'old' }] })
     await flushPromises()
 
-    expect(wrapper.vm.comments).toEqual([{ ...commentsResponse.results[0], id: 2, content: 'new' }])
+    expect(wrapper.vm.comments).toEqual([{ ...commentsResponse.results[0], id: 2, content: 'new', serialNo: 1 }])
     expect(wrapper.vm.loading).toBe(false)
     wrapper.unmount()
   })
