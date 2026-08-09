@@ -39,17 +39,5 @@
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>
-    <script>
-      // 在脚本加载完成后隐藏加载指示器
-      window.addEventListener('load', () => {
-        const loading = document.getElementById('app-loading');
-        if (loading) {
-          loading.style.opacity = '0';
-          setTimeout(() => {
-            loading.style.display = 'none';
-          }, 300);
-        }
-      });
-    </script>
   </body>
 </html>

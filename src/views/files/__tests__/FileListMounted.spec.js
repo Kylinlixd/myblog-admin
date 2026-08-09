@@ -31,7 +31,10 @@ jest.mock('@ant-design/icons-vue', () => {
     VideoCameraOutlined: Icon,
     CopyOutlined: Icon,
     DownloadOutlined: Icon,
-    LoadingOutlined: Icon
+    LoadingOutlined: Icon,
+    QuestionCircleOutlined: Icon,
+    CloudServerOutlined: Icon,
+    FileTextOutlined: Icon
   }
 })
 
@@ -51,8 +54,10 @@ const ModalStub = {
 
 const globalStubs = {
   PageHeader: true,
+  'a-alert': true,
   'a-button': ButtonStub,
   'a-card': true,
+  'a-drawer': true,
   'a-form': true,
   'a-form-item': true,
   'a-input': true,
@@ -63,6 +68,8 @@ const globalStubs = {
   'a-table': TableStub,
   'a-tag': true,
   'a-upload': true,
+  'a-upload-dragger': { template: '<div><slot /></div>' },
+  'a-progress': true,
   'a-image': true,
   'a-popconfirm': { template: '<div><slot /></div>' },
   'a-modal': ModalStub

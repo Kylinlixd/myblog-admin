@@ -2,17 +2,72 @@
   <div class="file-list admin-page">
     <PageHeader title="文件管理" subtitle="上传、筛选并管理内容资源。">
       <template #actions>
-        <a-upload
-          :customRequest="handleCustomUpload"
-          :showUploadList="false"
-          :beforeUpload="beforeUpload"
-        >
-          <a-button type="primary">
-            <UploadOutlined /> 上传文件
+        <a-space>
+          <a-button @click="openTutorial">
+            <QuestionCircleOutlined /> 使用教程
           </a-button>
-        </a-upload>
+          <a-upload
+            :customRequest="handleCustomUpload"
+            :showUploadList="false"
+            :beforeUpload="beforeUpload"
+          >
+            <a-button type="primary">
+              <UploadOutlined /> 上传文件
+            </a-button>
+          </a-upload>
+        </a-space>
       </template>
     </PageHeader>
+
+    <section class="storage-brief" aria-label="文件存储概况">
+      <div class="storage-brief__copy">
+        <span class="storage-eyebrow"><CloudServerOutlined /> 资源存储</span>
+        <strong>{{ backendSummary.label }}</strong>
+        <p>{{ backendSummary.description }}</p>
+      </div>
+      <dl class="storage-metrics">
+        <div>
+          <dt>当前结果</dt>
+          <dd>{{ total }}</dd>
+        </div>
+        <div>
+          <dt>可见容量</dt>
+          <dd>{{ formatFileSize(visibleBytes) }}</dd>
+        </div>
+      </dl>
+      <button
+        v-if="tutorialHintVisible"
+        type="button"
+        class="tutorial-hint"
+        @click="openTutorial"
+      >
+        第一次使用？查看 5 步教程
+      </button>
+    </section>
+
+    <section class="upload-zone" aria-label="上传文件">
+      <a-upload-dragger
+        :customRequest="handleCustomUpload"
+        :showUploadList="false"
+        :beforeUpload="beforeUpload"
+        :multiple="false"
+      >
+        <div class="upload-zone__inner">
+          <span class="upload-zone__icon"><UploadOutlined /></span>
+          <div>
+            <strong>拖拽文件到这里，或点击选择</strong>
+            <p>自动识别图片、PDF、Word、Excel、音视频；单个文件不超过 50 MB。</p>
+          </div>
+        </div>
+      </a-upload-dragger>
+      <div v-if="uploadingName" class="upload-progress" aria-live="polite">
+        <div>
+          <span>正在上传</span>
+          <strong>{{ uploadingName }}</strong>
+        </div>
+        <a-progress :percent="uploadProgress" :show-info="true" size="small" />
+      </div>
+    </section>
 
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
@@ -29,6 +84,8 @@
             <a-select-option value="image">图片</a-select-option>
             <a-select-option value="audio">音频</a-select-option>
             <a-select-option value="video">视频</a-select-option>
+            <a-select-option value="document">文档</a-select-option>
+            <a-select-option value="other">其他</a-select-option>
           </a-select>
         </a-form-item>
       </div>
@@ -92,6 +149,7 @@
               <div class="image-preview-container preview-frame--stable">
                 <a-image
                   :src="record.url"
+                  :alt="`预览：${record.name}`"
                   :width="60"
                   :height="60"
                   fit="cover"
@@ -182,6 +240,30 @@
       </a-table>
     </a-card>
 
+    <section v-if="fileList.length" class="file-mobile-grid" aria-label="移动端文件列表">
+      <article v-for="record in fileList" :key="record.id" class="file-mobile-row">
+        <div class="file-mobile-row__identity">
+          <span class="file-kind"><FileTextOutlined /></span>
+          <div>
+            <strong>{{ record.name }}</strong>
+            <span>{{ getTypeName(record.type) }} · {{ formatFileSize(record.size) }}</span>
+          </div>
+        </div>
+        <div class="file-mobile-row__actions">
+          <a-button type="text" size="small" @click="handleDownload(record)">下载</a-button>
+          <a-button type="text" size="small" @click="copyFileUrl(record.url)">复制链接</a-button>
+          <a-popconfirm
+            title="确定要删除这个文件吗？"
+            ok-text="确定"
+            cancel-text="取消"
+            @confirm="handleDelete(record.id)"
+          >
+            <a-button type="text" danger size="small">删除</a-button>
+          </a-popconfirm>
+        </div>
+      </article>
+    </section>
+
     <!-- 媒体预览对话框 -->
     <a-modal
       v-model:open="previewVisible"
@@ -195,7 +277,7 @@
           v-if="previewType === 'audio'"
           :src="previewUrl"
           controls
-          style="width: 100%"
+          class="media-player media-player--audio"
           ref="audioPlayer"
           @error="handleMediaError"
         ></audio>
@@ -203,12 +285,14 @@
           v-if="previewType === 'video'"
           :src="previewUrl"
           controls
-          style="width: 100%; max-height: 600px;"
+          class="media-player media-player--video"
           ref="videoPlayer"
           @error="handleMediaError"
         ></video>
       </div>
     </a-modal>
+
+    <FileTutorialDrawer v-model:open="tutorialOpen" />
   </div>
 </template>
 
@@ -224,12 +308,16 @@ import {
   VideoCameraOutlined,
   CopyOutlined,
   DownloadOutlined,
-  LoadingOutlined
+  LoadingOutlined,
+  QuestionCircleOutlined,
+  CloudServerOutlined,
+  FileTextOutlined
 } from '@ant-design/icons-vue'
 import { uploadFile, getFileList, searchFiles, deleteFile, downloadFile } from '@/api/file'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
+import FileTutorialDrawer from './FileTutorialDrawer.vue'
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -240,6 +328,10 @@ const total = ref(0)
 const selectedRowKeys = ref([])
 const deletingIds = reactive(new Set())
 const batchDeleting = ref(false)
+const uploadProgress = ref(0)
+const uploadingName = ref('')
+const tutorialOpen = ref(false)
+const tutorialHintVisible = ref(false)
 let requestGeneration = 0
 
 // 搜索表单
@@ -253,6 +345,21 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('')
+
+const visibleBytes = computed(() => fileList.value.reduce((sum, file) => sum + (Number(file.size) || 0), 0))
+const backendSummary = computed(() => {
+  const xionCount = fileList.value.filter((file) => file.storageBackend === 'xion').length
+  if (xionCount > 0) {
+    return {
+      label: 'AstraStoreXion 正在托管新资源',
+      description: `当前页面有 ${xionCount} 个 Xion 文件；历史本地文件继续兼容。`
+    }
+  }
+  return {
+    label: '本地媒体兼容模式',
+    description: '现有文件保持可用，新上传会按服务器配置选择存储后端。'
+  }
+})
 
 // 表格列定义
 const columns = [
@@ -363,7 +470,10 @@ const normalizeFileForView = (item) => {
     description: item.description,
     category: item.category,
     tags: item.tags,
-    uploader: item.uploader
+    uploader: item.uploader,
+    storageBackend: item.storage_backend || 'local',
+    checksum: item.checksum,
+    contentType: item.content_type
   }
 }
 
@@ -479,12 +589,23 @@ const handleDelete = async (id) => {
 
 const isDeleting = (id) => deletingIds.has(id)
 
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx'])
+
+const inferFileType = (file) => {
+  const mimeType = String(file?.type || '').toLowerCase()
+  const extension = String(file?.name || '').split('.').pop()?.toLowerCase()
+  if (mimeType.startsWith('image/')) return 'image'
+  if (mimeType.startsWith('audio/')) return 'audio'
+  if (mimeType.startsWith('video/')) return 'video'
+  if (mimeType === 'application/pdf' || documentExtensions.has(extension)) return 'document'
+  return 'other'
+}
+
 // 上传前检查
 const beforeUpload = (file) => {
-  // 检查文件大小（限制为100MB）
-  const isLt100M = file.size / 1024 / 1024 < 100
-  if (!isLt100M) {
-    message.error('文件大小不能超过100MB!')
+  if (file.size > MAX_UPLOAD_BYTES) {
+    message.error('文件大小不能超过 50 MB')
     return false
   }
   return true
@@ -492,18 +613,22 @@ const beforeUpload = (file) => {
 
 // 处理自定义上传
 const handleCustomUpload = async ({ file, onSuccess, onError }) => {
+  uploadingName.value = file.name
+  uploadProgress.value = 0
   try {
     const result = await uploadFile({
       file,
-      file_type: file.type.startsWith('image/') ? 'image' : 
-                 file.type.startsWith('audio/') ? 'audio' : 
-                 file.type.startsWith('video/') ? 'video' : 'other'
+      file_type: inferFileType(file),
+      onProgress: (percent) => {
+        uploadProgress.value = percent
+      }
     })
     
     if (result) {
+      uploadProgress.value = 100
       message.success('上传成功')
       onSuccess(result)
-      fetchFiles() // 刷新列表
+      await fetchFiles()
     } else {
       const error = new Error('上传失败')
       message.error(error.message)
@@ -511,8 +636,20 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     }
   } catch (error) {
     console.error('上传失败:', error)
-    message.error('上传失败')
+    message.error(error.message || '上传失败')
     onError(error)
+  } finally {
+    uploadingName.value = ''
+  }
+}
+
+const openTutorial = () => {
+  tutorialOpen.value = true
+  tutorialHintVisible.value = false
+  try {
+    window.localStorage.setItem('file-tutorial-seen', 'true')
+  } catch {
+    // Storage access can be disabled without blocking the tutorial.
   }
 }
 
@@ -570,7 +707,9 @@ const getTypeName = (type) => {
   const typeMap = {
     image: '图片',
     audio: '音频',
-    video: '视频'
+    video: '视频',
+    document: '文档',
+    other: '其他'
   }
   return typeMap[type] || type
 }
@@ -578,9 +717,10 @@ const getTypeName = (type) => {
 // 获取类型颜色
 const getTypeColor = (type) => {
   const colorMap = {
-    image: 'blue',
-    audio: 'green',
-    video: 'purple'
+    image: 'geekblue',
+    audio: 'geekblue',
+    video: 'geekblue',
+    document: 'geekblue'
   }
   return colorMap[type] || 'default'
 }
@@ -661,11 +801,189 @@ const handleImageError = (e) => {
 }
 
 onMounted(() => {
+  try {
+    tutorialHintVisible.value = window.localStorage.getItem('file-tutorial-seen') !== 'true'
+  } catch {
+    tutorialHintVisible.value = true
+  }
   fetchFiles()
 })
 </script>
 
 <style scoped lang="scss">
+.storage-brief {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto;
+  gap: 18px 32px;
+  align-items: center;
+  padding: 22px 24px 24px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.storage-brief__copy {
+  display: grid;
+  gap: 5px;
+
+  strong {
+    color: var(--color-text);
+    font-size: 18px;
+    font-weight: 720;
+    letter-spacing: -.015em;
+  }
+
+  p {
+    max-width: 64ch;
+    margin: 0;
+    color: var(--color-text-secondary);
+    line-height: 1.65;
+  }
+}
+
+.storage-eyebrow {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 720;
+  letter-spacing: .06em;
+}
+
+.storage-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(92px, 1fr));
+  gap: 10px;
+  margin: 0;
+
+  div {
+    min-width: 108px;
+    padding: 11px 14px;
+    border-left: 2px solid color-mix(in srgb, var(--color-primary) 45%, white);
+    background: color-mix(in srgb, var(--color-page) 72%, white);
+  }
+
+  dt {
+    color: var(--color-text-secondary);
+    font-size: 11px;
+  }
+
+  dd {
+    margin: 3px 0 0;
+    color: var(--color-text);
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 720;
+  }
+}
+
+.tutorial-hint {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  transition: transform .2s ease, color .2s ease;
+
+  &:hover { transform: translateX(3px); }
+  &:active { transform: translateX(3px) scale(.98); }
+  &:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 4px; }
+}
+
+.upload-zone {
+  display: grid;
+  gap: 12px;
+}
+
+.upload-zone :deep(.ant-upload-wrapper),
+.upload-zone :deep(.ant-upload-drag) {
+  width: 100%;
+}
+
+.upload-zone :deep(.ant-upload-drag) {
+  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-page) 70%, white);
+  transition: border-color .22s ease, background .22s ease, transform .22s ease;
+}
+
+.upload-zone :deep(.ant-upload-drag:hover) {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 4%, white);
+  transform: translateY(-1px);
+}
+
+.upload-zone__inner {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 20px;
+  text-align: left;
+
+  strong {
+    display: block;
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 680;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: var(--color-text-secondary);
+    line-height: 1.55;
+  }
+}
+
+.upload-zone__icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 10%, white);
+  color: var(--color-primary);
+  font-size: 19px;
+}
+
+.upload-progress {
+  display: grid;
+  grid-template-columns: minmax(180px, .7fr) minmax(240px, 1.3fr);
+  gap: 20px;
+  align-items: center;
+  padding: 14px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+
+  div:first-child {
+    display: grid;
+    min-width: 0;
+  }
+
+  span {
+    color: var(--color-text-secondary);
+    font-size: 11px;
+  }
+
+  strong {
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.file-mobile-grid { display: none; }
+
 .media-preview-container {
   display: flex;
   justify-content: center;
@@ -675,6 +993,9 @@ onMounted(() => {
   border-radius: 4px;
   padding: 16px;
 }
+
+.media-player { width: 100%; }
+.media-player--video { max-height: 600px; }
 
 .media-preview-container--stable {
   aspect-ratio: 16 / 9;
@@ -705,4 +1026,77 @@ onMounted(() => {
 }
 
 .preview-frame--stable { aspect-ratio: 1; }
+
+@media (max-width: 768px) {
+  .storage-brief {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .storage-metrics {
+    width: 100%;
+  }
+
+  .upload-zone__inner {
+    align-items: flex-start;
+    padding: 8px 10px;
+  }
+
+  .upload-progress {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .admin-table-card { display: none; }
+
+  .file-mobile-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .file-mobile-row {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .file-mobile-row__identity {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 12px;
+    align-items: center;
+
+    strong,
+    span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    strong { color: var(--color-text); font-weight: 680; }
+    span { margin-top: 3px; color: var(--color-text-secondary); font-size: 12px; }
+  }
+
+  .file-kind {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--color-primary) 9%, white);
+    color: var(--color-primary);
+  }
+
+  .file-mobile-row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-border);
+  }
+}
 </style>

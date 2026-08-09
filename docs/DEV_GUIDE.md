@@ -52,6 +52,19 @@ src/
 - 保持键盘可访问性；仅图标按钮必须有 `aria-label`。
 - 大型编辑器、Markdown 高亮等依赖只在对应路由加载。
 
+### 文件中心
+
+`views/files/FileList.vue` 是博客资源工作台，`FileTutorialDrawer.vue` 提供五步内置教程。新增行为需保持以下契约：
+
+- 浏览器只调用 Django `/api/upload/`，不得访问 Xion 的 8081 端口或读取服务密钥。
+- 单文件上限为 50 MB，上传进度由 `api/file.js` 的 `onProgress` 回调提供。
+- 图片、音频、视频、PDF/Word/Excel/TXT 分别归类；未知类型归为 `other`。
+- 列表同时兼容 `storage_backend=local` 和 `storage_backend=xion`，只使用 Django 返回的稳定 `file_url`。
+- 删除失败时保留可重试状态；不要在前端假设底层对象已经消失。
+- 桌面使用表格，移动端使用资源卡片；改动后至少检查 390px 和 1200px 视口。
+
+教程更新时同步维护 `FileTutorialDrawer.spec.js`，确保上传、复制链接、插入文章、下载/删除、常见问题五个步骤仍完整。
+
 ## 5. 测试
 
 测试文件与业务文件相邻放置在 `__tests__` 中，重点覆盖纯数据转换、请求契约、会话和可复用组件。
@@ -63,6 +76,16 @@ npm run build
 ```
 
 提交前执行 `npm run check`。构建成功仍出现大分包警告时，应先确认该依赖是否只在懒加载路由中使用，再决定拆分策略。
+
+文件中心定向测试：
+
+```bash
+npm test -- --runInBand \
+  src/api/__tests__/file.spec.js \
+  src/views/files/__tests__/FileList.spec.js \
+  src/views/files/__tests__/FileListMounted.spec.js \
+  src/views/files/__tests__/FileTutorialDrawer.spec.js
+```
 
 ## 6. 新增功能流程
 

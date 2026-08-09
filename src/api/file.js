@@ -3,6 +3,8 @@ import request from '@/utils/request'
 import { normalizeCollectionResponse } from './collections'
 import { unwrapApiResponse } from './response'
 
+const FILE_TRANSFER_TIMEOUT_MS = 300000
+
 function normalizeFileItem(item) {
   return {
     ...item,
@@ -41,16 +43,28 @@ function normalizeUploadResponse(response) {
     : item
 }
 
-export const uploadFile = async (params) =>
-  normalizeUploadResponse(await request.post('/api/upload/upload/', buildUploadData(params)))
+export const uploadFile = async (params) => {
+  const options = params.onProgress
+    ? {
+        onUploadProgress: ({ loaded, total }) => {
+          if (!total) return
+          params.onProgress(Math.min(100, Math.round((loaded / total) * 100)))
+        }
+      }
+    : {}
+  options.timeout = FILE_TRANSFER_TIMEOUT_MS
+  return normalizeUploadResponse(
+    await request.post('/api/upload/upload/', buildUploadData(params), options)
+  )
+}
 
 export async function getFileList(params = {}) {
   const response = await request.get('/api/upload/files/', {
     params: {
       page: params.page || 1,
-      pageSize: params.pageSize || 10,
-      keyword: params.keyword || undefined,
-      file_type: params.type || undefined
+      page_size: params.pageSize || 10,
+      q: params.keyword || undefined,
+      type: params.type || undefined
     }
   })
   return normalizeFileResponse(response)
@@ -64,14 +78,17 @@ export async function searchFiles(params) {
       category: params.category,
       tags: params.tags?.length ? JSON.stringify(params.tags) : undefined,
       page: params.page || 1,
-      pageSize: params.pageSize || 10
+      page_size: params.pageSize || 10
     }
   })
   return normalizeFileResponse(response)
 }
 
 export const downloadFile = (fileId) =>
-  request.post(`/api/upload/files/${fileId}/download/`, null, { responseType: 'blob' })
+  request.post(`/api/upload/files/${fileId}/download/`, null, {
+    responseType: 'blob',
+    timeout: FILE_TRANSFER_TIMEOUT_MS
+  })
 
 export const deleteFile = (fileId) =>
   request.delete(`/api/upload/files/${fileId}/`)

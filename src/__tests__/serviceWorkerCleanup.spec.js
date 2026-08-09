@@ -2,6 +2,13 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 describe('service worker cleanup', () => {
+  it('keeps the HTML entrypoint compatible with the production script CSP', () => {
+    const html = fs.readFileSync(path.join(process.cwd(), 'index.html'), 'utf8')
+    const inlineScripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>[\s\S]*?<\/script>/gi)]
+
+    expect(inlineScripts).toHaveLength(0)
+  })
+
   it('marks the document after Vue mounts for release health checks', () => {
     const source = fs.readFileSync(path.join(process.cwd(), 'src/main.js'), 'utf8')
 
