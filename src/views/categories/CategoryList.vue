@@ -92,10 +92,15 @@
       :indent-size="0"
       :scroll="{ x: 860 }"
       class="responsive-table"
-    >
+      >
       <template #bodyCell="{ column, record }">
+        <!-- 序号列 -->
+        <template v-if="column.dataIndex === 'serialNo'">
+          {{ record.serialNo }}
+        </template>
+
         <!-- 状态列 -->
-        <template v-if="column.dataIndex === 'status'">
+        <template v-else-if="column.dataIndex === 'status'">
           <a-tag :color="record.status === 'active' ? 'success' : 'default'">
             {{ record.status === 'active' ? '启用' : '禁用' }}
           </a-tag>
@@ -188,36 +193,49 @@ import AsyncState from '@/components/common/AsyncState.vue'
 // 表格列配置
 const columns = [
   {
+    title: '序号',
+    dataIndex: 'serialNo',
+    key: 'serialNo',
+    width: 72,
+    align: 'center'
+  },
+  {
     title: '分类名称',
     dataIndex: 'name',
     key: 'name',
-    width: '30%',
+    width: 180,
     ellipsis: true
   },
   {
     title: '描述',
     dataIndex: 'description',
     key: 'description',
-    width: '35%',
+    width: 300,
     ellipsis: true
   },
   {
     title: '排序',
     dataIndex: 'sort',
     key: 'sort',
-    width: '10%'
+    width: 100,
+    align: 'center',
+    defaultSortOrder: 'ascend',
+    sorter: (a, b) => {
+      const sortDifference = Number(a.sort || 0) - Number(b.sort || 0)
+      return sortDifference || Number(a.id || 0) - Number(b.id || 0)
+    }
   },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: '15%'
+    width: 180,
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
-    width: '20%',
+    width: 190,
     fixed: 'right'
   }
 ]
@@ -256,7 +274,7 @@ const onSelectChange = (keys) => {
 
 // 表格变化处理
 const handleTableChange = (pagination, filters, sorter) => {
-  // 这里可以处理分页、筛选、排序等变化
+  // 分类排序由表格列的 sorter 处理，保持分页和筛选行为由现有流程管理。
 }
 
 // 搜索表单
@@ -309,6 +327,17 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
+const normalizeCategory = (item) => ({
+  ...item,
+  sort: Number(item.sort ?? 0) || 0,
+  status: item.status || 'inactive'
+})
+
+const compareCategories = (left, right) => {
+  const sortDifference = left.sort - right.sort
+  return sortDifference || Number(left.id || 0) - Number(right.id || 0)
+}
+
 // 获取分类列表
 const fetchCategories = async (allowPageReset = true) => {
   const generation = ++requestGeneration
@@ -326,7 +355,13 @@ const fetchCategories = async (allowPageReset = true) => {
       pagination.current = 1
       return fetchCategories(false)
     }
-    categoryList.value = results.map((item) => ({ ...item, status: item.status || 'inactive' }))
+    categoryList.value = results
+      .map(normalizeCategory)
+      .sort(compareCategories)
+      .map((item, index) => ({
+        ...item,
+        serialNo: (pagination.current - 1) * pagination.pageSize + index + 1
+      }))
     pagination.total = count
   } catch (error) {
     if (generation !== requestGeneration) return
