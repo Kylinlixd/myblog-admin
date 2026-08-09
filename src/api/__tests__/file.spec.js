@@ -1,4 +1,4 @@
-import { getFileList, searchFiles, uploadFile } from '../file'
+import { downloadFile, getFileList, searchFiles, uploadFile } from '../file'
 import request from '@/utils/request'
 
 describe('file API normalization', () => {
@@ -32,6 +32,14 @@ describe('file API normalization', () => {
         size: 0,
         url: '/media/image.png'
       }]
+    })
+    expect(request.get).toHaveBeenCalledWith('/api/upload/files/', {
+      params: {
+        page: 1,
+        page_size: 10,
+        q: undefined,
+        type: undefined
+      }
     })
   })
 
@@ -111,7 +119,20 @@ describe('file API normalization', () => {
     const result = await uploadFile({ file, file_type: 'document', onProgress })
 
     expect(onProgress).toHaveBeenCalledWith(50)
+    expect(request.post.mock.calls[0][2].timeout).toBe(300000)
     expect(result.storage_backend).toBe('xion')
     expect(result.url).toBe('/api/upload/public/10/')
+  })
+
+  it('uses the long transfer timeout for downloads', async () => {
+    jest.spyOn(request, 'post').mockResolvedValueOnce(new Blob(['file']))
+
+    await downloadFile(9)
+
+    expect(request.post).toHaveBeenCalledWith(
+      '/api/upload/files/9/download/',
+      null,
+      { responseType: 'blob', timeout: 300000 }
+    )
   })
 })
