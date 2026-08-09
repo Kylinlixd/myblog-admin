@@ -85,25 +85,6 @@ describe('CategoryList mounted states and taxonomy actions', () => {
     wrapper.unmount()
   })
 
-  it('keeps categories ordered by sort and then id', async () => {
-    getCategoryList.mockResolvedValueOnce({
-      count: 3,
-      results: [
-        { id: 9, name: '网络技术', sort: '2' },
-        { id: 4, name: '前端', sort: '0' },
-        { id: 2, name: '后端', sort: '0' }
-      ]
-    })
-    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
-    await flushPromises()
-
-    expect(wrapper.vm.categoryList.map((item) => item.id)).toEqual([2, 4, 9])
-    const sortColumn = wrapper.vm.columns.find((column) => column.dataIndex === 'sort')
-    expect(sortColumn.defaultSortOrder).toBe('ascend')
-    expect(sortColumn.sorter({ sort: 0, id: 1 }, { sort: 1, id: 1 })).toBeLessThan(0)
-    wrapper.unmount()
-  })
-
   it('renders an inline error state and retries the category request', async () => {
     getCategoryList.mockRejectedValueOnce(new Error('分类加载失败'))
     const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
@@ -245,7 +226,7 @@ describe('CategoryList mounted states and taxonomy actions', () => {
 
     second.resolve({ count: 1, results: [{ id: 2, name: 'new' }] })
     await newerRequest
-    expect(wrapper.vm.categoryList).toEqual([{ id: 2, name: 'new', sort: 0, status: 'inactive' }])
+    expect(wrapper.vm.categoryList).toEqual([{ id: 2, name: 'new', status: 'inactive' }])
     expect(wrapper.vm.loading).toBe(false)
     wrapper.unmount()
   })

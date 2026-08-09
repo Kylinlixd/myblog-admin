@@ -124,11 +124,6 @@
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
       >
         <template #bodyCell="{ column, record }">
-          <!-- 序号列 -->
-          <template v-if="column.dataIndex === 'serialNo'">
-            {{ record.serialNo }}
-          </template>
-
           <!-- 分类列 -->
           <template v-if="column.dataIndex === 'category'">
             <a-tag color="blue">
@@ -289,9 +284,8 @@ const fetchDynamics = async (allowPageReset = true) => {
       currentPage.value = 1
       return fetchDynamics(false)
     }
-    dynamicList.value = results.map((item, index) => ({
+    dynamicList.value = results.map(item => ({
       ...item,
-      serialNo: (requestedPage - 1) * pageSize.value + index + 1,
       mediaUrls: item.mediaUrls || [],
       category: item.category || null,
       like_count: item.like_count ?? item.likes ?? 0,
@@ -368,9 +362,9 @@ const handleBatchDelete = async () => {
 // 表格列定义
 const columns = [
   {
-    title: '序号',
-    dataIndex: 'serialNo',
-    key: 'serialNo',
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
     width: 60,
     align: 'center'
   },
@@ -458,9 +452,9 @@ const columns = [
 // 移动端优化的列定义
 const columnsForMobile = [
   {
-    title: '序号',
-    dataIndex: 'serialNo',
-    key: 'serialNo',
+    title: 'ID',
+    dataIndex: 'id',
+    key: 'id',
     width: 60,
     align: 'center'
   },

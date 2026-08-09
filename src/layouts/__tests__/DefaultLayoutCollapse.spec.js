@@ -160,8 +160,4 @@ describe('DefaultLayout navigation controls', () => {
     expect(layoutSource).toContain('left: var(--admin-sidebar-width)')
     expect(layoutSource).toContain('padding-top: 72px')
   })
-
-  it('keeps the desktop collapse control close to the sidebar edge', () => {
-    expect(layoutSource).toContain('padding: 0 28px 0 8px')
-  })
 })

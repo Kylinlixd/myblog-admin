@@ -84,19 +84,11 @@
       }"
       :row-key="record => record.id"
       @change="handleTableChange"
-      :scroll="{ x: 1160 }"
-      class="responsive-table tag-table"
+      :scroll="{ x: 800 }"
     >
       <template #bodyCell="{ column, record }">
-        <!-- 描述列 -->
-        <template v-if="column.dataIndex === 'description'">
-          <span class="tag-description" :title="record.description || '暂无描述'">
-            {{ record.description || '暂无描述' }}
-          </span>
-        </template>
-
         <!-- 状态列 -->
-        <template v-else-if="column.dataIndex === 'status'">
+        <template v-if="column.dataIndex === 'status'">
           <a-tag :color="record.status === 'active' ? 'success' : 'default'">
             {{ record.status === 'active' ? '启用' : '禁用' }}
           </a-tag>
@@ -104,12 +96,12 @@
 
         <!-- 创建时间列 -->
         <template v-else-if="column.dataIndex === 'createdAt'">
-          <span class="tag-date">{{ formatDate(record.createdAt) }}</span>
+          {{ formatDate(record.createdAt) }}
         </template>
 
         <!-- 更新时间列 -->
         <template v-else-if="column.dataIndex === 'updatedAt'">
-          <span class="tag-date">{{ formatDate(record.updatedAt) }}</span>
+          {{ formatDate(record.updatedAt) }}
         </template>
 
         <!-- 操作列 -->
@@ -196,50 +188,44 @@ const columns = [
     title: '标签名称',
     dataIndex: 'name',
     key: 'name',
-    width: 180,
-    ellipsis: true,
+    width: '25%',
   },
   {
     title: '描述',
     dataIndex: 'description',
     key: 'description',
-    width: 280,
+    width: '30%',
     ellipsis: true,
   },
   {
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    width: 90,
-    align: 'center',
+    width: '10%',
   },
   {
     title: '使用次数',
     dataIndex: 'useCount',
     key: 'useCount',
-    width: 100,
-    align: 'center',
-    sorter: (a, b) => Number(a.useCount || 0) - Number(b.useCount || 0),
+    width: '10%',
   },
   {
     title: '创建时间',
     dataIndex: 'createdAt',
     key: 'createdAt',
-    width: 160,
-    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    width: '15%',
   },
   {
     title: '更新时间',
     dataIndex: 'updatedAt',
     key: 'updatedAt',
-    width: 160,
-    sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
+    width: '15%',
   },
   {
     title: '操作',
     dataIndex: 'action',
     key: 'action',
-    width: 190,
+    width: '20%',
     fixed: 'right',
   }
 ]
@@ -478,21 +464,3 @@ onMounted(() => {
   fetchTags()
 })
 </script>
-
-<style scoped lang="scss">
-.tag-list :deep(.tag-description) {
-  display: block;
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tag-list :deep(.tag-date) {
-  white-space: nowrap;
-}
-
-.tag-list :deep(.tag-table .ant-table-tbody > tr > td) {
-  vertical-align: middle;
-}
-</style>
