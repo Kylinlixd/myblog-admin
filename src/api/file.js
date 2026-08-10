@@ -6,14 +6,18 @@ import { unwrapApiResponse } from './response'
 const FILE_TRANSFER_TIMEOUT_MS = 300000
 
 function normalizeFileItem(item) {
-  return {
+  const normalized = {
     ...item,
     type: item.type ?? item.file_type,
     size: item.size ?? item.file_size,
-    url: item.url ?? item.file_url ?? null,
-    posterUrl: item.posterUrl ?? item.poster_url ?? null,
-    poster_url: item.poster_url ?? item.posterUrl ?? null
+    url: item.url ?? item.file_url ?? null
   }
+  const posterUrl = item.posterUrl ?? item.poster_url
+  if (posterUrl) {
+    normalized.posterUrl = posterUrl
+    normalized.poster_url = posterUrl
+  }
+  return normalized
 }
 
 function normalizeFileResponse(response) {
