@@ -162,11 +162,11 @@ describe('DefaultLayout navigation controls', () => {
   })
 
   it('keeps the desktop collapse control close to the sidebar edge', () => {
-    expect(layoutSource).toContain('padding: 0 28px 0 0')
+    expect(layoutSource).toContain('padding: 0 28px 0 0 !important')
   })
 
   it('keeps the mobile header controls aligned close to the viewport edge', () => {
-    expect(layoutSource).toContain('.workspace-header { height: auto; min-height: 64px; padding: 8px 12px; }')
+    expect(layoutSource).toContain('.workspace-header { height: auto; min-height: 64px; padding: 8px 12px !important; }')
   })
 
   it('uses one visual scale for the mobile header controls', () => {
