@@ -47,7 +47,7 @@ const ButtonStub = {
 const globalStubs = {
   'a-button': ButtonStub,
   'a-form': { template: '<form><slot /></form>' },
-  'a-form-item': { template: '<div><slot /></div>' },
+  'a-form-item': { inheritAttrs: false, template: '<div v-bind="$attrs"><slot /></div>' },
   'a-input': { template: '<input />' },
   'a-input-search': { template: '<input />' },
   'a-list': { template: '<div><slot /></div>' },
@@ -117,6 +117,20 @@ describe('DynamicEdit mounted interactions', () => {
 
     expect(wrapper.find('.content-type-control').text()).toContain('上传文件')
     expect(wrapper.find('.media-upload-status').text()).toContain('支持 MOV')
+    wrapper.unmount()
+  })
+
+  it('renders the active media upload field before the content editor', async () => {
+    const wrapper = await mountEditor()
+    wrapper.vm.form.type = 'image'
+    await wrapper.vm.$nextTick()
+
+    const uploadField = wrapper.find('.media-upload-field')
+    const contentField = wrapper.find('.editor-content-field')
+
+    expect(uploadField.exists()).toBe(true)
+    expect(contentField.exists()).toBe(true)
+    expect(uploadField.element.compareDocumentPosition(contentField.element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     wrapper.unmount()
   })
 

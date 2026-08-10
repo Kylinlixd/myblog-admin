@@ -59,6 +59,7 @@
             v-if="form.type === 'text'"
             class="quick-media-upload"
             :show-upload-list="false"
+            :open-file-dialog-on-click="true"
             :before-upload="beforeMediaUpload"
             :custom-request="handleCustomUpload"
             accept="image/*,.heic,.heif,audio/*,video/*,.mov,.m4v,.hevc"
@@ -79,22 +80,9 @@
         </div>
       </a-form-item>
 
-      <a-form-item class="editor-content-field" label="内容" name="content">
-        <markdown-editor
-          ref="markdownEditorRef"
-          v-model="form.content"
-          :height="'400px'"
-          :theme="'light'"
-          :preview-theme="'default'"
-          :code-theme="'atom-one-light'"
-          :language="'zh-CN'"
-          @onSave="handleSave"
-        />
-      </a-form-item>
-
       <!-- 图片上传 -->
       <a-form-item
-        class="editor-settings-field"
+        class="editor-settings-field media-upload-field"
         label="图片"
         name="mediaUrls"
         v-if="form.type === 'image'"
@@ -103,6 +91,7 @@
           <a-upload
             list-type="picture-card"
             :file-list="fileList"
+            :open-file-dialog-on-click="true"
             :before-upload="beforeImageUpload"
             :custom-request="handleCustomUpload"
             @remove="handleMediaRemove"
@@ -125,7 +114,7 @@
 
       <!-- 音频上传 -->
       <a-form-item
-        class="editor-settings-field"
+        class="editor-settings-field media-upload-field"
         label="音频"
         name="mediaUrls"
         v-if="form.type === 'audio'"
@@ -133,6 +122,7 @@
         <div class="media-upload-container">
           <a-upload
             :file-list="fileList"
+            :open-file-dialog-on-click="true"
             :before-upload="beforeAudioUpload"
             :custom-request="handleCustomUpload"
             @remove="handleMediaRemove"
@@ -154,7 +144,7 @@
 
       <!-- 视频上传 -->
       <a-form-item
-        class="editor-settings-field"
+        class="editor-settings-field media-upload-field"
         label="视频"
         name="mediaUrls"
         v-if="form.type === 'video'"
@@ -162,6 +152,7 @@
         <div class="media-upload-container">
           <a-upload
             :file-list="fileList"
+            :open-file-dialog-on-click="true"
             :before-upload="beforeVideoUpload"
             :custom-request="handleCustomUpload"
             @remove="handleMediaRemove"
@@ -179,6 +170,19 @@
         <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
           <video controls preload="metadata" playsinline :src="form.mediaUrls[0]" :poster="fileList[0]?.posterUrl || undefined" style="width: 100%"></video>
         </div>
+      </a-form-item>
+
+      <a-form-item class="editor-content-field" label="内容" name="content">
+        <markdown-editor
+          ref="markdownEditorRef"
+          v-model="form.content"
+          :height="'400px'"
+          :theme="'light'"
+          :preview-theme="'default'"
+          :code-theme="'atom-one-light'"
+          :language="'zh-CN'"
+          @onSave="handleSave"
+        />
       </a-form-item>
 
       <a-form-item class="editor-settings-field" label="状态" name="status">
@@ -1407,11 +1411,30 @@ onBeforeUnmount(() => {
     .edit-form {
       padding: 14px;
       border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+
+      :deep(.editor-title-field),
+      :deep(.editor-content-field),
+      :deep(.editor-settings-field),
+      :deep(.editor-form-actions) {
+        grid-column: auto;
+        grid-row: auto;
+        width: 100%;
+      }
     }
 
     .media-upload-container {
       flex-direction: column;
       gap: 10px;
+      width: 100%;
+    }
+
+    .media-upload-field :deep(.ant-upload-select-picture-card),
+    .media-upload-field :deep(.ant-upload) {
+      min-width: 112px;
+      min-height: 48px;
+      touch-action: manipulation;
     }
 
     .content-type-control {

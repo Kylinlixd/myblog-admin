@@ -10,4 +10,16 @@ describe('admin editor layout', () => {
     expect(source).toContain('class="editor-settings-field"')
     expect(source).toContain('grid-template-columns: minmax(0, 1fr) 320px')
   })
+
+  it('places media upload controls before the editor and keeps mobile uploads tappable', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/views/dynamics/DynamicEdit.vue'), 'utf8')
+    const uploadIndex = source.indexOf('media-upload-field')
+    const editorIndex = source.indexOf('class="editor-content-field"')
+
+    expect(uploadIndex).toBeGreaterThan(-1)
+    expect(uploadIndex).toBeLessThan(editorIndex)
+    expect(source).toContain(':open-file-dialog-on-click="true"')
+    expect(source).toMatch(/@media \(max-width: 640px\)[\s\S]*?\.edit-form \{[\s\S]*?display: flex;/)
+    expect(source).toContain('grid-row: auto;')
+  })
 })
