@@ -24,3 +24,11 @@ test('文章详情包含移动端和 reduced motion 规则', () => {
   expect(source).toContain('@media (max-width: 768px)')
   expect(source).toContain('prefers-reduced-motion: reduce')
 })
+
+test('视频文章详情渲染可播放媒体源', () => {
+  expect(source).toContain("import { buildApiUrl } from '@/utils/apiBaseUrl'")
+  expect(source).toContain("dynamic.type === 'video'")
+  expect(source).toContain('<video')
+  expect(source).toContain('controls')
+  expect(source).toContain('dynamicMediaUrls')
+})

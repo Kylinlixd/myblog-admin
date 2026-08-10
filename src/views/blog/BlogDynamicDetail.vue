@@ -34,6 +34,18 @@
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
         <main class="article-main-column">
+          <div v-if="dynamic.type === 'video' && dynamicMediaUrls.length" class="dynamic-video">
+            <video
+              v-for="url in dynamicMediaUrls"
+              :key="url"
+              class="dynamic-video__player"
+              controls
+              preload="metadata"
+              :src="url"
+            >
+              您的浏览器不支持视频播放
+            </video>
+          </div>
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
 
           <div class="dynamic-footer">
@@ -145,9 +157,10 @@
 </template>
 
 <script setup>
-import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments } from '@/api/blog'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
 import MarkdownIt from 'markdown-it'
@@ -192,6 +205,13 @@ const renderMarkdown = (content) => {
 const route = useRoute()
 const appStore = useAppStore()
 const dynamic = ref(null)
+const dynamicMediaUrls = computed(() => {
+  const media = dynamic.value?.mediaUrls ?? dynamic.value?.media_urls ?? dynamic.value?.files ?? []
+  const items = Array.isArray(media) ? media : [media]
+  return items
+    .map((item) => buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || ''))
+    .filter(Boolean)
+})
 const loading = ref(true)
 const articleBodyRef = ref(null)
 const tocItems = ref([])
@@ -979,6 +999,22 @@ onBeforeUnmount(() => {
     }
 
     .article-main-column { min-width: 0; }
+
+    .dynamic-video {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .dynamic-video__player {
+      display: block;
+      width: 100%;
+      max-height: min(68vh, 680px);
+      border: 1px solid var(--article-line);
+      border-radius: 22px;
+      background: #10243a;
+      box-shadow: 0 20px 52px rgb(88 65 37 / 9%);
+    }
 
     .article-main-column .dynamic-body {
       width: 100%;
