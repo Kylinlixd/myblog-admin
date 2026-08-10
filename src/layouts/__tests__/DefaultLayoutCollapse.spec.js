@@ -169,6 +169,10 @@ describe('DefaultLayout navigation controls', () => {
     expect(layoutSource).toContain('.workspace-header { height: auto; min-height: 64px; padding: 8px 12px !important; }')
   })
 
+  it('keeps the mobile drawer brand mark separated from its label', () => {
+    expect(layoutSource).toContain('.admin-brand--drawer { padding-inline: 22px; gap: 11px; }')
+  })
+
   it('uses a compact visual scale for the mobile header controls', () => {
     expect(layoutSource).toContain('.header-left { min-width: 0; gap: 8px; overflow: hidden; }')
     expect(layoutSource).toContain('.icon-button { display: grid; width: 36px; height: 36px;')

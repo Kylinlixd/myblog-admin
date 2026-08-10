@@ -141,7 +141,7 @@ function handleLogout() {
 .admin-sidebar .ant-layout-sider-children { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; }
 .admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 18px; color: white; white-space: nowrap; }
 .admin-brand__link { display: flex; min-width: 0; align-items: center; gap: 11px; color: inherit; text-decoration: none; }
-.admin-brand--drawer { padding-inline: 22px; }
+.admin-brand--drawer { padding-inline: 22px; gap: 11px; }
 .admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
 .admin-brand__link > span:last-child, .admin-brand--drawer > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
