@@ -34,10 +34,6 @@
           <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
           </button>
-          <router-link v-if="isMobile" class="header-brand" to="/dashboard">
-            <span class="header-brand__mark">L</span>
-            <span><strong>LiXD Studio</strong><small>内容工作台</small></span>
-          </router-link>
         </div>
         <div class="header-actions">
           <span class="workspace-status"><i /> 系统在线</span>
@@ -174,11 +170,6 @@ function handleLogout() {
 .workspace-header { position: fixed; z-index: 50; top: 0; right: 0; left: var(--admin-sidebar-width); display: flex; box-sizing: border-box; min-width: 0; height: 72px; padding: 0 28px 0 0 !important; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
 .header-left { min-width: 0; gap: 8px; overflow: hidden; }
-.header-brand { display: inline-flex; align-items: center; gap: 9px; color: var(--color-text); text-decoration: none; }
-.header-brand__mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: var(--color-primary); color: #fff; font-size: 18px; font-weight: 800; }
-.header-brand > span:last-child { display: grid; gap: 2px; }
-.header-brand strong { font-size: 13px; font-weight: 800; line-height: 1.1; }
-.header-brand small { color: var(--color-text-muted); font-size: 10px; line-height: 1.1; }
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { min-width: 0; gap: 16px; }
@@ -205,6 +196,6 @@ function handleLogout() {
   .workspace-content { padding: 18px 14px; }
   .header-left { gap: 8px; }
   .header-actions { gap: 8px; }
-  .blog-link span, .user-copy, .header-brand > span:last-child, .workspace-status { display: none; }
+  .blog-link span, .user-copy, .workspace-status { display: none; }
 }
 </style>

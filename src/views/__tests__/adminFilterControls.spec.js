@@ -140,7 +140,7 @@ describe('admin filter controls', () => {
     expect(editor).not.toContain('created?.data')
     expect(editor).not.toContain('result.file_type')
     expect(editor).not.toContain('result.file_url')
-    expect(layout).toContain('header-brand')
+    expect(layout).not.toContain('header-brand')
     expect(layout).toContain('workspace-status')
   })
 })
