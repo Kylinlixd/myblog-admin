@@ -48,12 +48,27 @@
       </a-form-item>
 
       <a-form-item class="editor-settings-field" label="内容类型" name="type">
-        <a-radio-group v-model:value="form.type">
-          <a-radio value="text">纯文本</a-radio>
-          <a-radio value="image">图文</a-radio>
-          <a-radio value="audio">音频</a-radio>
-          <a-radio value="video">视频</a-radio>
-        </a-radio-group>
+        <div class="content-type-control">
+          <a-radio-group v-model:value="form.type">
+            <a-radio value="text">纯文本</a-radio>
+            <a-radio value="image">图文</a-radio>
+            <a-radio value="audio">音频</a-radio>
+            <a-radio value="video">视频</a-radio>
+          </a-radio-group>
+          <a-upload
+            v-if="form.type === 'text'"
+            class="quick-media-upload"
+            :show-upload-list="false"
+            :before-upload="beforeMediaUpload"
+            :custom-request="handleCustomUpload"
+            accept="image/*,audio/*,video/*"
+          >
+            <a-button type="primary">
+              <template #icon><upload-outlined /></template>
+              上传文件
+            </a-button>
+          </a-upload>
+        </div>
       </a-form-item>
 
       <a-form-item class="editor-content-field" label="内容" name="content">
@@ -797,6 +812,36 @@ const handleImagePreview = (file) => {
   handlePreviewMedia(file)
 }
 
+const detectMediaType = (file) => {
+  const mimeType = String(file?.type || '').toLowerCase()
+  if (mimeType.startsWith('image/')) return 'image'
+  if (mimeType.startsWith('audio/')) return 'audio'
+  if (mimeType.startsWith('video/')) return 'video'
+
+  const extension = String(file?.name || '').split('.').pop()?.toLowerCase()
+  if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) return 'image'
+  if (['mp3', 'wav', 'ogg'].includes(extension)) return 'audio'
+  if (['mp4', 'webm', 'ogg'].includes(extension)) return 'video'
+  return undefined
+}
+
+const beforeMediaUpload = (file) => {
+  const mediaType = detectMediaType(file)
+  if (!mediaType) {
+    message.error('仅支持图片、音频或视频文件')
+    return false
+  }
+
+  const isValid = mediaType === 'image'
+    ? beforeImageUpload(file)
+    : mediaType === 'audio'
+      ? beforeAudioUpload(file)
+      : beforeVideoUpload(file)
+
+  if (isValid) form.value.type = mediaType
+  return isValid
+}
+
 // 检查图片上传
 const beforeImageUpload = (file) => {
   const isValidType = checkFileType(file, ['jpg', 'jpeg', 'png', 'gif'])
@@ -1097,6 +1142,13 @@ onBeforeUnmount(() => {
     font-size: 12px;
     white-space: nowrap;
   }
+
+  .content-type-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
   
   .media-preview {
     margin-top: 16px;
@@ -1282,6 +1334,21 @@ onBeforeUnmount(() => {
     .media-upload-container {
       flex-direction: column;
       gap: 10px;
+    }
+
+    .content-type-control {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quick-media-upload,
+    .quick-media-upload :deep(.ant-upload) {
+      width: 100%;
+    }
+
+    .quick-media-upload :deep(.ant-btn) {
+      width: 100%;
     }
   }
 }

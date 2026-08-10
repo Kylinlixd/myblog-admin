@@ -112,6 +112,13 @@ describe('DynamicEdit mounted interactions', () => {
     wrapper.unmount()
   })
 
+  it('shows a quick upload action for a new text draft', async () => {
+    const wrapper = await mountEditor()
+
+    expect(wrapper.find('.content-type-control').text()).toContain('上传文件')
+    wrapper.unmount()
+  })
+
   it('clears incompatible media controls when the content type changes', async () => {
     const wrapper = await mountEditor()
     wrapper.vm.form.type = 'image'
