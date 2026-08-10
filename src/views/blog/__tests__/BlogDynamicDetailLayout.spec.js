@@ -31,4 +31,7 @@ test('视频文章详情渲染可播放媒体源', () => {
   expect(source).toContain('<video')
   expect(source).toContain('controls')
   expect(source).toContain('dynamicMediaUrls')
+  expect(source).toContain('dynamicMediaItems')
+  expect(source).toContain(':poster="item.posterUrl || undefined"')
+  expect(source).toContain('playsinline')
 })

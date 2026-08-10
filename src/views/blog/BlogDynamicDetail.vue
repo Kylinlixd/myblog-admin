@@ -36,12 +36,14 @@
         <main class="article-main-column">
           <div v-if="dynamic.type === 'video' && dynamicMediaUrls.length" class="dynamic-video">
             <video
-              v-for="url in dynamicMediaUrls"
-              :key="url"
+              v-for="item in dynamicMediaItems"
+              :key="item.url"
               class="dynamic-video__player"
               controls
               preload="metadata"
-              :src="url"
+              :src="item.url"
+              :poster="item.posterUrl || undefined"
+              playsinline
             >
               您的浏览器不支持视频播放
             </video>
@@ -211,6 +213,21 @@ const dynamicMediaUrls = computed(() => {
   return items
     .map((item) => buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || ''))
     .filter(Boolean)
+})
+const dynamicMediaItems = computed(() => {
+  const media = dynamic.value?.mediaUrls ?? dynamic.value?.media_urls ?? dynamic.value?.files ?? []
+  const items = Array.isArray(media) ? media : [media]
+  return items.map((item) => {
+    const url = buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || '')
+    const poster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url || ''
+    return {
+      url,
+      posterUrl: poster ? buildApiUrl(poster) : '',
+      name: typeof item === 'object' ? item?.name || '' : '',
+      type: typeof item === 'object' ? item?.type || item?.file_type || '' : '',
+      size: typeof item === 'object' ? item?.size || item?.file_size || 0 : 0
+    }
+  }).filter(item => item.url)
 })
 const loading = ref(true)
 const articleBodyRef = ref(null)
@@ -1009,6 +1026,8 @@ onBeforeUnmount(() => {
     .dynamic-video__player {
       display: block;
       width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
       max-height: min(68vh, 680px);
       border: 1px solid var(--article-line);
       border-radius: 22px;

@@ -38,11 +38,11 @@
             <a-image-preview-group>
               <div class="image-grid">
                 <a-image
-                  v-for="(url, index) in dynamic.mediaUrls"
+                  v-for="(item, index) in mediaItems"
                   :key="index"
-                  :src="url"
+                  :src="item.url"
                   :preview="{
-                    src: url,
+                    src: item.url,
                     mask: false
                   }"
                   class="preview-image"
@@ -55,10 +55,10 @@
           <template v-else-if="dynamic.type === 'audio'">
             <div class="audio-player">
               <audio
-                v-for="(url, index) in dynamic.mediaUrls"
+                v-for="(item, index) in mediaItems"
                 :key="index"
                 controls
-                :src="url"
+                :src="item.url"
                 class="audio-element"
               >
                 您的浏览器不支持音频播放
@@ -70,10 +70,13 @@
           <template v-else-if="dynamic.type === 'video'">
             <div class="video-player">
               <video
-                v-for="(url, index) in dynamic.mediaUrls"
+                v-for="(item, index) in mediaItems"
                 :key="index"
                 controls
-                :src="url"
+                :src="item.url"
+                :poster="item.posterUrl || undefined"
+                preload="metadata"
+                playsinline
                 class="video-element"
               >
                 您的浏览器不支持视频播放
@@ -107,11 +110,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { getDynamicDetail } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { EditOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import MarkdownIt from 'markdown-it'
 
@@ -132,6 +136,23 @@ const defaultDynamic = {
 }
 
 const dynamic = ref({ ...defaultDynamic })
+
+const normalizeMediaItem = (item) => {
+  const rawUrl = typeof item === 'string' ? item : item?.url || item?.file_url
+  const rawPoster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url
+  return {
+    url: buildApiUrl(rawUrl || ''),
+    posterUrl: rawPoster ? buildApiUrl(rawPoster) : '',
+    name: typeof item === 'object' ? item?.name || '' : '',
+    type: typeof item === 'object' ? item?.type || item?.file_type || '' : '',
+    size: typeof item === 'object' ? item?.size || item?.file_size || 0 : 0
+  }
+}
+
+const mediaItems = computed(() => {
+  const items = Array.isArray(dynamic.value.mediaUrls) ? dynamic.value.mediaUrls : [dynamic.value.mediaUrls]
+  return items.map(normalizeMediaItem).filter(item => item.url)
+})
 
 const normalizeDynamic = (data = {}) => ({
   ...defaultDynamic,
@@ -409,6 +430,9 @@ onMounted(async () => {
         
         .video-element {
           width: 100%;
+          aspect-ratio: 16 / 9;
+          object-fit: contain;
+          background: #10243a;
           max-height: 500px;
           margin-bottom: 16px;
           border-radius: 8px;
