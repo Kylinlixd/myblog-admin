@@ -28,6 +28,13 @@ describe('admin editor layout', () => {
 
     expect(source).toContain('.file-name')
     expect(source).toContain('.file-size')
-    expect(source).toMatch(/@media \(max-width: 640px\)[\s\S]*?\.file-selector \{[\s\S]*?\.file-preview \{[\s\S]*?margin-bottom: 0;[\s\S]*?\.file-info \{[\s\S]*?display: none;/)
+    expect(source).toMatch(/@media \(max-width: 640px\)[\s\S]*?:global\(\.file-selector \.file-preview\)[\s\S]*?margin-bottom: 0;[\s\S]*?:global\(\.file-selector \.file-info\)[\s\S]*?display: none;/)
+  })
+
+  it('keeps teleported file selector styles outside the editor scope', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/views/dynamics/DynamicEdit.vue'), 'utf8')
+
+    expect(source).toContain(':global(.file-selector .file-preview)')
+    expect(source).toContain(':global(.file-selector .file-info)')
   })
 })

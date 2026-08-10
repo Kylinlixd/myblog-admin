@@ -1397,6 +1397,14 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 640px) {
+  :global(.file-selector .file-preview) {
+    margin-bottom: 0;
+  }
+
+  :global(.file-selector .file-info) {
+    display: none;
+  }
+
   .dynamic-edit {
     .edit-header {
       align-items: flex-start;
@@ -1435,16 +1443,6 @@ onBeforeUnmount(() => {
           min-width: 112px;
           min-height: 48px;
           touch-action: manipulation;
-        }
-
-        .file-selector {
-          .file-preview {
-            margin-bottom: 0;
-          }
-
-          .file-info {
-            display: none;
-          }
         }
 
         .content-type-control {
