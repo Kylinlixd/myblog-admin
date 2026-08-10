@@ -61,13 +61,21 @@
             :show-upload-list="false"
             :before-upload="beforeMediaUpload"
             :custom-request="handleCustomUpload"
-            accept="image/*,audio/*,video/*"
+            accept="image/*,.heic,.heif,audio/*,video/*,.mov,.m4v,.hevc"
           >
             <a-button type="primary">
               <template #icon><upload-outlined /></template>
               上传文件
             </a-button>
           </a-upload>
+        </div>
+        <div class="media-upload-status" :class="`is-${uploadState.stage}`">
+          <strong>支持 MOV / MP4 / HEVC · HEIC / HEIF</strong>
+          <span v-if="uploadState.stage === 'uploading'">正在上传 {{ uploadState.progress }}%</span>
+          <span v-else-if="uploadState.stage === 'processing'">正在优化视频，完成后会自动生成封面</span>
+          <span v-else-if="uploadState.stage === 'success'">{{ uploadState.message }}</span>
+          <span v-else-if="uploadState.stage === 'error'">{{ uploadState.message }}</span>
+          <span v-else>单个文件不超过 50MB，视频会转为网页友好的 MP4</span>
         </div>
       </a-form-item>
 
@@ -100,7 +108,7 @@
             @remove="handleMediaRemove"
             :preview="handleImagePreview"
             multiple
-            accept="image/*"
+            accept="image/*,.heic,.heif"
           >
             <div>
               <plus-outlined />
@@ -112,7 +120,7 @@
             从文件库选择
           </a-button>
         </div>
-        <div class="upload-tip">支持 jpg、jpeg、png、gif 格式，单个文件不超过 2MB</div>
+        <div class="upload-tip">支持 JPG、PNG、GIF、HEIC、HEIF，单个文件不超过 50MB</div>
       </a-form-item>
 
       <!-- 音频上传 -->
@@ -157,7 +165,7 @@
             :before-upload="beforeVideoUpload"
             :custom-request="handleCustomUpload"
             @remove="handleMediaRemove"
-            accept="video/*"
+            accept="video/*,.mov,.m4v,.hevc"
           >
             <a-button type="primary">
               <template #icon><upload-outlined /></template>上传视频
@@ -169,7 +177,7 @@
           </a-button>
         </div>
         <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
-          <video controls :src="form.mediaUrls[0]" style="width: 100%"></video>
+          <video controls preload="metadata" playsinline :src="form.mediaUrls[0]" :poster="fileList[0]?.posterUrl || undefined" style="width: 100%"></video>
         </div>
       </a-form-item>
 
@@ -194,7 +202,7 @@
     >
       <img v-if="previewType === 'image'" alt="预览" style="width: 100%" :src="previewUrl" />
       <audio v-if="previewType === 'audio'" controls style="width: 100%" :src="previewUrl"></audio>
-      <video v-if="previewType === 'video'" controls style="width: 100%" :src="previewUrl"></video>
+      <video v-if="previewType === 'video'" controls preload="metadata" playsinline style="width: 100%" :src="previewUrl" :poster="previewPosterUrl || undefined"></video>
     </a-modal>
 
     <!-- 文件选择器弹窗 -->
@@ -252,7 +260,10 @@
                         <video
                           v-else-if="item.type === 'video'"
                           :src="item.url"
+                          :poster="item.posterUrl ? buildApiUrl(item.posterUrl) : undefined"
                           controls
+                          preload="metadata"
+                          playsinline
                           style="max-width: 100%; max-height: 100%;"
                         ></video>
                         <audio
@@ -365,12 +376,15 @@ watch(() => form.value.type, (type, previousType) => {
 
 // 文件列表 - 上传组件使用
 const fileList = ref([])
+// 让移动端用户区分网络上传和服务端视频优化两个阶段。
+const uploadState = ref({ stage: 'idle', progress: 0, message: '' })
 
 // 预览相关状态
 const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('image')
+const previewPosterUrl = ref('')
 
 // 分类和标签数据
 const categories = ref([])
@@ -399,6 +413,7 @@ const applyFileListResponse = ({ count, results }) => {
     name: file.name,
     type: file.type,
     url: file.url,
+    posterUrl: file.posterUrl || file.poster_url,
     size: file.size ?? 0,
     created_at: file.created_at,
     updated_at: file.updated_at,
@@ -531,15 +546,14 @@ const fetchDynamicDetail = async () => {
     const data = await getDynamicDetail(route.params.id)
     if (data) {
       // 处理 mediaUrls，确保是数组且包含前缀
-      let mediaUrls = []
+      let mediaItems = []
       if (data.mediaUrls) {
-        mediaUrls = Array.isArray(data.mediaUrls) ? data.mediaUrls : [data.mediaUrls]
-        mediaUrls = mediaUrls.map(url => {
-          if (!url) return null
-          const fullUrl = buildApiUrl(url)
-          return fullUrl
-        }).filter(Boolean)
+        mediaItems = Array.isArray(data.mediaUrls) ? data.mediaUrls : [data.mediaUrls]
       }
+      const mediaUrls = mediaItems.map(item => {
+        const url = typeof item === 'string' ? item : item?.url || item?.file_url
+        return url ? buildApiUrl(url) : null
+      }).filter(Boolean)
       
       // 填充表单数据
       form.value = {
@@ -554,7 +568,7 @@ const fetchDynamicDetail = async () => {
       }
       
       // 更新文件列表用于上传组件显示
-      updateFileList()
+      updateFileList(mediaItems)
       
       // 重置表单验证状态
       formRef.value?.resetFields()
@@ -580,28 +594,34 @@ const fetchDynamicDetail = async () => {
 }
 
 // 更新文件列表
-const updateFileList = () => {
+const updateFileList = (sourceItems = form.value.mediaUrls) => {
   if (!form.value.mediaUrls || form.value.mediaUrls.length === 0) {
     fileList.value = []
     return
   }
   
   // 确保 mediaUrls 是数组
-  const mediaUrls = Array.isArray(form.value.mediaUrls) ? form.value.mediaUrls : [form.value.mediaUrls]
-  fileList.value = mediaUrls.map((url, index) => {
+  const mediaItems = Array.isArray(sourceItems) ? sourceItems : [sourceItems]
+  fileList.value = mediaItems.map((item, index) => {
+    const url = typeof item === 'string' ? item : item?.url || item?.file_url
     if (!url) {
       console.warn(`跳过无效的 URL，索引: ${index}`)
       return null
     }
     
-    const fileName = url.split('/').pop() || `file-${index}`
+    const fileName = (typeof item === 'object' && item?.name) || url.split('/').pop() || `file-${index}`
     const fullUrl = buildApiUrl(url)
     return {
       uid: `-${index}`,
       name: fileName,
       status: 'done',
       url: fullUrl,
-      thumbUrl: fullUrl
+      thumbUrl: fullUrl,
+      posterUrl: typeof item === 'object' && item?.poster_url
+        ? buildApiUrl(item.poster_url)
+        : typeof item === 'object' && item?.posterUrl
+          ? buildApiUrl(item.posterUrl)
+          : undefined
     }
   }).filter(Boolean) // 过滤掉无效的项
   
@@ -622,7 +642,8 @@ const handleSave = async () => {
     }
     
     // 处理媒体文件 URL，移除前缀
-    const processedMediaUrls = form.value.mediaUrls.map(url => {
+    const processedMediaUrls = form.value.mediaUrls.map(item => {
+      const url = typeof item === 'string' ? item : item?.url || item?.file_url
       if (!url) return url;
       return stripApiBaseUrl(url);
     });
@@ -703,7 +724,18 @@ const handleCancel = () => {
 }
 
 // 处理自定义上传
-const handleCustomUpload = async ({ file, onSuccess, onError }) => {
+const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
+  const reportProgress = (percent) => {
+    const progress = Math.max(0, Math.min(100, Number(percent) || 0))
+    uploadState.value = {
+      stage: progress >= 100 ? 'processing' : 'uploading',
+      progress,
+      message: progress >= 100 ? '正在优化视频' : ''
+    }
+    onProgress?.({ percent: progress })
+  }
+
+  uploadState.value = { stage: 'uploading', progress: 0, message: '' }
   try {
     if (!file || !(file instanceof File)) {
       throw new Error('无效的文件对象')
@@ -712,16 +744,17 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     let result
     try {
       if (form.value.type === 'image') {
-        result = await uploadImage(file)
+        result = await uploadImage(file, reportProgress)
       } else if (form.value.type === 'audio') {
-        result = await uploadAudio(file)
+        result = await uploadAudio(file, reportProgress)
       } else if (form.value.type === 'video') {
-        result = await uploadVideo(file)
+        result = await uploadVideo(file, reportProgress)
       } else {
         throw new Error('不支持的文件类型')
       }
     } catch (uploadError) {
       console.error('文件上传失败:', uploadError)
+      uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: uploadError.message || '文件上传失败' }
       message.error(uploadError.message || '文件上传失败')
       onError(uploadError)
       return
@@ -730,6 +763,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     if (!result || !result.url) {
       const error = new Error('上传结果无效')
       console.error('上传结果无效:', result)
+      uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: '服务器返回数据无效' }
       message.error('上传失败：服务器返回数据无效')
       onError(error)
       return
@@ -762,7 +796,9 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
       url: fileUrl,
       thumbUrl: fileUrl,
       type: result.type,
-      id: result.id
+      id: result.id,
+      posterUrl: result.posterUrl || result.poster_url || undefined,
+      size: result.size
     }
     
     if (form.value.type === 'audio' || form.value.type === 'video') {
@@ -775,9 +811,11 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     formRef.value?.validateFields(['mediaUrls'])
     
     onSuccess(result)
+    uploadState.value = { stage: 'success', progress: 100, message: '上传完成，媒体已优化' }
     message.success('上传成功')
   } catch (error) {
     console.error('上传处理失败:', error)
+    uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: error.message || '上传失败' }
     message.error(error.message || '上传失败')
     onError(error)
   }
@@ -802,6 +840,7 @@ const handleMediaRemove = (file) => {
 const handlePreviewMedia = (file) => {
   const url = file.url || file.thumbUrl
   previewUrl.value = buildApiUrl(url)
+  previewPosterUrl.value = file.posterUrl ? buildApiUrl(file.posterUrl) : ''
   previewVisible.value = true
   previewTitle.value = file.name || '预览'
   previewType.value = form.value.type
@@ -819,9 +858,9 @@ const detectMediaType = (file) => {
   if (mimeType.startsWith('video/')) return 'video'
 
   const extension = String(file?.name || '').split('.').pop()?.toLowerCase()
-  if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) return 'image'
+  if (['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif'].includes(extension)) return 'image'
   if (['mp3', 'wav', 'ogg'].includes(extension)) return 'audio'
-  if (['mp4', 'webm', 'ogg'].includes(extension)) return 'video'
+  if (['mp4', 'mov', 'm4v', 'webm', 'ogg', 'hevc'].includes(extension)) return 'video'
   return undefined
 }
 
@@ -844,8 +883,8 @@ const beforeMediaUpload = (file) => {
 
 // 检查图片上传
 const beforeImageUpload = (file) => {
-  const isValidType = checkFileType(file, ['jpg', 'jpeg', 'png', 'gif'])
-  const isValidSize = checkFileSize(file, 2)
+  const isValidType = checkFileType(file, ['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif'])
+  const isValidSize = checkFileSize(file, 50)
   return isValidType && isValidSize
 }
 
@@ -858,8 +897,8 @@ const beforeAudioUpload = (file) => {
 
 // 检查视频上传
 const beforeVideoUpload = (file) => {
-  const isValidType = checkFileType(file, ['mp4', 'webm', 'ogg'])
-  const isValidSize = checkFileSize(file, 20)
+  const isValidType = checkFileType(file, ['mp4', 'mov', 'm4v', 'webm', 'ogg', 'hevc'])
+  const isValidSize = checkFileSize(file, 50)
   return isValidType && isValidSize
 }
 
@@ -1001,7 +1040,8 @@ const handleFileConfirm = () => {
     url: file.url,
     thumbUrl: file.url,
     type: file.type,
-    id: file.id
+    id: file.id,
+    posterUrl: file.posterUrl || file.poster_url
   }))
   
   fileList.value = newFileList
@@ -1148,6 +1188,44 @@ onBeforeUnmount(() => {
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
+  }
+
+  .media-upload-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid #e6ebf3;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #6b7890;
+    font-size: 12px;
+
+    strong {
+      color: #315bea;
+      font-weight: 600;
+    }
+
+    &.is-processing {
+      border-color: #b9c9ff;
+      background: #f0f4ff;
+      color: #315bea;
+    }
+
+    &.is-success {
+      border-color: #b7ebc6;
+      background: #f2fff5;
+      color: #278343;
+    }
+
+    &.is-error {
+      border-color: #ffc9c9;
+      background: #fff5f5;
+      color: #c63838;
+    }
   }
   
   .media-preview {

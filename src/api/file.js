@@ -10,7 +10,9 @@ function normalizeFileItem(item) {
     ...item,
     type: item.type ?? item.file_type,
     size: item.size ?? item.file_size,
-    url: item.url ?? item.file_url ?? null
+    url: item.url ?? item.file_url ?? null,
+    posterUrl: item.posterUrl ?? item.poster_url ?? null,
+    poster_url: item.poster_url ?? item.posterUrl ?? null
   }
 }
 

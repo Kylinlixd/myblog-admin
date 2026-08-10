@@ -116,6 +116,15 @@ describe('DynamicEdit mounted interactions', () => {
     const wrapper = await mountEditor()
 
     expect(wrapper.find('.content-type-control').text()).toContain('上传文件')
+    expect(wrapper.find('.media-upload-status').text()).toContain('支持 MOV')
+    wrapper.unmount()
+  })
+
+  it('detects iPhone HEIC and MOV files by MIME type and extension', async () => {
+    const wrapper = await mountEditor()
+
+    expect(wrapper.vm.detectMediaType({ name: 'IMG_1001.HEIC', type: 'image/heic' })).toBe('image')
+    expect(wrapper.vm.detectMediaType({ name: 'IMG_1001.MOV', type: 'video/quicktime' })).toBe('video')
     wrapper.unmount()
   })
 
