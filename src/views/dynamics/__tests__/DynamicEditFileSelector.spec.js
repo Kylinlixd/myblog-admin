@@ -35,9 +35,18 @@ jest.mock('@/utils/upload', () => ({
   checkFileType: jest.fn()
 }))
 
+const mockMarkdownInsert = jest.fn()
+const mockMarkdownFocus = jest.fn()
+
 jest.mock('@/components/MarkdownEditor.vue', () => ({
   __esModule: true,
-  default: { template: '<div />' }
+  default: {
+    template: '<div />',
+    methods: {
+      insertContent: (...args) => mockMarkdownInsert(...args),
+      focus: (...args) => mockMarkdownFocus(...args)
+    }
+  }
 }))
 
 jest.mock('vue-router', () => ({
@@ -60,6 +69,32 @@ describe('DynamicEdit file selector responses', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     getFileList.mockResolvedValue(normalizedFiles)
+  })
+
+  const mountEditor = () => mount(DynamicEdit, {
+    global: {
+      stubs: {
+        'a-button': true,
+        'a-form': true,
+        'a-form-item': true,
+        'a-input': true,
+        'a-input-search': true,
+        'a-list': true,
+        'a-list-item': true,
+        'a-modal': true,
+        'a-radio': true,
+        'a-radio-group': true,
+        'a-select': true,
+        'a-select-option': true,
+        'a-spin': true,
+        'a-upload': true
+      },
+      config: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.startsWith('a-')
+        }
+      }
+    }
   })
 
   it('consumes normalized file results for open, search, and type-change fetches', async () => {
@@ -150,6 +185,68 @@ describe('DynamicEdit file selector responses', () => {
     expect(wrapper.vm.form.fileIds).toEqual([7])
     expect(getFileList).toHaveBeenCalledTimes(2)
     expect(wrapper.vm.fileListData).toEqual(normalizedFiles.results)
+    wrapper.unmount()
+  })
+
+  it('inserts a selected image into Markdown and keeps the media association', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.markdownEditorRef = { insertContent: mockMarkdownInsert, focus: mockMarkdownFocus }
+    wrapper.vm.selectedFiles = [{ id: 7, name: 'cover.png', type: 'image', url: '/media/cover.png' }]
+    wrapper.vm.fileSelectorVisible = true
+
+    wrapper.vm.handleFileInsert()
+    await flushPromises()
+
+    expect(mockMarkdownInsert).toHaveBeenCalledWith('![cover.png](/media/cover.png)')
+    expect(mockMarkdownFocus).toHaveBeenCalled()
+    expect(wrapper.vm.form.mediaUrls).toEqual(['/media/cover.png'])
+    expect(wrapper.vm.form.fileIds).toEqual([7])
+    expect(wrapper.vm.fileSelectorVisible).toBe(false)
+    expect(wrapper.vm.selectedFiles).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('generates playable HTML for audio and video and preserves image order', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.markdownEditorRef = { insertContent: mockMarkdownInsert, focus: mockMarkdownFocus }
+
+    wrapper.vm.selectedFiles = [{ id: 8, name: 'voice.mp3', type: 'audio', url: '/media/voice.mp3' }]
+    wrapper.vm.handleFileInsert()
+    expect(mockMarkdownInsert).toHaveBeenLastCalledWith('<audio controls src="/media/voice.mp3"></audio>')
+
+    wrapper.vm.selectedFiles = [{ id: 9, name: 'demo.mp4', type: 'video', url: '/media/demo.mp4' }]
+    wrapper.vm.handleFileInsert()
+    expect(mockMarkdownInsert).toHaveBeenLastCalledWith('<video controls src="/media/demo.mp4"></video>')
+
+    wrapper.vm.selectedFiles = [
+      { id: 10, name: 'first.png', type: 'image', url: '/media/first.png' },
+      { id: 11, name: 'second.png', type: 'image', url: '/media/second.png' }
+    ]
+    wrapper.vm.handleFileInsert()
+    expect(mockMarkdownInsert).toHaveBeenLastCalledWith([
+      '![first.png](/media/first.png)',
+      '![second.png](/media/second.png)'
+    ].join('\n\n'))
+    wrapper.unmount()
+  })
+
+  it('keeps Markdown unchanged when only associating selected media', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.form.content = '原有正文'
+    wrapper.vm.markdownEditorRef = { insertContent: mockMarkdownInsert, focus: mockMarkdownFocus }
+    wrapper.vm.selectedFiles = [{ id: 7, name: 'cover.png', type: 'image', url: '/media/cover.png' }]
+
+    wrapper.vm.handleFileConfirm()
+    await flushPromises()
+
+    expect(wrapper.vm.form.content).toBe('原有正文')
+    expect(mockMarkdownInsert).not.toHaveBeenCalled()
     wrapper.unmount()
   })
 })

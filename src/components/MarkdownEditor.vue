@@ -1,6 +1,7 @@
 <template>
   <div class="markdown-editor-wrapper">
     <md-editor
+      ref="editorRef"
       v-model="content"
       :theme="theme"
       :preview-theme="previewTheme"
@@ -17,6 +18,8 @@
 import { ref, watch } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
+
+const editorRef = ref(null)
 
 const props = defineProps({
   modelValue: {
@@ -71,7 +74,18 @@ const handleSave = () => {
 defineExpose({
   setContent: (value) => {
     content.value = value
-  }
+  },
+  // 将外部媒体引用交给编辑器，插入当前光标位置。
+  insertContent: (value) => {
+    if (!value || !editorRef.value?.insert) return false
+    editorRef.value.insert(() => ({
+      targetValue: value,
+      select: false
+    }))
+    return true
+  },
+  // 插入完成后把焦点交还给编辑器，方便继续输入。
+  focus: () => editorRef.value?.focus?.()
 })
 </script>
 

@@ -298,7 +298,8 @@
           </div>
           <div class="file-selector-actions">
             <a-button @click="fileSelectorVisible = false">取消</a-button>
-            <a-button type="primary" @click="handleFileConfirm">确定</a-button>
+            <a-button :disabled="selectedFiles.length === 0" @click="handleFileConfirm">仅关联媒体</a-button>
+            <a-button type="primary" :disabled="selectedFiles.length === 0" @click="handleFileInsert">插入正文</a-button>
           </div>
         </div>
       </div>
@@ -1022,20 +1023,26 @@ const handleFileSelect = (file) => {
   }
 }
 
-// 处理文件确认
-const handleFileConfirm = () => {
+const validateSelectedFiles = () => {
   if (selectedFiles.value.length === 0) {
     message.warning('请选择文件')
-    return
+    return false
   }
-  
+
   // 检查文件类型是否一致
   const fileTypes = new Set(selectedFiles.value.map(file => file.type))
   if (fileTypes.size > 1) {
     message.warning('请选择相同类型的文件')
-    return
+    return false
   }
-  
+
+  return true
+}
+
+// 将选中的文件关联到动态媒体字段。
+const applySelectedFiles = () => {
+  if (!validateSelectedFiles()) return false
+
   // 更新文件列表和表单数据
   const newFileList = selectedFiles.value.map(file => ({
     uid: `-${file.id}`,
@@ -1051,13 +1058,52 @@ const handleFileConfirm = () => {
   fileList.value = newFileList
   form.value.mediaUrls = selectedFiles.value.map(file => file.url)
   form.value.fileIds = selectedFiles.value.map(file => file.id)
-  
+
+  return true
+}
+
+// 处理文件确认，仅关联媒体，不修改正文。
+const handleFileConfirm = () => {
+  if (!applySelectedFiles()) return
+
   fileSelectorVisible.value = false
   selectedFiles.value = []
-  
+
   // 触发表单验证
   formRef.value?.validateFields(['mediaUrls', 'type'])
   fetchFileList()
+}
+
+// 根据媒体类型生成可直接渲染的 Markdown/HTML 引用。
+const buildMarkdownMediaReference = (file) => {
+  if (file.type === 'image') return `![${file.name}](${file.url})`
+  if (file.type === 'audio') return `<audio controls src="${file.url}"></audio>`
+  if (file.type === 'video') return `<video controls src="${file.url}"></video>`
+  return `[${file.name}](${file.url})`
+}
+
+// 将选中文件插入当前光标位置，同时保留媒体关联。
+const handleFileInsert = () => {
+  if (!validateSelectedFiles()) return
+  if (!markdownEditorRef.value?.insertContent) {
+    message.error('编辑器暂不可用，请刷新页面后重试')
+    return
+  }
+
+  const references = selectedFiles.value.map(buildMarkdownMediaReference).join('\n\n')
+  if (!applySelectedFiles()) return
+
+  const inserted = markdownEditorRef.value.insertContent(references)
+  if (inserted === false) {
+    message.error('插入正文失败，请重试')
+    return
+  }
+
+  fileSelectorVisible.value = false
+  selectedFiles.value = []
+  formRef.value?.validateFields(['mediaUrls', 'type'])
+  fetchFileList()
+  nextTick(() => markdownEditorRef.value?.focus?.())
 }
 
 // 格式化文件大小
