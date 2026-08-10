@@ -22,4 +22,12 @@ describe('admin editor layout', () => {
     expect(source).toMatch(/@media \(max-width: 640px\)[\s\S]*?\.edit-form \{[\s\S]*?display: flex;/)
     expect(source).toContain('grid-row: auto;')
   })
+
+  it('hides file metadata only in the mobile selector', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/views/dynamics/DynamicEdit.vue'), 'utf8')
+
+    expect(source).toContain('.file-name')
+    expect(source).toContain('.file-size')
+    expect(source).toMatch(/@media \(max-width: 640px\)[\s\S]*?\.file-selector \{[\s\S]*?\.file-preview \{[\s\S]*?margin-bottom: 0;[\s\S]*?\.file-info \{[\s\S]*?display: none;/)
+  })
 })

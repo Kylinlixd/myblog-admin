@@ -1430,14 +1430,24 @@ onBeforeUnmount(() => {
       width: 100%;
     }
 
-    .media-upload-field :deep(.ant-upload-select-picture-card),
-    .media-upload-field :deep(.ant-upload) {
-      min-width: 112px;
-      min-height: 48px;
-      touch-action: manipulation;
-    }
+        .media-upload-field :deep(.ant-upload-select-picture-card),
+        .media-upload-field :deep(.ant-upload) {
+          min-width: 112px;
+          min-height: 48px;
+          touch-action: manipulation;
+        }
 
-    .content-type-control {
+        .file-selector {
+          .file-preview {
+            margin-bottom: 0;
+          }
+
+          .file-info {
+            display: none;
+          }
+        }
+
+        .content-type-control {
       align-items: flex-start;
       flex-direction: column;
       gap: 10px;
