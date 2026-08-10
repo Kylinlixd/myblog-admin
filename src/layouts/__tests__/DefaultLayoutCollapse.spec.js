@@ -168,4 +168,10 @@ describe('DefaultLayout navigation controls', () => {
   it('keeps the mobile header controls aligned close to the viewport edge', () => {
     expect(layoutSource).toContain('.workspace-header { height: auto; min-height: 64px; padding: 8px 12px; }')
   })
+
+  it('uses one visual scale for the mobile header controls', () => {
+    expect(layoutSource).toContain('.header-left { min-width: 0; gap: 8px; overflow: hidden; }')
+    expect(layoutSource).toContain('.header-brand__mark { display: grid; width: 36px; height: 36px;')
+    expect(layoutSource).toContain('.icon-button { display: grid; width: 36px; height: 36px;')
+  })
 })

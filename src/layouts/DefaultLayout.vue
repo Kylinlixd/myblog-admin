@@ -173,16 +173,16 @@ function handleLogout() {
 .admin-shell:not(.admin-shell--mobile) .workspace { padding-top: 72px; }
 .workspace-header { position: fixed; z-index: 50; top: 0; right: 0; left: var(--admin-sidebar-width); display: flex; box-sizing: border-box; min-width: 0; height: 72px; padding: 0 28px 0 0; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
-.header-left { min-width: 0; gap: 10px; overflow: hidden; }
+.header-left { min-width: 0; gap: 8px; overflow: hidden; }
 .header-brand { display: inline-flex; align-items: center; gap: 9px; color: var(--color-text); text-decoration: none; }
-.header-brand__mark { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 8px; background: var(--color-primary); color: #fff; font-size: 16px; font-weight: 800; }
+.header-brand__mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; background: var(--color-primary); color: #fff; font-size: 18px; font-weight: 800; }
 .header-brand > span:last-child { display: grid; gap: 2px; }
 .header-brand strong { font-size: 13px; font-weight: 800; line-height: 1.1; }
 .header-brand small { color: var(--color-text-muted); font-size: 10px; line-height: 1.1; }
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { min-width: 0; gap: 16px; }
-.icon-button { display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
+.icon-button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
 .user-button { min-height: 46px; gap: 10px; padding: 5px 7px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
 .user-button:hover { background: var(--color-surface-muted); }
@@ -203,7 +203,7 @@ function handleLogout() {
 @media (max-width: 720px) {
   .workspace-header { height: auto; min-height: 64px; padding: 8px 12px; }
   .workspace-content { padding: 18px 14px; }
-  .header-left { gap: 10px; }
+  .header-left { gap: 8px; }
   .header-actions { gap: 8px; }
   .blog-link span, .user-copy, .header-brand > span:last-child, .workspace-status { display: none; }
 }
