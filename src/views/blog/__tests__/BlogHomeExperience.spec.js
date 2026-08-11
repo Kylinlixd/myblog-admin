@@ -59,6 +59,22 @@ describe('warm technology blog homepage', () => {
     expect(source).toContain('scaleX: 0')
   })
 
+  it('gives the path manifesto enough vertical breathing room', () => {
+    expect(source).toContain('margin-bottom: clamp(84px, 9vh, 124px)')
+    expect(source).toContain('line-height: 1.02')
+    expect(source).toContain('gap: clamp(6px, 1vw, 16px)')
+  })
+
+  it('gives topic cards structure and responsive visual variation', () => {
+    expect(source).toContain('topic-accordion__index')
+    expect(source).toContain('topic-accordion__decoration')
+    expect(source).toContain('topic-accordion__copy')
+    expect(source).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
+    expect(source).toContain('opacity: .82')
+    expect(source).toContain('grid-template-columns: 1fr')
+    expect(source).toContain('top: auto')
+  })
+
   it('uses bundled imagery and scroll-linked editorial reveals', () => {
     expect(source).toContain('/warm-garden-visual.svg')
     expect(source).toContain('visual-ribbon')
