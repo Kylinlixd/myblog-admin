@@ -274,7 +274,9 @@ const stack = [
 }
 .contact-banner .eyebrow { color: #9db4ff; }
 .contact-banner h2 { max-width: 650px; color: white; }
-.contact-banner a { display: inline-flex; flex-shrink: 0; align-items: center; gap: 9px; padding-bottom: 6px; border-bottom: 1px solid rgb(255 255 255 / 42%); color: white; font-weight: 650; }
+.contact-banner a { display: inline-flex; flex-shrink: 0; align-items: center; gap: 9px; padding-bottom: 6px; border-bottom: 1px solid rgb(255 250 242 / 68%); color: #fffaf2; font-weight: 700; transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast); }
+.contact-banner a:hover { border-bottom-color: #f1b678; color: #f1b678; transform: translateX(3px); }
+.contact-banner a:focus-visible { outline: 3px solid rgb(241 182 120 / 62%); outline-offset: 6px; }
 
 @media (max-width: 900px) {
   .about-hero, .stack-section { grid-template-columns: 1fr; }

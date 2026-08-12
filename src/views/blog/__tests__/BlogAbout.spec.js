@@ -29,4 +29,13 @@ describe('BlogAbout', () => {
     expect(source).toContain('.about-hero.cinematic-hero')
     expect(source).toContain('max-width: none')
   })
+
+  it('keeps the contact email readable on the dark banner', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogAbout.vue'), 'utf8')
+
+    expect(source).toContain('.contact-banner a {')
+    expect(source).toContain('color: #fffaf2')
+    expect(source).toContain('.contact-banner a:hover')
+    expect(source).toContain('.contact-banner a:focus-visible')
+  })
 })
