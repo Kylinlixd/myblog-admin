@@ -238,6 +238,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { getBlogCategoryList, getBlogTagList, getHotDynamics, getRecentDynamics } from '@/api/blog'
 import { normalizeCollectionResponse } from '@/api/collections'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
+import { scheduleIdle } from '@/utils/idle'
 import AsyncState from '@/components/common/AsyncState.vue'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -253,6 +254,7 @@ const manifestoIndex = ref(0)
 let motionContext
 let tiltX
 let tiltY
+let cancelHotLoad
 
 const featured = computed(() => latest.value.find((item) => mediaUrl(item)) || latest.value[0])
 const fallbackStories = [
@@ -413,17 +415,23 @@ function setupMotion() {
 async function loadHome() {
   loading.value = true
   error.value = ''
+  cancelHotLoad?.()
   try {
-    const [recentResult, hotResult, categoryResult, tagResult] = await Promise.all([
+    const [recentResult, categoryResult, tagResult] = await Promise.all([
       getRecentDynamics({ limit: 6 }),
-      getHotDynamics({ limit: 5 }),
       getBlogCategoryList(),
       getBlogTagList()
     ])
     latest.value = extractList(recentResult)
-    hot.value = extractList(hotResult)
     categories.value = extractList(categoryResult)
     tags.value = extractList(tagResult)
+    cancelHotLoad = scheduleIdle(async () => {
+      try {
+        hot.value = extractList(await getHotDynamics({ limit: 5 }))
+      } catch {
+        // 热门内容是次要模块，失败时保留主内容和已完成的首屏渲染。
+      }
+    })
     await nextTick()
     setupMotion()
   } catch (reason) {
@@ -435,6 +443,7 @@ async function loadHome() {
 
 onMounted(loadHome)
 onBeforeUnmount(() => {
+  cancelHotLoad?.()
   tiltX = undefined
   tiltY = undefined
   motionContext?.revert()

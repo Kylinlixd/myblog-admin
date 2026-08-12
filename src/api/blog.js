@@ -1,4 +1,5 @@
 import request from '@/utils/request'
+import { cachedRequest } from '@/services/http/publicRequestCache'
 
 const LEGACY_BLOG_API_PREFIX = '/blog'
 const BLOG_API_PREFIX = '/api/blog'
@@ -21,8 +22,14 @@ export function createBlogApiUrl(path = '') {
   return `${BLOG_API_PREFIX}/${normalizedPath}/`
 }
 
+function getPublicBlog(path, params) {
+  const url = createBlogApiUrl(path)
+  const query = JSON.stringify(params || {})
+  return cachedRequest(`GET:${url}?${query}`, () => request.get(url, params ? { params } : undefined))
+}
+
 export const getBlogCategoryList = () =>
-  request.get(createBlogApiUrl('categories'))
+  getPublicBlog('categories')
 
 export const getBlogDynamics = (params) =>
   request.get(createBlogApiUrl('dynamics'), { params })
@@ -34,10 +41,10 @@ export const getAdjacentDynamics = (id) =>
   request.get(createBlogApiUrl(`dynamics/${id}/adjacent`))
 
 export const getHotDynamics = (params) =>
-  request.get(createBlogApiUrl('dynamics/hot'), { params })
+  getPublicBlog('dynamics/hot', params)
 
 export const getRecentDynamics = (params) =>
-  request.get(createBlogApiUrl('dynamics/recent'), { params })
+  getPublicBlog('dynamics/recent', params)
 
 export const getCategoryDynamics = (categoryId, params) =>
   request.get(createBlogApiUrl(`categories/${categoryId}/dynamics`), { params })
@@ -46,7 +53,7 @@ export const getTagDynamics = (tagId, params) =>
   request.get(createBlogApiUrl(`tags/${tagId}/dynamics`), { params })
 
 export const getBlogTagList = () =>
-  request.get(createBlogApiUrl('tags'))
+  getPublicBlog('tags')
 
 export const increaseDynamicView = (id) =>
   request.put(createBlogApiUrl(`dynamics/${id}/view`))

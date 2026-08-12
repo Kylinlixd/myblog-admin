@@ -6,7 +6,6 @@ import 'ant-design-vue/dist/reset.css'
 import App from './App.vue'
 import router from './router'
 import { pinia, useUserStore } from './stores'
-import { registerAntComponents } from './config/antComponents'
 import './styles/main.scss'
 
 const app = createApp(App)
@@ -30,7 +29,6 @@ app.config.errorHandler = (error) => {
 
 app.use(pinia)
 app.use(router)
-registerAntComponents(app)
 app.mount('#app')
 document.documentElement.dataset.appReady = 'true'
 

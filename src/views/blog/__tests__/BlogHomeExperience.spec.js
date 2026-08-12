@@ -87,4 +87,10 @@ describe('warm technology blog homepage', () => {
     expect(source).toContain('Array.isArray(mediaUrls) ? mediaUrls.length > 0 : Boolean(mediaUrls)')
     expect(source).toContain('article?.files || []')
   })
+
+  it('loads non-critical hot content during browser idle time', () => {
+    expect(source).toContain('scheduleIdle')
+    expect(source).toContain('cancelHotLoad = scheduleIdle')
+    expect(source).toContain('getHotDynamics({ limit: 5 })')
+  })
 })

@@ -1,31 +1,13 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { antComponents, registerAntComponents } from '../antComponents'
-
 describe('Ant Design component registry', () => {
-  it('registers only the components used by global templates', () => {
-    const componentNames = antComponents.map((component) => component.name)
+  it('uses Vite template auto-import instead of a full global component registry', () => {
+    const viteConfig = fs.readFileSync(path.join(process.cwd(), 'vite.config.js'), 'utf8')
 
-    expect(componentNames).toEqual(expect.arrayContaining([
-      'AButton',
-      'AForm',
-      'AInput',
-      'ALayout',
-      'AModal',
-      'AProgress',
-      'ATable'
-    ]))
-    expect(componentNames).not.toContain('Antd')
-  })
-
-  it('registers components without an install hook by name', () => {
-    const app = { use: jest.fn(), component: jest.fn() }
-    const plainComponent = antComponents.find((component) => !component.install)
-
-    registerAntComponents(app)
-
-    expect(app.component).toHaveBeenCalledWith(plainComponent.name, plainComponent)
+    expect(viteConfig).toContain("import Components from 'unplugin-vue-components/vite'")
+    expect(viteConfig).toContain("AntDesignVueResolver({ importStyle: false })")
+    expect(viteConfig).toContain('Components({')
   })
 
   it('uses Chinese pagination copy for page-size selectors', () => {
