@@ -93,11 +93,11 @@ describe('HTTP client', () => {
 
     expect(refreshPost).toHaveBeenCalledWith(
       'https://api.example.test/api/token/refresh/',
-      { refresh: 'refresh-value' },
+      null,
       { withCredentials: true }
     )
     expect(getAccessToken()).toBe('fresh-access')
-    expect(getRefreshToken()).toBe('fresh-refresh')
+    expect(getRefreshToken()).toBe('')
   })
 
   it('shares one refresh request between simultaneous unauthorized requests', async () => {

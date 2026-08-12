@@ -8,12 +8,13 @@ import {
 describe('tokenStorage', () => {
   beforeEach(() => localStorage.clear())
 
-  it('stores raw access and refresh tokens', () => {
+  it('stores access tokens but never persists refresh tokens', () => {
     saveSession({ access: 'access-value', refresh: 'refresh-value' })
 
     expect(getAccessToken()).toBe('access-value')
-    expect(getRefreshToken()).toBe('refresh-value')
+    expect(getRefreshToken()).toBe('')
     expect(localStorage.getItem('blog.accessToken')).toBe('access-value')
+    expect(localStorage.getItem('blog.refreshToken')).toBeNull()
   })
 
   it('requires an access token', () => {

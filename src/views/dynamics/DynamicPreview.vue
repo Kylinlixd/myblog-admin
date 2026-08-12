@@ -118,6 +118,7 @@ import { getCategoryList } from '@/api/category'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { EditOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import MarkdownIt from 'markdown-it'
+import DOMPurify from 'dompurify'
 
 const route = useRoute()
 const router = useRouter()
@@ -175,7 +176,7 @@ const md = new MarkdownIt({
 
 // 渲染Markdown内容
 const renderMarkdown = (content) => {
-  return md.render(content || '')
+  return DOMPurify.sanitize(md.render(content || ''))
 }
 
 // 获取动态详情

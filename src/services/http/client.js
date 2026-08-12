@@ -5,7 +5,6 @@ import { normalizeApiError } from './errors'
 import {
   clearSession,
   getAccessToken,
-  getRefreshToken,
   saveSession
 } from './tokenStorage'
 
@@ -38,19 +37,18 @@ export function createHttpClient(options = {}) {
     (response) => response.data,
     async (error) => {
       const original = error.config
-      const refresh = getRefreshToken()
-      const canRefresh = error.response?.status === 401 && refresh && !original?._retry
+      const requestUrl = String(original?.url || '')
+      const canRefresh = error.response?.status === 401 && !original?._retry && !requestUrl.includes('/auth/login')
 
       if (canRefresh) {
         original._retry = true
         const apiBaseUrl = String(client.defaults.baseURL || '').replace(/\/$/, '')
         refreshPromise ||= axios
-          .post(`${apiBaseUrl}/api/token/refresh/`, { refresh }, { withCredentials: true })
+          .post(`${apiBaseUrl}/api/token/refresh/`, null, { withCredentials: true })
           .then(({ data }) => {
             const session = data?.data || data
             saveSession({
-              access: session.access,
-              refresh: session.refresh || refresh
+              access: session.access
             })
             return session.access
           })

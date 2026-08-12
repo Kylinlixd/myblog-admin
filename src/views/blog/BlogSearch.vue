@@ -635,9 +635,19 @@ const getRandomColor = () => {
 
 // 高亮关键词
 const highlightKeyword = (text) => {
-  if (!keyword.value) return text
-  const regex = new RegExp(keyword.value, 'gi')
-  return text.replace(regex, match => `<span class="highlight">${match}</span>`)
+  const value = String(text ?? '')
+  const escaped = value.replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[character])
+  if (!keyword.value) return escaped
+  const escapedKeyword = keyword.value.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  if (!escapedKeyword) return escaped
+  const regex = new RegExp(escapedKeyword, 'gi')
+  return escaped.replace(regex, match => `<span class="highlight">${match}</span>`)
 }
 
 // 获取项目链接

@@ -5,7 +5,7 @@ import { getAccessToken, getRefreshToken } from '@/services/http/tokenStorage'
 describe('authentication API contract', () => {
   beforeEach(() => localStorage.clear())
 
-  it('persists the backend access and refresh pair', () => {
+  it('persists only the backend access token', () => {
     persistAuthResponse({
       code: 200,
       data: { access: 'access-value', refresh: 'refresh-value' },
@@ -13,7 +13,7 @@ describe('authentication API contract', () => {
     })
 
     expect(getAccessToken()).toBe('access-value')
-    expect(getRefreshToken()).toBe('refresh-value')
+    expect(getRefreshToken()).toBe('')
   })
 
   it('rejects a successful response without an access token', () => {
@@ -23,17 +23,16 @@ describe('authentication API contract', () => {
   })
 
   it('unwraps an envelope returned by the explicit refresh API', async () => {
-    localStorage.setItem('blog.refreshToken', 'refresh-value')
     jest.spyOn(request, 'post').mockResolvedValueOnce({
       code: 200,
       message: 'success',
-      data: { access: 'fresh-access', refresh: 'fresh-refresh' }
+      data: { access: 'fresh-access' }
     })
 
     await refreshToken()
 
     expect(getAccessToken()).toBe('fresh-access')
-    expect(getRefreshToken()).toBe('fresh-refresh')
+    expect(getRefreshToken()).toBe('')
   })
 
   it.each([

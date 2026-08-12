@@ -1,7 +1,6 @@
 import request from '@/services/http/client'
 import {
   clearSession,
-  getRefreshToken,
   saveSession
 } from '@/services/http/tokenStorage'
 
@@ -12,7 +11,7 @@ export function persistAuthResponse(response) {
   if (!session?.access) {
     throw new TypeError('登录响应缺少 access token')
   }
-  saveSession({ access: session.access, refresh: session.refresh })
+  saveSession({ access: session.access })
   return response
 }
 
@@ -63,12 +62,9 @@ export async function uploadAvatar(file) {
 }
 
 export async function refreshToken() {
-  const refresh = getRefreshToken()
-  if (!refresh) throw new TypeError('缺少 refresh token')
-
-  const response = await request.post('/api/token/refresh/', { refresh })
+  const response = await request.post('/api/token/refresh/', null)
   const session = response?.data?.data || response?.data || response
-  saveSession({ access: session.access, refresh: session.refresh || refresh })
+  saveSession({ access: session.access })
   return response
 }
 
