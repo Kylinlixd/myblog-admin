@@ -37,5 +37,7 @@ describe('BlogAbout', () => {
     expect(source).toContain('color: #fffaf2')
     expect(source).toContain('.contact-banner a:hover')
     expect(source).toContain('.contact-banner a:focus-visible')
+    expect(source).toContain('padding: clamp(32px, 6vw, 64px)')
+    expect(source).toContain('.stack-section > div, .stack-groups, .stack-group, .stack-group ul { min-width: 0; }')
   })
 })

@@ -30,6 +30,15 @@ describe('cinematic public blog pages', () => {
       .forEach((name) => expect(readPage(name)).toContain('cinematic-hero'))
   })
 
+  it('keeps the category archive title readable instead of forming a text block', () => {
+    const categories = readPage('BlogCategories.vue')
+
+    expect(categories).toContain('max-width: 920px')
+    expect(categories).toContain('font-size: clamp(40px, 5vw, 64px)')
+    expect(categories).toContain('line-height: 1.08')
+    expect(categories).toContain('margin: 18px 0 0')
+  })
+
   it('does not expose development fixtures on the public dynamic stream', () => {
     const dynamic = readPage('BlogDynamic.vue')
 

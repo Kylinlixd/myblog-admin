@@ -253,8 +253,11 @@ const stack = [
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   gap: clamp(48px, 8vw, 104px);
   margin-top: clamp(80px, 12vw, 144px);
+  padding: clamp(32px, 6vw, 64px);
   align-items: start;
 }
+.stack-section > div, .stack-groups, .stack-group, .stack-group ul { min-width: 0; }
+.stack-section h2, .stack-description { overflow-wrap: anywhere; }
 .stack-description { max-width: 480px; margin: 24px 0 0; color: var(--color-text-secondary); font-size: 17px; line-height: 1.8; }
 .stack-groups { border-top: 1px solid var(--color-border); }
 .stack-group { display: grid; grid-template-columns: 110px 1fr; gap: 24px; padding: 25px 0; border-bottom: 1px solid var(--color-border); }

@@ -49,8 +49,8 @@ onMounted(fetchCategories)
 .categories-container { max-width: 1240px; margin: 0 auto; padding: clamp(32px, 6vw, 86px) 20px 90px; }
 .page-header { margin-bottom: 42px; text-align: left; }
 .archive-kicker { color: #b85e2d; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
-.page-title { max-width: 760px; margin: 14px 0; color: #253142; font-size: clamp(38px, 6vw, 76px); font-weight: 800; letter-spacing: -.065em; line-height: .98; }
-.page-desc { max-width: 570px; margin: 0; color: #5b6672; font-size: 15px; line-height: 1.7; }
+.page-title { max-width: 920px; margin: 14px 0 0; color: #253142; font-size: clamp(40px, 5vw, 64px); font-weight: 800; letter-spacing: -.055em; line-height: 1.08; text-wrap: balance; }
+.page-desc { max-width: 570px; margin: 18px 0 0; color: #5b6672; font-size: 15px; line-height: 1.7; }
 .archive-meta { display: flex; gap: 10px; margin-top: 24px; color: #7d695c; font-size: 12px; }
 .archive-meta span { padding: 7px 11px; border: 1px solid #ead8c7; border-radius: 999px; background: rgb(255 250 242 / 72%); }
 .categories-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
@@ -63,5 +63,5 @@ onMounted(fetchCategories)
 .category-count { width: fit-content; padding: 5px 9px; border-radius: 999px; background: #f7e2cf; color: #a44e25; font-size: 12px; font-weight: 700; }
 .category-desc { margin: auto 0 0; color: #697586; font-size: 13px; line-height: 1.55; }
 @media (max-width: 980px) { .category-card { grid-column: span 6; } }
-@media (max-width: 620px) { .categories-container { padding-inline: 16px; } .category-card { grid-column: span 12; } .page-title { font-size: clamp(40px, 13vw, 64px); } }
+@media (max-width: 620px) { .categories-container { padding-inline: 16px; } .category-card { grid-column: span 12; } .page-title { max-width: 100%; font-size: clamp(40px, 13vw, 64px); line-height: 1.06; text-wrap: pretty; } }
 </style>
