@@ -14,6 +14,7 @@ describe('asset deployment rules', () => {
     expect(source).toContain('gzip on;')
     expect(source).toContain('gzip_comp_level 5;')
     expect(source).toContain('gzip_types')
+    expect(source).toContain('gzip_proxied any;')
     expect(source).toContain('application/javascript')
   })
 })
