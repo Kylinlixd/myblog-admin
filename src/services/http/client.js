@@ -19,7 +19,9 @@ export function createHttpClient(options = {}) {
 
   client.interceptors.request.use((config) => {
     const token = getAccessToken()
-    if (token) {
+    const requestUrl = String(config.url || '')
+    const isPublicBlogRequest = requestUrl.includes('/api/blog/') || requestUrl.endsWith('/api/blog')
+    if (token && !isPublicBlogRequest) {
       config.headers.Authorization = `Bearer ${token}`
     }
     const method = (config.method || 'get').toLowerCase()
@@ -38,7 +40,8 @@ export function createHttpClient(options = {}) {
     async (error) => {
       const original = error.config
       const requestUrl = String(original?.url || '')
-      const canRefresh = error.response?.status === 401 && !original?._retry && !requestUrl.includes('/auth/login')
+      const isPublicBlogRequest = requestUrl.includes('/api/blog/') || requestUrl.endsWith('/api/blog')
+      const canRefresh = error.response?.status === 401 && !original?._retry && !requestUrl.includes('/auth/login') && !isPublicBlogRequest
 
       if (canRefresh) {
         original._retry = true

@@ -295,12 +295,20 @@ router.beforeEach(async (to) => {
 router.afterEach((to) => {
   const appStore = useAppStore()
   appStore.endNavigation()
+  sessionStorage.removeItem('vite-chunk-recovery')
   document.title = to.meta.title ? `${to.meta.title} · LiXD 的博客` : 'LiXD 的博客'
 })
 
 // 添加路由错误处理
 router.onError((error) => {
   console.error('[Router]', error)
+  const isChunkLoadError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(error?.message || '')
+  if (isChunkLoadError && !sessionStorage.getItem('vite-chunk-recovery')) {
+    sessionStorage.setItem('vite-chunk-recovery', '1')
+    window.location.reload()
+    return
+  }
+  sessionStorage.removeItem('vite-chunk-recovery')
   const appStore = useAppStore()
   appStore.hasError = true
   appStore.errorMessage = error.message || '路由加载失败'

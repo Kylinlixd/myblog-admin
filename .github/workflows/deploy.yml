@@ -29,7 +29,11 @@ jobs:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
 
       - name: Package release
-        run: tar -czf release.tgz -C dist .
+        run: |
+          mkdir -p .release-package
+          cp -R dist/. .release-package/
+          cp ops/nginx/myblog-admin.conf .release-package/.myblog-admin-assets.conf
+          tar -czf release.tgz -C .release-package .
           
       - name: Deploy to server
         uses: appleboy/scp-action@v0.1.7
@@ -53,6 +57,11 @@ jobs:
             mkdir -p "$release_dir"
             tar -xzf "/tmp/release.tgz" -C "$release_dir"
             ln -sfn "$release_dir" /var/www/myblog-admin/current
+            install -d /etc/nginx/snippets
+            install -m 0644 "$release_dir/.myblog-admin-assets.conf" /etc/nginx/snippets/myblog-admin-assets.conf
+            if ! grep -qF 'include /etc/nginx/snippets/myblog-admin-assets.conf;' /etc/nginx/sites-enabled/myblog-admin; then
+              sed -i '/    location \/ {/i\    include /etc/nginx/snippets/myblog-admin-assets.conf;' /etc/nginx/sites-enabled/myblog-admin
+            fi
             rm -f /tmp/release.tgz
             nginx -t
             systemctl reload nginx

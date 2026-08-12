@@ -28,6 +28,22 @@ describe('HTTP client', () => {
     expect(response).toEqual({ code: 200, data: { id: 7 }, message: 'success' })
   })
 
+  it('does not attach an admin token to public blog requests', async () => {
+    saveSession({ access: 'stale-admin-token' })
+    const adapter = jest.fn(async (config) => ({
+      config,
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      data: { code: 200, data: { items: [] }, message: 'success' }
+    }))
+    const client = createHttpClient({ adapter })
+
+    await client.get('/api/blog/dynamics/', { params: { page: 1, pageSize: 10 } })
+
+    expect(adapter.mock.calls[0][0].headers.Authorization).toBeUndefined()
+  })
+
   it.each(['get', 'head', 'options'])('does not add a request ID to %s requests', async (method) => {
     const adapter = jest.fn(async (config) => ({
       config,
