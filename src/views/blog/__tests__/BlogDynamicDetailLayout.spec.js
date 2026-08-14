@@ -35,3 +35,16 @@ test('视频文章详情渲染可播放媒体源', () => {
   expect(source).toContain(':poster="item.posterUrl || undefined"')
   expect(source).toContain('playsinline')
 })
+
+test('动态详情区分失效文章与可重试的加载失败', () => {
+  expect(source).toContain('detailErrorKind')
+  expect(source).toContain("文章加载失败，请稍后重试")
+  expect(source).toContain('重试')
+  expect(source).toContain('Number(status) === 404')
+})
+
+test('动态详情在路由 ID 变化时重新加载，并隔离附加请求', () => {
+  expect(source).toContain("watch(() => route.params.id")
+  expect(source).toContain('void Promise.allSettled')
+  expect(source).toContain('dynamic.value = response.data')
+})

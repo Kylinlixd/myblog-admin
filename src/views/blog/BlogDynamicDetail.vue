@@ -6,7 +6,8 @@
     </div>
     
     <div v-else-if="!dynamic" class="error-state">
-      <p>文章不存在或已被删除</p>
+      <p>{{ detailErrorKind === 'not-found' ? '文章不存在或已被删除' : '文章加载失败，请稍后重试' }}</p>
+      <a-button v-if="detailErrorKind !== 'not-found'" type="primary" @click="fetchDynamicDetail(route.params.id)">重试</a-button>
     </div>
     
     <div v-else class="article-reading-shell">
@@ -159,7 +160,7 @@
 </template>
 
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments } from '@/api/blog'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
@@ -230,6 +231,8 @@ const dynamicMediaItems = computed(() => {
   }).filter(item => item.url)
 })
 const loading = ref(true)
+const detailErrorKind = ref('')
+let detailRequestSequence = 0
 const articleBodyRef = ref(null)
 const tocItems = ref([])
 const tocOpen = ref(false)
@@ -291,16 +294,19 @@ const scrollToHeading = (id) => {
 }
 
 // 获取评论列表
-const fetchComments = async () => {
-  if (!dynamic.value) return
+const fetchComments = async (requestedId = dynamic.value?.id) => {
+  const dynamicId = requestedId
+  if (!dynamicId) return
   
   try {
-    const result = await getDynamicComments(dynamic.value.id, {
+    const result = await getDynamicComments(dynamicId, {
       page: commentPage.value,
       pageSize: commentPageSize.value
     })
     
     
+    if (String(route.params.id) !== String(dynamicId)) return
+
     if (result && result.code === 200 && result.data) {
       commentList.value = result.data.list || []
       commentTotal.value = result.data.total || 0
@@ -366,37 +372,69 @@ const handleCommentPageChange = async (page) => {
   await fetchComments()
 }
 
-const fetchDynamicDetail = async () => {
+const isNotFoundError = (error) => {
+  const status = error?.status ?? error?.response?.status ?? error?.code
+  return Number(status) === 404
+}
+
+const fetchDynamicDetail = async (requestedId = route.params.id) => {
+  const dynamicId = String(requestedId || '')
+  const requestSequence = ++detailRequestSequence
+
+  dynamic.value = null
+  detailErrorKind.value = ''
+  commentList.value = []
+  commentTotal.value = 0
+  commentPage.value = 1
+
   try {
     loading.value = true
     appStore.startLoading('加载文章内容...')
-    
-    const dynamicId = route.params.id
-    const response = await getBlogDynamicDetail(dynamicId)
-    
-        if (response.code === 200) {
-          dynamic.value = response.data
-          const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
-          readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
-          await syncArticleNavigation()
-      // 增加阅读量
-      await increaseDynamicView(dynamicId)
-      // 加载评论列表
-      await fetchComments()
-    } else {
-      console.error('获取文章详情失败:', response.message)
-      appStore.setLoadingError('获取文章详情失败，请刷新重试')
+
+    if (!dynamicId) {
+      const error = new Error('缺少文章 ID')
+      error.status = 404
+      throw error
     }
+
+    const response = await getBlogDynamicDetail(dynamicId)
+    if (requestSequence !== detailRequestSequence) return
+
+    if (response?.code !== 200 || !response.data) {
+      const error = new Error(response?.message || '获取文章详情失败')
+      error.status = Number(response?.code) || 0
+      throw error
+    }
+
+    dynamic.value = response.data
+    const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
+    readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
+    await syncArticleNavigation()
+    if (requestSequence !== detailRequestSequence) return
+
+    // 浏览量和评论是附加信息，失败时不阻断正文展示。
+    void Promise.allSettled([
+      increaseDynamicView(dynamicId),
+      fetchComments(dynamicId)
+    ])
   } catch (error) {
+    if (requestSequence !== detailRequestSequence) return
     console.error('获取文章详情失败:', error)
-    appStore.setLoadingError('获取文章详情失败，请刷新重试')
+    detailErrorKind.value = isNotFoundError(error) ? 'not-found' : 'load-error'
+    appStore.setLoadingError(
+      detailErrorKind.value === 'not-found' ? '文章不存在或已被删除' : '文章加载失败，请稍后重试'
+    )
   } finally {
+    if (requestSequence !== detailRequestSequence) return
     loading.value = false
     appStore.endLoading()
   }
 }
 
-onMounted(fetchDynamicDetail)
+watch(() => route.params.id, (nextId, previousId) => {
+  if (nextId && nextId !== previousId) fetchDynamicDetail(nextId)
+})
+onMounted(() => fetchDynamicDetail(route.params.id))
 onMounted(() => {
   window.addEventListener('scroll', updateReadingProgress, { passive: true })
   window.addEventListener('resize', updateReadingProgress)

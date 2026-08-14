@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogHome.vue'), 'utf8')
+const layoutSource = fs.readFileSync(path.join(process.cwd(), 'src/layouts/BlogLayout.vue'), 'utf8')
 
 describe('warm technology blog homepage', () => {
   it('keeps the hero wide and the bento grid dense', () => {
@@ -42,8 +43,15 @@ describe('warm technology blog homepage', () => {
   })
 
   it('keeps the next chapter in reach on tall screens', () => {
-    expect(source).toContain('min-height: clamp(760px, 86dvh, 980px)')
+    expect(source).toContain('min-height: clamp(620px, calc(100dvh - 86px), 900px)')
+    expect(source).not.toContain('min-height: clamp(760px, 86dvh, 980px)')
     expect(source).not.toContain('min-height: calc(100dvh - 62px)')
+  })
+
+  it('uses a fluid homepage container on wide screens', () => {
+    expect(layoutSource).toContain("'blog-shell--home': route.name === 'BlogHome'")
+    expect(layoutSource).toContain('.blog-shell--home')
+    expect(layoutSource).toContain('--content-width: min(1480px, calc(100vw - 64px))')
   })
 
   it('turns the second screen into a three-line path manifesto', () => {
