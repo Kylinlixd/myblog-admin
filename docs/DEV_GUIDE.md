@@ -57,7 +57,7 @@ src/
 `views/files/FileList.vue` 是博客资源工作台，`FileTutorialDrawer.vue` 提供五步内置教程。新增行为需保持以下契约：
 
 - 浏览器只调用 Django `/api/upload/`，不得访问 Xion 的 8081 端口或读取服务密钥。
-- 单文件上限为 50 MB，上传进度由 `api/file.js` 的 `onProgress` 回调提供。
+- 单文件上限为 1 GB，上传进度由 `api/file.js` 的 `onProgress` 回调提供。
 - 图片、音频、视频、PDF/Word/Excel/TXT 分别归类；未知类型归为 `other`。
 - 列表同时兼容 `storage_backend=local` 和 `storage_backend=xion`，只使用 Django 返回的稳定 `file_url`。
 - 删除失败时保留可重试状态；不要在前端假设底层对象已经消失。

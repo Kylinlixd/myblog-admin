@@ -23,7 +23,7 @@ describe('FileTutorialDrawer', () => {
     for (const text of ['上传文件', '复制链接', '插入文章', '下载与删除', '常见问题']) {
       expect(wrapper.text()).toContain(text)
     }
-    expect(wrapper.text()).toContain('50 MB')
+    expect(wrapper.text()).toContain('1 GB')
   })
 
   it('emits the model update when the drawer closes', async () => {

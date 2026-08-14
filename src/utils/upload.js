@@ -16,7 +16,12 @@ export const uploadVideo = (file, onProgress) => uploadFile(file, 'video', onPro
 
 export const checkFileSize = (file, maxSize) => {
   const isLtSize = file.size / 1024 / 1024 < maxSize
-  if (!isLtSize) message.error(`文件大小不能超过 ${maxSize}MB!`)
+  if (!isLtSize) {
+    const readableSize = maxSize >= 1024 && maxSize % 1024 === 0
+      ? `${maxSize / 1024} GB`
+      : `${maxSize}MB`
+    message.error(`文件大小不能超过 ${readableSize}!`)
+  }
   return isLtSize
 }
 

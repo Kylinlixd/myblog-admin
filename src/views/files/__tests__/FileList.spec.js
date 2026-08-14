@@ -139,14 +139,14 @@ describe('FileList upload handling', () => {
     wrapper.unmount()
   })
 
-  it('recognizes document extensions and enforces the shared 50 MB limit', async () => {
+  it('recognizes document extensions and enforces the shared 1 GB limit', async () => {
     const wrapper = mount(FileList, { global: { stubs: globalStubs } })
     await flushPromises()
 
     expect(wrapper.vm.inferFileType({ name: 'guide.pdf', type: 'application/pdf' })).toBe('document')
     expect(wrapper.vm.inferFileType({ name: 'checklist.docx', type: '' })).toBe('document')
-    expect(wrapper.vm.beforeUpload({ name: 'large.pdf', size: 51 * 1024 * 1024 })).toBe(false)
-    expect(message.error).toHaveBeenCalledWith('文件大小不能超过 50 MB')
+    expect(wrapper.vm.beforeUpload({ name: 'large.pdf', size: 1024 * 1024 * 1024 + 1 })).toBe(false)
+    expect(message.error).toHaveBeenCalledWith('文件大小不能超过 1 GB')
     wrapper.unmount()
   })
 

@@ -3,7 +3,7 @@ import request from '@/utils/request'
 import { normalizeCollectionResponse } from './collections'
 import { unwrapApiResponse } from './response'
 
-const FILE_TRANSFER_TIMEOUT_MS = 300000
+const FILE_TRANSFER_TIMEOUT_MS = 1800000
 
 function normalizeFileItem(item) {
   const normalized = {

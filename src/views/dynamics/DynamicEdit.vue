@@ -76,7 +76,7 @@
           <span v-else-if="uploadState.stage === 'processing'">正在优化视频，完成后会自动生成封面</span>
           <span v-else-if="uploadState.stage === 'success'">{{ uploadState.message }}</span>
           <span v-else-if="uploadState.stage === 'error'">{{ uploadState.message }}</span>
-          <span v-else>单个文件不超过 50MB，视频会转为网页友好的 MP4</span>
+          <span v-else>单个文件不超过 1GB，视频会转为网页友好的 MP4</span>
         </div>
       </a-form-item>
 
@@ -109,7 +109,7 @@
             从文件库选择
           </a-button>
         </div>
-        <div class="upload-tip">支持 JPG、PNG、GIF、HEIC、HEIF，单个文件不超过 50MB</div>
+        <div class="upload-tip">支持 JPG、PNG、GIF、HEIC、HEIF，单个文件不超过 1GB</div>
       </a-form-item>
 
       <!-- 音频上传 -->
@@ -889,21 +889,21 @@ const beforeMediaUpload = (file) => {
 // 检查图片上传
 const beforeImageUpload = (file) => {
   const isValidType = checkFileType(file, ['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif'])
-  const isValidSize = checkFileSize(file, 50)
+  const isValidSize = checkFileSize(file, 1024)
   return isValidType && isValidSize
 }
 
 // 检查音频上传
 const beforeAudioUpload = (file) => {
   const isValidType = checkFileType(file, ['mp3', 'wav', 'ogg'])
-  const isValidSize = checkFileSize(file, 5)
+  const isValidSize = checkFileSize(file, 1024)
   return isValidType && isValidSize
 }
 
 // 检查视频上传
 const beforeVideoUpload = (file) => {
   const isValidType = checkFileType(file, ['mp4', 'mov', 'm4v', 'webm', 'ogg', 'hevc'])
-  const isValidSize = checkFileSize(file, 50)
+  const isValidSize = checkFileSize(file, 1024)
   return isValidType && isValidSize
 }
 

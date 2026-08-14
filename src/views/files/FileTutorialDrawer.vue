@@ -16,7 +16,7 @@
         <span class="tutorial-index">01</span>
         <div>
           <h3>上传文件</h3>
-          <p>拖入文件或点击“上传文件”。单个文件不超过 50 MB；图片、PDF、Word、Excel、音视频均会自动识别。</p>
+          <p>拖入文件或点击“上传文件”。单个文件不超过 1 GB；图片、PDF、Word、Excel、音视频均会自动识别。</p>
         </div>
       </li>
       <li>

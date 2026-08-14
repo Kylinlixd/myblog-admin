@@ -56,7 +56,7 @@
           <span class="upload-zone__icon"><UploadOutlined /></span>
           <div>
             <strong>拖拽文件到这里，或点击选择</strong>
-            <p>自动识别图片、PDF、Word、Excel、音视频；单个文件不超过 50 MB。</p>
+            <p>自动识别图片、PDF、Word、Excel、音视频；单个文件不超过 1 GB。</p>
           </div>
         </div>
       </a-upload-dragger>
@@ -589,7 +589,7 @@ const handleDelete = async (id) => {
 
 const isDeleting = (id) => deletingIds.has(id)
 
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024
 const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx'])
 
 const inferFileType = (file) => {
@@ -605,7 +605,7 @@ const inferFileType = (file) => {
 // 上传前检查
 const beforeUpload = (file) => {
   if (file.size > MAX_UPLOAD_BYTES) {
-    message.error('文件大小不能超过 50 MB')
+    message.error('文件大小不能超过 1 GB')
     return false
   }
   return true

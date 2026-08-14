@@ -119,7 +119,7 @@ describe('file API normalization', () => {
     const result = await uploadFile({ file, file_type: 'document', onProgress })
 
     expect(onProgress).toHaveBeenCalledWith(50)
-    expect(request.post.mock.calls[0][2].timeout).toBe(300000)
+    expect(request.post.mock.calls[0][2].timeout).toBe(1800000)
     expect(result.storage_backend).toBe('xion')
     expect(result.url).toBe('/api/upload/public/10/')
   })
@@ -132,7 +132,7 @@ describe('file API normalization', () => {
     expect(request.post).toHaveBeenCalledWith(
       '/api/upload/files/9/download/',
       null,
-      { responseType: 'blob', timeout: 300000 }
+      { responseType: 'blob', timeout: 1800000 }
     )
   })
 })
