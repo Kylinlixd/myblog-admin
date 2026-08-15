@@ -44,6 +44,29 @@ describe('HTTP client', () => {
     expect(adapter.mock.calls[0][0].headers.Authorization).toBeUndefined()
   })
 
+  it('retries a transient public GET request before returning a network error', async () => {
+    const adapter = jest.fn(async (config) => {
+      if (adapter.mock.calls.length === 1) {
+        throw { config }
+      }
+
+      return {
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        data: { code: 200, data: { id: 58 }, message: 'success' }
+      }
+    })
+    const client = createHttpClient({ adapter, retryDelayMs: 0 })
+
+    await expect(client.get('/api/blog/dynamics/58/')).resolves.toEqual({
+      code: 200,
+      data: { id: 58 },
+      message: 'success'
+    })
+    expect(adapter).toHaveBeenCalledTimes(2)
+  })
+
   it.each(['get', 'head', 'options'])('does not add a request ID to %s requests', async (method) => {
     const adapter = jest.fn(async (config) => ({
       config,
