@@ -32,56 +32,13 @@
         <div v-if="dynamic.content" class="content-text markdown-body" v-html="renderMarkdown(dynamic.content)"></div>
         
         <!-- 媒体内容 -->
-        <div v-if="dynamic.mediaUrls && dynamic.mediaUrls.length" class="media-content">
-          <!-- 图片预览 -->
-          <template v-if="dynamic.type === 'image'">
-            <a-image-preview-group>
-              <div class="image-grid">
-                <a-image
-                  v-for="(item, index) in mediaItems"
-                  :key="index"
-                  :src="item.url"
-                  :preview="{
-                    src: item.url,
-                    mask: false
-                  }"
-                  class="preview-image"
-                />
-              </div>
-            </a-image-preview-group>
-          </template>
-          
-          <!-- 音频预览 -->
-          <template v-else-if="dynamic.type === 'audio'">
-            <div class="audio-player">
-              <audio
-                v-for="(item, index) in mediaItems"
-                :key="index"
-                controls
-                :src="item.url"
-                class="audio-element"
-              >
-                您的浏览器不支持音频播放
-              </audio>
-            </div>
-          </template>
-          
-          <!-- 视频预览 -->
-          <template v-else-if="dynamic.type === 'video'">
-            <div class="video-player">
-              <video
-                v-for="(item, index) in mediaItems"
-                :key="index"
-                controls
-                :src="item.url"
-                :poster="item.posterUrl || undefined"
-                preload="metadata"
-                playsinline
-                class="video-element"
-              >
-                您的浏览器不支持视频播放
-              </video>
-            </div>
+        <div v-if="mediaItems.length" class="media-content">
+          <template v-for="item in mediaItems" :key="item.url">
+            <div v-if="isMediaUnavailable(item.url)" class="media-unavailable">该媒体已不可用</div>
+            <img v-else-if="item.type === 'image'" :src="item.url" :alt="item.name || '动态图片'" class="preview-image" @error="markMediaUnavailable(item.url)" />
+            <audio v-else-if="item.type === 'audio'" controls :src="item.url" class="audio-element" @error="markMediaUnavailable(item.url)">您的浏览器不支持音频播放</audio>
+            <video v-else-if="item.type === 'video'" controls :src="item.url" :poster="item.posterUrl || undefined" preload="metadata" playsinline class="video-element" @error="markMediaUnavailable(item.url)">您的浏览器不支持视频播放</video>
+            <a v-else :href="item.url" target="_blank" rel="noopener" @click.prevent="openMedia(item)">下载附件{{ item.name ? `：${item.name}` : '' }}</a>
           </template>
         </div>
       </div>
@@ -137,23 +94,41 @@ const defaultDynamic = {
 }
 
 const dynamic = ref({ ...defaultDynamic })
+const unavailableMediaUrls = ref(new Set())
 
-const normalizeMediaItem = (item) => {
+const normalizeMediaItem = (item, fallbackType) => {
   const rawUrl = typeof item === 'string' ? item : item?.url || item?.file_url
   const rawPoster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url
   return {
     url: buildApiUrl(rawUrl || ''),
     posterUrl: rawPoster ? buildApiUrl(rawPoster) : '',
     name: typeof item === 'object' ? item?.name || '' : '',
-    type: typeof item === 'object' ? item?.type || item?.file_type || '' : '',
+    type: typeof item === 'object' ? item?.type || item?.file_type || fallbackType : fallbackType,
     size: typeof item === 'object' ? item?.size || item?.file_size || 0 : 0
   }
 }
 
 const mediaItems = computed(() => {
   const items = Array.isArray(dynamic.value.mediaUrls) ? dynamic.value.mediaUrls : [dynamic.value.mediaUrls]
-  return items.map(normalizeMediaItem).filter(item => item.url)
+  return items.map((item) => normalizeMediaItem(item, dynamic.value.type)).filter(item => item.url)
 })
+const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
+const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
+const openMedia = async (item) => {
+  const popup = window.open('', '_blank')
+  if (!popup) return window.location.assign(item.url)
+  if (new URL(item.url, window.location.href).origin !== window.location.origin) return popup.location.assign(item.url)
+  try {
+    const response = await fetch(item.url, { method: 'HEAD' })
+    if (response.ok) return popup.location.assign(item.url)
+    popup.close()
+    if (response.status === 404) markMediaUnavailable(item.url)
+    else message.error('媒体加载失败，请稍后重试')
+  } catch {
+    popup.close()
+    message.error('媒体加载失败，请稍后重试')
+  }
+}
 
 const normalizeDynamic = (data = {}) => ({
   ...defaultDynamic,
@@ -181,6 +156,7 @@ const renderMarkdown = (content) => {
 
 // 获取动态详情
 const fetchDynamicDetail = async () => {
+  unavailableMediaUrls.value = new Set()
   if (route.params.id === 'draft') {
     const cachedPreview = localStorage.getItem('dynamicPreview')
     if (!cachedPreview) {
@@ -438,6 +414,13 @@ onMounted(async () => {
           margin-bottom: 16px;
           border-radius: 8px;
         }
+      }
+
+      .media-unavailable {
+        padding: 12px;
+        color: #64748b;
+        border: 1px dashed #cbd5e1;
+        border-radius: 8px;
       }
     }
   }

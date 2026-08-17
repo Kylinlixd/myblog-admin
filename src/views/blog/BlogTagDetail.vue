@@ -28,10 +28,11 @@
             <a-card hoverable class="dynamic-card cinematic-card">
               <!-- 文章图片 -->
               <img 
-                v-if="dynamic.mediaUrls && dynamic.mediaUrls.length > 0" 
-                :src="dynamic.mediaUrls[0]" 
+                v-if="coverUrl(dynamic) && !isMediaUnavailable(coverUrl(dynamic))"
+                :src="coverUrl(dynamic)"
                 alt="文章图片"
                 class="dynamic-image"
+                @error="markMediaUnavailable(coverUrl(dynamic))"
               />
               <div v-else class="dynamic-image dynamic-image-placeholder">
                 <file-text-outlined />
@@ -91,6 +92,7 @@ import { message } from 'ant-design-vue'
 import { getTagDynamics } from '@/api/blog'
 import { TagOutlined, EyeOutlined, HeartOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import { useAppStore } from '@/stores/app'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 
 const route = useRoute()
 const router = useRouter()
@@ -103,6 +105,19 @@ const dynamics = ref([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(12)
+const unavailableMediaUrls = ref(new Set())
+
+const coverUrl = (dynamic) => {
+  const mediaItems = Array.isArray(dynamic.mediaUrls) ? dynamic.mediaUrls : [dynamic.mediaUrls]
+  const media = mediaItems.find((item) => {
+    const type = typeof item === 'object' ? item?.type || item?.file_type : dynamic.type
+    return type === 'image'
+  })
+  const type = typeof media === 'object' ? media?.type || media?.file_type : dynamic.type
+  return type === 'image' ? buildApiUrl(typeof media === 'string' ? media : media?.url || media?.file_url || '') : ''
+}
+const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
+const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 
 // 获取标签详情和文章列表
 const fetchTagDynamics = async () => {

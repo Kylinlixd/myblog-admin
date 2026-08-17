@@ -101,4 +101,32 @@ describe('DynamicPreview mounted interactions', () => {
     wrapper.unmount()
     routeParams.id = '42'
   })
+
+  it('isolates an unavailable media item from the rest of the preview', () => {
+    const source = require('node:fs').readFileSync(
+      require('node:path').join(process.cwd(), 'src/views/dynamics/DynamicPreview.vue'),
+      'utf8'
+    )
+
+    expect(source).toContain('markMediaUnavailable')
+    expect(source).toContain('该媒体已不可用')
+  })
+
+  it('replaces a failed image with an unavailable state', async () => {
+    getDynamicDetail.mockResolvedValueOnce({
+      id: 42,
+      type: 'image',
+      content: '',
+      mediaUrls: [{ url: '/api/upload/public/1/', type: 'image', name: 'cover.png' }],
+      status: 'published',
+      tags: []
+    })
+
+    const wrapper = mount(DynamicPreview, { global: { stubs: globalStubs } })
+    await flushPromises()
+    await wrapper.find('.preview-image').trigger('error')
+
+    expect(wrapper.find('.media-unavailable').text()).toContain('该媒体已不可用')
+    wrapper.unmount()
+  })
 })

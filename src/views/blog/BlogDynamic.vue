@@ -38,32 +38,15 @@
               </router-link>
             </div>
 
-            <!-- 图片展示 -->
-            <div v-if="item.images && item.images.length" class="image-gallery">
-              <div v-for="(image, imgIndex) in item.images.slice(0, 3)" :key="imgIndex" class="gallery-image">
-                <img :src="image" :alt="`图片 ${imgIndex + 1}`" />
-              </div>
-              <div v-if="item.images.length > 3" class="more-images">
-                <router-link :to="`/blog/dynamics/${item.id}`">
-                  查看全部 {{ item.images.length }} 张图片
-                </router-link>
-              </div>
-            </div>
-
-            <!-- 音频播放器 -->
-            <div v-if="item.audio" class="audio-player">
-              <audio class="audio-element" controls>
-                <source :src="item.audio" type="audio/mpeg">
-                您的浏览器不支持音频播放
-              </audio>
-            </div>
-
-            <!-- 视频播放器 -->
-            <div v-if="item.video" class="video-player">
-              <video class="video-element" controls>
-                <source :src="item.video" type="video/mp4">
-                您的浏览器不支持视频播放
-              </video>
+            <div v-if="mediaItems(item).length" class="dynamic-media-list">
+              <template v-for="media in mediaItems(item).slice(0, 3)" :key="media.url">
+                <div v-if="isMediaUnavailable(media.url)" class="media-unavailable">该媒体已不可用</div>
+                <img v-else-if="media.type === 'image'" :src="media.url" :alt="media.name || '动态图片'" @error="markMediaUnavailable(media.url)" />
+                <audio v-else-if="media.type === 'audio'" controls preload="metadata" :src="media.url" @error="markMediaUnavailable(media.url)">您的浏览器不支持音频播放</audio>
+                <video v-else-if="media.type === 'video'" controls preload="metadata" :src="media.url" :poster="media.posterUrl || undefined" playsinline @error="markMediaUnavailable(media.url)">您的浏览器不支持视频播放</video>
+                <a v-else :href="media.url" target="_blank" rel="noopener" @click.prevent="openMedia(media)">下载附件{{ media.name ? `：${media.name}` : '' }}</a>
+              </template>
+              <router-link v-if="mediaItems(item).length > 3" :to="`/blog/dynamics/${item.id}`">查看全部 {{ mediaItems(item).length }} 个附件</router-link>
             </div>
           </div>
 
@@ -193,6 +176,7 @@ import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { 
   getBlogDynamics, 
   likeDynamic, 
@@ -222,6 +206,37 @@ const fetchedPages = ref(new Set()) // 用于跟踪已请求的页码
 const commentContent = ref('')
 const nickname = ref('')
 const email = ref('')
+const unavailableMediaUrls = ref(new Set())
+
+const mediaItems = (dynamic) => {
+  const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
+  return (Array.isArray(media) ? media : [media]).map((item) => {
+    const poster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url || ''
+    return {
+      url: buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || ''),
+      type: typeof item === 'string' ? dynamic.type : item?.type || item?.file_type || dynamic.type,
+      name: typeof item === 'object' ? item?.name || '' : '',
+      posterUrl: poster ? buildApiUrl(poster) : ''
+    }
+  }).filter((item) => item.url)
+}
+const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
+const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
+const openMedia = async (item) => {
+  const popup = window.open('', '_blank')
+  if (!popup) return window.location.assign(item.url)
+  if (new URL(item.url, window.location.href).origin !== window.location.origin) return popup.location.assign(item.url)
+  try {
+    const response = await fetch(item.url, { method: 'HEAD' })
+    if (response.ok) return popup.location.assign(item.url)
+    popup.close()
+    if (response.status === 404) markMediaUnavailable(item.url)
+    else message.error('媒体加载失败，请稍后重试')
+  } catch {
+    popup.close()
+    message.error('媒体加载失败，请稍后重试')
+  }
+}
 
 // 选中的动态
 const selectedDynamic = ref(null)
@@ -285,7 +300,6 @@ const fetchDynamicList = async (isRefresh = false) => {
         views: item.views || 0,
         likes: item.likes || 0,
         comments: item.comments || 0,
-        images: item.mediaUrls || [],
         type: item.type || 'text',
         status: item.status || 'draft'
       }));
@@ -325,6 +339,7 @@ const fetchDynamicList = async (isRefresh = false) => {
 // 刷新列表
 const refreshList = () => {
   page.value = 1
+  unavailableMediaUrls.value = new Set()
   fetchDynamicList(true)
 }
 
@@ -677,6 +692,27 @@ onActivated(() => {
   width: 100%;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dynamic-media-list {
+  display: grid;
+  gap: 12px;
+  margin: 1rem 0;
+}
+
+.dynamic-media-list img,
+.dynamic-media-list video,
+.dynamic-media-list audio {
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+
+.media-unavailable {
+  padding: 12px;
+  color: #64748b;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
 }
 
 .dynamic-footer {

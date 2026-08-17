@@ -35,19 +35,14 @@
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
         <main class="article-main-column">
-          <div v-if="dynamic.type === 'video' && dynamicMediaUrls.length" class="dynamic-video">
-            <video
-              v-for="item in dynamicMediaItems"
-              :key="item.url"
-              class="dynamic-video__player"
-              controls
-              preload="metadata"
-              :src="item.url"
-              :poster="item.posterUrl || undefined"
-              playsinline
-            >
-              您的浏览器不支持视频播放
-            </video>
+          <div v-if="dynamicMediaUrls.length" class="dynamic-media">
+            <template v-for="item in dynamicMediaItems" :key="item.url">
+              <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
+              <img v-else-if="item.type === 'image'" class="dynamic-media__image" :src="item.url" :alt="item.name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(item.url)" />
+              <audio v-else-if="item.type === 'audio'" class="dynamic-media__audio" controls preload="metadata" :src="item.url" @error="markMediaUnavailable(item.url)">您的浏览器不支持音频播放</audio>
+              <video v-else-if="item.type === 'video'" class="dynamic-media__video" controls preload="metadata" :src="item.url" :poster="item.posterUrl || undefined" playsinline @error="markMediaUnavailable(item.url)">您的浏览器不支持视频播放</video>
+              <a v-else class="dynamic-media__file" :href="item.url" target="_blank" rel="noopener" @click.prevent="openMedia(item)">下载附件{{ item.name ? `：${item.name}` : '' }}</a>
+            </template>
           </div>
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
 
@@ -208,6 +203,7 @@ const renderMarkdown = (content) => {
 const route = useRoute()
 const appStore = useAppStore()
 const dynamic = ref(null)
+const unavailableMediaUrls = ref(new Set())
 const dynamicMediaUrls = computed(() => {
   const media = dynamic.value?.mediaUrls ?? dynamic.value?.media_urls ?? dynamic.value?.files ?? []
   const items = Array.isArray(media) ? media : [media]
@@ -225,11 +221,30 @@ const dynamicMediaItems = computed(() => {
       url,
       posterUrl: poster ? buildApiUrl(poster) : '',
       name: typeof item === 'object' ? item?.name || '' : '',
-      type: typeof item === 'object' ? item?.type || item?.file_type || '' : '',
+      type: typeof item === 'object'
+        ? item?.type || item?.file_type || dynamic.value?.type || 'other'
+        : dynamic.value?.type || 'other',
       size: typeof item === 'object' ? item?.size || item?.file_size || 0 : 0
     }
   }).filter(item => item.url)
 })
+const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
+const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
+const openMedia = async (item) => {
+  const popup = window.open('', '_blank')
+  if (!popup) return window.location.assign(item.url)
+  if (new URL(item.url, window.location.href).origin !== window.location.origin) return popup.location.assign(item.url)
+  try {
+    const response = await fetch(item.url, { method: 'HEAD' })
+    if (response.ok) return popup.location.assign(item.url)
+    popup.close()
+    if (response.status === 404) markMediaUnavailable(item.url)
+    else message.error('媒体加载失败，请稍后重试')
+  } catch {
+    popup.close()
+    message.error('媒体加载失败，请稍后重试')
+  }
+}
 const loading = ref(true)
 const detailErrorKind = ref('')
 let detailRequestSequence = 0
@@ -382,6 +397,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
   const requestSequence = ++detailRequestSequence
 
   dynamic.value = null
+  unavailableMediaUrls.value = new Set()
   detailErrorKind.value = ''
   commentList.value = []
   commentTotal.value = 0
@@ -1030,7 +1046,7 @@ onBeforeUnmount(() => {
 
     .article-header .dynamic-meta {
       gap: 8px;
-      color: var(--article-muted);
+      color: var(--article-muted, #64748b);
       font-size: 13px;
     }
 
@@ -1055,13 +1071,14 @@ onBeforeUnmount(() => {
 
     .article-main-column { min-width: 0; }
 
-    .dynamic-video {
+    .dynamic-media {
       display: grid;
       gap: 16px;
       margin-bottom: 22px;
     }
 
-    .dynamic-video__player {
+    .dynamic-media__image,
+    .dynamic-media__video {
       display: block;
       width: 100%;
       aspect-ratio: 16 / 9;
@@ -1071,6 +1088,16 @@ onBeforeUnmount(() => {
       border-radius: 22px;
       background: #10243a;
       box-shadow: 0 20px 52px rgb(88 65 37 / 9%);
+    }
+
+    .dynamic-media__audio { width: 100%; }
+
+    .dynamic-media__file,
+    .media-unavailable {
+      padding: 14px;
+      border: 1px dashed var(--article-line);
+      border-radius: 10px;
+      color: var(--article-muted);
     }
 
     .article-main-column .dynamic-body {
