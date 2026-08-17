@@ -16,7 +16,7 @@ jest.mock('@/api/category', () => ({ getCategoryList: jest.fn(), createCategory:
 jest.mock('@/api/tag', () => ({ getTagList: jest.fn(), createTag: jest.fn() }))
 jest.mock('@/api/file', () => ({ getFileList: jest.fn() }))
 jest.mock('@/utils/upload', () => ({
-  uploadImage: jest.fn(), uploadAudio: jest.fn(), uploadVideo: jest.fn(),
+  uploadFile: jest.fn(), uploadImage: jest.fn(), uploadAudio: jest.fn(), uploadVideo: jest.fn(),
   checkFileSize: jest.fn(() => true), checkFileType: jest.fn(() => true)
 }))
 jest.mock('@/components/MarkdownEditor.vue', () => ({ __esModule: true, default: { template: '<div />' } }))
@@ -112,18 +112,17 @@ describe('DynamicEdit mounted interactions', () => {
     wrapper.unmount()
   })
 
-  it('shows a quick upload action for a new text draft', async () => {
+  it('uses one attachment area instead of asking for a content type', async () => {
     const wrapper = await mountEditor()
 
-    expect(wrapper.find('.content-type-control').text()).toContain('上传文件')
-    expect(wrapper.find('.media-upload-status').text()).toContain('支持 MOV')
+    expect(wrapper.find('[label="内容类型"]').exists()).toBe(false)
+    expect(wrapper.find('.media-upload-field').text()).toContain('添加附件')
+    expect(wrapper.find('.media-upload-status').text()).toContain('附件类型由文件自动识别')
     wrapper.unmount()
   })
 
-  it('renders the active media upload field before the content editor', async () => {
+  it('renders the attachment area before the content editor', async () => {
     const wrapper = await mountEditor()
-    wrapper.vm.form.type = 'image'
-    await wrapper.vm.$nextTick()
 
     const uploadField = wrapper.find('.media-upload-field')
     const contentField = wrapper.find('.editor-content-field')
@@ -139,10 +138,11 @@ describe('DynamicEdit mounted interactions', () => {
 
     expect(wrapper.vm.detectMediaType({ name: 'IMG_1001.HEIC', type: 'image/heic' })).toBe('image')
     expect(wrapper.vm.detectMediaType({ name: 'IMG_1001.MOV', type: 'video/quicktime' })).toBe('video')
+    expect(wrapper.vm.detectMediaType({ name: 'logo.svg', type: 'image/svg+xml' })).toBe('other')
     wrapper.unmount()
   })
 
-  it('clears incompatible media controls when the content type changes', async () => {
+  it('keeps attachments when the derived compatibility type changes', async () => {
     const wrapper = await mountEditor()
     wrapper.vm.form.type = 'image'
     wrapper.vm.form.mediaUrls = ['/media/image.png']
@@ -151,9 +151,9 @@ describe('DynamicEdit mounted interactions', () => {
     wrapper.vm.form.type = 'audio'
     await flushPromises()
 
-    expect(wrapper.vm.form.mediaUrls).toEqual([])
-    expect(wrapper.vm.form.fileIds).toEqual([])
-    expect(wrapper.vm.fileList).toEqual([])
+    expect(wrapper.vm.form.mediaUrls).toEqual(['/media/image.png'])
+    expect(wrapper.vm.form.fileIds).toEqual([3])
+    expect(wrapper.vm.fileList).toHaveLength(1)
     wrapper.unmount()
   })
 

@@ -4,7 +4,7 @@ import DynamicEdit from '../DynamicEdit.vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '@/api/dynamic'
 import { createCategory, getCategoryList } from '@/api/category'
 import { createTag, getTagList } from '@/api/tag'
-import { uploadImage } from '@/utils/upload'
+import { uploadFile } from '@/utils/upload'
 import { message } from 'ant-design-vue'
 import { loadEditorDraft } from '../editorDraft'
 
@@ -36,6 +36,7 @@ jest.mock('@/api/file', () => ({
 }))
 
 jest.mock('@/utils/upload', () => ({
+  uploadFile: jest.fn(),
   uploadImage: jest.fn(),
   uploadAudio: jest.fn(),
   uploadVideo: jest.fn(),
@@ -133,8 +134,7 @@ describe('DynamicEdit normalized API responses', () => {
       type: 'image',
       content: 'Normalized body',
       status: 'published',
-      mediaUrls: ['/media/cover.png'],
-      fileIds: [7],
+      mediaUrls: [{ id: 7, url: '/media/cover.png', type: 'image' }],
       category: { id: 3 },
       tags: [{ id: 5 }]
     })
@@ -252,7 +252,7 @@ describe('DynamicEdit normalized API responses', () => {
   })
 
   it('uses normalized upload fields for media and file info', async () => {
-    uploadImage.mockResolvedValueOnce({
+    uploadFile.mockResolvedValueOnce({
       id: 19,
       name: 'photo.png',
       type: 'image',
@@ -260,7 +260,6 @@ describe('DynamicEdit normalized API responses', () => {
       url: '/media/photo.png'
     })
     const wrapper = await mountEditor()
-    wrapper.vm.form.type = 'image'
     wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
     const file = new File(['image'], 'photo.png', { type: 'image/png' })
     const onSuccess = jest.fn()
@@ -278,6 +277,7 @@ describe('DynamicEdit normalized API responses', () => {
       id: 19,
       url: '/media/photo.png'
     })
+    expect(uploadFile).toHaveBeenCalledWith(file, 'image', expect.any(Function))
     expect(onSuccess).toHaveBeenCalledWith(expect.objectContaining({ id: 19 }))
     expect(onError).not.toHaveBeenCalled()
     expect(message.success).toHaveBeenCalledWith('上传成功')

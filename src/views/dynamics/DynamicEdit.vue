@@ -47,128 +47,35 @@
         </div>
       </a-form-item>
 
-      <a-form-item class="editor-settings-field" label="内容类型" name="type">
-        <div class="content-type-control">
-          <a-radio-group v-model:value="form.type">
-            <a-radio value="text">纯文本</a-radio>
-            <a-radio value="image">图文</a-radio>
-            <a-radio value="audio">音频</a-radio>
-            <a-radio value="video">视频</a-radio>
-          </a-radio-group>
+      <a-form-item class="editor-settings-field media-upload-field" label="附件" name="mediaUrls">
+        <div class="media-upload-container">
           <a-upload
-            v-if="form.type === 'text'"
-            class="quick-media-upload"
-            :show-upload-list="false"
+            :file-list="fileList"
             :open-file-dialog-on-click="true"
             :before-upload="beforeMediaUpload"
             :custom-request="handleCustomUpload"
-            accept="image/*,.heic,.heif,audio/*,video/*,.mov,.m4v,.hevc"
+            @remove="handleMediaRemove"
+            :preview="handlePreviewMedia"
+            multiple
           >
             <a-button type="primary">
               <template #icon><upload-outlined /></template>
-              上传文件
+              添加附件
             </a-button>
           </a-upload>
+          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
+            <template #icon><folder-outlined /></template>
+            从文件库选择
+          </a-button>
         </div>
+        <div class="upload-tip">可混合添加图片、音频、视频、文档和其他文件，单个文件不超过 1GB</div>
         <div class="media-upload-status" :class="`is-${uploadState.stage}`">
-          <strong>支持 MOV / MP4 / HEVC · HEIC / HEIF</strong>
+          <strong>视频会自动生成网页可播放版本和封面</strong>
           <span v-if="uploadState.stage === 'uploading'">正在上传 {{ uploadState.progress }}%</span>
           <span v-else-if="uploadState.stage === 'processing'">正在优化视频，完成后会自动生成封面</span>
           <span v-else-if="uploadState.stage === 'success'">{{ uploadState.message }}</span>
           <span v-else-if="uploadState.stage === 'error'">{{ uploadState.message }}</span>
-          <span v-else>单个文件不超过 1GB，视频会转为网页友好的 MP4</span>
-        </div>
-      </a-form-item>
-
-      <!-- 图片上传 -->
-      <a-form-item
-        class="editor-settings-field media-upload-field"
-        label="图片"
-        name="mediaUrls"
-        v-if="form.type === 'image'"
-      >
-        <div class="media-upload-container">
-          <a-upload
-            list-type="picture-card"
-            :file-list="fileList"
-            :open-file-dialog-on-click="true"
-            :before-upload="beforeImageUpload"
-            :custom-request="handleCustomUpload"
-            @remove="handleMediaRemove"
-            :preview="handleImagePreview"
-            multiple
-            accept="image/*,.heic,.heif"
-          >
-            <div>
-              <plus-outlined />
-              <div style="margin-top: 8px">上传</div>
-            </div>
-          </a-upload>
-          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
-            <template #icon><folder-outlined /></template>
-            从文件库选择
-          </a-button>
-        </div>
-        <div class="upload-tip">支持 JPG、PNG、GIF、HEIC、HEIF，单个文件不超过 1GB</div>
-      </a-form-item>
-
-      <!-- 音频上传 -->
-      <a-form-item
-        class="editor-settings-field media-upload-field"
-        label="音频"
-        name="mediaUrls"
-        v-if="form.type === 'audio'"
-      >
-        <div class="media-upload-container">
-          <a-upload
-            :file-list="fileList"
-            :open-file-dialog-on-click="true"
-            :before-upload="beforeAudioUpload"
-            :custom-request="handleCustomUpload"
-            @remove="handleMediaRemove"
-            accept="audio/*"
-          >
-            <a-button type="primary">
-              <template #icon><upload-outlined /></template>上传音频
-            </a-button>
-          </a-upload>
-          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
-            <template #icon><folder-outlined /></template>
-            从文件库选择
-          </a-button>
-        </div>
-        <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
-          <audio controls :src="form.mediaUrls[0]" style="width: 100%"></audio>
-        </div>
-      </a-form-item>
-
-      <!-- 视频上传 -->
-      <a-form-item
-        class="editor-settings-field media-upload-field"
-        label="视频"
-        name="mediaUrls"
-        v-if="form.type === 'video'"
-      >
-        <div class="media-upload-container">
-          <a-upload
-            :file-list="fileList"
-            :open-file-dialog-on-click="true"
-            :before-upload="beforeVideoUpload"
-            :custom-request="handleCustomUpload"
-            @remove="handleMediaRemove"
-            accept="video/*,.mov,.m4v,.hevc"
-          >
-            <a-button type="primary">
-              <template #icon><upload-outlined /></template>上传视频
-            </a-button>
-          </a-upload>
-          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
-            <template #icon><folder-outlined /></template>
-            从文件库选择
-          </a-button>
-        </div>
-        <div v-if="form.mediaUrls && form.mediaUrls.length > 0" class="media-preview">
-          <video controls preload="metadata" playsinline :src="form.mediaUrls[0]" :poster="fileList[0]?.posterUrl || undefined" style="width: 100%"></video>
+          <span v-else>附件类型由文件自动识别，无需手动选择</span>
         </div>
       </a-form-item>
 
@@ -323,14 +230,12 @@ import {
   EyeOutlined, 
   CheckOutlined, 
   CloseOutlined, 
-  PlusOutlined, 
   UploadOutlined,
-  DeleteOutlined,
   FolderOutlined,
   FileOutlined
 } from '@ant-design/icons-vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
-import { uploadImage, uploadAudio, uploadVideo, checkFileSize, checkFileType } from '../../utils/upload'
+import { uploadFile, checkFileSize } from '../../utils/upload'
 import { getCategoryList, createCategory } from '../../api/category'
 import { getTagList, createTag } from '../../api/tag'
 import { getFileList } from '../../api/file'
@@ -348,7 +253,6 @@ const isEdit = computed(() => route.params.id !== undefined)
 const draftId = computed(() => String(route.params.id || 'new'))
 const saving = ref(false)
 const dirty = ref(false)
-let mediaTypeReady = false
 let draftTimer
 let isHydrating = false
 
@@ -371,18 +275,21 @@ watch(form, () => {
   draftTimer = window.setTimeout(() => saveEditorDraft(draftId.value, form.value), 700)
 }, { deep: true, flush: 'sync' })
 
-watch(() => form.value.type, (type, previousType) => {
-  if (!mediaTypeReady || !previousType || type === previousType) return
-  form.value.mediaUrls = []
-  form.value.fileIds = []
-  fileList.value = []
-  selectedFiles.value = []
-}, { flush: 'sync' })
-
 // 文件列表 - 上传组件使用
 const fileList = ref([])
 // 让移动端用户区分网络上传和服务端视频优化两个阶段。
 const uploadState = ref({ stage: 'idle', progress: 0, message: '' })
+
+const syncDynamicType = () => {
+  const type = [...fileList.value]
+    .filter(file => file?.type)
+    .sort((left, right) => {
+      if (left.id == null || right.id == null) return 0
+      return Number(left.id) - Number(right.id)
+    })[0]?.type
+  form.value.type = ['image', 'audio', 'video'].includes(type) ? type : 'text'
+  return form.value.type
+}
 
 // 预览相关状态
 const previewVisible = ref(false)
@@ -486,30 +393,7 @@ const rules = {
     { required: true, message: '请输入标题' },
     { max: 100, message: '标题不能超过100个字符' }
   ],
-  type: [{ required: true, message: '请选择内容类型', trigger: 'change' }],
-  content: [{ 
-    required: true, 
-    message: '请输入内容', 
-    trigger: ['blur', 'change'],
-    validator: (rule, value) => {
-      if (!value && form.value.type === 'text') {
-        return Promise.reject('请输入内容')
-      }
-      return Promise.resolve()
-    }
-  }],
-  mediaUrls: [
-    {
-      validator: (rule, value) => {
-        if ((form.value.type === 'image' || form.value.type === 'audio' || form.value.type === 'video') 
-            && (!form.value.mediaUrls || form.value.mediaUrls.length === 0)) {
-          return Promise.reject(`请上传${form.value.type === 'image' ? '图片' : form.value.type === 'audio' ? '音频' : '视频'}`)
-        }
-        return Promise.resolve()
-      },
-      trigger: 'change'
-    }
-  ]
+  content: [{ required: true, message: '请输入内容', trigger: ['blur', 'change'] }]
 }
 
 // 获取标签列表
@@ -567,13 +451,14 @@ const fetchDynamicDetail = async () => {
         content: data.content || '',
         status: data.status || 'draft',
         mediaUrls: mediaUrls,
-        fileIds: data.fileIds || [],
+        fileIds: mediaItems.map(item => typeof item === 'object' ? item?.id : null).filter(Boolean),
         categoryId: data.category?.id,
         tags: Array.isArray(data.tags) ? data.tags.map(tag => tag.id) : []
       }
       
       // 更新文件列表用于上传组件显示
       updateFileList(mediaItems)
+      syncDynamicType()
       
       // 重置表单验证状态
       formRef.value?.resetFields()
@@ -626,7 +511,8 @@ const updateFileList = (sourceItems = form.value.mediaUrls) => {
         ? buildApiUrl(item.poster_url)
         : typeof item === 'object' && item?.posterUrl
           ? buildApiUrl(item.posterUrl)
-          : undefined
+          : undefined,
+      type: typeof item === 'object' ? item?.type || item?.file_type || 'other' : form.value.type
     }
   }).filter(Boolean) // 过滤掉无效的项
   
@@ -640,12 +526,6 @@ const handleSave = async () => {
     // 表单验证
     await formRef.value.validate();
     
-    // 验证媒体文件
-    if (form.value.type !== 'text' && (!form.value.mediaUrls || form.value.mediaUrls.length === 0)) {
-      message.error(`请上传${form.value.type === 'image' ? '图片' : form.value.type === 'audio' ? '音频' : '视频'}`);
-      return;
-    }
-    
     // 处理媒体文件 URL，移除前缀
     const processedMediaUrls = form.value.mediaUrls.map(item => {
       const url = typeof item === 'string' ? item : item?.url || item?.file_url
@@ -656,7 +536,7 @@ const handleSave = async () => {
     // 准备提交的数据，确保格式正确
     const dynamicData = {
       title: form.value.title.trim(),  // 确保标题字段存在
-      type: form.value.type,
+      type: syncDynamicType(),
       content: form.value.content.trim(),
       status: form.value.status,
       mediaUrls: processedMediaUrls,
@@ -746,17 +626,10 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
       throw new Error('无效的文件对象')
     }
 
+    const fileType = detectMediaType(file)
     let result
     try {
-      if (form.value.type === 'image') {
-        result = await uploadImage(file, reportProgress)
-      } else if (form.value.type === 'audio') {
-        result = await uploadAudio(file, reportProgress)
-      } else if (form.value.type === 'video') {
-        result = await uploadVideo(file, reportProgress)
-      } else {
-        throw new Error('不支持的文件类型')
-      }
+      result = await uploadFile(file, fileType, reportProgress)
     } catch (uploadError) {
       console.error('文件上传失败:', uploadError)
       uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: uploadError.message || '文件上传失败' }
@@ -781,17 +654,11 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
     
     const fileUrl = buildApiUrl(result.url)
     
-    // 对于音频和视频，只保留一个文件
-    if (form.value.type === 'audio' || form.value.type === 'video') {
-      form.value.mediaUrls = [fileUrl]
-      form.value.fileIds = [result.id]
-    } else {
-      form.value.mediaUrls.push(fileUrl)
-      if (!form.value.fileIds) {
-        form.value.fileIds = []
-      }
-      form.value.fileIds.push(result.id)
+    form.value.mediaUrls.push(fileUrl)
+    if (!form.value.fileIds) {
+      form.value.fileIds = []
     }
+    form.value.fileIds.push(result.id)
     
     // 更新文件列表
     const fileInfo = {
@@ -806,11 +673,8 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
       size: result.size
     }
     
-    if (form.value.type === 'audio' || form.value.type === 'video') {
-      fileList.value = [fileInfo]
-    } else {
-      fileList.value.push(fileInfo)
-    }
+    fileList.value.push(fileInfo)
+    syncDynamicType()
     
     // 触发表单验证
     formRef.value?.validateFields(['mediaUrls'])
@@ -835,6 +699,7 @@ const handleMediaRemove = (file) => {
     if (form.value.fileIds) {
       form.value.fileIds.splice(index, 1)
     }
+    syncDynamicType()
     // 触发表单验证
     formRef.value?.validateFields(['mediaUrls'])
   }
@@ -848,63 +713,20 @@ const handlePreviewMedia = (file) => {
   previewPosterUrl.value = file.posterUrl ? buildApiUrl(file.posterUrl) : ''
   previewVisible.value = true
   previewTitle.value = file.name || '预览'
-  previewType.value = form.value.type
-}
-
-// 图片预览
-const handleImagePreview = (file) => {
-  handlePreviewMedia(file)
+  previewType.value = file.type || form.value.type
 }
 
 const detectMediaType = (file) => {
-  const mimeType = String(file?.type || '').toLowerCase()
-  if (mimeType.startsWith('image/')) return 'image'
-  if (mimeType.startsWith('audio/')) return 'audio'
-  if (mimeType.startsWith('video/')) return 'video'
-
   const extension = String(file?.name || '').split('.').pop()?.toLowerCase()
   if (['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif'].includes(extension)) return 'image'
   if (['mp3', 'wav', 'ogg'].includes(extension)) return 'audio'
   if (['mp4', 'mov', 'm4v', 'webm', 'ogg', 'hevc'].includes(extension)) return 'video'
-  return undefined
+  if (['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(extension)) return 'document'
+  return 'other'
 }
 
 const beforeMediaUpload = (file) => {
-  const mediaType = detectMediaType(file)
-  if (!mediaType) {
-    message.error('仅支持图片、音频或视频文件')
-    return false
-  }
-
-  const isValid = mediaType === 'image'
-    ? beforeImageUpload(file)
-    : mediaType === 'audio'
-      ? beforeAudioUpload(file)
-      : beforeVideoUpload(file)
-
-  if (isValid) form.value.type = mediaType
-  return isValid
-}
-
-// 检查图片上传
-const beforeImageUpload = (file) => {
-  const isValidType = checkFileType(file, ['jpg', 'jpeg', 'png', 'gif', 'heic', 'heif'])
-  const isValidSize = checkFileSize(file, 1024)
-  return isValidType && isValidSize
-}
-
-// 检查音频上传
-const beforeAudioUpload = (file) => {
-  const isValidType = checkFileType(file, ['mp3', 'wav', 'ogg'])
-  const isValidSize = checkFileSize(file, 1024)
-  return isValidType && isValidSize
-}
-
-// 检查视频上传
-const beforeVideoUpload = (file) => {
-  const isValidType = checkFileType(file, ['mp4', 'mov', 'm4v', 'webm', 'ogg', 'hevc'])
-  const isValidSize = checkFileSize(file, 1024)
-  return isValidType && isValidSize
+  return checkFileSize(file, 1024)
 }
 
 // 显示文件选择器
@@ -1000,23 +822,8 @@ const isFileSelected = (file) => {
 const handleFileSelect = (file) => {
   const index = selectedFiles.value.findIndex(f => f.id === file.id)
   if (index === -1) {
-    // 根据文件类型自动设置动态类型
-    if (file.type === 'image') {
-      form.value.type = 'image'
-    } else if (file.type === 'audio') {
-      form.value.type = 'audio'
-    } else if (file.type === 'video') {
-      form.value.type = 'video'
-    }
-
-    // 如果是音频或视频，只允许选择一个文件
-    if (form.value.type === 'audio' || form.value.type === 'video') {
-      selectedFiles.value = [file]
-      message.success('已选择视频文件')
-    } else {
-      selectedFiles.value.push(file)
-      message.success('已选择图片文件')
-    }
+    selectedFiles.value.push(file)
+    message.success('已选择附件')
   } else {
     selectedFiles.value.splice(index, 1)
     message.info('已取消选择')
@@ -1029,13 +836,6 @@ const validateSelectedFiles = () => {
     return false
   }
 
-  // 检查文件类型是否一致
-  const fileTypes = new Set(selectedFiles.value.map(file => file.type))
-  if (fileTypes.size > 1) {
-    message.warning('请选择相同类型的文件')
-    return false
-  }
-
   return true
 }
 
@@ -1043,7 +843,6 @@ const validateSelectedFiles = () => {
 const applySelectedFiles = () => {
   if (!validateSelectedFiles()) return false
 
-  // 更新文件列表和表单数据
   const newFileList = selectedFiles.value.map(file => ({
     uid: `-${file.id}`,
     name: file.name,
@@ -1054,10 +853,15 @@ const applySelectedFiles = () => {
     id: file.id,
     posterUrl: file.posterUrl || file.poster_url
   }))
-  
-  fileList.value = newFileList
-  form.value.mediaUrls = selectedFiles.value.map(file => file.url)
-  form.value.fileIds = selectedFiles.value.map(file => file.id)
+
+  const filesByKey = new Map()
+  for (const file of [...fileList.value, ...newFileList]) {
+    filesByKey.set(file.id == null ? file.url : `id:${file.id}`, file)
+  }
+  fileList.value = [...filesByKey.values()]
+  form.value.mediaUrls = fileList.value.map(file => file.url)
+  form.value.fileIds = fileList.value.map(file => file.id).filter(Boolean)
+  syncDynamicType()
 
   return true
 }
@@ -1070,7 +874,7 @@ const handleFileConfirm = () => {
   selectedFiles.value = []
 
   // 触发表单验证
-  formRef.value?.validateFields(['mediaUrls', 'type'])
+  formRef.value?.validateFields(['mediaUrls'])
   fetchFileList()
 }
 
@@ -1101,7 +905,7 @@ const handleFileInsert = () => {
 
   fileSelectorVisible.value = false
   selectedFiles.value = []
-  formRef.value?.validateFields(['mediaUrls', 'type'])
+  formRef.value?.validateFields(['mediaUrls'])
   fetchFileList()
   nextTick(() => markdownEditorRef.value?.focus?.())
 }
@@ -1131,6 +935,7 @@ function restoreLocalDraft() {
   try {
     Object.assign(form.value, draft)
     updateFileList()
+    syncDynamicType()
     message.info('已恢复本机保存的草稿')
   } finally {
     isHydrating = false
@@ -1149,7 +954,6 @@ function guardUnsavedChanges(event) {
 onMounted(async () => {
   await Promise.all([fetchDynamicDetail(), fetchCategories(), fetchTags()])
   restoreLocalDraft()
-  mediaTypeReady = true
   window.addEventListener('beforeunload', guardUnsavedChanges)
 })
 
@@ -1233,13 +1037,6 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
 
-  .content-type-control {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-  }
-
   .media-upload-status {
     display: flex;
     flex-wrap: wrap;
@@ -1275,16 +1072,6 @@ onBeforeUnmount(() => {
       border-color: #ffc9c9;
       background: #fff5f5;
       color: #c63838;
-    }
-  }
-  
-  .media-preview {
-    margin-top: 16px;
-    width: 100%;
-    
-    audio, video {
-      width: 100%;
-      max-width: 100%;
     }
   }
   
@@ -1491,20 +1278,6 @@ onBeforeUnmount(() => {
           touch-action: manipulation;
         }
 
-        .content-type-control {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .quick-media-upload,
-    .quick-media-upload :deep(.ant-upload) {
-      width: 100%;
-    }
-
-    .quick-media-upload :deep(.ant-btn) {
-      width: 100%;
-    }
   }
 }
 

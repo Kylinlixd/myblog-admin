@@ -16,7 +16,7 @@ Remove the editor's manual `text/image/audio/video` selector. A dynamic is conte
 
 - Existing dynamics and the database enum are retained.
 - `type` remains in requests and responses for existing list filters and consumers, but is no longer user-authored.
-- Text-only dynamics still require content. Dynamics with attachments may be saved without text.
+- Dynamics continue to require content; attachments are optional and may be mixed.
 - Tests cover mixed attachment selection and backend type derivation.
 
 ## Out of scope

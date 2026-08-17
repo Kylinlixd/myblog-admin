@@ -28,6 +28,7 @@ jest.mock('@/api/tag', () => ({
 }))
 
 jest.mock('@/utils/upload', () => ({
+  uploadFile: jest.fn(),
   uploadImage: jest.fn(),
   uploadAudio: jest.fn(),
   uploadVideo: jest.fn(),
@@ -185,6 +186,57 @@ describe('DynamicEdit file selector responses', () => {
     expect(wrapper.vm.form.fileIds).toEqual([7])
     expect(getFileList).toHaveBeenCalledTimes(2)
     expect(wrapper.vm.fileListData).toEqual(normalizedFiles.results)
+    wrapper.unmount()
+  })
+
+  it('keeps mixed selected files and derives the compatibility type', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.selectedFiles = [
+      { id: 7, name: 'cover.png', type: 'image', url: '/media/cover.png' },
+      { id: 8, name: 'voice.mp3', type: 'audio', url: '/media/voice.mp3' }
+    ]
+
+    wrapper.vm.handleFileConfirm()
+    await flushPromises()
+
+    expect(wrapper.vm.form.fileIds).toEqual([7, 8])
+    expect(wrapper.vm.form.mediaUrls).toEqual(['/media/cover.png', '/media/voice.mp3'])
+    expect(wrapper.vm.form.type).toBe('image')
+    wrapper.unmount()
+  })
+
+  it('derives the compatibility type using the lowest file id', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.selectedFiles = [
+      { id: 8, name: 'voice.mp3', type: 'audio', url: '/media/voice.mp3' },
+      { id: 7, name: 'cover.png', type: 'image', url: '/media/cover.png' }
+    ]
+
+    wrapper.vm.handleFileConfirm()
+    await flushPromises()
+
+    expect(wrapper.vm.form.type).toBe('image')
+    wrapper.unmount()
+  })
+
+  it('adds selected files without dropping existing attachments', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.form.mediaUrls = ['/media/cover.png']
+    wrapper.vm.form.fileIds = [7]
+    wrapper.vm.fileList = [{ id: 7, uid: '-7', name: 'cover.png', type: 'image', url: '/media/cover.png' }]
+    wrapper.vm.selectedFiles = [{ id: 8, name: 'voice.mp3', type: 'audio', url: '/media/voice.mp3' }]
+
+    wrapper.vm.handleFileConfirm()
+    await flushPromises()
+
+    expect(wrapper.vm.form.fileIds).toEqual([7, 8])
+    expect(wrapper.vm.form.mediaUrls).toEqual(['/media/cover.png', '/media/voice.mp3'])
     wrapper.unmount()
   })
 
