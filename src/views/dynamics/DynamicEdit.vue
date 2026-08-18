@@ -343,6 +343,16 @@ const tagOptions = computed(() => {
   }))
 })
 
+const mergeTags = (items = []) => {
+  const merged = new Map((tags.value || [])
+    .filter(item => item?.id != null)
+    .map(item => [String(item.id), item]))
+  for (const item of items) {
+    if (item?.id != null && item?.name) merged.set(String(item.id), item)
+  }
+  tags.value = [...merged.values()]
+}
+
 // 添加计算属性来处理分类选项
 const categoryOptions = computed(() => {
   return (categories.value || []).map(item => ({
@@ -401,7 +411,7 @@ const fetchTags = async () => {
   tagsLoading.value = true
   try {
     const { results = [] } = (await getTagList()) || {}
-    tags.value = results
+    mergeTags(results)
   } catch (error) {
     console.error('获取标签列表失败:', error)
     message.error('获取标签列表失败')
@@ -455,6 +465,7 @@ const fetchDynamicDetail = async () => {
         categoryId: data.category?.id,
         tags: Array.isArray(data.tags) ? data.tags.map(tag => tag.id) : []
       }
+      mergeTags(Array.isArray(data.tags) ? data.tags : [])
       
       // 更新文件列表用于上传组件显示
       updateFileList(mediaItems)

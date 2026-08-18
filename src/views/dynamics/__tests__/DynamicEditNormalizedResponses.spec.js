@@ -159,6 +159,24 @@ describe('DynamicEdit normalized API responses', () => {
     wrapper.unmount()
   })
 
+  it('keeps selected tag names available when the tag list is empty', async () => {
+    routeParams.id = '42'
+    getDynamicDetail.mockResolvedValueOnce({
+      title: 'Tagged title',
+      content: 'Tagged body',
+      status: 'draft',
+      mediaUrls: [],
+      tags: [{ id: 46, name: '当下观察' }]
+    })
+    getTagList.mockResolvedValueOnce({ count: 0, results: [] })
+
+    const wrapper = await mountEditor()
+
+    expect(wrapper.vm.form.tags).toEqual([46])
+    expect(wrapper.vm.tagOptions).toContainEqual({ value: 46, label: '当下观察' })
+    wrapper.unmount()
+  })
+
   it('resets the hydration guard after a detail request fails', async () => {
     routeParams.id = '42'
     let rejectDetail
