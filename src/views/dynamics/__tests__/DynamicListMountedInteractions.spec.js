@@ -121,6 +121,20 @@ describe('DynamicList mounted interactions', () => {
     wrapper.unmount()
   })
 
+  it('omits automatic type UI and never sends a type filter', async () => {
+    const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
+    await flushPromises()
+    getDynamicList.mockClear()
+
+    expect(wrapper.text()).not.toContain('类型')
+    expect(wrapper.vm.columns.some((column) => column.dataIndex === 'type')).toBe(false)
+
+    await wrapper.vm.handleSearch()
+    expect(getDynamicList).toHaveBeenLastCalledWith(expect.not.objectContaining({ type: expect.anything() }))
+
+    wrapper.unmount()
+  })
+
   it('resets page and selection for filtering and reset', async () => {
     const wrapper = mount(DynamicList, { global: { stubs: globalStubs } })
     await flushPromises()

@@ -60,18 +60,6 @@
             <a-select-option value="draft">草稿</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="类型">
-          <a-select
-            v-model:value="searchForm.type"
-            placeholder="选择类型"
-            allowClear
-          >
-            <a-select-option value="text">文本</a-select-option>
-            <a-select-option value="image">图文</a-select-option>
-            <a-select-option value="audio">音频</a-select-option>
-            <a-select-option value="video">视频</a-select-option>
-          </a-select>
-        </a-form-item>
         <a-form-item>
           <a-space size="middle">
             <a-button type="primary" @click="handleSearch">
@@ -252,8 +240,7 @@ const searchForm = reactive({
   title: '',
   categoryId: undefined,
   tagIds: [],
-  status: undefined,
-  type: undefined
+  status: undefined
 })
 
 // 获取动态列表
@@ -268,7 +255,6 @@ const fetchDynamics = async (allowPageReset = true) => {
     const params = {
       page: requestedPage,
       pageSize: pageSize.value,
-      type: searchForm.type,
       status: searchForm.status,
       content: searchForm.content?.trim(),
       title: searchForm.title?.trim(),  // 确保标题搜索参数正确传递
@@ -328,7 +314,6 @@ const resetSearch = () => {
   searchForm.categoryId = undefined;
   searchForm.tagIds = [];
   searchForm.status = undefined;
-  searchForm.type = undefined;
   // 重置页码
   currentPage.value = 1;
   selectedRowKeys.value = []
@@ -381,20 +366,6 @@ const columns = [
     width: 200,
     ellipsis: true,
     customRender: ({ text }) => text || '无标题'
-  },
-  {
-    title: '类型',
-    dataIndex: 'type',
-    key: 'type',
-    width: 100,
-    align: 'center',
-    filters: [
-      { text: '文本', value: 'text' },
-      { text: '图文', value: 'image' },
-      { text: '音频', value: 'audio' },
-      { text: '视频', value: 'video' }
-    ],
-    onFilter: (value, record) => record.type === value
   },
   {
     title: '分类',
