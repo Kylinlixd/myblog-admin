@@ -13,7 +13,6 @@
     <div v-else class="article-reading-shell">
       <div class="reading-progress" aria-hidden="true"><span :style="{ width: `${readingProgress}%` }"></span></div>
       <header class="article-header">
-        <div class="article-kicker">{{ dynamic.type || 'TECH NOTE' }} · DIGITAL GARDEN</div>
         <h1 class="dynamic-title">{{ dynamic.title }}</h1>
         <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
         <div class="dynamic-meta">
@@ -1016,7 +1015,6 @@ onBeforeUnmount(() => {
       animation: article-enter .6s ease both;
     }
 
-    .article-kicker,
     .article-toc__label {
       color: #a66b28;
       font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;

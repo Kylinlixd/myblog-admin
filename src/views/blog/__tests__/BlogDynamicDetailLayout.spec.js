@@ -5,11 +5,21 @@ const source = fs.readFileSync(
   path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'),
   'utf8'
 )
+const listSource = fs.readFileSync(
+  path.join(process.cwd(), 'src/views/blog/BlogDynamic.vue'),
+  'utf8'
+)
 
 test('文章详情包含编辑型头部元信息与阅读结构', () => {
   expect(source).toContain('article-reading-shell')
   expect(source).toContain('reading-progress')
   expect(source).toContain('阅读时长')
+})
+
+test('文章详情不展示文章类型字段', () => {
+  expect(source).not.toContain('{{ dynamic.type ||')
+  expect(source).not.toContain('class="article-kicker"')
+  expect(listSource).not.toContain('class="dynamic-type"')
 })
 
 test('文章详情包含目录与移动端折叠入口', () => {

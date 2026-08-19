@@ -22,7 +22,6 @@
             </router-link>
             <div class="dynamic-meta">
               <span class="dynamic-time">{{ formatDate(item.createTime) }}</span>
-              <span v-if="item.type" class="dynamic-type">{{ item.type }}</span>
               <span v-if="item.views" class="dynamic-views">
                 <eye-outlined /> {{ item.views }}
               </span>

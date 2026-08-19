@@ -17,9 +17,6 @@
     <a-card class="preview-card">
       <template #extra>
         <a-space>
-          <a-tag :color="getTypeTagColor(dynamic.type)">
-            {{ getTypeText(dynamic.type) }}
-          </a-tag>
           <a-tag :color="dynamic.status === 'published' ? 'success' : 'default'">
             {{ dynamic.status === 'published' ? '已发布' : '草稿' }}
           </a-tag>
@@ -218,28 +215,6 @@ const formatDate = (dateString) => {
     second: '2-digit',
     hour12: false
   })
-}
-
-// 获取类型标签颜色
-const getTypeTagColor = (type) => {
-  const colorMap = {
-    text: '',
-    image: 'blue',
-    audio: 'purple',
-    video: 'magenta'
-  }
-  return colorMap[type] || ''
-}
-
-// 获取类型文本
-const getTypeText = (type) => {
-  const textMap = {
-    text: '文本',
-    image: '图文',
-    audio: '音频',
-    video: '视频'
-  }
-  return textMap[type] || type
 }
 
 // 编辑动态
