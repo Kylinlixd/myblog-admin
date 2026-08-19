@@ -67,10 +67,10 @@ const cachedViews = computed(() =>
   align-items: center;
   overflow: hidden;
   padding: 12px 16px;
-  border: 1px solid var(--blog-line);
+  border: 1px solid var(--blog-line, rgb(78 62 45 / 16%));
   border-radius: 18px;
   background: rgb(255 253 248 / 94%);
-  color: var(--blog-text);
+  color: var(--blog-text, #172436);
   box-shadow: 0 16px 34px rgb(88 65 37 / 12%);
   backdrop-filter: blur(16px);
 }
@@ -122,8 +122,8 @@ const cachedViews = computed(() =>
   gap: 2px;
 }
 
-.loading-toast__copy strong { color: var(--blog-text); font-size: 12px; letter-spacing: .03em; }
-.loading-toast__copy > span { overflow: hidden; color: var(--blog-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.loading-toast__copy strong { color: var(--blog-text, #172436); font-size: 12px; letter-spacing: .03em; }
+.loading-toast__copy > span { overflow: hidden; color: var(--blog-text-muted, #7a746a); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .loading-toast-enter-active, .loading-toast-leave-active { transition: opacity 180ms ease, transform 180ms ease; }
 .loading-toast-enter-from, .loading-toast-leave-to { opacity: 0; transform: translate3d(0, 8px, 0); }
 
