@@ -285,10 +285,10 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     const writeText = jest.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
 
-    await wrapper.vm.copyFileUrl('/api/upload/public/fbff1098db5e417e91f2ee8d64a7119f/')
+    await wrapper.vm.copyFileUrl('/api/files/public/fbff1098db5e417e91f2ee8d64a7119f/')
 
     expect(writeText).toHaveBeenCalledWith(
-      new URL('/api/upload/public/fbff1098db5e417e91f2ee8d64a7119f/', window.location.origin).toString()
+      new URL('/api/files/public/fbff1098db5e417e91f2ee8d64a7119f/', window.location.origin).toString()
     )
 
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: originalClipboard })

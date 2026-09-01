@@ -117,7 +117,7 @@ describe('DynamicPreview mounted interactions', () => {
       id: 42,
       type: 'image',
       content: '',
-      mediaUrls: [{ url: '/api/upload/public/1/', type: 'image', name: 'cover.png' }],
+      mediaUrls: [{ url: '/api/files/public/1/', type: 'image', name: 'cover.png' }],
       status: 'published',
       tags: []
     })
