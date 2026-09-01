@@ -37,15 +37,15 @@
               </router-link>
             </div>
 
-            <div v-if="mediaItems(item).length" class="dynamic-media-list">
-              <template v-for="media in mediaItems(item).slice(0, 3)" :key="media.url">
+            <div v-if="mediaCount(item)" class="dynamic-media-list">
+              <template v-for="media in previewMediaItems(item)" :key="media.url">
                 <div v-if="isMediaUnavailable(media.url)" class="media-unavailable">该媒体已不可用</div>
-                <img v-else-if="media.type === 'image'" :src="media.url" :alt="media.name || '动态图片'" @error="markMediaUnavailable(media.url)" />
-                <audio v-else-if="media.type === 'audio'" controls preload="metadata" :src="media.url" @error="markMediaUnavailable(media.url)">您的浏览器不支持音频播放</audio>
-                <video v-else-if="media.type === 'video'" controls preload="metadata" :src="media.url" :poster="media.posterUrl || undefined" playsinline @error="markMediaUnavailable(media.url)">您的浏览器不支持视频播放</video>
+                <img v-else-if="media.type === 'image'" :src="media.url" :alt="media.name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(media.url)" />
+                <audio v-else-if="media.type === 'audio'" controls preload="none" :src="media.url" @error="markMediaUnavailable(media.url)">您的浏览器不支持音频播放</audio>
+                <video v-else-if="media.type === 'video'" controls preload="none" :src="media.url" :poster="media.posterUrl || undefined" playsinline @error="markMediaUnavailable(media.url)">您的浏览器不支持视频播放</video>
                 <a v-else :href="media.url" target="_blank" rel="noopener" @click.prevent="openMedia(media)">下载附件{{ media.name ? `：${media.name}` : '' }}</a>
               </template>
-              <router-link v-if="mediaItems(item).length > 3" :to="`/blog/dynamics/${item.id}`">查看全部 {{ mediaItems(item).length }} 个附件</router-link>
+              <router-link v-if="mediaCount(item) > 1" :to="`/blog/dynamics/${item.id}`">查看全部 {{ mediaCount(item) }} 个附件</router-link>
             </div>
           </div>
 
@@ -219,6 +219,8 @@ const mediaItems = (dynamic) => {
     }
   }).filter((item) => item.url)
 }
+const mediaCount = (dynamic) => Number(dynamic?.mediaCount ?? mediaItems(dynamic).length)
+const previewMediaItems = (dynamic) => mediaItems(dynamic).slice(0, 1)
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 const openMedia = async (item) => {

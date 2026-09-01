@@ -293,6 +293,14 @@ const syncArticleNavigation = async () => {
   })
 }
 
+const hydrateLazyMedia = async () => {
+  await nextTick()
+  articleBodyRef.value?.querySelectorAll('img').forEach((image) => {
+    image.loading = 'lazy'
+    image.decoding = 'async'
+  })
+}
+
 const updateReadingProgress = () => {
   const element = articleBodyRef.value
   if (!element) return
@@ -425,6 +433,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
     readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
     await syncArticleNavigation()
+    await hydrateLazyMedia()
     if (requestSequence !== detailRequestSequence) return
 
     // 浏览量和评论是附加信息，失败时不阻断正文展示。

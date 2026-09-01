@@ -9,7 +9,7 @@
             <span class="hero-title__line hero-title__line--accent" aria-hidden="true">
               <span>无限</span>
               <span class="hero-title__portal">
-                <img :src="featureImage" alt="" />
+                <img :src="featureImage" alt="" decoding="async" />
               </span>
               <span>可能</span>
             </span>
@@ -31,6 +31,7 @@
             :src="featureImage"
             :alt="featured.title"
             loading="eager"
+            decoding="async"
           />
           <div class="hero-feature__ambient" aria-hidden="true" />
           <div class="hero-feature__wash" />
@@ -60,9 +61,9 @@
           :class="`image-reveal--${index + 1}`"
         >
           <router-link v-if="item.id" :to="`/blog/dynamics/${item.id}`">
-            <img :src="storyImage(item)" :alt="item.title" loading="lazy" />
+            <img :src="storyImage(item)" :alt="item.title" loading="lazy" decoding="async" />
           </router-link>
-          <img v-else :src="storyImage(item)" :alt="item.title" loading="lazy" />
+          <img v-else :src="storyImage(item)" :alt="item.title" loading="lazy" decoding="async" />
           <div><span>0{{ index + 1 }}</span><strong>{{ item.title }}</strong></div>
         </article>
       </div>
@@ -105,7 +106,7 @@
       />
       <div v-else class="bento-grid">
         <router-link class="bento-card bento-card--lead group" :to="`/blog/dynamics/${latest[0].id}`">
-          <img v-if="mediaUrl(latest[0])" :src="mediaUrl(latest[0])" :alt="latest[0].title" loading="lazy" />
+          <img v-if="mediaUrl(latest[0])" :src="mediaUrl(latest[0])" :alt="latest[0].title" loading="lazy" decoding="async" />
           <div class="bento-card__ambient" />
           <div class="bento-card__wash" />
           <div class="bento-card__copy">
@@ -157,7 +158,7 @@
           :to="`/blog/dynamics/${item.id}`"
         >
           <div class="story-card__media">
-            <img v-if="mediaUrl(item)" :src="mediaUrl(item)" :alt="item.title" loading="lazy" />
+            <img v-if="mediaUrl(item)" :src="mediaUrl(item)" :alt="item.title" loading="lazy" decoding="async" />
             <div v-else class="story-card__fallback" />
           </div>
           <div class="story-card__body">

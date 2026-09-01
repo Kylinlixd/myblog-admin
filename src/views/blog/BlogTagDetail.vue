@@ -32,6 +32,8 @@
                 :src="coverUrl(dynamic)"
                 alt="文章图片"
                 class="dynamic-image"
+                loading="lazy"
+                decoding="async"
                 @error="markMediaUnavailable(coverUrl(dynamic))"
               />
               <div v-else class="dynamic-image dynamic-image-placeholder">
