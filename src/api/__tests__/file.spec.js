@@ -107,7 +107,7 @@ describe('file API normalization', () => {
           id: 10,
           file_type: 'document',
           file_size: 10,
-          file_url: '/api/upload/public/10/',
+          file_url: '/api/upload/public/fbff1098db5e417e91f2ee8d64a7119f/',
           storage_backend: 'xion',
           checksum: 'abc'
         }
@@ -121,7 +121,7 @@ describe('file API normalization', () => {
     expect(onProgress).toHaveBeenCalledWith(50)
     expect(request.post.mock.calls[0][2].timeout).toBe(1800000)
     expect(result.storage_backend).toBe('xion')
-    expect(result.url).toBe('/api/upload/public/10/')
+    expect(result.url).toBe('/api/upload/public/fbff1098db5e417e91f2ee8d64a7119f/')
   })
 
   it('uses the long transfer timeout for downloads', async () => {
