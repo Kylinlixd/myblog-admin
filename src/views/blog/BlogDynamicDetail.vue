@@ -34,8 +34,8 @@
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
         <main class="article-main-column">
-          <div v-if="dynamicMediaUrls.length" class="dynamic-media">
-            <template v-for="item in dynamicMediaItems" :key="item.url">
+          <div v-if="visibleDynamicMediaItems.length" class="dynamic-media">
+            <template v-for="item in visibleDynamicMediaItems" :key="item.url">
               <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
               <img v-else-if="item.type === 'image'" class="dynamic-media__image" :src="item.url" :alt="item.name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(item.url)" />
               <audio v-else-if="item.type === 'audio'" class="dynamic-media__audio" controls preload="metadata" :src="item.url" @error="markMediaUnavailable(item.url)">您的浏览器不支持音频播放</audio>
@@ -46,18 +46,40 @@
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
 
           <div class="dynamic-footer">
-        <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
-          <span class="tag-label">标签：</span>
-          <router-link 
-            v-for="tag in dynamic.tags" 
-            :key="tag.id"
-            :to="`/blog/tags/${tag.id}`"
-            class="tag-item"
-          >
-            {{ tag.name }}
-          </router-link>
-        </div>
+            <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
+              <span class="tag-label">标签：</span>
+              <router-link 
+                v-for="tag in dynamic.tags" 
+                :key="tag.id"
+                :to="`/blog/tags/${tag.id}`"
+                class="tag-item"
+              >
+                {{ tag.name }}
+              </router-link>
+            </div>
           </div>
+          <nav v-if="adjacent.prev || adjacent.next" class="article-adjacent" aria-label="文章导航">
+            <router-link
+              v-if="adjacent.prev"
+              :to="`/blog/dynamics/${adjacent.prev.id}`"
+              class="article-adjacent__item article-adjacent__item--prev"
+            >
+              <span class="article-adjacent__direction"><left-outlined /> 上一篇</span>
+              <strong>{{ adjacent.prev.title }}</strong>
+              <small>{{ adjacent.prev.category?.name || '继续阅读' }}</small>
+            </router-link>
+            <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
+            <router-link
+              v-if="adjacent.next"
+              :to="`/blog/dynamics/${adjacent.next.id}`"
+              class="article-adjacent__item article-adjacent__item--next"
+            >
+              <span class="article-adjacent__direction">下一篇 <right-outlined /></span>
+              <strong>{{ adjacent.next.title }}</strong>
+              <small>{{ adjacent.next.category?.name || '继续阅读' }}</small>
+            </router-link>
+            <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
+          </nav>
         </main>
 
         <aside v-if="tocItems.length" class="article-side-column">
@@ -156,10 +178,11 @@
 <script setup>
 import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments } from '@/api/blog'
+import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
+import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
@@ -203,13 +226,15 @@ const route = useRoute()
 const appStore = useAppStore()
 const dynamic = ref(null)
 const unavailableMediaUrls = ref(new Set())
-const dynamicMediaUrls = computed(() => {
-  const media = dynamic.value?.mediaUrls ?? dynamic.value?.media_urls ?? dynamic.value?.files ?? []
-  const items = Array.isArray(media) ? media : [media]
-  return items
-    .map((item) => buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || ''))
-    .filter(Boolean)
-})
+const adjacent = ref({ prev: null, next: null })
+
+const contentContainsMedia = (url) => {
+  const content = dynamic.value?.content || ''
+  if (!content || !url) return false
+  const path = url.replace(/^https?:\/\/[^/]+/, '')
+  return content.includes(url) || content.includes(path)
+}
+
 const dynamicMediaItems = computed(() => {
   const media = dynamic.value?.mediaUrls ?? dynamic.value?.media_urls ?? dynamic.value?.files ?? []
   const items = Array.isArray(media) ? media : [media]
@@ -227,6 +252,10 @@ const dynamicMediaItems = computed(() => {
     }
   }).filter(item => item.url)
 })
+const visibleDynamicMediaItems = computed(() => dynamicMediaItems.value.filter(
+  (item) => item.type !== 'image' || !contentContainsMedia(item.url)
+))
+const dynamicMediaUrls = computed(() => visibleDynamicMediaItems.value.map((item) => item.url))
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 const openMedia = async (item) => {
@@ -343,6 +372,22 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
   }
 }
 
+const fetchAdjacent = async (requestedId) => {
+  try {
+    const result = await getAdjacentDynamics(requestedId)
+    if (String(route.params.id) !== String(requestedId)) return
+    const payload = result?.data || {}
+    adjacent.value = {
+      prev: payload.prev || null,
+      next: payload.next || null
+    }
+  } catch {
+    if (String(route.params.id) === String(requestedId)) {
+      adjacent.value = { prev: null, next: null }
+    }
+  }
+}
+
 // 提交评论
 const submitComment = async () => {
   if (!dynamic.value) return
@@ -409,6 +454,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
   commentList.value = []
   commentTotal.value = 0
   commentPage.value = 1
+  adjacent.value = { prev: null, next: null }
 
   try {
     loading.value = true
@@ -439,7 +485,8 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     // 浏览量和评论是附加信息，失败时不阻断正文展示。
     void Promise.allSettled([
       increaseDynamicView(dynamicId),
-      fetchComments(dynamicId)
+      fetchComments(dynamicId),
+      fetchAdjacent(dynamicId)
     ])
   } catch (error) {
     if (requestSequence !== detailRequestSequence) return
@@ -1123,6 +1170,71 @@ onBeforeUnmount(() => {
       border-top-color: var(--article-line);
     }
 
+    .article-adjacent {
+      display: grid;
+      width: min(100%, 780px);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin: 28px 0 0;
+    }
+
+    .article-adjacent__item {
+      position: relative;
+      display: flex;
+      min-height: 126px;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      padding: 17px 20px;
+      border: 1px solid var(--article-line);
+      border-radius: 18px;
+      background: var(--article-paper);
+      box-shadow: 0 14px 38px rgb(88 65 37 / 8%);
+      color: var(--article-ink);
+      text-decoration: none;
+      transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+    }
+
+    .article-adjacent__item--next { align-items: flex-end; text-align: right; }
+    .article-adjacent__item--spacer { pointer-events: none; box-shadow: none; opacity: 0; }
+
+    .article-adjacent__item:hover,
+    .article-adjacent__item:focus-visible {
+      border-color: #d98b38;
+      box-shadow: 0 18px 42px rgb(88 65 37 / 13%);
+      transform: translateY(-3px);
+    }
+
+    .article-adjacent__direction {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+      color: #a66b28;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .1em;
+    }
+
+    .article-adjacent__item--next .article-adjacent__direction { justify-content: flex-end; }
+    .article-adjacent__item strong {
+      display: -webkit-box;
+      max-width: 100%;
+      overflow: hidden;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -.015em;
+      line-height: 1.45;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+
+    .article-adjacent__item small {
+      margin-top: 9px;
+      color: var(--article-muted);
+      font-size: 12px;
+    }
+
     .article-side-column {
       position: sticky;
       top: 34px;
@@ -1254,6 +1366,9 @@ onBeforeUnmount(() => {
       .article-header .dynamic-title { font-size: clamp(2rem, 11vw, 3.1rem); }
       .article-header .dynamic-meta span { padding: 6px 9px; }
       .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
+      .article-adjacent { grid-template-columns: minmax(0, 1fr); }
+      .article-adjacent__item--next { align-items: flex-start; text-align: left; }
+      .article-adjacent__item--next .article-adjacent__direction { justify-content: flex-start; }
       .comment-section { width: 100%; padding: 22px 18px; }
       .comment-form .ant-input, .comment-form .ant-input-affix-wrapper, .comment-form textarea { max-width: 100%; }
     }

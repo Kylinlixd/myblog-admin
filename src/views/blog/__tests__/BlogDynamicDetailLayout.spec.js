@@ -66,3 +66,15 @@ test('动态详情在路由 ID 变化时重新加载，并隔离附加请求', (
   expect(source).toContain('void Promise.allSettled')
   expect(source).toContain('dynamic.value = response.data')
 })
+
+test('文章详情提供上一篇与下一篇导航', () => {
+  expect(source).toContain('getAdjacentDynamics')
+  expect(source).toContain('class="article-adjacent"')
+  expect(source).toContain('上一篇')
+  expect(source).toContain('下一篇')
+})
+
+test('正文已嵌入的封面图片不会在附件区重复展示', () => {
+  expect(source).toContain('visibleDynamicMediaItems')
+  expect(source).toContain('contentContainsMedia')
+})
