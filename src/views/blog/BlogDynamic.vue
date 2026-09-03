@@ -13,15 +13,24 @@
       </div>
 
       <div v-if="dynamicList.length > 0" class="blog-dynamic-layout">
-        <aside v-if="timelineGroups.length" class="dynamic-timeline" aria-label="时间线">
+        <aside v-if="timelineGroups.length || activeTimeline" class="dynamic-timeline" aria-label="时间线">
           <div class="dynamic-timeline__label">时间线</div>
           <p class="dynamic-timeline__intro">按发布节奏回看内容</p>
           <nav class="dynamic-timeline__nav">
             <button
+              type="button"
+              :class="{ 'is-active': !activeTimeline }"
+              @click="selectTimelinePeriod('')"
+            >
+              <span class="timeline-year">全部</span>
+              <strong>动态</strong>
+            </button>
+            <button
               v-for="group in timelineGroups"
               :key="group.key"
               type="button"
-              @click="scrollToTimeline(group.key)"
+              :class="{ 'is-active': activeTimeline === group.key }"
+              @click="selectTimelinePeriod(group.key)"
             >
               <span class="timeline-year">{{ group.year }}</span>
               <strong>{{ group.monthLabel }}</strong>
@@ -37,7 +46,6 @@
           v-for="(item, index) in dynamicList"
           :key="item.id || index"
           class="dynamic-item cinematic-card"
-          :data-timeline="dynamicPeriod(item)"
         >
           <!-- 动态头部 -->
           <div class="dynamic-header">
@@ -197,13 +205,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, onActivated } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { 
   getBlogDynamics, 
+  getBlogDynamicTimeline,
   likeDynamic, 
   commentDynamic, 
   getDynamicComments 
@@ -232,6 +241,8 @@ const commentContent = ref('')
 const nickname = ref('')
 const email = ref('')
 const unavailableMediaUrls = ref(new Set())
+const timelineGroups = ref([])
+const activeTimeline = ref('')
 
 const mediaItems = (dynamic) => {
   const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
@@ -292,38 +303,27 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-
-const dynamicPeriod = (item) => {
-  const date = new Date(item?.createTime || item?.createdAt || item?.created_at)
-  if (Number.isNaN(date.getTime())) return ''
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+const fetchTimeline = async () => {
+  try {
+    const response = await getBlogDynamicTimeline()
+    timelineGroups.value = response?.code === 200 && Array.isArray(response.data)
+      ? response.data
+      : []
+  } catch {
+    timelineGroups.value = []
+  }
 }
 
-const timelineGroups = computed(() => {
-  const groups = new Map()
-  dynamicList.value.forEach((item) => {
-    const date = new Date(item?.createTime || item?.createdAt || item?.created_at)
-    if (Number.isNaN(date.getTime())) return
-    const key = dynamicPeriod(item)
-    const existing = groups.get(key)
-    if (existing) {
-      existing.count += 1
-    } else {
-      groups.set(key, {
-        key,
-        year: date.getFullYear(),
-        monthLabel: monthNames[date.getMonth()] || `${date.getMonth() + 1}月`,
-        count: 1
-      })
-    }
-  })
-  return [...groups.values()]
-})
-
-const scrollToTimeline = (key) => {
-  const target = document.querySelector(`[data-timeline="${key}"]`)
-  target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const selectTimelinePeriod = async (key) => {
+  const nextPeriod = activeTimeline.value === key ? '' : key
+  if (nextPeriod === activeTimeline.value) return
+  activeTimeline.value = nextPeriod
+  page.value = 1
+  fetchedPages.value = new Set()
+  unavailableMediaUrls.value = new Set()
+  dynamicList.value = []
+  hasMore.value = true
+  await fetchDynamicList()
 }
 
 // 获取动态列表
@@ -341,7 +341,8 @@ const fetchDynamicList = async (isRefresh = false) => {
     // 使用getBlogDynamics函数替代原生fetch
     const response = await getBlogDynamics({
       page: page.value,
-      pageSize: pageSize.value
+      pageSize: pageSize.value,
+      month: activeTimeline.value || undefined
     })
     
     
@@ -556,12 +557,16 @@ const submitComment = async (item) => {
 }
 
 onMounted(() => {
+  fetchTimeline()
   fetchDynamicList()
 })
 
 onActivated(() => {
   if (dynamicList.value.length === 0) {
     fetchDynamicList()
+  }
+  if (timelineGroups.value.length === 0) {
+    fetchTimeline()
   }
 })
 </script>
@@ -689,6 +694,16 @@ onActivated(() => {
 .dynamic-timeline__nav button:hover {
   color: #4f46e5;
   transform: translateX(3px);
+}
+
+.dynamic-timeline__nav button.is-active {
+  color: #4338ca;
+}
+
+.dynamic-timeline__nav button.is-active::before {
+  border-color: #4f46e5;
+  background: #4f46e5;
+  box-shadow: 0 0 0 4px rgb(99 102 241 / 12%);
 }
 
 .timeline-year {

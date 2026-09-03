@@ -34,6 +34,9 @@ export const getBlogCategoryList = () =>
 export const getBlogDynamics = (params) =>
   request.get(createBlogApiUrl('dynamics'), { params })
 
+export const getBlogDynamicTimeline = () =>
+  request.get(createBlogApiUrl('dynamics/timeline'))
+
 export const getBlogDynamicDetail = (id) =>
   request.get(createBlogApiUrl(`dynamics/${id}`))
 

@@ -52,8 +52,8 @@ describe('cinematic public blog pages', () => {
     const dynamic = readPage('BlogDynamic.vue')
 
     expect(dynamic).toContain('class="dynamic-timeline"')
-    expect(dynamic).toContain('timelineGroups')
-    expect(dynamic).toContain('scrollToTimeline')
+    expect(dynamic).toContain('getBlogDynamicTimeline')
+    expect(dynamic).toContain('selectTimelinePeriod')
   })
 
   it('separates readable article and comment colors from muted metadata', () => {
