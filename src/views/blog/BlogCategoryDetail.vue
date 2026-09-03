@@ -1,9 +1,14 @@
 <template>
   <div class="category-detail-container cinematic-page">
     <div class="page-header cinematic-hero">
+      <span class="category-kicker">THEME ARCHIVE · 主题归档</span>
       <h1 class="page-title">{{ category?.name || '加载中...' }}</h1>
-      <p class="page-subtitle">探索这个分类下的精彩内容</p>
-      <p class="page-desc">{{ category?.description || '' }}</p>
+      <p class="page-subtitle">按主题沉淀与实践，持续更新内容脉络。</p>
+      <p v-if="category?.description" class="page-desc">{{ category.description }}</p>
+      <div class="category-meta">
+        <span>{{ dynamics.length }} 篇文章</span>
+        <span>持续更新</span>
+      </div>
     </div>
     
     <div class="dynamics-list">
@@ -83,117 +88,76 @@ onMounted(() => {
 <style scoped>
 .category-detail-container {
   width: 100%;
-  max-width: 1600px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 3rem;
+  padding: clamp(24px, 5vw, 64px) clamp(20px, 4vw, 48px) 96px;
+  position: relative;
   min-height: 100vh;
-  background: #f8fafc;
-  position: relative;
-  overflow: hidden;
 }
 
-.category-detail-container::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    45deg,
-    transparent 0%,
-    rgba(56, 189, 248, 0.08) 30%,
-    rgba(129, 140, 248, 0.08) 40%,
-    rgba(192, 132, 252, 0.08) 50%,
-    transparent 100%
-  );
-  animation: gradientMove 30s linear infinite;
-  z-index: 0;
+.category-detail-container .page-header.cinematic-hero {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  max-width: 940px;
+  margin: 0 auto clamp(42px, 7vw, 88px) !important;
+  text-align: center !important;
 }
 
-.category-detail-container::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    -45deg,
-    transparent 0%,
-    rgba(56, 189, 248, 0.06) 30%,
-    rgba(129, 140, 248, 0.06) 40%,
-    rgba(192, 132, 252, 0.06) 50%,
-    transparent 100%
-  );
-  animation: gradientMove 25s linear infinite reverse;
-  z-index: 0;
+.category-detail-container .page-header.cinematic-hero::before {
+  margin: 0 auto 14px;
 }
 
-@keyframes gradientMove {
-  0% {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.2);
-  }
-  100% {
-    transform: rotate(360deg) scale(1);
-  }
-}
-
-.page-header {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  margin-bottom: 3rem;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.page-header:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-color: #d1d5db;
-}
-
-.page-title {
-  font-size: 2.5rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.category-kicker {
+  display: block;
+  margin-bottom: 14px;
+  color: #a64e23;
+  font-size: 11px;
+  font-weight: 780;
+  letter-spacing: .18em;
   line-height: 1.4;
-  margin-top: -0.5rem;
+  text-transform: uppercase;
 }
 
-.page-subtitle {
-  color: #6b7280;
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
-  font-weight: 500;
+.category-detail-container .page-header.cinematic-hero .page-title {
+  max-width: 860px;
+  font-size: clamp(2.9rem, 5.5vw, 5.4rem) !important;
+  letter-spacing: -.062em !important;
+  line-height: 1.02 !important;
+  text-wrap: balance;
 }
 
-.page-desc {
-  color: #4b5563;
-  font-size: 1.1rem;
-  line-height: 1.7;
+.category-detail-container .page-header.cinematic-hero .page-subtitle {
+  max-width: 620px;
+  margin: 14px auto 0 !important;
+}
+
+.category-detail-container .page-header.cinematic-hero .page-desc {
   max-width: 700px;
-  margin: 0 auto;
+  margin: 12px auto 0 !important;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
   overflow: hidden;
+}
+
+.category-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.category-meta span {
+  padding: 7px 12px;
+  border: 1px solid var(--blog-line);
+  border-radius: 999px;
+  background: var(--blog-surface);
+  color: var(--blog-text-soft);
+  font-size: 12px;
 }
 
 .loading-state,
@@ -207,12 +171,11 @@ onMounted(() => {
 }
 
 .dynamics-grid {
-  position: relative;
-  z-index: 1;
   display: grid;
-    grid-template-columns: repeat(3, 1fr);
-  gap: 2.5rem;
-  padding: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 2.5vw, 30px);
+  margin: 0 auto;
+  padding: 0;
 }
 
 .dynamic-card {
