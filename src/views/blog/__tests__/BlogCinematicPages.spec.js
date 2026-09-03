@@ -48,6 +48,14 @@ describe('cinematic public blog pages', () => {
     expect(dynamic).not.toContain('getMockDynamics')
   })
 
+  it('keeps a time navigation rail beside the dynamic stream', () => {
+    const dynamic = readPage('BlogDynamic.vue')
+
+    expect(dynamic).toContain('class="dynamic-timeline"')
+    expect(dynamic).toContain('timelineGroups')
+    expect(dynamic).toContain('scrollToTimeline')
+  })
+
   it('separates readable article and comment colors from muted metadata', () => {
     const theme = fs.readFileSync(path.join(process.cwd(), 'src/styles/blog-cinematic.scss'), 'utf8')
     const globalStyles = fs.readFileSync(path.join(process.cwd(), 'src/styles/global.scss'), 'utf8')

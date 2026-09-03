@@ -12,9 +12,33 @@
         <a-button @click="refreshList" type="primary" size="small">刷新</a-button>
       </div>
 
-      <!-- 动态列表 -->
-      <div v-if="dynamicList.length > 0" class="dynamic-list">
-        <div v-for="(item, index) in dynamicList" :key="item.id || index" class="dynamic-item cinematic-card">
+      <div v-if="dynamicList.length > 0" class="blog-dynamic-layout">
+        <aside v-if="timelineGroups.length" class="dynamic-timeline" aria-label="时间线">
+          <div class="dynamic-timeline__label">时间线</div>
+          <p class="dynamic-timeline__intro">按发布节奏回看内容</p>
+          <nav class="dynamic-timeline__nav">
+            <button
+              v-for="group in timelineGroups"
+              :key="group.key"
+              type="button"
+              @click="scrollToTimeline(group.key)"
+            >
+              <span class="timeline-year">{{ group.year }}</span>
+              <strong>{{ group.monthLabel }}</strong>
+              <small>{{ group.count }} 篇</small>
+            </button>
+          </nav>
+        </aside>
+
+        <div class="blog-dynamic-stream">
+          <!-- 动态列表 -->
+          <div v-if="dynamicList.length > 0" class="dynamic-list">
+        <div
+          v-for="(item, index) in dynamicList"
+          :key="item.id || index"
+          class="dynamic-item cinematic-card"
+          :data-timeline="dynamicPeriod(item)"
+        >
           <!-- 动态头部 -->
           <div class="dynamic-header">
             <router-link :to="`/blog/dynamics/${item.id}`" class="dynamic-title-link">
@@ -152,26 +176,28 @@
             </div>
           </div>
         </div>
-      </div>
+          </div>
 
-      <!-- 加载更多 -->
-      <div class="load-more">
-        <a-button 
-          type="primary" 
-          :loading="loading" 
-          @click="loadMore"
-          v-if="hasMore"
-        >
-          加载更多
-        </a-button>
-        <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
+          <!-- 加载更多 -->
+          <div class="load-more">
+            <a-button 
+              type="primary" 
+              :loading="loading" 
+              @click="loadMore"
+              v-if="hasMore"
+            >
+              加载更多
+            </a-button>
+            <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated } from 'vue'
+import { computed, ref, onMounted, onActivated } from 'vue'
 import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
@@ -264,6 +290,40 @@ const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+
+const dynamicPeriod = (item) => {
+  const date = new Date(item?.createTime || item?.createdAt || item?.created_at)
+  if (Number.isNaN(date.getTime())) return ''
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+const timelineGroups = computed(() => {
+  const groups = new Map()
+  dynamicList.value.forEach((item) => {
+    const date = new Date(item?.createTime || item?.createdAt || item?.created_at)
+    if (Number.isNaN(date.getTime())) return
+    const key = dynamicPeriod(item)
+    const existing = groups.get(key)
+    if (existing) {
+      existing.count += 1
+    } else {
+      groups.set(key, {
+        key,
+        year: date.getFullYear(),
+        monthLabel: monthNames[date.getMonth()] || `${date.getMonth() + 1}月`,
+        count: 1
+      })
+    }
+  })
+  return [...groups.values()]
+})
+
+const scrollToTimeline = (key) => {
+  const target = document.querySelector(`[data-timeline="${key}"]`)
+  target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 // 获取动态列表
@@ -518,9 +578,9 @@ onActivated(() => {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 800px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: clamp(24px, 4vw, 44px) 20px 72px;
 }
 
 .page-header {
@@ -545,7 +605,117 @@ onActivated(() => {
 .dynamic-list {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 20px;
+}
+
+.blog-dynamic-layout {
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(28px, 5vw, 64px);
+}
+
+.blog-dynamic-stream {
+  min-width: 0;
+}
+
+.dynamic-timeline {
+  position: sticky;
+  top: 28px;
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding: 12px 22px 12px 0;
+  border-right: 1px solid rgb(148 163 184 / 22%);
+}
+
+.dynamic-timeline__label {
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .14em;
+}
+
+.dynamic-timeline__intro {
+  margin: 8px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.dynamic-timeline__nav {
+  position: relative;
+  display: grid;
+  gap: 15px;
+  margin-top: 22px;
+}
+
+.dynamic-timeline__nav::before {
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  left: 4px;
+  width: 1px;
+  background: linear-gradient(#c7d2fe, rgb(148 163 184 / 22%));
+  content: '';
+}
+
+.dynamic-timeline__nav button {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 0 0 0 22px;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  text-align: left;
+  transition: color .2s ease, transform .2s ease;
+}
+
+.dynamic-timeline__nav button::before {
+  position: absolute;
+  top: 5px;
+  left: 1px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #818cf8;
+  border-radius: 50%;
+  background: #f8fafc;
+  content: '';
+  box-sizing: border-box;
+}
+
+.dynamic-timeline__nav button:hover {
+  color: #4f46e5;
+  transform: translateX(3px);
+}
+
+.timeline-year {
+  grid-column: 1;
+  color: #94a3b8;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.dynamic-timeline__nav strong {
+  grid-column: 1;
+  color: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+
+.dynamic-timeline__nav small {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.dynamic-timeline__nav button:hover small {
+  color: #6366f1;
 }
 
 .dynamic-item {
@@ -860,6 +1030,61 @@ onActivated(() => {
 .comment-pagination {
   text-align: center;
   margin-top: 20px;
+}
+
+@media (max-width: 900px) {
+  .blog-dynamic-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dynamic-timeline {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    border-right: 0;
+  }
+
+  .dynamic-timeline__nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .dynamic-timeline__nav::before,
+  .dynamic-timeline__nav button::before {
+    display: none;
+  }
+
+  .dynamic-timeline__nav button {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 11px;
+    border: 1px solid rgb(148 163 184 / 24%);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 76%);
+  }
+
+  .dynamic-timeline__nav button:hover {
+    transform: translateY(-2px);
+  }
+
+  .timeline-year {
+    font-size: 10px;
+  }
+
+  .dynamic-timeline__nav strong {
+    font-size: 13px;
+  }
+
+  .dynamic-timeline__nav small {
+    color: #94a3b8;
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 768px) {
