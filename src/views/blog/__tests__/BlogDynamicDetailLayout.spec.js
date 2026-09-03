@@ -78,3 +78,10 @@ test('正文已嵌入的封面图片不会在附件区重复展示', () => {
   expect(source).toContain('visibleDynamicMediaItems')
   expect(source).toContain('contentContainsMedia')
 })
+
+test('压缩包等文件附件放在正文后的下载区', () => {
+  expect(source).toContain('class="dynamic-attachments"')
+  expect(source).toContain('attachmentItems')
+  expect(source).toContain('formatFileSize')
+  expect(source).not.toContain('v-else class="dynamic-media__file"')
+})

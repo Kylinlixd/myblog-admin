@@ -34,16 +34,37 @@
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
         <main class="article-main-column">
-          <div v-if="visibleDynamicMediaItems.length" class="dynamic-media">
-            <template v-for="item in visibleDynamicMediaItems" :key="item.url">
+          <div v-if="topMediaItems.length" class="dynamic-media">
+            <template v-for="item in topMediaItems" :key="item.url">
               <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
               <img v-else-if="item.type === 'image'" class="dynamic-media__image" :src="item.url" :alt="item.name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(item.url)" />
               <audio v-else-if="item.type === 'audio'" class="dynamic-media__audio" controls preload="metadata" :src="item.url" @error="markMediaUnavailable(item.url)">您的浏览器不支持音频播放</audio>
               <video v-else-if="item.type === 'video'" class="dynamic-media__video" controls preload="metadata" :src="item.url" :poster="item.posterUrl || undefined" playsinline @error="markMediaUnavailable(item.url)">您的浏览器不支持视频播放</video>
-              <a v-else class="dynamic-media__file" :href="item.url" target="_blank" rel="noopener" @click.prevent="openMedia(item)">下载附件{{ item.name ? `：${item.name}` : '' }}</a>
             </template>
           </div>
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
+
+          <section v-if="attachmentItems.length" class="dynamic-attachments" aria-label="附件下载">
+            <div class="dynamic-attachments__heading">
+              <span>附件下载</span>
+              <small>{{ attachmentItems.length }} 个文件</small>
+            </div>
+            <div class="dynamic-attachments__list">
+              <a
+                v-for="item in attachmentItems"
+                :key="item.url"
+                class="dynamic-attachment"
+                :href="item.url"
+                target="_blank"
+                rel="noopener"
+                @click.prevent="openMedia(item)"
+              >
+                <download-outlined />
+                <span>{{ item.name || '下载附件' }}</span>
+                <small v-if="item.size">{{ formatFileSize(item.size) }}</small>
+              </a>
+            </div>
+          </section>
 
           <div class="dynamic-footer">
             <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
@@ -182,7 +203,7 @@ import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicCo
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
-import { LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
+import { DownloadOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
@@ -255,7 +276,22 @@ const dynamicMediaItems = computed(() => {
 const visibleDynamicMediaItems = computed(() => dynamicMediaItems.value.filter(
   (item) => item.type !== 'image' || !contentContainsMedia(item.url)
 ))
-const dynamicMediaUrls = computed(() => visibleDynamicMediaItems.value.map((item) => item.url))
+const topMediaItems = computed(() => visibleDynamicMediaItems.value.filter(
+  (item) => ['image', 'audio', 'video'].includes(item.type)
+))
+const attachmentItems = computed(() => visibleDynamicMediaItems.value.filter(
+  (item) => !['image', 'audio', 'video'].includes(item.type)
+))
+const dynamicMediaUrls = computed(() => topMediaItems.value.map((item) => item.url))
+
+const formatFileSize = (size) => {
+  const value = Number(size) || 0
+  if (!value) return ''
+  if (value < 1024) return `${value} B`
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`
+  if (value < 1024 * 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`
+  return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`
+}
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 const openMedia = async (item) => {
@@ -1162,6 +1198,74 @@ onBeforeUnmount(() => {
       border-radius: 22px;
       background: var(--article-paper);
       box-shadow: 0 20px 52px rgb(88 65 37 / 9%);
+    }
+
+    .dynamic-attachments {
+      width: min(100%, 780px);
+      margin: 22px 0 0;
+      padding: 18px;
+      border: 1px dashed var(--article-line);
+      border-radius: 18px;
+      background: rgb(255 253 248 / 76%);
+    }
+
+    .dynamic-attachments__heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      color: var(--article-ink);
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .dynamic-attachments__heading small {
+      color: var(--article-muted);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .dynamic-attachments__list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dynamic-attachment {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--article-line);
+      border-radius: 12px;
+      background: var(--article-paper);
+      color: var(--article-ink);
+      text-decoration: none;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+    .dynamic-attachment:hover,
+    .dynamic-attachment:focus-visible {
+      border-color: #d98b38;
+      box-shadow: 0 12px 28px rgb(88 65 37 / 11%);
+      transform: translateY(-1px);
+    }
+
+    .dynamic-attachment > span {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .dynamic-attachment small {
+      margin-left: auto;
+      color: var(--article-muted);
+      font-size: 11px;
+      white-space: nowrap;
     }
 
     .article-main-column .dynamic-footer {
