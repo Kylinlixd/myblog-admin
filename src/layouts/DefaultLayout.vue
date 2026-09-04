@@ -193,17 +193,17 @@ function handleLogout() {
 @media (max-width: 992px) {
   .admin-shell--mobile > .workspace { width: 100%; }
   .admin-shell--mobile .workspace-header { position: sticky; right: auto; left: auto; }
+  .blog-link span { display: none; }
+  .blog-link { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; padding: 0; border-radius: 10px; color: var(--color-text-secondary); }
+  .blog-link:hover { background: var(--color-surface-muted); color: var(--color-primary); }
 }
 @media (max-width: 720px) {
   .workspace-header { height: auto; min-height: 64px; padding: 8px 12px !important; }
   .workspace-content { padding: 18px 14px; }
   .header-left { gap: 8px; }
   .header-actions { gap: 8px; }
-  .user-copy, .workspace-status, .blog-link span { display: none; }
-  .blog-link { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; padding: 0; border-radius: 10px; color: var(--color-text-secondary); }
-  .blog-link:hover { background: var(--color-surface-muted); color: var(--color-primary); }
-  .admin-mobile-blog-link { display: flex; margin: 2px 12px 18px; min-height: 46px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 10px; background: #1b2740; color: #dfe8ff; font-size: 13px; font-weight: 750; text-decoration: none; }
-  .admin-mobile-blog-link:hover { border-color: #8ba7ff; background: #243356; color: white; }
+  .user-copy, .workspace-status { display: none; }
 }
-.admin-mobile-blog-link { display: none; }
+.admin-drawer .admin-mobile-blog-link { display: flex; margin: 2px 12px 18px; min-height: 46px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 10px; background: #1b2740; color: #dfe8ff; font-size: 13px; font-weight: 750; text-decoration: none; }
+.admin-drawer .admin-mobile-blog-link:hover { border-color: #8ba7ff; background: #243356; color: white; }
 </style>
