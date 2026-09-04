@@ -14,6 +14,9 @@
         <span class="brand-mark">L</span><span>LiXD Studio<small>内容工作台</small></span>
       </router-link>
       <AdminNavigation @navigate="mobileOpen = false" />
+      <router-link class="admin-mobile-blog-link" to="/blog" @click="mobileOpen = false">
+        <home-outlined /> 查看博客
+      </router-link>
     </a-drawer>
 
     <a-layout class="workspace">
@@ -196,6 +199,11 @@ function handleLogout() {
   .workspace-content { padding: 18px 14px; }
   .header-left { gap: 8px; }
   .header-actions { gap: 8px; }
-  .blog-link span, .user-copy, .workspace-status { display: none; }
+  .user-copy, .workspace-status { display: none; }
+  .blog-link { padding: 0 11px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); white-space: nowrap; }
+  .blog-link span { display: inline; }
+  .admin-mobile-blog-link { display: flex; margin: 2px 12px 18px; min-height: 46px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 10px; background: #1b2740; color: #dfe8ff; font-size: 13px; font-weight: 750; text-decoration: none; }
+  .admin-mobile-blog-link:hover { border-color: #8ba7ff; background: #243356; color: white; }
 }
+.admin-mobile-blog-link { display: none; }
 </style>
