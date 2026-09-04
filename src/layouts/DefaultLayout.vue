@@ -40,7 +40,7 @@
         </div>
         <div class="header-actions">
           <span class="workspace-status"><i /> 系统在线</span>
-          <router-link class="blog-link" to="/blog"><home-outlined /> <span>查看博客</span></router-link>
+          <router-link class="blog-link" to="/blog" :title="isMobile ? '查看博客' : undefined" aria-label="查看博客"><home-outlined /> <span>查看博客</span></router-link>
           <a-dropdown trigger="click">
             <button class="user-button" type="button">
               <a-avatar :src="userStore.avatar" :size="36">{{ userInitial }}</a-avatar>
@@ -199,9 +199,9 @@ function handleLogout() {
   .workspace-content { padding: 18px 14px; }
   .header-left { gap: 8px; }
   .header-actions { gap: 8px; }
-  .user-copy, .workspace-status { display: none; }
-  .blog-link { padding: 0 11px; border: 1px solid var(--color-border); border-radius: 999px; background: var(--color-surface); white-space: nowrap; }
-  .blog-link span { display: inline; }
+  .user-copy, .workspace-status, .blog-link span { display: none; }
+  .blog-link { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; padding: 0; border-radius: 10px; color: var(--color-text-secondary); }
+  .blog-link:hover { background: var(--color-surface-muted); color: var(--color-primary); }
   .admin-mobile-blog-link { display: flex; margin: 2px 12px 18px; min-height: 46px; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgb(255 255 255 / 10%); border-radius: 10px; background: #1b2740; color: #dfe8ff; font-size: 13px; font-weight: 750; text-decoration: none; }
   .admin-mobile-blog-link:hover { border-color: #8ba7ff; background: #243356; color: white; }
 }
