@@ -40,7 +40,7 @@
         </div>
         <div class="header-actions">
           <span class="workspace-status"><i /> 系统在线</span>
-          <router-link class="blog-link" to="/blog" :title="isMobile ? '查看博客' : undefined" aria-label="查看博客"><home-outlined /> <span>查看博客</span></router-link>
+          <router-link class="blog-link" to="/blog" :title="isMobile ? '查看博客' : undefined" aria-label="查看博客"><home-outlined /> <span v-if="isMobile">博客</span><span v-else>查看博客</span></router-link>
           <a-dropdown trigger="click">
             <button class="user-button" type="button">
               <a-avatar :src="userStore.avatar" :size="36">{{ userInitial }}</a-avatar>
@@ -193,8 +193,8 @@ function handleLogout() {
 @media (max-width: 992px) {
   .admin-shell--mobile > .workspace { width: 100%; }
   .admin-shell--mobile .workspace-header { position: sticky; right: auto; left: auto; }
-  .blog-link span { display: none; }
-  .blog-link { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; padding: 0; border-radius: 10px; color: var(--color-text-secondary); }
+  .blog-link span { display: inline; }
+  .blog-link { display: inline-flex; width: auto; height: 36px; flex: 0 0 auto; align-items: center; gap: 5px; padding: 0 8px; border-radius: 8px; color: var(--color-text-secondary); font-size: 12px; }
   .blog-link:hover { background: var(--color-surface-muted); color: var(--color-primary); }
 }
 @media (max-width: 720px) {
