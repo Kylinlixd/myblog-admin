@@ -104,32 +104,50 @@ describe('DataTable row selection', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('72px')
+    expect(localStorage.getItem('blog-admin:table-columns:v1:comments')).toBeNull()
 
-    document.dispatchEvent(new MouseEvent('mouseup', { clientX: 20 }))
+    document.dispatchEvent(new MouseEvent('mouseup', { clientX: 250 }))
     await wrapper.vm.$nextTick()
-    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 72 })
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 250 })
     wrapper.unmount()
 
     const restored = mount(DataTable, { props })
-    expect(restored.find('col[data-column-id="name"]').attributes('style')).toContain('72px')
+    expect(restored.find('col[data-column-id="name"]').attributes('style')).toContain('250px')
     restored.unmount()
   })
 
   it('cleans up an active resize when unmounted', async () => {
-    const wrapper = mount(DataTable, {
-      props: {
-        columns: [{ key: 'name', label: '名称', prop: 'name', width: 180 }],
-        columnStorageKey: 'comments'
-      }
-    })
-    const handle = wrapper.find('.column-resize-handle')
-    handle.element.parentElement.getBoundingClientRect = () => ({ width: 180 })
+    const addListener = jest.spyOn(document, 'addEventListener')
+    const removeListener = jest.spyOn(document, 'removeEventListener')
+    let wrapper
 
-    await handle.trigger('mousedown', { button: 0, clientX: 180 })
-    wrapper.unmount()
-    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 320 }))
-    document.dispatchEvent(new MouseEvent('mouseup', { clientX: 320 }))
+    try {
+      wrapper = mount(DataTable, {
+        props: {
+          columns: [{ key: 'name', label: '名称', prop: 'name', width: 180 }],
+          columnStorageKey: 'comments'
+        }
+      })
+      const handle = wrapper.find('.column-resize-handle')
+      handle.element.parentElement.getBoundingClientRect = () => ({ width: 180 })
 
-    expect(localStorage.getItem('blog-admin:table-columns:v1:comments')).toBeNull()
+      await handle.trigger('mousedown', { button: 0, clientX: 180 })
+      const mousemoveCallback = addListener.mock.calls.find(([eventName]) => eventName === 'mousemove')?.[1]
+      const mouseupCallback = addListener.mock.calls.find(([eventName]) => eventName === 'mouseup')?.[1]
+      expect(typeof mousemoveCallback).toBe('function')
+      expect(typeof mouseupCallback).toBe('function')
+
+      wrapper.unmount()
+      expect(removeListener).toHaveBeenCalledWith('mousemove', mousemoveCallback)
+      expect(removeListener).toHaveBeenCalledWith('mouseup', mouseupCallback)
+
+      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 320 }))
+      document.dispatchEvent(new MouseEvent('mouseup', { clientX: 320 }))
+      expect(localStorage.getItem('blog-admin:table-columns:v1:comments')).toBeNull()
+    } finally {
+      wrapper?.unmount()
+      addListener.mockRestore()
+      removeListener.mockRestore()
+    }
   })
 })
