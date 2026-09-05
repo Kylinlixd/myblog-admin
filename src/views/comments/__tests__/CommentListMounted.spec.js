@@ -168,7 +168,7 @@ describe('CommentList mounted states and actions', () => {
     })
 
     expect(wrapper.vm.comments.map((comment) => comment.serialNo)).toEqual([1, 2])
-    expect(wrapper.vm.columns[0]).toEqual({ label: '序号', prop: 'serialNo', width: '72px' })
+    expect(wrapper.vm.columns[0]).toEqual({ key: 'serialNo', label: '序号', prop: 'serialNo', width: '72px' })
     expect(wrapper.vm.columns.some((column) => column.prop === 'id')).toBe(false)
     wrapper.unmount()
   })
