@@ -212,6 +212,27 @@ describe('DataTable row selection', () => {
     wrapper.unmount()
   })
 
+  it('caps restored widths at the advertised maximum before keyboard resizing', async () => {
+    localStorage.setItem('blog-admin:table-columns:v1:comments', JSON.stringify({ name: 12000 }))
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [{ key: 'name', label: '名称', prop: 'name', width: 180 }],
+        columnStorageKey: 'comments'
+      }
+    })
+    const handle = wrapper.find('.column-resize-handle')
+
+    expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('10000px')
+    expect(handle.attributes('aria-valuenow')).toBe('10000')
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 12000 })
+
+    await handle.trigger('keydown', { key: 'ArrowLeft' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('9984px')
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 9984 })
+    wrapper.unmount()
+  })
+
   it('cleans up an active resize when unmounted', async () => {
     const addListener = jest.spyOn(document, 'addEventListener')
     const removeListener = jest.spyOn(document, 'removeEventListener')

@@ -196,7 +196,7 @@ const resizeColumnWithKeyboard = (event, column) => {
 onBeforeUnmount(removeResizeListeners)
 
 const getColumnStyle = (column) =>
-  column.width === undefined ? {} : { width: `${column.width}px` }
+  column.width === undefined ? {} : { width: `${clampColumnWidth(column.width)}px` }
 
 // 按路径获取对象属性值，支持嵌套属性
 const getValueByPath = (object, path) => {
