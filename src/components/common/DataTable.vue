@@ -31,7 +31,13 @@
                 role="separator"
                 aria-orientation="vertical"
                 :aria-label="`调整${column.label}列宽`"
+                :aria-valuemin="MIN_COLUMN_WIDTH"
+                :aria-valuenow="getColumnAriaValue(column)"
+                :aria-valuemax="ARIA_VALUE_MAX"
+                tabindex="0"
                 @mousedown="startColumnResize($event, column)"
+                @keydown="resizeColumnWithKeyboard($event, column)"
+                v-if="column.resizable"
               />
             </th>
           </tr>
@@ -80,7 +86,10 @@
 
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue'
-import { getColumnId, useResizableColumns } from '@/composables/useResizableColumns'
+import { getColumnId, MIN_COLUMN_WIDTH, useResizableColumns } from '@/composables/useResizableColumns'
+
+const KEYBOARD_RESIZE_STEP = 16
+const ARIA_VALUE_MAX = 10000
 
 const props = defineProps({
   data: {
@@ -120,7 +129,8 @@ const props = defineProps({
 const emit = defineEmits(['selection-change'])
 const { columns: resizableColumns, handleResizeColumn } = useResizableColumns(
   props.columnStorageKey,
-  computed(() => props.columns)
+  computed(() => props.columns),
+  { storage: props.columnStorageKey.trim() ? undefined : null }
 )
 const visibleKeys = computed(() => props.data.map((row, index) => getRowKey(row, index)))
 const selectedSet = computed(() => new Set(props.selectedRowKeys))
@@ -164,6 +174,18 @@ const startColumnResize = (event, column) => {
   activeResizeColumnId.value = getColumnId(column)
   document.addEventListener('mousemove', resizeColumn)
   document.addEventListener('mouseup', finishColumnResize)
+}
+
+const getColumnAriaValue = (column) =>
+  Math.max(MIN_COLUMN_WIDTH, Number.isFinite(column.width) ? column.width : MIN_COLUMN_WIDTH)
+
+const resizeColumnWithKeyboard = (event, column) => {
+  const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0
+  if (!direction) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  handleResizeColumn(getColumnAriaValue(column) + direction * KEYBOARD_RESIZE_STEP, column)
 }
 
 onBeforeUnmount(removeResizeListeners)

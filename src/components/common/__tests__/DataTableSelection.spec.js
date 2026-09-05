@@ -116,6 +116,74 @@ describe('DataTable row selection', () => {
     restored.unmount()
   })
 
+  it('does not persist a drag without a column storage key', async () => {
+    const writeStorage = jest.spyOn(Storage.prototype, 'setItem')
+    let wrapper
+
+    try {
+      wrapper = mount(DataTable, {
+        props: {
+          columns: [{ key: 'name', label: '名称', prop: 'name', width: 180 }]
+        }
+      })
+      const handle = wrapper.find('.column-resize-handle')
+      handle.element.parentElement.getBoundingClientRect = () => ({ width: 180 })
+
+      await handle.trigger('mousedown', { button: 0, clientX: 180 })
+      document.dispatchEvent(new MouseEvent('mouseup', { clientX: 240 }))
+      await wrapper.vm.$nextTick()
+
+      expect(writeStorage).not.toHaveBeenCalled()
+      expect(localStorage.getItem('blog-admin:table-columns:v1:')).toBeNull()
+    } finally {
+      wrapper?.unmount()
+      writeStorage.mockRestore()
+    }
+  })
+
+  it('does not render a resize handle for a non-resizable column', () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [
+          { key: 'fixed', label: '固定列', prop: 'fixed', resizable: false },
+          { key: 'name', label: '名称', prop: 'name' }
+        ]
+      }
+    })
+
+    expect(wrapper.find('th[data-column-id="fixed"] .column-resize-handle').exists()).toBe(false)
+    expect(wrapper.find('th[data-column-id="name"] .column-resize-handle').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('resizes with arrow keys, clamps at the minimum, and persists immediately', async () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [{ key: 'name', label: '名称', prop: 'name', width: 80 }],
+        columnStorageKey: 'comments'
+      }
+    })
+    const handle = wrapper.find('.column-resize-handle')
+
+    expect(handle.attributes('tabindex')).toBe('0')
+    expect(handle.attributes('aria-valuemin')).toBe('72')
+    expect(handle.attributes('aria-valuenow')).toBe('80')
+    expect(handle.attributes('aria-valuemax')).toBe('10000')
+
+    await handle.trigger('keydown', { key: 'ArrowLeft' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('72px')
+    expect(handle.attributes('aria-valuenow')).toBe('72')
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 72 })
+
+    await handle.trigger('keydown', { key: 'ArrowRight' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('88px')
+    expect(handle.attributes('aria-valuenow')).toBe('88')
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 88 })
+    wrapper.unmount()
+  })
+
   it('cleans up an active resize when unmounted', async () => {
     const addListener = jest.spyOn(document, 'addEventListener')
     const removeListener = jest.spyOn(document, 'removeEventListener')
