@@ -28,6 +28,7 @@
       :data="profiles"
       :columns="columns"
       :loading="loadingProfiles"
+      column-storage-key="access-logs"
       row-key="ip_address"
     >
       <template #ip="{ row }">
@@ -172,13 +173,13 @@ import Pagination from '@/components/common/Pagination.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 
 const columns = [
-  { label: 'IP 地址', slot: 'ip', width: '210px' },
-  { label: '归属画像', slot: 'geo', width: '180px' },
-  { label: '行为画像', slot: 'behavior', width: '130px' },
-  { label: '风险', slot: 'risk', width: '210px' },
-  { label: '最近访问', slot: 'last_seen', width: '170px' },
-  { label: '当前规则', slot: 'rules', width: '160px' },
-  { label: '操作', slot: 'action', width: '160px', fixed: 'right' }
+  { key: 'ip', label: 'IP 地址', slot: 'ip', width: '210px' },
+  { key: 'geo', label: '归属画像', slot: 'geo', width: '180px' },
+  { key: 'behavior', label: '行为画像', slot: 'behavior', width: '130px' },
+  { key: 'risk', label: '风险', slot: 'risk', width: '210px' },
+  { key: 'last_seen', label: '最近访问', slot: 'last_seen', width: '170px' },
+  { key: 'rules', label: '当前规则', slot: 'rules', width: '160px' },
+  { key: 'action', label: '操作', slot: 'action', width: '160px', fixed: 'right' }
 ]
 
 const profiles = ref([])

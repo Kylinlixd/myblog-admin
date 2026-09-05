@@ -134,13 +134,14 @@
     <a-card v-else class="data-card admin-table-card">
       <a-table
         :loading="loading"
-        :columns="columns"
+        :columns="resizableColumns"
         :data-source="fileList"
         :pagination="paginationConfig"
         :scroll="{ x: 'max-content' }"
         row-key="id"
         bordered
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+        @resizeColumn="handleResizeColumn"
       >
         <template #bodyCell="{ column, record }">
           <!-- 预览列 -->
@@ -318,6 +319,7 @@ import { buildApiUrl } from '@/utils/apiBaseUrl'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
 import FileTutorialDrawer from './FileTutorialDrawer.vue'
+import { useResizableColumns } from '@/composables/useResizableColumns'
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -432,6 +434,8 @@ const columns = [
     align: 'center'
   }
 ]
+
+const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('files', columns)
 
 // 分页配置
 const paginationConfig = computed(() => ({

@@ -73,7 +73,7 @@
 
     <a-card v-else class="admin-table-card">
       <a-table
-      :columns="columns"
+      :columns="resizableColumns"
       :data-source="tagList"
       :loading="loading"
       :pagination="pagination"
@@ -86,6 +86,7 @@
       @change="handleTableChange"
       :scroll="{ x: 1160 }"
       class="responsive-table tag-table"
+      @resizeColumn="handleResizeColumn"
     >
       <template #bodyCell="{ column, record }">
         <!-- 序号列 -->
@@ -194,6 +195,7 @@ import { getTagList, createTag, updateTag, deleteTag } from '@/api/tag'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
+import { useResizableColumns } from '@/composables/useResizableColumns'
 
 // 表格列配置
 const columns = [
@@ -255,6 +257,8 @@ const columns = [
     fixed: 'right',
   }
 ]
+
+const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('tags', columns)
 
 // 数据列表
 const tagList = ref([])

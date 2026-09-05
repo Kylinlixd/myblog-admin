@@ -103,13 +103,14 @@
       <div v-else class="content-table-scroll">
         <a-table
         :loading="loading"
-        :columns="responsive ? columnsForMobile : columns"
+        :columns="resizableColumns"
         :data-source="dynamicList"
         :pagination="paginationConfig"
         :scroll="{ x: 'max-content' }"
         row-key="id"
         bordered
         :row-selection="{ selectedRowKeys, onChange: onSelectChange }"
+        @resizeColumn="handleResizeColumn"
       >
         <template #bodyCell="{ column, record }">
           <!-- 序号列 -->
@@ -212,6 +213,7 @@ import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynam
 import { getCategoryList } from '@/api/category'
 import { getTagList } from '@/api/tag'
 import PageHeader from '@/components/common/PageHeader.vue'
+import { useResizableColumns } from '@/composables/useResizableColumns'
 
 const router = useRouter()
 const loading = ref(false)
@@ -466,6 +468,9 @@ const columnsForMobile = [
     align: 'center'
   }
 ]
+
+const activeColumns = computed(() => responsive.value ? columnsForMobile : columns)
+const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('dynamics', activeColumns)
 
 // 分页配置
 const paginationConfig = computed(() => ({

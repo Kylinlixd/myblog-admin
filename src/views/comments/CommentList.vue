@@ -66,6 +66,7 @@
       :data="comments"
       :columns="columns"
       :loading="loading"
+      column-storage-key="comments"
       selectable
       :selected-row-keys="selectedCommentIds"
       row-key="id"
@@ -160,13 +161,13 @@ import AsyncState from '../../components/common/AsyncState.vue'
 
 // 表格列配置
 const columns = [
-  { label: '序号', prop: 'serialNo', width: '72px' },
-  { label: '评论内容', prop: 'content', slot: 'content', width: '300px' },
-  { label: '评论者', prop: 'nickname', width: '120px' },
-  { label: '邮箱', prop: 'email', width: '180px' },
-  { label: '状态', prop: 'status', slot: 'status', width: '100px' },
-  { label: '评论时间', prop: 'createTime', slot: 'createTime', width: '150px' },
-  { label: '操作', slot: 'actions', width: '200px' }
+  { key: 'serialNo', label: '序号', prop: 'serialNo', width: '72px' },
+  { key: 'content', label: '评论内容', prop: 'content', slot: 'content', width: '300px' },
+  { key: 'nickname', label: '评论者', prop: 'nickname', width: '120px' },
+  { key: 'email', label: '邮箱', prop: 'email', width: '180px' },
+  { key: 'status', label: '状态', prop: 'status', slot: 'status', width: '100px' },
+  { key: 'createTime', label: '评论时间', prop: 'createTime', slot: 'createTime', width: '150px' },
+  { key: 'actions', label: '操作', slot: 'actions', width: '200px' }
 ]
 
 // 数据列表
