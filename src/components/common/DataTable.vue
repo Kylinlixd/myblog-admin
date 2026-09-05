@@ -2,6 +2,15 @@
   <div class="data-table admin-table-card" :aria-busy="loading">
     <div class="table-wrapper" :class="{ 'is-loading': loading }">
       <table class="inspira-table">
+        <colgroup>
+          <col v-if="selectable" class="selection-column" style="width: 48px" />
+          <col
+            v-for="column in resizableColumns"
+            :key="column.key"
+            :data-column-id="getColumnId(column)"
+            :style="getColumnStyle(column)"
+          />
+        </colgroup>
         <thead>
           <tr>
             <th v-if="selectable" class="selection-cell">
@@ -14,8 +23,16 @@
                 @change="toggleVisibleRows"
               />
             </th>
-            <th v-for="(column, index) in columns" :key="index" :style="column.width ? { width: column.width } : {}">
+            <th v-for="column in resizableColumns" :key="column.key" :data-column-id="getColumnId(column)">
               {{ column.label }}
+              <span
+                class="column-resize-handle"
+                :class="{ 'is-resizing': activeResizeColumnId === getColumnId(column) }"
+                role="separator"
+                aria-orientation="vertical"
+                :aria-label="`调整${column.label}列宽`"
+                @mousedown="startColumnResize($event, column)"
+              />
             </th>
           </tr>
         </thead>
@@ -31,7 +48,7 @@
                   @change="toggleRow(row, rowIndex, $event)"
                 />
               </td>
-              <td v-for="(column, colIndex) in columns" :key="colIndex">
+              <td v-for="column in resizableColumns" :key="column.key">
                 <template v-if="column.slot">
                   <slot :name="column.slot" :row="row" :index="rowIndex"></slot>
                 </template>
@@ -45,7 +62,7 @@
             </tr>
           </template>
           <tr v-if="!loading && (!data || data.length === 0)">
-            <td :colspan="columns.length + (selectable ? 1 : 0)" class="empty-cell">
+            <td :colspan="resizableColumns.length + (selectable ? 1 : 0)" class="empty-cell">
               <div class="empty-data">
                 <i class="icon-empty"></i>
                 <span>{{ emptyText }}</span>
@@ -62,7 +79,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { getColumnId, useResizableColumns } from '@/composables/useResizableColumns'
 
 const props = defineProps({
   data: {
@@ -92,14 +110,66 @@ const props = defineProps({
   selectedRowKeys: {
     type: Array,
     default: () => []
+  },
+  columnStorageKey: {
+    type: String,
+    default: ''
   }
 })
 
 const emit = defineEmits(['selection-change'])
+const { columns: resizableColumns, handleResizeColumn } = useResizableColumns(
+  props.columnStorageKey,
+  computed(() => props.columns)
+)
 const visibleKeys = computed(() => props.data.map((row, index) => getRowKey(row, index)))
 const selectedSet = computed(() => new Set(props.selectedRowKeys))
 const allVisibleSelected = computed(() => visibleKeys.value.length > 0 && visibleKeys.value.every((key) => selectedSet.value.has(key)))
 const someVisibleSelected = computed(() => !allVisibleSelected.value && visibleKeys.value.some((key) => selectedSet.value.has(key)))
+const activeResizeColumnId = ref(null)
+let resizeState = null
+
+const removeResizeListeners = () => {
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('mousemove', resizeColumn)
+    document.removeEventListener('mouseup', finishColumnResize)
+  }
+  resizeState = null
+  activeResizeColumnId.value = null
+}
+
+const resizeColumn = (event) => {
+  if (!resizeState) return
+  const { column, startWidth, startX } = resizeState
+  handleResizeColumn(startWidth + event.clientX - startX, column, false)
+}
+
+const finishColumnResize = (event) => {
+  if (!resizeState) return
+  const { column, startWidth, startX } = resizeState
+  handleResizeColumn(startWidth + event.clientX - startX, column, true)
+  removeResizeListeners()
+}
+
+const startColumnResize = (event, column) => {
+  if (event.button !== 0) return
+  const header = event.currentTarget?.parentElement
+  const startWidth = header?.getBoundingClientRect().width
+  if (!Number.isFinite(startWidth)) return
+
+  event.preventDefault()
+  event.stopPropagation()
+  removeResizeListeners()
+  resizeState = { column, startWidth, startX: event.clientX }
+  activeResizeColumnId.value = getColumnId(column)
+  document.addEventListener('mousemove', resizeColumn)
+  document.addEventListener('mouseup', finishColumnResize)
+}
+
+onBeforeUnmount(removeResizeListeners)
+
+const getColumnStyle = (column) =>
+  column.width === undefined ? {} : { width: `${column.width}px` }
 
 // 按路径获取对象属性值，支持嵌套属性
 const getValueByPath = (object, path) => {
@@ -191,10 +261,37 @@ const toggleVisibleRows = (event) => {
   }
   
   th {
+    position: relative;
     font-weight: 600;
     color: #606266;
     background-color: #f8faff;
     white-space: nowrap;
+  }
+
+  .column-resize-handle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: -5px;
+    z-index: 2;
+    width: 10px;
+    cursor: col-resize;
+    touch-action: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block: 20%;
+      inset-inline-start: 4px;
+      width: 2px;
+      background: var(--color-primary);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+  }
+
+  th:hover .column-resize-handle::after,
+  .column-resize-handle.is-resizing::after {
+    opacity: .7;
   }
   
   tr:hover td {
