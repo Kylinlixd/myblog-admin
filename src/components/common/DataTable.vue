@@ -151,13 +151,13 @@ const removeResizeListeners = () => {
 const resizeColumn = (event) => {
   if (!resizeState) return
   const { column, startWidth, startX } = resizeState
-  handleResizeColumn(startWidth + event.clientX - startX, column, false)
+  updateColumnWidth(startWidth + event.clientX - startX, column, false)
 }
 
 const finishColumnResize = (event) => {
   if (!resizeState) return
   const { column, startWidth, startX } = resizeState
-  handleResizeColumn(startWidth + event.clientX - startX, column, true)
+  updateColumnWidth(startWidth + event.clientX - startX, column, true)
   removeResizeListeners()
 }
 
@@ -176,8 +176,13 @@ const startColumnResize = (event, column) => {
   document.addEventListener('mouseup', finishColumnResize)
 }
 
-const getColumnAriaValue = (column) =>
-  Math.max(MIN_COLUMN_WIDTH, Number.isFinite(column.width) ? column.width : MIN_COLUMN_WIDTH)
+const clampColumnWidth = (width) =>
+  Math.min(ARIA_VALUE_MAX, Math.max(MIN_COLUMN_WIDTH, Number.isFinite(width) ? width : MIN_COLUMN_WIDTH))
+
+const getColumnAriaValue = (column) => clampColumnWidth(column.width)
+
+const updateColumnWidth = (width, column, persist = true) =>
+  handleResizeColumn(clampColumnWidth(width), column, persist)
 
 const resizeColumnWithKeyboard = (event, column) => {
   const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0
@@ -185,7 +190,7 @@ const resizeColumnWithKeyboard = (event, column) => {
 
   event.preventDefault()
   event.stopPropagation()
-  handleResizeColumn(getColumnAriaValue(column) + direction * KEYBOARD_RESIZE_STEP, column)
+  updateColumnWidth(getColumnAriaValue(column) + direction * KEYBOARD_RESIZE_STEP, column)
 }
 
 onBeforeUnmount(removeResizeListeners)

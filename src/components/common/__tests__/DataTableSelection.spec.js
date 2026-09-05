@@ -184,6 +184,34 @@ describe('DataTable row selection', () => {
     wrapper.unmount()
   })
 
+  it('caps keyboard and mouse resizing at the advertised maximum', async () => {
+    const wrapper = mount(DataTable, {
+      props: {
+        columns: [{ key: 'name', label: '名称', prop: 'name', width: 9990 }],
+        columnStorageKey: 'comments'
+      }
+    })
+    const handle = wrapper.find('.column-resize-handle')
+
+    await handle.trigger('keydown', { key: 'ArrowRight' })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('10000px')
+    expect(handle.attributes('aria-valuenow')).toBe('10000')
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 10000 })
+
+    handle.element.parentElement.getBoundingClientRect = () => ({ width: 10000 })
+    await handle.trigger('mousedown', { button: 0, clientX: 0 })
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 5000 }))
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('col[data-column-id="name"]').attributes('style')).toContain('10000px')
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 10000 })
+
+    document.dispatchEvent(new MouseEvent('mouseup', { clientX: 6000 }))
+    await wrapper.vm.$nextTick()
+    expect(JSON.parse(localStorage.getItem('blog-admin:table-columns:v1:comments'))).toEqual({ name: 10000 })
+    wrapper.unmount()
+  })
+
   it('cleans up an active resize when unmounted', async () => {
     const addListener = jest.spyOn(document, 'addEventListener')
     const removeListener = jest.spyOn(document, 'removeEventListener')
