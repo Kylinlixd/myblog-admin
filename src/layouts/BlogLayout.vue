@@ -114,7 +114,9 @@ function isNavigationActive(item) {
 
 <style scoped>
 .blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; overflow-x: hidden; background: var(--blog-bg); color: var(--blog-text); isolation: isolate; }
-.blog-shell--home { --content-width: min(1480px, calc(100vw - 64px)); }
+.blog-shell--home { --content-width: 1120px; }
+.blog-shell--home .site-header-panel { background: #fffaf2; backdrop-filter: none; box-shadow: 0 4px 18px rgb(89 61 34 / 5%); }
+.blog-shell--home .site-footer { background: #eee8dd; backdrop-filter: none; content-visibility: auto; contain-intrinsic-size: auto 112px; }
 .site-header { position: sticky; z-index: 100; top: 14px; height: 0; }
 .site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 15%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 82%); box-shadow: 0 18px 50px rgb(89 61 34 / 12%); backdrop-filter: blur(22px); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
