@@ -40,8 +40,8 @@
     <section class="operations-grid">
       <article class="workspace-panel content-pulse">
         <header class="panel-heading">
-          <div><span class="section-label">发布节奏</span><h2>近七天内容趋势</h2></div>
-          <router-link to="/dashboard/dynamics">查看全部内容 <right-outlined /></router-link>
+          <div><span class="section-label">发布节奏</span><h2>近七天内容&访问趋势</h2></div>
+          <router-link to="/dashboard/dynamics">查看全部内容 &gt;</router-link>
         </header>
 
         <div class="trend-summary" aria-label="近七天发布统计">
@@ -50,41 +50,7 @@
           <div><span>单日峰值</span><strong>{{ maxDaily }}</strong><small>篇</small></div>
         </div>
 
-        <div v-if="daily.length" class="trend-line-chart">
-          <svg viewBox="0 0 700 260" role="img" aria-labelledby="trend-chart-title trend-chart-description">
-            <title id="trend-chart-title">近七天每日发布数量折线图</title>
-            <desc id="trend-chart-description">七天共发布 {{ totalDaily }} 篇，峰值为 {{ maxDaily }} 篇。</desc>
-            <defs>
-              <linearGradient id="trend-area-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#315bea" stop-opacity=".24" />
-                <stop offset="1" stop-color="#315bea" stop-opacity=".02" />
-              </linearGradient>
-            </defs>
-            <g class="trend-guides" aria-hidden="true">
-              <line v-for="y in [36, 112, 188]" :key="y" x1="36" :y1="y" x2="664" :y2="y" />
-            </g>
-            <g class="trend-axis" aria-hidden="true">
-              <text x="8" y="40">{{ maxDaily }}</text>
-              <text x="8" y="116">{{ Math.round(maxDaily / 2) }}</text>
-              <text x="8" y="192">0</text>
-            </g>
-            <polygon class="trend-area" :points="trendAreaPoints" />
-            <polyline class="trend-line" :points="trendLinePoints" />
-            <g
-              v-for="item in trendPoints"
-              :key="item.day"
-              class="trend-point"
-              :class="{ 'trend-point--peak': item.isPeak }"
-              tabindex="0"
-              :aria-label="`${item.day}发布${item.count}篇`"
-            >
-              <circle :cx="item.x" :cy="item.y" r="5" />
-              <circle v-if="item.isPeak" class="trend-highlight" :cx="item.x" :cy="item.y" r="13" />
-              <text class="trend-value" :x="item.x" :y="item.y - 14">{{ item.count }}</text>
-              <text class="trend-day" :x="item.x" y="238">{{ item.day }}</text>
-            </g>
-          </svg>
-        </div>
+        <DashboardChart v-if="daily.length" class="trend-line-chart" :option="publishingOption(daily)" :label="`近七天内容与访问趋势，共发布 ${totalDaily} 篇，访问 ${dashboardData.visits.pv} PV`" />
         <div v-else-if="!loading" class="panel-empty">
           <read-outlined />
           <strong>最近还没有发布记录</strong>
@@ -95,24 +61,25 @@
       <aside class="operations-side">
         <section class="workspace-panel taxonomy-panel">
           <header class="panel-heading">
-            <div><span class="section-label">内容脉络</span><h2>活跃主题</h2></div>
+            <div><span class="section-label">内容脉络</span><h2>主题阅读分布</h2></div>
+            <router-link to="/dashboard/category">管理 &gt;</router-link>
           </header>
 
           <div v-if="hasTaxonomy" class="taxonomy-columns">
             <div v-if="dashboardData.categories.length" class="taxonomy-group">
-              <div class="taxonomy-title"><span>分类</span><router-link to="/dashboard/category">管理</router-link></div>
+              <div class="taxonomy-title"><span>分类</span><router-link to="/dashboard/category">管理 &gt;</router-link></div>
               <div class="taxonomy-list">
                 <div v-for="item in dashboardData.categories" :key="`category-${item.name}`" class="taxonomy-item">
-                  <div><strong>{{ item.name }}</strong><span>{{ item.count }} 篇</span></div>
+                  <div><strong>{{ item.name }}</strong><span>{{ item.count }}篇 · 总阅读 {{ formatNumber(item.views) }}</span></div>
                   <i><span :style="{ width: `${taxonomyShare(item, dashboardData.categories)}%` }" /></i>
                 </div>
               </div>
             </div>
             <div v-if="dashboardData.tags.length" class="taxonomy-group">
-              <div class="taxonomy-title"><span>标签</span><router-link to="/dashboard/tags">管理</router-link></div>
+              <div class="taxonomy-title"><span>标签</span><router-link to="/dashboard/tags">管理 &gt;</router-link></div>
               <div class="taxonomy-list">
                 <div v-for="item in dashboardData.tags" :key="`tag-${item.name}`" class="taxonomy-item">
-                  <div><strong>{{ item.name }}</strong><span>{{ item.count }} 篇</span></div>
+                  <div><strong>{{ item.name }}</strong><span>{{ item.count }}篇 · 总阅读 {{ formatNumber(item.views) }}</span></div>
                   <i><span :style="{ width: `${taxonomyShare(item, dashboardData.tags)}%` }" /></i>
                 </div>
               </div>
@@ -121,6 +88,51 @@
           <div v-else-if="!loading" class="compact-empty">分类与标签的发布数据会显示在这里。</div>
         </section>
 
+
+      </aside>
+    </section>
+    <section class="insights-grid" aria-label="阅读与安全数据">
+      <article class="workspace-panel insight-card" id="visit-overview">
+        <header class="panel-heading"><div><span class="section-label">读者足迹</span><h2>7天访问总览</h2></div><router-link to="/dashboard/access-logs?view=visits">查看访问统计 &gt;</router-link></header>
+        <div class="insight-kpis">
+          <div><span>7天总PV</span><strong>{{ formatNumber(dashboardData.visits.pv) }}</strong></div>
+          <div><span>7天UV</span><strong>{{ formatNumber(dashboardData.visits.uv) }}</strong></div>
+          <div><span>日均阅读</span><strong>{{ formatNumber(dashboardData.visits.average) }}</strong></div>
+          <div><span title="IP＋浏览器识别访客；间隔30分钟划分会话，单次阅读会话占比">跳出率 <small>估算</small></span><strong>{{ dashboardData.visits.bounceRate == null ? '—' : `${dashboardData.visits.bounceRate}%` }}</strong></div>
+        </div>
+        <DashboardChart v-if="daily.length" class="mini-chart" :option="visitsOption(daily)" label="近七天每日文章访问 PV 趋势" />
+        <div v-else class="compact-empty">{{ loading ? '正在加载访问数据…' : '暂无访问数据' }}</div>
+        <p class="card-note">PV 按文章详情访问计 · UV 按 IP＋浏览器去重</p>
+      </article>
+      <article class="workspace-panel insight-card">
+        <header class="panel-heading"><div><span class="section-label">阅读焦点</span><h2>热门文章 TOP5</h2></div><router-link to="/dashboard/dynamics">查看全部文章 &gt;</router-link></header>
+        <div class="article-list-head"><span>文章标题</span><span>阅读 / 评论</span></div>
+        <ol v-if="dashboardData.hotArticles.length" class="hot-articles">
+          <li v-for="(article, index) in dashboardData.hotArticles" :key="article.id">
+            <span class="article-rank" :class="{ 'article-rank--top': index < 3 }">{{ String(index + 1).padStart(2, '0') }}</span>
+            <router-link :to="`/dashboard/dynamics/edit/${article.id}`" :title="article.title">{{ article.title }}<span v-if="index < 3 && article.view_count > 0" aria-label="高热度"> 🔥</span></router-link>
+            <div class="article-counts"><strong>{{ formatNumber(article.view_count) }}</strong><span>{{ formatNumber(article.comment_count) }} 评论</span></div>
+          </li>
+        </ol>
+        <div v-else class="compact-empty">{{ loading ? '正在加载热门文章…' : '发布文章后，这里展示阅读排行。' }}</div>
+        <p class="card-note">按已发布文章累计阅读量排序</p>
+      </article>
+      <article class="workspace-panel insight-card">
+        <header class="panel-heading"><div><span class="section-label">安全观察</span><h2>访问安全简报</h2></div><router-link to="/dashboard/access-logs">查看访问日志 &gt;</router-link></header>
+        <div class="insight-kpis security-kpis">
+          <div><span>近7日独立IP</span><strong>{{ formatNumber(dashboardData.security.uniqueIps) }}</strong></div>
+          <div><span>中风险IP</span><strong class="risk-medium">{{ dashboardData.security.medium }}</strong></div>
+          <div><span>高风险IP</span><strong class="risk-high">{{ dashboardData.security.high }}</strong></div>
+          <div><span>严重风险IP</span><strong class="risk-critical">{{ dashboardData.security.critical }}</strong></div>
+        </div>
+        <div class="risk-list-heading">TOP 3 风险来源</div>
+        <ul v-if="dashboardData.security.topIps.length" class="risk-ip-list">
+          <li v-for="ip in dashboardData.security.topIps" :key="ip.ip_address"><span class="risk-ip-address" :title="ip.ip_address">{{ ip.ip_address }}</span><span class="risk-badge" :class="`risk-${ip.risk_level}`">{{ riskLabel(ip.risk_level) }}</span><strong>{{ formatNumber(ip.requests) }}<small> 次</small></strong></li>
+        </ul>
+        <div v-else class="compact-empty">{{ loading ? '正在加载安全数据…' : '近7日未发现中风险及以上 IP' }}</div>
+        <p class="card-note">已排除生效白名单 · 风险依据近7日请求</p>
+      </article>
+    </section>
         <section class="quick-actions" aria-label="快捷操作">
           <div class="quick-heading"><span class="section-label">下一步</span><h2>快捷操作</h2></div>
           <router-link v-for="action in quickActions" :key="action.path" :to="action.path" class="quick-action">
@@ -129,8 +141,6 @@
             <right-outlined />
           </router-link>
         </section>
-      </aside>
-    </section>
   </div>
 </template>
 
@@ -149,6 +159,8 @@ import {
 import request from '@/services/http/client'
 import { useUserStore } from '@/stores/user'
 import { mapDashboardData } from './dashboard/stats'
+import DashboardChart from './dashboard/DashboardChart.vue'
+import { publishingOption, visitsOption } from './dashboard/charts'
 
 const userStore = useUserStore()
 const currentDate = new Intl.DateTimeFormat('zh-CN', {
@@ -175,28 +187,6 @@ const averageDaily = computed(() => {
   const average = totalDaily.value / daily.value.length
   return Number.isInteger(average) ? String(average) : average.toFixed(1)
 })
-const trendPoints = computed(() => {
-  const left = 36
-  const right = 664
-  const top = 36
-  const bottom = 188
-  const divisor = Math.max(daily.value.length - 1, 1)
-  const peak = Math.max(maxDaily.value, 1)
-
-  return daily.value.map((item, index) => ({
-    ...item,
-    x: left + ((right - left) * index) / divisor,
-    y: bottom - ((bottom - top) * item.count) / peak,
-    isPeak: item.count > 0 && item.count === maxDaily.value
-  }))
-})
-const trendLinePoints = computed(() => trendPoints.value.map((item) => `${item.x},${item.y}`).join(' '))
-const trendAreaPoints = computed(() => {
-  if (!trendPoints.value.length) return ''
-  const first = trendPoints.value[0]
-  const last = trendPoints.value[trendPoints.value.length - 1]
-  return `${first.x},188 ${trendLinePoints.value} ${last.x},188`
-})
 const hasTaxonomy = computed(() => dashboardData.value.categories.length || dashboardData.value.tags.length)
 
 const quickActions = [
@@ -206,9 +196,12 @@ const quickActions = [
 ]
 
 function taxonomyShare(item, items) {
-  const peak = Math.max(1, ...items.map((entry) => entry.count))
-  return Math.round((item.count / peak) * 100)
+  const peak = Math.max(1, ...items.map((entry) => entry.views))
+  return Math.round((item.views / peak) * 100)
 }
+
+const formatNumber = value => new Intl.NumberFormat('zh-CN').format(Number(value) || 0)
+const riskLabel = level => ({ medium: '中风险', high: '高风险', critical: '严重风险' }[level] || '低风险')
 
 async function loadStats() {
   loading.value = true
@@ -256,9 +249,9 @@ onMounted(loadStats)
 .access-overview strong { color: var(--color-primary); font-size: 26px; letter-spacing: -.04em; }
 .access-overview small { color: var(--color-text-muted); font-size: 10px; }
 .access-overview a { display: inline-flex; align-items: center; gap: 6px; color: var(--color-primary); font-size: 12px; font-weight: 700; }
-.operations-grid { display: grid; grid-template-columns: minmax(0, 9fr) minmax(300px, 3fr); align-items: start; gap: 20px; margin-top: 20px; }
+.operations-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); align-items: stretch; gap: 20px; margin-top: 20px; }
 .workspace-panel { border: 1px solid var(--color-border); border-radius: 16px; background: #fff; box-shadow: var(--shadow-card); }
-.content-pulse { min-width: 0; min-height: 570px; padding: clamp(24px, 3vw, 38px); }
+.content-pulse { min-width: 0; min-height: 510px; padding: clamp(24px, 3vw, 38px); }
 .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
 .panel-heading h2, .quick-heading h2 { margin: 5px 0 0; font-size: 21px; letter-spacing: -.025em; }
 .panel-heading > a { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; color: var(--color-primary); font-size: 12px; font-weight: 700; }
@@ -268,26 +261,12 @@ onMounted(loadStats)
 .trend-summary span { color: var(--color-text-secondary); font-size: 11px; font-weight: 650; }
 .trend-summary strong { font-size: clamp(25px, 3vw, 38px); letter-spacing: -.05em; line-height: 1; }
 .trend-summary small { color: var(--color-text-muted); font-size: 10px; }
-.trend-line-chart { min-height: 330px; padding-top: 26px; }
-.trend-line-chart svg { display: block; width: 100%; height: auto; overflow: visible; }
-.trend-guides line { stroke: #e8edf5; stroke-width: 1; stroke-dasharray: 4 7; }
-.trend-area { fill: url(#trend-area-fill); }
-.trend-line { fill: none; stroke: var(--color-primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 8px 12px rgb(49 91 234 / 16%)); }
-.trend-point { outline: 0; }
-.trend-point circle { fill: white; stroke: #7390ed; stroke-width: 4; transition: r var(--transition-fast), fill var(--transition-fast); }
-.trend-point .trend-highlight { fill: none; stroke: #315bea; stroke-width: 1.5; stroke-dasharray: 3 4; opacity: .72; }
-.trend-point--peak circle { fill: var(--color-primary); stroke: #dce5ff; }
-.trend-point:hover circle, .trend-point:focus-visible circle { r: 8; fill: var(--color-primary); }
-.trend-point:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 5px; }
-.trend-value, .trend-day { fill: #55647b; font-size: 11px; font-weight: 700; text-anchor: middle; }
-.trend-point--peak .trend-value { fill: var(--color-primary); }
-.trend-day { fill: var(--color-text-secondary); font-size: 10px; font-weight: 650; }
-.trend-axis text { fill: var(--color-text-muted); font-size: 10px; font-weight: 700; text-anchor: end; }
+.trend-line-chart { margin-top: 20px; }
 .panel-empty { display: grid; min-height: 330px; place-content: center; justify-items: center; gap: 8px; color: var(--color-text-muted); text-align: center; }
 .panel-empty svg { margin-bottom: 6px; color: #a8b5c8; font-size: 28px; }
 .panel-empty strong { color: var(--color-text); }
 .panel-empty span, .compact-empty { color: var(--color-text-muted); font-size: 12px; }
-.operations-side { display: grid; gap: 20px; }
+.operations-side { display: grid; min-width: 0; }
 .taxonomy-panel { padding: 26px; }
 .taxonomy-panel .panel-heading { margin-bottom: 20px; }
 .taxonomy-columns, .taxonomy-group, .taxonomy-list { display: grid; }
@@ -313,7 +292,44 @@ onMounted(loadStats)
 .quick-action div { display: grid; min-width: 0; gap: 3px; }
 .quick-action strong { font-size: 12px; }
 .quick-action span { overflow: hidden; color: var(--color-text-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-@media (max-width: 1180px) { .operations-grid { grid-template-columns: 1fr; } .operations-side { grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); } }
+@media (max-width: 1180px) { .operations-grid { grid-template-columns: 1fr; } .operations-side { grid-template-columns: 1fr; } }
 @media (max-width: 820px) { .dashboard-intro { grid-template-columns: 1fr; align-items: start; } .intro-focus { min-width: 0; grid-template-columns: 1fr auto; align-items: center; justify-items: start; gap: 0 18px; } .intro-focus > strong { grid-row: span 2; margin: 0; } .create-button { grid-column: 1; } .metric-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); } .metric-item:nth-child(2) { border-right: 0; } .metric-item:nth-child(-n + 2) { border-bottom: 1px solid var(--color-border); } .operations-side { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .dashboard-intro { min-height: 0; padding: 26px 22px; border-radius: 16px 16px 7px 7px; } .intro-copy h1 { font-size: 34px; } .intro-focus { grid-template-columns: 1fr; gap: 10px; } .intro-focus > strong { grid-row: auto; } .metric-rail { grid-template-columns: 1fr; } .metric-item, .metric-item:nth-child(2) { min-height: 88px; border-right: 0; border-bottom: 1px solid var(--color-border); } .metric-item:last-child { border-bottom: 0; } .access-overview { grid-template-columns: 1fr 1fr; gap: 12px; } .access-overview a { grid-column: 1 / -1; padding-top: 8px; } .content-pulse, .taxonomy-panel { padding: 20px; } .panel-heading { align-items: flex-start; flex-direction: column; gap: 8px; } .trend-summary { grid-template-columns: 1fr; } .trend-summary div, .trend-summary div + div { padding: 13px 0; border-left: 0; border-bottom: 1px solid var(--color-border); } .trend-summary div:last-child { border-bottom: 0; } .trend-line-chart { min-height: 220px; margin-inline: -8px; padding-top: 18px; } }
+
+.insights-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
+.insight-card { display: flex; min-width: 0; flex-direction: column; padding: 24px; }
+.insight-card .panel-heading { gap: 10px; align-items: center; margin-bottom: 22px; }
+.insight-card .panel-heading h2 { font-size: 18px; }
+.insight-card .panel-heading > a { flex-shrink: 0; font-size: 11px; }
+.insight-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 16px; padding: 20px 0; border-block: 1px solid #edf0f5; }
+.insight-kpis > div { display: grid; gap: 8px; }
+.insight-kpis > div > span { color: #7a8699; font-size: 11px; }
+.insight-kpis strong { color: #1c2c48; font-size: clamp(24px, 2.3vw, 32px); line-height: 1; font-weight: 750; letter-spacing: -.04em; }
+.insight-kpis small { font-size: 9px; color: #9aa4b3; }
+.mini-chart { height: 140px; margin-top: 12px; }
+.card-note { margin: auto 0 0; padding-top: 16px; font-size: 10px; color: #929caf; line-height: 1.6; }
+.article-list-head { display: flex; justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid #edf0f5; color: #929caf; font-size: 10px; }
+.hot-articles, .risk-ip-list { list-style: none; padding: 0; margin: 0; }
+.hot-articles li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-height: 63px; border-bottom: 1px solid #edf0f5; }
+.article-rank { font-size: 12px; color: #a5afbf; font-weight: 750; }
+.article-rank--top { color: #315bea; }
+.hot-articles a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: #31415b; }
+.hot-articles a:hover { color: #315bea; }
+.article-counts { display: grid; gap: 4px; text-align: right; }
+.article-counts strong { color: #31415b; font-size: 13px; }
+.article-counts span { color: #929caf; font-size: 10px; }
+.risk-medium, .insight-kpis .risk-medium { color: #f59e0b; }
+.risk-high, .insight-kpis .risk-high { color: #f97316; }
+.risk-critical, .insight-kpis .risk-critical { color: #ef4444; }
+.risk-list-heading { padding: 18px 0 4px; color: #929caf; font-size: 10px; letter-spacing: .04em; }
+.risk-ip-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; min-height: 42px; border-bottom: 1px solid #edf0f5; }
+.risk-ip-address { overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-variant-numeric: tabular-nums; }
+.risk-badge { padding: 3px 5px; border-radius: 4px; background: #f8fafc; font-size: 10px; }
+.risk-ip-list strong { font-size: 12px; }
+.risk-ip-list small { color: #929caf; font-weight: 400; }
+.quick-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; margin-top: 20px; }
+.quick-heading { grid-column: 1 / -1; }
+@media (max-width: 1180px) { .insight-card { padding: 20px; } .insight-card .panel-heading { align-items: flex-start; flex-direction: column; gap: 2px; } }
+@media (max-width: 900px) { .insights-grid { grid-template-columns: 1fr; } .insight-card .panel-heading { flex-direction: row; align-items: center; } .insight-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } .quick-actions { grid-template-columns: 1fr; gap: 8px; } }
+@media (max-width: 480px) { .insight-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .insight-card .panel-heading { align-items: flex-start; flex-direction: column; } }
 </style>

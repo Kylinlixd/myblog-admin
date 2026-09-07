@@ -8,6 +8,8 @@ jest.mock('@/services/http/client', () => ({
   default: { get: jest.fn() }
 }))
 
+jest.mock('@/views/dashboard/DashboardChart.vue', () => ({ name: 'DashboardChart', template: '<div class="chart-stub" />' }))
+
 jest.mock('@/stores/user', () => ({
   useUserStore: () => ({ nickname: '管理员' })
 }))

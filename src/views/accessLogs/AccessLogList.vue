@@ -2,6 +2,21 @@
   <div class="admin-page access-log-page">
     <PageHeader title="访问日志与安全防护" subtitle="识别 IP 类型、归属与行为画像，并对风险来源执行人工防护规则。" />
 
+    <section v-if="showVisits" class="visits-panel">
+      <div class="visits-heading"><h2>近7天文章访问统计</h2><router-link to="/dashboard">返回仪表盘 &gt;</router-link></div>
+      <p>PV 按成功的文章详情请求统计，UV 按 IP＋浏览器去重；跳出率按30分钟会话估算。</p>
+      <div v-if="visitError" role="alert">{{ visitError }} <a-button @click="loadVisits">重试</a-button></div>
+      <template v-else-if="visitStats">
+        <div class="security-summary">
+          <div class="summary-card"><span>7天总PV</span><strong>{{ visitStats.visits.pv }}</strong></div>
+          <div class="summary-card"><span>7天UV</span><strong>{{ visitStats.visits.uv }}</strong></div>
+          <div class="summary-card"><span>日均阅读</span><strong>{{ visitStats.visits.average }}</strong></div>
+          <div class="summary-card"><span>跳出率（估算）</span><strong>{{ visitStats.visits.bounceRate == null ? '—' : `${visitStats.visits.bounceRate}%` }}</strong></div>
+        </div>
+        <DashboardChart :option="visitsOption(visitStats.daily)" label="近7天文章访问统计" />
+      </template>
+      <p v-else>正在加载访问统计…</p>
+    </section>
     <section class="security-summary" aria-label="安全概览">
       <div class="summary-card"><span>活跃 IP</span><strong>{{ total }}</strong></div>
       <div class="summary-card summary-card--danger"><span>高风险 IP</span><strong>{{ highRiskCount }}</strong></div>
@@ -14,10 +29,19 @@
         <a-form-item label="IP"><a-input v-model:value="filters.ip" allow-clear placeholder="IP 或 CIDR" /></a-form-item>
         <a-form-item label="风险">
           <a-select v-model:value="filters.risk" allow-clear placeholder="全部" style="width: 150px">
-            <a-select-option value="high">高 / 严重</a-select-option>
-            <a-select-option value="critical">严重</a-select-option>
+            <a-select-option value="low">低风险</a-select-option>
+            <a-select-option value="medium">中风险</a-select-option>
+            <a-select-option value="high">高风险</a-select-option>
+            <a-select-option value="critical">严重风险</a-select-option>
           </a-select>
         </a-form-item>
+        <a-form-item label="网络">
+          <a-select v-model:value="filters.network" allow-clear placeholder="内网 / 公网" style="width: 140px">
+            <a-select-option value="private">内网</a-select-option>
+            <a-select-option value="public">公网</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="地区"><a-input v-model:value="filters.region" allow-clear placeholder="国家 / 省份 / 城市" /></a-form-item>
         <a-button type="primary" html-type="submit">筛选</a-button>
         <a-button @click="resetFilters">重置</a-button>
       </a-form>
@@ -160,6 +184,11 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import request from '@/services/http/client'
+import DashboardChart from '@/views/dashboard/DashboardChart.vue'
+import { visitsOption } from '@/views/dashboard/charts'
+import { mapDashboardData } from '@/views/dashboard/stats'
 import { message } from 'ant-design-vue'
 import {
   createAccessLogRule,
@@ -171,6 +200,17 @@ import {
 import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+
+const route = useRoute()
+const showVisits = computed(() => route.query.view === 'visits')
+const visitStats = ref(null)
+const visitError = ref('')
+async function loadVisits() {
+  visitError.value = ''
+  try { visitStats.value = mapDashboardData(await request.get('/api/stats/')) }
+  catch (error) { visitError.value = error?.message || '访问统计加载失败' }
+}
+onMounted(() => { if (showVisits.value) loadVisits() })
 
 const columns = [
   { key: 'ip', label: 'IP 地址', slot: 'ip', width: '210px' },
@@ -191,7 +231,7 @@ const loadingRules = ref(false)
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
-const filters = ref({ ip: '', risk: undefined })
+const filters = ref({ ip: '', risk: undefined, network: undefined, region: '' })
 const documentWidth = ref(window.innerWidth)
 
 const drawerOpen = ref(false)
@@ -201,7 +241,7 @@ const ruleModalOpen = ref(false)
 const savingRule = ref(false)
 const ruleForm = ref(emptyRuleForm())
 
-const highRiskCount = computed(() => profiles.value.filter((item) => ['high', 'critical'].includes(item.risk_level)).length)
+const highRiskCount = ref(0)
 
 function emptyRuleForm() {
   return {
@@ -216,7 +256,7 @@ function emptyRuleForm() {
   }
 }
 
-const riskLabel = (level) => ({ normal: '正常', low: '低', medium: '中', high: '高', critical: '严重', unknown: '未知' }[level] || level)
+const riskLabel = (level) => ({ normal: '低风险', low: '低风险', medium: '中风险', high: '高风险', critical: '严重风险', unknown: '未知' }[level] || level)
 const riskColor = (level) => ({ normal: 'success', low: 'blue', medium: 'orange', high: 'volcano', critical: 'red', unknown: 'default' }[level] || 'default')
 const ruleLabel = (type) => ({ whitelist: '白名单', blacklist: '黑名单', ban: '封禁', rate_limit: '限流' }[type] || type)
 const ruleColor = (type) => ({ whitelist: 'green', blacklist: 'red', ban: 'volcano', rate_limit: 'gold' }[type] || 'blue')
@@ -225,7 +265,7 @@ const formatDate = (value) => value ? new Date(value).toLocaleString('zh-CN', { 
 const geoText = (row) => {
   const geo = row.geo
   if (!geo) return '未知'
-  return [geo.country, geo.region, geo.city].filter(Boolean).join(' · ') || (geo.matched ? '本地库已命中' : '未知')
+  return [geo.location || [...new Set([geo.country, geo.region, geo.city].filter(Boolean))].join(' · '), geo.isp].filter(Boolean).join(' · ') || (geo.matched ? '本地库已命中' : '未知')
 }
 const riskReasonsText = (row) => (row.risk_reasons || []).join('，') || '未发现明显异常'
 
@@ -240,6 +280,7 @@ async function loadProfiles() {
     const response = await getAccessLogProfiles(params)
     profiles.value = response?.data?.list || []
     total.value = response?.data?.total || 0
+    highRiskCount.value = response?.data?.summary?.high_risk || 0
   } catch (error) {
     message.error(error?.message || 'IP 画像加载失败')
   } finally {
@@ -265,7 +306,7 @@ async function loadAll() {
 }
 
 function applyFilters() { page.value = 1; loadProfiles() }
-function resetFilters() { filters.value = { ip: '', risk: undefined }; applyFilters() }
+function resetFilters() { filters.value = { ip: '', risk: undefined, network: undefined, region: '' }; applyFilters() }
 function changePage(value) { page.value = value; loadProfiles() }
 function changeSize(value) { pageSize.value = value; page.value = 1; loadProfiles() }
 
@@ -367,4 +408,9 @@ onMounted(() => {
 .log-row .ant-tag { flex: 0 0 auto; }
 @media (max-width: 900px) { .security-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .security-summary { grid-template-columns: 1fr; } .access-log-toolbar { align-items: stretch; flex-direction: column; } }
+.visits-panel { margin-bottom: 20px; padding: 24px; background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; }
+.visits-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.visits-heading h2 { margin: 0; font-size: 20px; }
+.visits-panel p { color: #8691a4; font-size: 12px; }
+.visits-heading a { color: #315bea; }
 </style>

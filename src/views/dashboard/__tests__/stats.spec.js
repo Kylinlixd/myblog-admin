@@ -23,15 +23,18 @@ describe('mapDashboardStats', () => {
       }
     })).toEqual({
       total: { dynamics: 12, categories: 4, tags: 9, comments: 0 },
-      daily: [{ day: '07-28', count: 3 }],
+      daily: [{ day: '07-28', count: 3, pv: 0 }],
       categories: [
-        { name: '分类1', count: 6 },
-        { name: '分类2', count: 5 },
-        { name: '分类3', count: 4 },
-        { name: '分类4', count: 3 },
-        { name: '分类5', count: 2 }
+        { name: '分类1', count: 6, views: 0 },
+        { name: '分类2', count: 5, views: 0 },
+        { name: '分类3', count: 4, views: 0 },
+        { name: '分类4', count: 3, views: 0 },
+        { name: '分类5', count: 2, views: 0 }
       ],
-      tags: [{ name: 'Vue', count: 7 }],
+      tags: [{ name: 'Vue', count: 7, views: 0 }],
+      visits: { pv: 0, uv: 0, average: 0, bounceRate: null },
+      hotArticles: [],
+      security: { uniqueIps: 0, medium: 0, high: 0, critical: 0, topIps: [] },
       access: { requests: 0, uniqueIps: 0 }
     })
 
@@ -40,6 +43,9 @@ describe('mapDashboardStats', () => {
       daily: [],
       categories: [],
       tags: [],
+      visits: { pv: 0, uv: 0, average: 0, bounceRate: null },
+      hotArticles: [],
+      security: { uniqueIps: 0, medium: 0, high: 0, critical: 0, topIps: [] },
       access: { requests: 0, uniqueIps: 0 }
     })
   })

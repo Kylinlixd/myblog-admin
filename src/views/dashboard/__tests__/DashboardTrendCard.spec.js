@@ -10,7 +10,7 @@ describe('Dashboard operations workspace', () => {
 
     expect(source).toContain('metric-rail')
     expect(source).toContain('operations-grid')
-    expect(source).toContain('grid-template-columns: minmax(0, 9fr) minmax(300px, 3fr)')
+    expect(source).toContain('grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr)')
     expect(source).not.toContain('stats-grid')
   })
 
@@ -19,15 +19,13 @@ describe('Dashboard operations workspace', () => {
 
     expect(source).toContain('content-pulse')
     expect(source).toContain('trend-line-chart')
-    expect(source).toContain('<svg')
-    expect(source).toContain('trendLinePoints')
-    expect(source).toContain('trendAreaPoints')
+    expect(source).toContain('<DashboardChart')
+    expect(source).toContain('publishingOption(daily)')
+    expect(source).toContain('insights-grid')
     expect(source).not.toContain('trend-bar')
     expect(source).toContain('totalDaily')
     expect(source).toContain('averageDaily')
     expect(source).toContain('maxDaily')
-    expect(source).toContain('trend-axis')
-    expect(source).toContain('trend-highlight')
   })
 
   it('uses real category and tag activity without invented growth data', () => {
