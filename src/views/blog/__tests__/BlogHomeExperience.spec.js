@@ -4,101 +4,40 @@ import path from 'node:path'
 const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogHome.vue'), 'utf8')
 const layoutSource = fs.readFileSync(path.join(process.cwd(), 'src/layouts/BlogLayout.vue'), 'utf8')
 
-describe('warm technology blog homepage', () => {
-  it('keeps the hero wide and the bento grid dense', () => {
-    expect(source).toContain('hero-feature')
-    expect(source).toContain('grid-auto-flow: dense')
-    expect(source).toContain('grid-template-columns: repeat(12')
+describe('focused warm technology blog homepage', () => {
+  it('keeps only the hero, latest articles, topics, and shared footer structure', () => {
+    expect(source).toContain('class="home-hero app-container"')
+    expect(source).toContain('id="latest-articles"')
+    expect(source).toContain('id="topics"')
+    expect(layoutSource).toContain('<footer class="site-footer">')
+    expect(source).not.toContain('visual-ribbon')
+    expect(source).not.toContain('manifesto-carousel')
+    expect(source).not.toContain('tag-marquee')
+    expect(source).not.toContain('final-cta')
+    expect(source).not.toContain('bento-grid')
   })
 
-  it('scopes motion and honors reduced motion', () => {
-    expect(source).toContain("from 'gsap'")
-    expect(source).toContain("from 'gsap/ScrollTrigger'")
-    expect(source).toContain('prefers-reduced-motion: reduce')
-  })
-
-  it('builds an asymmetric two-line hero with inline media', () => {
-    expect(source).toContain('class="hero-stage"')
-    expect(source).toContain('hero-title__portal')
-    expect(source).toContain('hero-scroll-cue')
+  it('uses a text-first hero and article list without homepage images', () => {
     expect(source).toContain('aria-label="探索技术，无限可能"')
-    expect(source).not.toContain('SCROLL TO EXPLORE · 01')
-    expect(source).not.toContain('CREATION PRINCIPLES · 03')
+    expect(source).toContain('class="article-list"')
+    expect(source).toContain('v-for="(item, index) in latest"')
+    expect(source).not.toContain('<img')
+    expect(source).not.toContain('getHotDynamics')
+    expect(source).not.toContain('getBlogTagList')
   })
 
-  it('includes a manual creation-principles carousel', () => {
-    expect(source).toContain('manifesto-carousel')
-    expect(source).toContain('currentManifesto')
-    expect(source).toContain('previousManifesto')
-    expect(source).toContain('nextManifesto')
-    expect(source).toContain('aria-live="polite"')
+  it('defers topic data and below-fold rendering until it is near the viewport', () => {
+    expect(source).toContain('content-visibility: auto')
+    expect(source).toContain('contain-intrinsic-size: 720px')
+    expect(source).toContain('IntersectionObserver')
+    expect(source).toContain("rootMargin: '240px 0px'")
+    expect(source).toContain('loadCategories()')
   })
 
-  it('adds responsive depth without bypassing reduced motion', () => {
-    expect(source).toContain('--hero-pointer-x')
-    expect(source).toContain('gsap.quickTo')
-    expect(source).toContain("pin: '.story-intro'")
-    expect(source).toContain("window.matchMedia('(prefers-reduced-motion: reduce)')")
-    expect(source).toContain('@media (hover: none)')
-  })
-
-  it('keeps the next chapter in reach on tall screens', () => {
-    expect(source).toContain('min-height: clamp(620px, calc(100dvh - 86px), 900px)')
-    expect(source).not.toContain('min-height: clamp(760px, 86dvh, 980px)')
-    expect(source).not.toContain('min-height: calc(100dvh - 62px)')
-  })
-
-  it('uses a fluid homepage container on wide screens', () => {
-    expect(layoutSource).toContain("'blog-shell--home': route.name === 'BlogHome'")
-    expect(layoutSource).toContain('.blog-shell--home')
-    expect(layoutSource).toContain('--content-width: min(1480px, calc(100vw - 64px))')
-  })
-
-  it('turns the second screen into a three-line path manifesto', () => {
-    expect(source).toContain('signal-path__progress')
-    expect(source).toContain('<span>问题</span>')
-    expect(source).toContain('<span>判断</span>')
-    expect(source).toContain('<span>构建</span>')
-    expect(source).toContain('技术不是孤立的答案，')
-    expect(source).toContain('而是一条从问题、判断')
-    expect(source).toContain('到持续构建的路径。')
-    expect(source).toContain('white-space: nowrap')
-    expect(source).toContain("gsap.fromTo('.signal-path__progress'")
-    expect(source).toContain('scaleX: 0')
-  })
-
-  it('gives the path manifesto enough vertical breathing room', () => {
-    expect(source).toContain('margin-bottom: clamp(84px, 9vh, 124px)')
-    expect(source).toContain('line-height: 1.02')
-    expect(source).toContain('gap: clamp(6px, 1vw, 16px)')
-  })
-
-  it('gives topic cards structure and responsive visual variation', () => {
-    expect(source).toContain('topic-accordion__index')
-    expect(source).toContain('topic-accordion__decoration')
-    expect(source).toContain('topic-accordion__copy')
-    expect(source).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
-    expect(source).toContain('opacity: .82')
-    expect(source).toContain('grid-template-columns: 1fr')
-    expect(source).toContain('top: auto')
-  })
-
-  it('uses bundled imagery and scroll-linked editorial reveals', () => {
-    expect(source).toContain('/warm-garden-visual.svg')
-    expect(source).toContain('visual-ribbon')
-    expect(source).toContain('image-reveal')
-    expect(source).toContain("gsap.to('.visual-ribbon__track'")
-    expect(source).toContain('clipPath')
-  })
-
-  it('uses attached files when the legacy media URL list is empty', () => {
-    expect(source).toContain('Array.isArray(mediaUrls) ? mediaUrls.length > 0 : Boolean(mediaUrls)')
-    expect(source).toContain('article?.files || []')
-  })
-
-  it('loads non-critical hot content during browser idle time', () => {
-    expect(source).toContain('scheduleIdle')
-    expect(source).toContain('cancelHotLoad = scheduleIdle')
-    expect(source).toContain('getHotDynamics({ limit: 5 })')
+  it('keeps the warm visual language restrained on the homepage', () => {
+    expect(source).toContain('--home-accent: #b85e2d')
+    expect(source).toContain('border-radius: 999px')
+    expect(source).toContain('prefers-reduced-motion: reduce')
+    expect(layoutSource).toContain("v-if=\"route.name !== 'BlogHome'\"")
   })
 })

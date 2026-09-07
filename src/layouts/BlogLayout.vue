@@ -1,6 +1,6 @@
 <template>
   <div class="blog-shell" :class="{ 'blog-shell--home': route.name === 'BlogHome' }">
-    <div class="blog-atmosphere" aria-hidden="true">
+    <div v-if="route.name !== 'BlogHome'" class="blog-atmosphere" aria-hidden="true">
       <span class="blog-atmosphere__orb blog-atmosphere__orb--one" />
       <span class="blog-atmosphere__orb blog-atmosphere__orb--two" />
       <span class="blog-atmosphere__grid" />
