@@ -6,7 +6,7 @@ const layoutSource = fs.readFileSync(path.join(process.cwd(), 'src/layouts/BlogL
 
 describe('focused warm technology blog homepage', () => {
   it('keeps only the hero, latest articles, topics, and shared footer structure', () => {
-    expect(source).toContain('class="home-hero app-container"')
+    expect(source).toContain('class="home-hero"')
     expect(source).toContain('id="latest-posts"')
     expect(source).toContain('id="topics"')
     expect(layoutSource).toContain('<footer class="site-footer">')
@@ -42,6 +42,9 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('white-space: nowrap')
     expect(source).toContain('context.arc(')
     expect(source).toContain('hero-glow')
+    expect(source).toContain('class="hero-inner app-container"')
+    expect(source).toContain('opacity: 0; transform: translateY(5px) scale(.985)')
+    expect(source).toContain('.home-hero { position: relative; display: flex; width: 100%;')
     expect(source).toContain('hero-title--ready')
     expect(source).toContain('titleReady')
     expect(source).toContain('justify-content: center')

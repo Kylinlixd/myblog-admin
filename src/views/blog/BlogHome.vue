@@ -1,13 +1,15 @@
 <template>
   <div class="home-page">
-    <section class="home-hero app-container" aria-labelledby="home-title">
+    <section class="home-hero" aria-labelledby="home-title">
       <canvas ref="particleCanvas" class="hero-particle-canvas" :class="{ 'hero-particle-canvas--settled': titleReady }" aria-hidden="true" />
       <div class="hero-glow-field" aria-hidden="true"><span class="hero-glow hero-glow--one" /><span class="hero-glow hero-glow--two" /><span class="hero-glow hero-glow--three" /></div>
-      <div class="hero-copy">
-        <h1 id="home-title" class="hero-title" :class="{ 'hero-title--ready': titleReady }" aria-label="探索技术，无限可能">
-          <span class="hero-title__lead">探索技术</span>
-          <span class="hero-title__accent">无限可能</span>
-        </h1>
+      <div class="hero-inner app-container">
+        <div class="hero-copy">
+          <h1 id="home-title" class="hero-title" :class="{ 'hero-title--ready': titleReady }" aria-label="探索技术，无限可能">
+            <span class="hero-title__lead">探索技术</span>
+            <span class="hero-title__accent">无限可能</span>
+          </h1>
+        </div>
       </div>
       <a class="hero-scroll-cue" href="#latest-posts" aria-label="滚动到最新文章"><span aria-hidden="true" /></a>
     </section>
@@ -105,7 +107,7 @@ function startParticleTitle() {
     canvas.width = Math.floor(width * ratio); canvas.height = Math.floor(height * ratio); canvas.style.width = `${width}px`; canvas.style.height = `${height}px`; context.setTransform(ratio, 0, 0, ratio, 0, 0)
     const fontSize = Math.min(92, Math.max(42, width * 0.075)); const titleWidth = fontSize * 8.8; const startX = Math.max(18, (width - titleWidth) / 2); const startY = Math.max(70, (height - fontSize) / 2)
     particles = [...createTextPoints('探索技术', startX, startY, fontSize, '#27342f', 1), ...createTextPoints('无限可能', startX + fontSize * 4.55, startY, fontSize, '#b85e2d', 2)]
-    ambient = Array.from({ length: 18 }, (_, index) => ({ x: width * (0.54 + ((index * 17) % 39) / 100), y: height * (0.13 + ((index * 29) % 72) / 100), length: 24 + (index % 4) * 18, angle: -0.35 + (index % 5) * 0.18, alpha: 0.08 + (index % 3) * 0.025 }))
+    ambient = Array.from({ length: 26 }, (_, index) => ({ x: width * (0.52 + ((index * 17) % 43) / 100), y: height * (0.1 + ((index * 29) % 78) / 100), length: 24 + (index % 4) * 18, angle: -0.35 + (index % 5) * 0.18, alpha: 0.1 + (index % 3) * 0.025 }))
     startedAt = performance.now()
   }
   function render(now) {
@@ -143,13 +145,14 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 <style scoped>
 .home-page { --header-height: 62px; --home-ink: #27342f; --home-muted: #687068; --home-accent: #b85e2d; --home-line: #e5ddcf; color: var(--home-ink); padding-bottom: 64px; }
 .home-page .app-container { max-width: 1120px; }
-.home-hero { position: relative; display: flex; min-height: calc(100dvh - var(--header-height)); align-items: center; justify-content: center; overflow: hidden; isolation: isolate; padding-block: 80px 72px; }
+.home-hero { position: relative; display: flex; width: 100%; max-width: none; min-height: calc(100dvh - var(--header-height)); align-items: center; justify-content: center; overflow: hidden; isolation: isolate; padding-block: 80px 72px; }
 .home-hero::before { position: absolute; z-index: -2; inset: 7% 5% 10% 42%; border-radius: 48% 36% 42% 30%; background: radial-gradient(circle at 56% 48%, rgb(211 187 149 / 25%), transparent 68%); content: ''; filter: blur(18px); }
 .home-hero::after { position: absolute; z-index: -3; inset: 0; background: radial-gradient(ellipse at 75% 18%, rgb(219 177 126 / 20%), transparent 30%), radial-gradient(ellipse at 88% 74%, rgb(154 171 151 / 17%), transparent 34%), linear-gradient(112deg, transparent 35%, rgb(255 250 241 / 42%) 52%, transparent 72%); content: ''; }
 .hero-particle-canvas { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity 1.1s cubic-bezier(.22, .8, .25, 1); }.hero-particle-canvas--settled { opacity: 0; }
 .hero-glow-field { position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; }.hero-glow { position: absolute; display: block; border-radius: 50%; filter: blur(2px); opacity: .7; }.hero-glow--one { top: 16%; right: 15%; width: 18px; height: 18px; background: #d8a36e; box-shadow: 0 0 38px 16px rgb(216 163 110 / 22%); }.hero-glow--two { top: 29%; right: 27%; width: 8px; height: 8px; background: #9aa78f; box-shadow: 0 0 30px 11px rgb(154 167 143 / 22%); }.hero-glow--three { right: 7%; bottom: 22%; width: 12px; height: 12px; background: #d6b895; box-shadow: 0 0 34px 14px rgb(214 184 149 / 18%); }
+.hero-inner { display: flex; width: 100%; max-width: 1120px; align-items: center; justify-content: center; }
 .hero-copy { position: relative; z-index: 1; display: flex; max-width: 1120px; flex-direction: column; align-items: center; padding: 24px; }
-.hero-title { display: flex; min-height: clamp(90px, 10vw, 120px); align-items: center; justify-content: center; gap: .18em; margin: 0; font-size: clamp(42px, 7.5vw, 92px); font-weight: 800; letter-spacing: -.065em; line-height: 1.08; text-align: center; white-space: nowrap; opacity: .18; transform: translateY(5px) scale(.985); transition: opacity 1.4s cubic-bezier(.22, .8, .25, 1), transform 1.4s cubic-bezier(.22, .8, .25, 1); }.hero-title--ready { opacity: 1; transform: translateY(0) scale(1); }.hero-title__accent { color: var(--home-accent); }
+.hero-title { display: flex; min-height: clamp(90px, 10vw, 120px); align-items: center; justify-content: center; gap: .18em; margin: 0; font-size: clamp(42px, 7.5vw, 92px); font-weight: 800; letter-spacing: -.065em; line-height: 1.08; text-align: center; white-space: nowrap; opacity: 0; transform: translateY(5px) scale(.985); transition: opacity 1.4s cubic-bezier(.22, .8, .25, 1), transform 1.4s cubic-bezier(.22, .8, .25, 1); }.hero-title--ready { opacity: 1; transform: translateY(0) scale(1); }.hero-title__accent { color: var(--home-accent); }
 .hero-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border-radius: 999px; padding: 0 18px; font-size: 13px; transition: transform .2s ease, background-color .2s ease, color .2s ease; }
 .hero-button:hover { transform: translateY(-2px); }.hero-button:active { transform: translateY(1px) scale(.98); }
 .hero-button--primary { background: #34453e; color: #fffaf2; }.hero-button--primary:hover { background: #25372f; }
