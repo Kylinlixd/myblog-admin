@@ -47,6 +47,9 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('justify-content: center')
     expect(layoutSource).toContain('.blog-shell--home .site-header')
     expect(layoutSource).toContain('.blog-shell--home .site-main')
+    expect(layoutSource).toContain('position: fixed')
+    expect(source).toContain('(height - fontSize) / 2')
+    expect(source).toContain('cubic-bezier')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
