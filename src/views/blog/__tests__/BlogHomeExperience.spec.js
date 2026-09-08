@@ -36,7 +36,7 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('id="latest-posts"')
     expect(source).toContain('min-height: calc(100dvh - var(--header-height))')
     expect(source).toContain('prefers-reduced-motion: reduce')
-    expect(source).toContain('Math.min(92')
+    expect(source).toContain('Math.min(84')
     expect(source).toContain('ambient')
     expect(source).toContain('context.stroke()')
     expect(source).toContain('white-space: nowrap')
@@ -55,6 +55,8 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('cubic-bezier')
     expect(source).toContain('hero-particle-canvas--settled { opacity: 1;')
     expect(source).toContain('const titleAlpha = titleReady.value ? 0 : 1')
+    expect(source).toContain('quadraticCurveTo')
+    expect(source).toContain('@keyframes hero-orbit')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
