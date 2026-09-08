@@ -50,6 +50,7 @@ describe('focused warm technology blog homepage', () => {
     expect(layoutSource).toContain('position: fixed')
     expect(source).toContain('(height - fontSize) / 2')
     expect(source).toContain('cubic-bezier')
+    expect(source).toContain('hero-particle-canvas--settled { opacity: 0;')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {

@@ -163,6 +163,9 @@ describe('DefaultLayout navigation controls', () => {
 
   it('keeps the desktop collapse control close to the sidebar edge', () => {
     expect(layoutSource).toContain('padding: 0 28px 0 0 !important')
+    expect(layoutSource).toContain('.sidebar-collapse-control { display: grid; width: 36px; height: 36px;')
+    expect(layoutSource).toContain('border: 0; border-radius: 10px; background: white;')
+    expect(layoutSource).toContain('.sidebar-collapse-control:hover { background: var(--color-surface-muted);')
   })
 
   it('keeps the mobile header controls aligned close to the viewport edge', () => {

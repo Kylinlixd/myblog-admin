@@ -150,9 +150,9 @@ function handleLogout() {
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
 .admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow-x: hidden; overflow-y: auto; gap: 16px; padding: 46px 12px 18px; }
 .admin-sidebar .admin-navigation { min-height: 0; max-height: none; flex: 1 1 auto; overscroll-behavior: contain; scrollbar-color: rgb(174 187 208 / 38%) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
-.sidebar-collapse-control { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-border); border-radius: 11px; background: var(--color-surface); color: var(--color-text-secondary); cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
+.sidebar-collapse-control { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .workspace-sidebar-toggle { position: relative; z-index: 1; }
-.sidebar-collapse-control:hover { background: #315bea; color: white; transform: none; }
+.sidebar-collapse-control:hover { background: var(--color-surface-muted); color: var(--color-text); transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
 .admin-sidebar.ant-layout-sider-collapsed .admin-brand { justify-content: center; padding-inline: 0; }
