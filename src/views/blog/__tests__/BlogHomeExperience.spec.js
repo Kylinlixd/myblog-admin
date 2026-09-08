@@ -61,6 +61,9 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('createRadialGradient')
     expect(source).toContain('@keyframes hero-nebula')
     expect(source).toContain('@keyframes hero-cloud')
+    expect(source).toContain('@pointermove="handleHeroPointer"')
+    expect(source).toContain('--hero-shift-x')
+    expect(source).toContain('@keyframes hero-blob-morph')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
