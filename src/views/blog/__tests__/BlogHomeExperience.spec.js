@@ -33,6 +33,9 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('id="latest-posts"')
     expect(source).toContain('min-height: calc(100dvh - var(--header-height))')
     expect(source).toContain('prefers-reduced-motion: reduce')
+    expect(source).toContain('Math.min(92')
+    expect(source).toContain('ambient')
+    expect(source).toContain('context.stroke()')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {

@@ -103,7 +103,7 @@ function startParticleTitle() {
   function resize() {
     const rect = canvas.parentElement.getBoundingClientRect(); const ratio = Math.min(window.devicePixelRatio || 1, 2); width = rect.width; height = rect.height
     canvas.width = Math.floor(width * ratio); canvas.height = Math.floor(height * ratio); canvas.style.width = `${width}px`; canvas.style.height = `${height}px`; context.setTransform(ratio, 0, 0, ratio, 0, 0)
-    const fontSize = Math.min(76, Math.max(38, width * 0.062)); const startX = Math.max(18, width * 0.045); const startY = Math.max(70, height * 0.3)
+    const fontSize = Math.min(92, Math.max(42, width * 0.075)); const startX = Math.max(18, width * 0.045); const startY = Math.max(70, height * 0.3)
     particles = [...createTextPoints('探索技术', startX, startY, fontSize, '#27342f', 1), ...createTextPoints('无限可能', startX, startY + fontSize * 1.14, fontSize, '#b85e2d', 2)]
     ambient = Array.from({ length: 18 }, (_, index) => ({ x: width * (0.54 + ((index * 17) % 39) / 100), y: height * (0.13 + ((index * 29) % 72) / 100), length: 24 + (index % 4) * 18, angle: -0.35 + (index % 5) * 0.18, alpha: 0.08 + (index % 3) * 0.025 }))
     startedAt = performance.now()
