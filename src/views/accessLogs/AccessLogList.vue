@@ -66,8 +66,9 @@
       </template>
       <template #behavior="{ row }">
         <div class="behavior-cell">
-          <strong>{{ row.behavior?.total_requests || 0 }} 次请求</strong>
-          <small>{{ row.behavior?.risk?.recent_1m || 0 }} 次/分钟</small>
+          <strong>近7天总请求：{{ windowRequestsText(row) }}</strong>
+          <small>失败率：{{ failureRateText(row) }}</small>
+          <a-tag v-if="hasAnomaly(row)" :color="anomalyColor(row.behavior?.risk?.anomaly_level)">{{ anomalyLabel(row.behavior?.risk?.anomaly_level) }}</a-tag>
         </div>
       </template>
       <template #risk="{ row }">
@@ -118,14 +119,20 @@
           </dl>
         </section>
         <section>
-          <h3>行为画像</h3>
+          <h3>行为画像（近7天）</h3>
           <div class="behavior-chips">
-            <span>总请求 {{ selectedProfile.behavior?.total_requests || 0 }}</span>
-            <span>认证失败 {{ selectedProfile.behavior?.risk?.auth_failures || 0 }}</span>
-            <span>4xx/5xx {{ (selectedProfile.behavior?.risk?.client_errors || 0) + (selectedProfile.behavior?.risk?.server_errors || 0) }}</span>
-            <span>写操作 {{ selectedProfile.behavior?.risk?.write_count || 0 }}</span>
+            <span>总请求：{{ windowRequestsText(selectedProfile) }}</span>
+            <span>认证失败：{{ countText(selectedProfile.behavior?.risk?.auth_failures) }}</span>
+            <span>客户端错误（4xx）：{{ countText(selectedProfile.behavior?.risk?.client_errors) }}</span>
+            <span>服务端错误（5xx）：{{ countText(selectedProfile.behavior?.risk?.server_errors) }}</span>
+            <span>写操作：{{ countText(selectedProfile.behavior?.risk?.write_count) }}</span>
+            <span>失败率：{{ failureRateText(selectedProfile) }}</span>
           </div>
-          <p class="risk-reason">{{ riskReasonsText(selectedProfile) }}</p>
+          <div v-if="hasAnomaly(selectedProfile)" class="anomaly-summary">
+            <a-tag :color="anomalyColor(selectedProfile.behavior?.risk?.anomaly_level)">{{ anomalyLabel(selectedProfile.behavior?.risk?.anomaly_level) }}</a-tag>
+            <span>{{ anomalyReasonsText(selectedProfile) }}</span>
+          </div>
+          <p class="risk-reason">安全风险：{{ riskReasonsText(selectedProfile) }}</p>
         </section>
         <section v-if="selectedProfile.rules?.length">
           <h3>当前防护</h3>
@@ -262,6 +269,19 @@ const ruleLabel = (type) => ({ whitelist: '白名单', blacklist: '黑名单', b
 const ruleColor = (type) => ({ whitelist: 'green', blacklist: 'red', ban: 'volcano', rate_limit: 'gold' }[type] || 'blue')
 const ipColor = (scope) => ({ public: 'blue', private: 'orange', loopback: 'green', reserved: 'red', unknown: 'default' }[scope] || 'default')
 const formatDate = (value) => value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-'
+const countText = (value) => `${value ?? 0}次`
+const windowRequestsText = (row) => {
+  const value = row?.behavior?.risk?.total_requests
+  return value == null ? '—' : countText(value)
+}
+const failureRateText = (row) => {
+  const value = row?.behavior?.risk?.error_rate
+  return value == null ? '—' : `${value}%`
+}
+const anomalyLabel = (level) => ({ medium: '异常', high: '高度异常', critical: '严重异常' }[level] || '')
+const anomalyColor = (level) => ({ medium: 'gold', high: 'volcano', critical: 'red' }[level] || 'default')
+const hasAnomaly = (row) => ['medium', 'high', 'critical'].includes(row?.behavior?.risk?.anomaly_level)
+const anomalyReasonsText = (row) => (row?.behavior?.risk?.anomaly_reasons || []).join('，') || '请求异常'
 const geoText = (row) => {
   const geo = row.geo
   if (!geo) return '未知'
@@ -390,6 +410,7 @@ onMounted(() => {
 .geo-cell { color: var(--color-text); font-size: 12px; }
 .behavior-cell { display: grid; gap: 3px; }
 .behavior-cell small { color: var(--color-text-muted); font-size: 11px; }
+.behavior-cell .ant-tag { width: fit-content; margin: 2px 0 0; font-size: 11px; }
 .risk-score { margin-left: 6px; color: var(--color-text); font-size: 12px; font-weight: 700; }
 .risk-reason { display: block; max-width: 180px; margin-top: 4px; overflow: hidden; color: var(--color-text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .rule-cell { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -403,6 +424,8 @@ onMounted(() => {
 .detail-grid dd { margin: 6px 0 0; color: var(--color-text); font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
 .behavior-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .behavior-chips span { padding: 6px 10px; border-radius: 999px; background: #eef2ff; color: #344054; font-size: 12px; }
+.anomaly-summary { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-top: 10px; color: #344054; font-size: 12px; line-height: 1.5; }
+.anomaly-summary span { min-width: 0; overflow-wrap: anywhere; }
 .rule-row, .log-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid #eef1f5; }
 .log-row code { min-width: 0; flex: 1; overflow: hidden; color: #344054; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .log-row .ant-tag { flex: 0 0 auto; }
