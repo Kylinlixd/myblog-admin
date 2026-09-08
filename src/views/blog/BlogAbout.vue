@@ -2,7 +2,7 @@
   <div class="about-page cinematic-page">
     <section class="about-hero app-container cinematic-hero">
       <div class="hero-copy">
-        <p class="eyebrow"><span></span> 关于 LiXD</p>
+        <p class="eyebrow"><span></span> 关于时不语之间</p>
         <h1>持续学习，也持续输出。</h1>
         <p class="hero-intro">
           我是小东，一名全栈开发者。这里记录真实项目里的取舍、踩坑与解法，
@@ -14,7 +14,7 @@
             href="https://github.com/Kylinlixd"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="在 GitHub 查看 Kylinlixd"
+            aria-label="在 GitHub 查看时不语之间"
           >
             <github-outlined /> GitHub <arrow-right-outlined />
           </a>
@@ -26,11 +26,11 @@
 
       <div class="profile-card cinematic-card">
         <div class="avatar-wrap">
-          <img src="/about-avatar.jpg" alt="LiXD 的头像" />
+          <img src="/about-avatar.jpg" alt="时不语之间的头像" />
           <span class="online-dot" aria-label="保持创作中"></span>
         </div>
         <div>
-          <strong>LiXD</strong>
+          <strong>时不语之间</strong>
           <p>Full-stack developer</p>
         </div>
         <dl class="profile-facts">

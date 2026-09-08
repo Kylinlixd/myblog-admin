@@ -8,9 +8,9 @@
     </div>
     <header class="site-header" @keydown.esc="mobileOpen = false">
       <div class="site-header-panel app-container header-inner">
-        <router-link class="brand" to="/blog" aria-label="LiXD 博客首页">
-          <span class="brand-mark">L</span>
-          <span><strong>LIXD</strong><small>DIGITAL GARDEN</small></span>
+        <router-link class="brand" to="/blog" aria-label="时不语之间首页">
+          <span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span>
+          <span><strong>时不语之间</strong><small>COFFEE &amp; CODE</small></span>
         </router-link>
 
         <nav class="desktop-nav" aria-label="主导航">
@@ -72,7 +72,7 @@
 
     <footer class="site-footer">
       <div class="app-container footer-inner">
-        <span>© {{ year }} LiXD. 保持好奇，持续构建。</span>
+        <span>© {{ year }} 时不语之间。保持好奇，持续构建。</span>
         <div><router-link to="/blog/about">关于</router-link><router-link to="/blog/categories">归档</router-link></div>
       </div>
     </footer>
@@ -122,7 +122,8 @@ function isNavigationActive(item) {
 .site-header { position: sticky; z-index: 100; top: 14px; height: 0; }
 .site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 15%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 82%); box-shadow: 0 18px 50px rgb(89 61 34 / 12%); backdrop-filter: blur(22px); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
-.brand-mark { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 10px; background: var(--blog-accent); color: white; font-size: 17px; font-weight: 800; box-shadow: 0 8px 24px rgb(200 111 55 / 27%); }
+.brand-mark { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; }
+.brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .brand > span:last-child { display: flex; flex-direction: column; line-height: 1.05; }
 .brand strong { font-size: 13px; letter-spacing: .1em; }
 .brand small { margin-top: 5px; color: var(--blog-text-muted); font-size: 8px; letter-spacing: .09em; }
@@ -150,6 +151,6 @@ function isNavigationActive(item) {
 .page-enter-from { opacity: 0; transform: translateY(5px); }
 .page-leave-to { opacity: 0; }
 @media (max-width: 960px) { .site-header-panel { grid-template-columns: minmax(150px, 1fr) auto; } .desktop-nav, .admin-link { display: none; } .menu-button, .mobile-nav { display: flex; } .mobile-nav { flex-direction: column; gap: 4px; } .mobile-admin-link { display: flex; min-height: 44px; align-items: center; justify-content: center; margin-top: 5px; background: var(--blog-text); color: #fffaf2 !important; font-weight: 750; } }
-@media (max-width: 620px) { .site-header { top: 8px; } .blog-shell--home { --header-height: 66px; } .blog-shell--home .site-header { padding-top: 8px; } .site-header-panel { width: calc(100% - 20px); min-height: 58px; gap: 7px; padding-inline: 10px; } .brand { flex: 0 0 auto; } .brand-mark { width: 34px; height: 34px; } .header-actions { min-width: 0; flex: 1 1 auto; gap: 6px; } .quick-search { flex: 1 1 auto; width: auto; min-width: 0; max-width: none; height: 40px; padding: 0 11px; } .quick-search input { width: 100%; min-width: 0; font-size: 13px; } .menu-button { flex: 0 0 40px; width: 40px; height: 40px; } .brand small { display: none; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
+@media (max-width: 620px) { .site-header { top: 8px; } .blog-shell--home { --header-height: 66px; } .blog-shell--home .site-header { padding-top: 8px; } .site-header-panel { width: calc(100% - 20px); min-height: 58px; gap: 7px; padding-inline: 10px; } .brand { flex: 0 0 auto; } .brand-mark { width: 38px; height: 38px; } .header-actions { min-width: 0; flex: 1 1 auto; gap: 6px; } .quick-search { flex: 1 1 auto; width: auto; min-width: 0; max-width: none; height: 40px; padding: 0 11px; } .quick-search input { width: 100%; min-width: 0; font-size: 13px; } .menu-button { flex: 0 0 40px; width: 40px; height: 40px; } .brand small { display: none; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
 @media (max-width: 390px) { .brand > span:last-child { display: none; } .site-header-panel { grid-template-columns: auto minmax(0, 1fr); } .quick-search { height: 36px; padding-inline: 10px; } .quick-search-button { flex-basis: 16px; width: 16px; height: 16px; } .quick-search input { font-size: 12px; } }
 </style>

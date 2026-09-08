@@ -3,7 +3,7 @@
     <a-layout-sider v-if="!isMobile" v-model:collapsed="collapsed" :trigger="null" collapsible :width="232" :collapsed-width="76" class="admin-sidebar">
       <div class="admin-brand">
         <router-link class="admin-brand__link" to="/dashboard">
-          <span class="brand-mark">L</span><span v-if="!collapsed">LiXD Studio<small>内容工作台</small></span>
+          <span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span><span v-if="!collapsed">时不语之间<small>内容工作台</small></span>
         </router-link>
       </div>
       <AdminNavigation />
@@ -11,7 +11,7 @@
 
     <a-drawer id="admin-mobile-navigation" v-model:open="mobileOpen" placement="left" :closable="false" :width="272" class="admin-drawer">
       <router-link class="admin-brand admin-brand--drawer" to="/dashboard" @click="mobileOpen = false">
-        <span class="brand-mark">L</span><span>LiXD Studio<small>内容工作台</small></span>
+        <span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span><span>时不语之间<small>内容工作台</small></span>
       </router-link>
       <AdminNavigation @navigate="mobileOpen = false" />
       <router-link class="admin-mobile-blog-link" to="/blog" @click="mobileOpen = false">
@@ -145,7 +145,8 @@ function handleLogout() {
 .admin-brand { position: relative; display: flex; height: 76px; align-items: center; padding: 0 18px; color: white; white-space: nowrap; }
 .admin-brand__link { display: flex; min-width: 0; align-items: center; gap: 11px; color: inherit; text-decoration: none; }
 .admin-brand--drawer { padding-inline: 22px; gap: 11px; }
-.admin-brand .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 auto; place-items: center; border-radius: 10px; background: var(--color-primary); font-size: 20px; font-weight: 800; }
+.admin-brand .brand-mark { display: grid; width: 44px; height: 44px; flex: 0 0 auto; place-items: center; }
+.admin-brand .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .admin-brand__link > span:last-child, .admin-brand--drawer > span:last-child { display: flex; flex-direction: column; font-weight: 750; line-height: 1.2; }
 .admin-brand small { margin-top: 4px; color: #8290ab; font-size: 10px; font-weight: 500; letter-spacing: .06em; }
 .admin-navigation { display: grid; max-height: calc(100vh - 76px); overflow-x: hidden; overflow-y: auto; gap: 16px; padding: 46px 12px 18px; }

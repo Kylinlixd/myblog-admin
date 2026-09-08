@@ -1,4 +1,4 @@
-# LiXD Studio · Kylin Blog
+# 时不语之间 · Kylin Blog
 
 个人博客公开站点与内容管理端。项目使用 Vue 3、Vite、Pinia 和 Ant Design Vue，同一套应用提供 `/blog` 公开阅读区与 `/dashboard` 管理工作台。
 

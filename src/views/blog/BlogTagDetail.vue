@@ -154,7 +154,7 @@ const fetchTagDynamics = async () => {
       
       // 设置页面标题
       if (tag.value) {
-        document.title = `${tag.value.name} - 标签文章`
+        document.title = `${tag.value.name}｜时不语之间`
       }
     } else {
       message.error('获取标签详情失败')

@@ -30,7 +30,7 @@ const routes = [
     component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
     meta: { 
       requiresAuth: false,
-      title: '博客首页'
+      title: '首页'
     },
     children: [
       {
@@ -38,7 +38,7 @@ const routes = [
         name: 'BlogHome',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogHome.vue'),
         meta: { 
-          title: '博客首页',
+          title: '首页',
           keepAlive: true,
           requiresAuth: false
         }
@@ -296,7 +296,7 @@ router.afterEach((to) => {
   const appStore = useAppStore()
   appStore.endNavigation()
   sessionStorage.removeItem('vite-chunk-recovery')
-  document.title = to.meta.title ? `${to.meta.title} · LiXD 的博客` : 'LiXD 的博客'
+  document.title = to.meta.title ? `${to.meta.title}｜时不语之间` : '首页｜时不语之间'
 })
 
 // 添加路由错误处理

@@ -1,13 +1,13 @@
 <template>
   <main class="login-page">
     <section class="login-intro" aria-label="产品介绍">
-      <router-link class="login-brand" to="/blog"><span>L</span><strong>LiXD Studio</strong></router-link>
+      <router-link class="login-brand" to="/blog"><span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span><strong>时不语之间</strong></router-link>
       <div>
         <span class="login-kicker">CONTENT WORKSPACE</span>
         <h1>让创作保持专注，<br />让管理回归简单。</h1>
         <p>在一个清晰、可靠的工作台中管理文章、分类、标签与读者评论。</p>
       </div>
-      <small>© {{ year }} LiXD · Personal Blog</small>
+      <small>© {{ year }} 时不语之间 · Personal Blog</small>
     </section>
 
     <section class="login-panel">
@@ -77,7 +77,8 @@ async function handleLogin() {
 .login-intro::before { position: absolute; width: 520px; height: 520px; border: 1px solid rgb(255 255 255 / 8%); border-radius: 50%; background: radial-gradient(circle, rgb(49 91 234 / 28%), transparent 68%); content: ''; right: -160px; top: 12%; }
 .login-intro > * { position: relative; z-index: 1; }
 .login-brand { display: flex; align-items: center; gap: 12px; color: white; font-size: 18px; }
-.login-brand span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--color-primary); font-weight: 800; }
+.login-brand .brand-mark { display: grid; width: 44px; height: 44px; place-items: center; }
+.login-brand .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .login-kicker { color: #7694ff; font-size: 10px; font-weight: 800; letter-spacing: .18em; }
 .login-intro h1 { max-width: 640px; margin: 18px 0; font-size: clamp(38px, 5vw, 68px); line-height: 1.12; letter-spacing: -.045em; }
 .login-intro p { max-width: 560px; color: #aeb9ce; font-size: 17px; line-height: 1.8; }
