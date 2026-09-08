@@ -2,7 +2,7 @@
   <div class="home-page">
     <section class="home-hero" aria-labelledby="home-title">
       <canvas ref="particleCanvas" class="hero-particle-canvas" :class="{ 'hero-particle-canvas--settled': titleReady }" aria-hidden="true" />
-      <div class="hero-glow-field" aria-hidden="true"><span class="hero-glow hero-glow--one" /><span class="hero-glow hero-glow--two" /><span class="hero-glow hero-glow--three" /></div>
+      <div class="hero-glow-field" aria-hidden="true" />
       <div class="hero-inner app-container">
         <div class="hero-copy">
           <h1 id="home-title" class="hero-title" :class="{ 'hero-title--ready': titleReady }" aria-label="探索技术，无限可能">
@@ -115,24 +115,12 @@ function startParticleTitle() {
     startedAt = performance.now()
   }
   function drawAtmosphere(now, elapsed) {
-    const breath = reduceMotion ? 0 : Math.sin(now / 11000) * .5 + .5; const centerX = width * (.73 + Math.sin(now / 17000) * .012); const centerY = height * (.5 + Math.cos(now / 14500) * .018)
-    const cloud = context.createRadialGradient(centerX, centerY, width * .03, centerX, centerY, width * .72)
-    cloud.addColorStop(0, `rgb(195 143 95 / ${.14 + breath * .04})`); cloud.addColorStop(.32, `rgb(222 191 151 / ${.12 + breath * .03})`); cloud.addColorStop(.68, 'rgb(164 177 151 / 7%)'); cloud.addColorStop(1, 'rgb(248 241 229 / 0%)')
+    const breath = reduceMotion ? 0 : Math.sin(now / 11000) * .5 + .5; const centerX = width * (.68 + Math.sin(now / 17000) * .012); const centerY = height * (.5 + Math.cos(now / 14500) * .018)
+    const leftLight = context.createRadialGradient(width * .24, height * .5, 0, width * .24, height * .5, width * .54)
+    leftLight.addColorStop(0, `rgb(255 249 238 / ${.1 + breath * .025})`); leftLight.addColorStop(.55, 'rgb(236 216 193 / 6%)'); leftLight.addColorStop(1, 'rgb(248 241 229 / 0%)'); context.fillStyle = leftLight; context.fillRect(0, 0, width, height)
+    const cloud = context.createRadialGradient(centerX, centerY, width * .02, centerX, centerY, width * .7)
+    cloud.addColorStop(0, `rgb(194 140 91 / ${.1 + breath * .035})`); cloud.addColorStop(.3, `rgb(220 187 145 / ${.09 + breath * .025})`); cloud.addColorStop(.58, 'rgb(151 170 147 / 6%)'); cloud.addColorStop(1, 'rgb(248 241 229 / 0%)')
     context.fillStyle = cloud; context.fillRect(0, 0, width, height)
-    const bands = [
-      { y: .22, amp: .055, phase: .5, color: 'rgb(199 145 94 / 17%)', width: 86 },
-      { y: .48, amp: .08, phase: 2.4, color: 'rgb(221 187 143 / 14%)', width: 110 },
-      { y: .72, amp: .06, phase: 4.6, color: 'rgb(132 157 137 / 12%)', width: 96 }
-    ]
-    for (const band of bands) {
-      const gradient = context.createLinearGradient(width * .28, 0, width * 1.05, 0); gradient.addColorStop(0, 'rgb(255 250 241 / 0%)'); gradient.addColorStop(.26, band.color); gradient.addColorStop(.7, band.color); gradient.addColorStop(1, 'rgb(255 250 241 / 0%)')
-      context.save(); context.beginPath()
-      for (let step = 0; step <= 24; step += 1) {
-        const progress = step / 24; const x = width * (.3 + progress * .82); const y = height * band.y + Math.sin(progress * Math.PI * 2.2 + now / 9000 + band.phase) * height * band.amp + Math.sin(progress * Math.PI + elapsed / 13000) * height * .018
-        if (step === 0) context.moveTo(x, y); else context.lineTo(x, y)
-      }
-      context.lineWidth = band.width * (0.94 + breath * .1); context.lineCap = 'round'; context.strokeStyle = gradient; context.shadowBlur = 48; context.shadowColor = band.color; context.stroke(); context.restore()
-    }
   }
   function render(now) {
     if (!width || !height) resize(); context.clearRect(0, 0, width, height); const elapsed = now - startedAt
@@ -177,10 +165,10 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 .home-page { --header-height: 62px; --home-ink: #27342f; --home-muted: #687068; --home-accent: #b85e2d; --home-line: #e5ddcf; color: var(--home-ink); padding-bottom: 64px; }
 .home-page .app-container { max-width: 1120px; }
 .home-hero { position: relative; display: flex; width: 100%; max-width: none; min-height: calc(100dvh - var(--header-height)); align-items: center; justify-content: center; overflow: hidden; isolation: isolate; padding-block: 80px 72px; }
-.home-hero::before { position: absolute; z-index: -2; inset: 3% -4% 5% 28%; border-radius: 46% 54% 50% 45%; background: radial-gradient(ellipse 55% 62% at 72% 38%, rgb(196 143 91 / 24%), transparent 68%), radial-gradient(ellipse 60% 54% at 68% 70%, rgb(133 153 130 / 20%), transparent 70%), radial-gradient(ellipse 76% 72% at 42% 54%, rgb(255 251 243 / 48%), transparent 72%); content: ''; filter: blur(36px); animation: hero-nebula 18s ease-in-out infinite alternate; }
-.home-hero::after { position: absolute; z-index: -3; inset: 0; background: radial-gradient(ellipse 86% 92% at 68% 48%, rgb(239 224 203 / 60%), transparent 72%), linear-gradient(110deg, #f5eee3 0%, #f7f0e5 44%, #f3ecdf 100%); content: ''; }
+.home-hero::before { position: absolute; z-index: -2; inset: -8% -10% -8% -6%; border-radius: 50%; background: radial-gradient(ellipse 38% 54% at 26% 48%, rgb(237 216 194 / 18%), transparent 76%), radial-gradient(ellipse 56% 68% at 68% 43%, rgb(199 147 98 / 20%), transparent 72%), radial-gradient(ellipse 48% 58% at 73% 72%, rgb(141 162 141 / 15%), transparent 76%), radial-gradient(ellipse 74% 82% at 48% 54%, rgb(255 251 243 / 26%), transparent 74%); content: ''; filter: blur(54px); animation: hero-nebula 22s ease-in-out infinite alternate; }
+.home-hero::after { position: absolute; z-index: -3; inset: 0; background: radial-gradient(ellipse 84% 94% at 52% 50%, transparent 48%, rgb(137 108 80 / 5%) 100%), radial-gradient(ellipse 48% 66% at 70% 48%, rgb(239 224 204 / 42%), transparent 78%), radial-gradient(ellipse 44% 70% at 24% 48%, rgb(244 229 211 / 22%), transparent 78%), linear-gradient(110deg, #f4ede2 0%, #f7f0e6 50%, #f1e9dc 100%); content: ''; }
 .hero-particle-canvas { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; }.hero-particle-canvas--settled { opacity: 1; }
-.hero-glow-field { position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; box-shadow: inset 0 0 180px 28px rgb(116 91 67 / 7%); }.hero-glow-field::before, .hero-glow-field::after { position: absolute; display: block; width: 68%; height: 48%; border-radius: 46% 54% 52% 48%; background: radial-gradient(ellipse at 56% 46%, rgb(198 146 96 / 17%), transparent 62%), radial-gradient(ellipse at 76% 66%, rgb(136 158 137 / 11%), transparent 68%); content: ''; filter: blur(40px); animation: hero-cloud 19s ease-in-out infinite alternate; }.hero-glow-field::before { top: 12%; right: -10%; }.hero-glow-field::after { right: -4%; bottom: 8%; background: radial-gradient(ellipse at 48% 42%, rgb(216 179 134 / 13%), transparent 64%), radial-gradient(ellipse at 78% 58%, rgb(137 157 135 / 12%), transparent 70%); animation-delay: -9s; }.hero-glow { position: absolute; display: block; border-radius: 50%; filter: blur(2px); opacity: .7; animation: hero-glow-drift 9s ease-in-out infinite alternate; }.hero-glow::before { position: absolute; top: 50%; left: 50%; width: 240px; height: 170px; border-radius: 48% 52% 58% 42%; background: radial-gradient(ellipse, rgb(216 163 110 / 15%), transparent 70%); content: ''; filter: blur(25px); transform: translate(-50%, -50%); animation: hero-aura 11s ease-in-out infinite alternate; }.hero-glow--one { top: 18%; right: 16%; width: 8px; height: 8px; background: #d8a36e; box-shadow: 0 0 28px 12px rgb(216 163 110 / 18%); }.hero-glow--two { top: 31%; right: 29%; width: 6px; height: 6px; background: #9aa78f; box-shadow: 0 0 24px 9px rgb(154 167 143 / 16%); animation-delay: -3s; }.hero-glow--three { right: 8%; bottom: 23%; width: 7px; height: 7px; background: #d6b895; box-shadow: 0 0 26px 10px rgb(214 184 149 / 14%); animation-delay: -6s; }
+.hero-glow-field { position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; box-shadow: inset 0 0 180px 28px rgb(116 91 67 / 8%); }.hero-glow-field::before, .hero-glow-field::after { position: absolute; display: block; width: 62%; height: 56%; border-radius: 50%; background: radial-gradient(ellipse at 52% 45%, rgb(201 149 99 / 10%), transparent 65%), radial-gradient(ellipse at 72% 66%, rgb(141 162 141 / 8%), transparent 72%); content: ''; filter: blur(52px); animation: hero-cloud 24s ease-in-out infinite alternate; }.hero-glow-field::before { top: 5%; right: -8%; }.hero-glow-field::after { right: 3%; bottom: 1%; background: radial-gradient(ellipse at 46% 44%, rgb(224 190 149 / 8%), transparent 68%), radial-gradient(ellipse at 78% 60%, rgb(136 159 139 / 9%), transparent 72%); animation-delay: -12s; }.hero-glow-field { opacity: .72; animation: hero-field-breathe 18s ease-in-out infinite alternate; }
 .hero-inner { display: flex; width: 100%; max-width: 1120px; align-items: center; justify-content: center; }
 .hero-copy { position: relative; z-index: 1; display: flex; max-width: 1120px; flex-direction: column; align-items: center; padding: 24px; }
 .hero-title { display: flex; max-width: 100%; min-height: clamp(90px, 10vw, 120px); align-items: center; justify-content: center; gap: .18em; margin: 0; font-size: clamp(36px, 6.8vw, 84px); font-weight: 800; letter-spacing: -.065em; line-height: 1.08; text-align: center; white-space: nowrap; opacity: 0; transform: translateY(5px) scale(.985); transition: opacity 1.4s cubic-bezier(.22, .8, .25, 1), transform 1.4s cubic-bezier(.22, .8, .25, 1); }.hero-title--ready { opacity: 1; transform: translateY(0) scale(1); }.hero-title__accent { color: var(--home-accent); }
@@ -193,8 +181,8 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 @keyframes hero-bounce { 0%, 100% { transform: rotate(45deg) translate(-2px, -2px); } 50% { transform: rotate(45deg) translate(4px, 4px); } }
 @keyframes hero-glow-drift { from { transform: translate3d(-8px, 5px, 0) scale(.92); opacity: .48; } to { transform: translate3d(8px, -7px, 0) scale(1.08); opacity: .82; } }
 @keyframes hero-nebula { from { transform: translate3d(-2%, 1%, 0) rotate(-2deg) scale(.96); opacity: .62; } to { transform: translate3d(3%, -2%, 0) rotate(3deg) scale(1.05); opacity: .96; } }
-@keyframes hero-aura { from { opacity: .35; transform: translate(-50%, -50%) scale(.78) rotate(-8deg); } to { opacity: 1; transform: translate(-43%, -56%) scale(1.18) rotate(8deg); } }
 @keyframes hero-cloud { from { transform: translate3d(-3%, 2%, 0) scale(.94) rotate(-3deg); opacity: .48; } to { transform: translate3d(4%, -3%, 0) scale(1.08) rotate(3deg); opacity: .95; } }
+@keyframes hero-field-breathe { from { opacity: .58; } to { opacity: .9; } }
 .home-lazy-section { content-visibility: auto; contain-intrinsic-size: 720px; scroll-margin-top: 94px; }.latest-section { padding-block: 24px 40px; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }.section-heading h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.025em; line-height: 1.4; }.section-heading > p { margin: 0; color: var(--home-muted); font-size: 13px; line-height: 1.7; }
 .article-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }.article-row { display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 16px; min-height: 178px; padding: 26px; border: 1px solid var(--home-line); border-radius: 18px; background: #fffaf2; transition: border-color .18s ease, background-color .18s ease; }.article-row:hover { border-color: #bcb4a4; background: #fffcf6; }.article-body { min-width: 0; }.article-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 12px; line-height: 1.6; color: var(--home-accent); }.article-meta time { color: var(--home-muted); font-variant-numeric: tabular-nums; }.article-body h3 { margin: 12px 0 10px; font-size: 19px; line-height: 1.55; font-weight: 650; overflow-wrap: anywhere; }.article-body p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; color: var(--home-muted); font-size: 13px; line-height: 1.85; overflow-wrap: anywhere; }.article-arrow { align-self: end; color: #8b9187; font-size: 18px; }

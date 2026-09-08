@@ -56,7 +56,7 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('hero-particle-canvas--settled { opacity: 1;')
     expect(source).toContain('const titleAlpha = titleReady.value ? 0 : 1')
     expect(source).toContain('bezierCurveTo')
-    expect(source).toContain('@keyframes hero-aura')
+    expect(source).toContain('@keyframes hero-field-breathe')
     expect(source).toContain('drawAtmosphere')
     expect(source).toContain('createRadialGradient')
     expect(source).toContain('@keyframes hero-nebula')
