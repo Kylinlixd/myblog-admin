@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="时不语之间">
+  <rect width="32" height="32" rx="8" fill="#FFF8ED"/>
+  <path d="M7.2 14.1h14.1v5.6a4.6 4.6 0 0 1-4.6 4.6h-4.9a4.6 4.6 0 0 1-4.6-4.6v-5.6Z" fill="#9B4E28"/>
+  <path d="M21.3 15.8h2.2a3.2 3.2 0 1 1 0 6.4h-2.7" fill="none" stroke="#9B4E28" stroke-width="2.4" stroke-linecap="round"/>
+  <path d="M10.2 10.6c0-1.6 1.5-1.8 1.5-3.2 0-.7-.3-1.2-.7-1.7M14.1 10.6c0-1.6 1.5-1.8 1.5-3.2 0-.7-.3-1.2-.7-1.7" fill="none" stroke="#9B4E28" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M6.3 26.4h17.2" stroke="#9B4E28" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
