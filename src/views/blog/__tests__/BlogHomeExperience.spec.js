@@ -7,7 +7,7 @@ const layoutSource = fs.readFileSync(path.join(process.cwd(), 'src/layouts/BlogL
 describe('focused warm technology blog homepage', () => {
   it('keeps only the hero, latest articles, topics, and shared footer structure', () => {
     expect(source).toContain('class="home-hero app-container"')
-    expect(source).toContain('id="latest-articles"')
+    expect(source).toContain('id="latest-posts"')
     expect(source).toContain('id="topics"')
     expect(layoutSource).toContain('<footer class="site-footer">')
     expect(source).not.toContain('visual-ribbon')
@@ -20,10 +20,19 @@ describe('focused warm technology blog homepage', () => {
   it('uses a text-first hero and article list without homepage images', () => {
     expect(source).toContain('aria-label="探索技术，无限可能"')
     expect(source).toContain('class="article-list"')
-    expect(source).toContain('v-for="(item, index) in latest"')
+    expect(source).toContain('v-for="item in latest"')
     expect(source).not.toContain('<img')
     expect(source).not.toContain('getHotDynamics')
     expect(source).not.toContain('getBlogTagList')
+  })
+
+  it('provides a first-screen hero with native particle title and scroll guidance', () => {
+    expect(source).toContain('class="hero-particle-canvas"')
+    expect(source).toContain('aria-label="滚动到最新文章"')
+    expect(source).toContain('href="#latest-posts"')
+    expect(source).toContain('id="latest-posts"')
+    expect(source).toContain('min-height: calc(100dvh - var(--header-height))')
+    expect(source).toContain('prefers-reduced-motion: reduce')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
