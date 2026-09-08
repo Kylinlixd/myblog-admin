@@ -57,6 +57,7 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('const titleAlpha = titleReady.value ? 0 : 1')
     expect(source).toContain('quadraticCurveTo')
     expect(source).toContain('@keyframes hero-orbit')
+    expect(source).toContain('@keyframes hero-haze')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
