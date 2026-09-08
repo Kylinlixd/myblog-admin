@@ -26,6 +26,7 @@ describe('focused warm technology blog homepage', () => {
     expect(source).not.toContain('getBlogTagList')
     expect(source).not.toContain('class="eyebrow"')
     expect(source).not.toContain('class="hero-description"')
+    expect(source).not.toContain('class="hero-actions')
   })
 
   it('provides a first-screen hero with native particle title and scroll guidance', () => {
@@ -38,9 +39,11 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('Math.min(92')
     expect(source).toContain('ambient')
     expect(source).toContain('context.stroke()')
+    expect(source).toContain('white-space: nowrap')
+    expect(source).toContain('context.arc(')
+    expect(source).toContain('hero-glow')
     expect(source).toContain('hero-title--ready')
     expect(source).toContain('titleReady')
-    expect(source).toContain('hero-actions--centered')
     expect(source).toContain('justify-content: center')
     expect(layoutSource).toContain('.blog-shell--home .site-header')
     expect(layoutSource).toContain('.blog-shell--home .site-main')
