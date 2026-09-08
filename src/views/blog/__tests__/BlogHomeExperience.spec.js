@@ -64,6 +64,8 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('@pointermove="handleHeroPointer"')
     expect(source).toContain('--hero-shift-x')
     expect(source).toContain('@keyframes hero-blob-morph')
+    expect(source).toContain('.hero-particle-canvas { position: absolute; z-index: 2;')
+    expect(source).toContain('.hero-glow-field { position: absolute; z-index: 1;')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
