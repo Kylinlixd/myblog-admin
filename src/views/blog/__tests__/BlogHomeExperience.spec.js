@@ -36,6 +36,8 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('Math.min(92')
     expect(source).toContain('ambient')
     expect(source).toContain('context.stroke()')
+    expect(source).toContain('hero-title--ready')
+    expect(source).toContain('titleReady')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {

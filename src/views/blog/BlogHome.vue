@@ -1,10 +1,13 @@
 <template>
   <div class="home-page">
     <section class="home-hero app-container" aria-labelledby="home-title">
-      <canvas ref="particleCanvas" class="hero-particle-canvas" aria-hidden="true" />
+      <canvas ref="particleCanvas" class="hero-particle-canvas" :class="{ 'hero-particle-canvas--settled': titleReady }" aria-hidden="true" />
       <div class="hero-copy">
         <p class="eyebrow">开发 · 记录 · 思考</p>
-        <h1 id="home-title" class="hero-title" aria-label="探索技术，无限可能"><span class="sr-only">探索技术 无限可能</span></h1>
+        <h1 id="home-title" class="hero-title" :class="{ 'hero-title--ready': titleReady }" aria-label="探索技术，无限可能">
+          <span class="hero-title__lead">探索技术</span>
+          <span class="hero-title__accent">无限可能</span>
+        </h1>
         <p class="hero-description">记录开发经验、产品过程与持续构建中的判断，让每一次阅读都能通向下一步行动。</p>
         <div class="hero-actions">
           <a class="hero-button hero-button--primary" href="#latest-posts">查看最新文章</a>
@@ -54,10 +57,12 @@ const error = ref('')
 const categoryLoading = ref(false)
 const categoryError = ref('')
 const categoriesLoaded = ref(false)
+const titleReady = ref(false)
 let categoryObserver
 let latestObserver
 let particleFrame
 let particleResizeObserver
+let titleReadyTimer
 const extractList = (response) => normalizeCollectionResponse(response).results
 
 function excerpt(article) { return (article?.summary || article?.content || '点击阅读完整内容。').replace(/[#>*_`\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 110) }
@@ -131,12 +136,13 @@ function startParticleTitle() {
 
 onMounted(() => {
   startParticleTitle()
+  titleReadyTimer = window.setTimeout(() => { titleReady.value = true }, 2200)
   if ('IntersectionObserver' in window) {
     latestObserver = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) { latestObserver.disconnect(); loadLatest() } }, { rootMargin: '240px 0px' }); latestObserver.observe(latestSection.value)
   } else loadLatest()
   observeCategories()
 })
-onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconnect(); particleResizeObserver?.disconnect(); cancelAnimationFrame(particleFrame) })
+onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconnect(); particleResizeObserver?.disconnect(); cancelAnimationFrame(particleFrame); window.clearTimeout(titleReadyTimer) })
 </script>
 
 <style scoped>
@@ -144,10 +150,10 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 .home-page .app-container { max-width: 1120px; }
 .home-hero { position: relative; display: flex; min-height: calc(100dvh - var(--header-height)); align-items: center; overflow: hidden; isolation: isolate; padding-block: 80px 72px; }
 .home-hero::before { position: absolute; z-index: -2; inset: 7% 5% 10% 42%; border-radius: 48% 36% 42% 30%; background: radial-gradient(circle at 56% 48%, rgb(211 187 149 / 25%), transparent 68%); content: ''; filter: blur(18px); }
-.hero-particle-canvas { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hero-particle-canvas { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity .45s ease; }.hero-particle-canvas--settled { opacity: .14; }
 .hero-copy { position: relative; z-index: 1; max-width: 720px; padding: 24px; border-radius: 28px; background: rgb(250 245 235 / 46%); }
 .eyebrow { margin: 0 0 18px; color: var(--home-muted); font-size: 12px; letter-spacing: .12em; }
-.hero-title { min-height: clamp(100px, 12vw, 150px); margin: 0; }
+.hero-title { display: flex; min-height: clamp(116px, 14vw, 176px); flex-direction: column; justify-content: center; margin: 0; font-size: clamp(48px, 7.5vw, 92px); font-weight: 800; letter-spacing: -.065em; line-height: 1.08; opacity: 0; transform: translateY(5px); transition: opacity .45s ease, transform .45s ease; }.hero-title--ready { opacity: 1; transform: translateY(0); }.hero-title__accent { color: var(--home-accent); }
 .hero-description { max-width: 620px; margin: 20px 0 26px; color: var(--home-muted); font-size: 15px; line-height: 1.85; }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .hero-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border-radius: 999px; padding: 0 18px; font-size: 13px; transition: transform .2s ease, background-color .2s ease, color .2s ease; }
@@ -161,6 +167,6 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }.section-heading h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.025em; line-height: 1.4; }.section-heading > p { margin: 0; color: var(--home-muted); font-size: 13px; line-height: 1.7; }
 .article-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }.article-row { display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 16px; min-height: 178px; padding: 26px; border: 1px solid var(--home-line); border-radius: 18px; background: #fffaf2; transition: border-color .18s ease, background-color .18s ease; }.article-row:hover { border-color: #bcb4a4; background: #fffcf6; }.article-body { min-width: 0; }.article-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 12px; line-height: 1.6; color: var(--home-accent); }.article-meta time { color: var(--home-muted); font-variant-numeric: tabular-nums; }.article-body h3 { margin: 12px 0 10px; font-size: 19px; line-height: 1.55; font-weight: 650; overflow-wrap: anywhere; }.article-body p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; color: var(--home-muted); font-size: 13px; line-height: 1.85; overflow-wrap: anywhere; }.article-arrow { align-self: end; color: #8b9187; font-size: 18px; }
 .section-link { display: table; margin: 24px auto 0; padding: 10px 18px; color: var(--home-muted); font-size: 13px; }.section-link:hover { color: var(--home-accent); }.section-link span { margin-left: 10px; }.topics-section { padding-top: 32px; border-top: 1px solid var(--home-line); contain-intrinsic-size: auto 280px; }.category-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }.category-row { display: grid; grid-template-columns: minmax(0, 1fr) 16px; gap: 9px; padding: 20px; border: 1px solid var(--home-line); border-radius: 14px; background: #eee9df; transition: border-color .18s ease; }.category-row:nth-child(4n + 2) { background: #e9ece3; }.category-row:nth-child(4n + 3) { background: #f0e7db; }.category-row:nth-child(4n + 4) { background: #ebe8e1; }.category-row:hover { border-color: #bcb4a4; }.category-name { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }.category-description { grid-column: 1 / -1; color: var(--home-muted); font-size: 12px; line-height: 1.75; overflow-wrap: anywhere; }.category-arrow { grid-column: 2; grid-row: 1; color: #838b7f; }.category-skeleton { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; min-height: 110px; }.category-skeleton span { border: 1px solid var(--home-line); border-radius: 14px; background: #eee9df; }.category-error, .category-empty { color: var(--home-muted); font-size: 14px; padding-block: 20px; }.category-error button { border: 1px solid var(--home-line); border-radius: 999px; padding: 9px 16px; background: #fffaf2; color: var(--home-ink); cursor: pointer; }.home-page a:focus-visible, .home-page button:focus-visible { outline: 2px solid var(--home-accent); outline-offset: 4px; }.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-@media (max-width: 760px) { .home-hero { min-height: calc(100dvh - var(--header-height)); padding-block: 44px 60px; }.hero-copy { padding: 18px; }.hero-title { min-height: 90px; }.hero-description { font-size: 14px; }.section-heading { align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 18px; }.section-heading h2 { font-size: 22px; }.article-list { grid-template-columns: 1fr; gap: 12px; }.article-row { min-height: 0; padding: 22px; }.article-body h3 { font-size: 18px; }.category-list, .category-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); }.category-row { padding: 16px; }.home-page { padding-bottom: 40px; } }
-@media (prefers-reduced-motion: reduce) { .hero-button, .hero-scroll-cue span, .article-row, .category-row { animation: none; transition: none; } }
+@media (max-width: 760px) { .home-hero { min-height: calc(100dvh - var(--header-height)); padding-block: 44px 60px; }.hero-copy { padding: 18px; }.hero-title { min-height: 112px; font-size: clamp(42px, 12vw, 64px); }.hero-description { font-size: 14px; }.section-heading { align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 18px; }.section-heading h2 { font-size: 22px; }.article-list { grid-template-columns: 1fr; gap: 12px; }.article-row { min-height: 0; padding: 22px; }.article-body h3 { font-size: 18px; }.category-list, .category-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); }.category-row { padding: 16px; }.home-page { padding-bottom: 40px; } }
+@media (prefers-reduced-motion: reduce) { .hero-button, .hero-scroll-cue span, .hero-title, .hero-particle-canvas, .article-row, .category-row { animation: none; transition: none; } }
 </style>
