@@ -55,10 +55,12 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('cubic-bezier')
     expect(source).toContain('hero-particle-canvas--settled { opacity: 1;')
     expect(source).toContain('const titleAlpha = titleReady.value ? 0 : 1')
-    expect(source).toContain('quadraticCurveTo')
+    expect(source).toContain('bezierCurveTo')
     expect(source).toContain('@keyframes hero-orbit')
-    expect(source).toContain('@keyframes hero-haze')
     expect(source).toContain('@keyframes hero-aura')
+    expect(source).toContain('hero-light-ribbon')
+    expect(source).toContain('@keyframes hero-nebula')
+    expect(source).toContain('@keyframes hero-ribbon-flow')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
