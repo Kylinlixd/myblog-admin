@@ -64,6 +64,7 @@ let titleReadyTimer
 let pointerFrame
 let pointerTarget = { x: 0, y: 0 }
 let pointerCurrent = { x: 0, y: 0 }
+const compactScreen = typeof window !== 'undefined' && (window.matchMedia?.('(max-width: 760px)').matches || window.innerWidth < 760)
 const extractList = (response) => normalizeCollectionResponse(response).results
 
 function excerpt(article) { return (article?.summary || article?.content || '点击阅读完整内容。').replace(/[#>*_`\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 110) }
@@ -126,14 +127,18 @@ function startParticleTitle() {
     const rect = canvas.parentElement.getBoundingClientRect(); const ratio = Math.min(window.devicePixelRatio || 1, 2); width = rect.width; height = rect.height
     canvas.width = Math.floor(width * ratio); canvas.height = Math.floor(height * ratio); canvas.style.width = `${width}px`; canvas.style.height = `${height}px`; context.setTransform(ratio, 0, 0, ratio, 0, 0)
     const fontSize = Math.min(84, Math.max(42, width * 0.068)); const titleWidth = fontSize * 8.8; const startX = Math.max(18, (width - titleWidth) / 2); const startY = Math.max(70, (height - fontSize) / 2)
-    particles = [...createTextPoints('探索技术', startX, startY, fontSize, '#27342f', 1), ...createTextPoints('无限可能', startX + fontSize * 4.55, startY, fontSize, '#b85e2d', 2)]
-    ambient = [
+    particles = compactScreen ? [] : [...createTextPoints('探索技术', startX, startY, fontSize, '#27342f', 1), ...createTextPoints('无限可能', startX + fontSize * 4.55, startY, fontSize, '#b85e2d', 2)]
+    const ambientPoints = compactScreen ? [
+      [.2, .28, 1.1, .1, '#d7a56f'], [.38, .2, 1.5, .12, '#b9c1ad'], [.62, .24, 1.6, .12, '#d7a56f'], [.82, .32, 1.2, .1, '#c88753'],
+      [.25, .58, 1.4, .1, '#c88753'], [.48, .66, 1.1, .1, '#d7a56f'], [.7, .6, 1.8, .12, '#879b8a'], [.88, .72, 1.2, .1, '#d7a56f']
+    ] : [
       [.58, .22, 1.4, .16, '#c88753'], [.67, .18, 2.1, .2, '#d7a56f'], [.77, .24, 1.2, .13, '#879b8a'], [.86, .2, 1.6, .15, '#c88753'],
       [.62, .38, 1.1, .12, '#879b8a'], [.73, .36, 1.7, .17, '#d7a56f'], [.84, .41, 2.3, .2, '#c88753'], [.92, .35, 1.2, .13, '#b9c1ad'],
       [.57, .58, 2.1, .18, '#d7a56f'], [.68, .56, 1.2, .13, '#879b8a'], [.79, .61, 1.6, .15, '#c88753'], [.9, .57, 2, .17, '#d7a56f'],
       [.61, .76, 1.3, .13, '#b9c1ad'], [.72, .73, 2.2, .18, '#c88753'], [.83, .79, 1.1, .12, '#879b8a'], [.94, .72, 1.7, .15, '#d7a56f']
-    ].map(([x, y, radius, alpha, color], index) => ({ x: width * x, y: height * y, radius, alpha, color, phase: index * 1.37 }))
-    network = [
+    ]
+    ambient = ambientPoints.map(([x, y, radius, alpha, color], index) => ({ x: width * x, y: height * y, radius, alpha, color, phase: index * 1.37 }))
+    network = compactScreen ? [] : [
       { x: width * .54, y: height * .2, width: width * .2, height: height * -.08, alpha: .14, phase: .4 },
       { x: width * .68, y: height * .27, width: width * .25, height: height * .1, alpha: .12, phase: 2.1 },
       { x: width * .58, y: height * .47, width: width * .25, height: height * -.12, alpha: .12, phase: 3.3 },
@@ -145,7 +150,10 @@ function startParticleTitle() {
   function drawFlowRibbons(now, elapsed) {
     const breath = reduceMotion ? 0 : Math.sin(now / 9200) * .5 + .5
     const shiftX = pointerCurrent.x * width * .025; const shiftY = pointerCurrent.y * height * .02
-    const ribbons = [
+    const ribbons = compactScreen ? [
+      { y: .32, bend: .07, phase: .3, colors: ['rgb(255 249 238 / 0%)', `rgb(226 185 139 / ${.17 + breath * .055})`, 'rgb(255 249 238 / 0%)'] },
+      { y: .63, bend: -.06, phase: 2.5, colors: ['rgb(255 249 238 / 0%)', `rgb(169 187 166 / ${.13 + breath * .045})`, 'rgb(255 249 238 / 0%)'] }
+    ] : [
       { y: .24, bend: -.12, phase: .2, colors: ['rgb(206 150 101 / 0%)', `rgb(206 150 101 / ${.11 + breath * .045})`, 'rgb(234 202 164 / 0%)'] },
       { y: .4, bend: .1, phase: 1.7, colors: ['rgb(255 249 238 / 0%)', `rgb(255 249 238 / ${.16 + breath * .04})`, 'rgb(188 204 187 / 0%)'] },
       { y: .62, bend: -.09, phase: 3.1, colors: ['rgb(173 193 169 / 0%)', `rgb(151 173 151 / ${.1 + breath * .035})`, 'rgb(206 150 101 / 0%)'] },
@@ -153,14 +161,15 @@ function startParticleTitle() {
     ]
     for (const ribbon of ribbons) {
       const drift = reduceMotion ? 0 : Math.sin(now / 7800 + ribbon.phase) * height * .014
-      const startX = width * .12 + shiftX; const endX = width * 1.08 + shiftX; const startY = height * ribbon.y + drift + shiftY
+      const startX = width * (compactScreen ? .02 : .12) + shiftX; const endX = width * (compactScreen ? 1.08 : 1.08) + shiftX; const startY = height * ribbon.y + drift + shiftY
       const gradient = context.createLinearGradient(startX, 0, endX, 0); gradient.addColorStop(0, ribbon.colors[0]); gradient.addColorStop(.48, ribbon.colors[1]); gradient.addColorStop(1, ribbon.colors[2])
       context.save(); context.beginPath(); context.moveTo(startX, startY); context.bezierCurveTo(width * .38 + shiftX, startY + height * ribbon.bend, width * .7 + shiftX, startY - height * ribbon.bend, endX, startY + drift * .6)
-      context.lineWidth = Math.max(24, width * .018); context.lineCap = 'round'; context.strokeStyle = gradient; context.globalAlpha = .78; context.shadowBlur = 24; context.shadowColor = 'rgb(202 150 102 / 14%)'; context.stroke(); context.restore()
+      context.lineWidth = Math.max(compactScreen ? 30 : 24, width * .018); context.lineCap = 'round'; context.strokeStyle = gradient; context.globalAlpha = .78; context.shadowBlur = compactScreen ? 30 : 24; context.shadowColor = 'rgb(202 150 102 / 14%)'; context.stroke(); context.restore()
     }
     void elapsed
   }
   function drawOrbitSystem(now) {
+    if (compactScreen) return
     const centerX = width * .76 + pointerCurrent.x * width * .02; const centerY = height * (.52 + pointerCurrent.y * .018)
     const orbits = [
       { rx: width * .35, ry: height * .16, rotation: -.16, alpha: .1, phase: .2 },
@@ -211,7 +220,7 @@ function startParticleTitle() {
 
 onMounted(() => {
   startParticleTitle()
-  titleReadyTimer = window.setTimeout(() => { titleReady.value = true }, 2200)
+  titleReadyTimer = window.setTimeout(() => { titleReady.value = true }, compactScreen ? 450 : 2200)
   if ('IntersectionObserver' in window) {
     latestObserver = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) { latestObserver.disconnect(); loadLatest() } }, { rootMargin: '240px 0px' }); latestObserver.observe(latestSection.value)
   } else loadLatest()
@@ -250,6 +259,29 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; }.section-heading h2 { margin: 0; font-size: 25px; font-weight: 700; letter-spacing: -.025em; line-height: 1.4; }.section-heading > p { margin: 0; color: var(--home-muted); font-size: 13px; line-height: 1.7; }
 .article-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }.article-row { display: grid; grid-template-columns: minmax(0, 1fr) 18px; gap: 16px; min-height: 178px; padding: 26px; border: 1px solid var(--home-line); border-radius: 18px; background: #fffaf2; transition: border-color .18s ease, background-color .18s ease; }.article-row:hover { border-color: #bcb4a4; background: #fffcf6; }.article-body { min-width: 0; }.article-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 12px; line-height: 1.6; color: var(--home-accent); }.article-meta time { color: var(--home-muted); font-variant-numeric: tabular-nums; }.article-body h3 { margin: 12px 0 10px; font-size: 19px; line-height: 1.55; font-weight: 650; overflow-wrap: anywhere; }.article-body p { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; color: var(--home-muted); font-size: 13px; line-height: 1.85; overflow-wrap: anywhere; }.article-arrow { align-self: end; color: #8b9187; font-size: 18px; }
 .section-link { display: table; margin: 24px auto 0; padding: 10px 18px; color: var(--home-muted); font-size: 13px; }.section-link:hover { color: var(--home-accent); }.section-link span { margin-left: 10px; }.topics-section { padding-top: 32px; border-top: 1px solid var(--home-line); contain-intrinsic-size: auto 280px; }.category-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }.category-row { display: grid; grid-template-columns: minmax(0, 1fr) 16px; gap: 9px; padding: 20px; border: 1px solid var(--home-line); border-radius: 14px; background: #eee9df; transition: border-color .18s ease; }.category-row:nth-child(4n + 2) { background: #e9ece3; }.category-row:nth-child(4n + 3) { background: #f0e7db; }.category-row:nth-child(4n + 4) { background: #ebe8e1; }.category-row:hover { border-color: #bcb4a4; }.category-name { font-size: 15px; font-weight: 650; overflow-wrap: anywhere; }.category-description { grid-column: 1 / -1; color: var(--home-muted); font-size: 12px; line-height: 1.75; overflow-wrap: anywhere; }.category-arrow { grid-column: 2; grid-row: 1; color: #838b7f; }.category-skeleton { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; min-height: 110px; }.category-skeleton span { border: 1px solid var(--home-line); border-radius: 14px; background: #eee9df; }.category-error, .category-empty { color: var(--home-muted); font-size: 14px; padding-block: 20px; }.category-error button { border: 1px solid var(--home-line); border-radius: 999px; padding: 9px 16px; background: #fffaf2; color: var(--home-ink); cursor: pointer; }.home-page a:focus-visible, .home-page button:focus-visible { outline: 2px solid var(--home-accent); outline-offset: 4px; }.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-@media (max-width: 760px) { .home-hero { min-height: calc(100dvh - var(--header-height)); padding-block: 44px 60px; }.hero-copy { padding: 18px; }.hero-title { min-height: 80px; font-size: clamp(28px, 8.7vw, 54px); gap: .12em; }.hero-glow--one { right: 8%; }.hero-glow--two { right: 18%; }.hero-glow-field { inset: -3%; }.hero-blob { opacity: .28; filter: blur(26px); }.section-heading { align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 18px; }.section-heading h2 { font-size: 22px; }.article-list { grid-template-columns: 1fr; gap: 12px; }.article-row { min-height: 0; padding: 22px; }.article-body h3 { font-size: 18px; }.category-list, .category-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); }.category-row { padding: 16px; }.home-page { padding-bottom: 40px; } }
+@media (max-width: 760px) {
+  .home-hero { min-height: calc(100dvh - var(--header-height)); padding-block: 44px 60px; }
+  .home-hero::before { inset: -18%; background: radial-gradient(ellipse 92% 66% at 50% 42%, rgb(213 172 128 / 22%), transparent 74%), radial-gradient(ellipse 100% 62% at 28% 72%, rgb(252 242 226 / 18%), transparent 78%), radial-gradient(ellipse 100% 58% at 76% 66%, rgb(155 174 152 / 13%), transparent 80%); filter: blur(55px); }
+  .home-hero::after { background: linear-gradient(155deg, #f4ede2 0%, #f8f1e7 50%, #f1e8da 100%); }
+  .hero-inner { padding-inline: 16px; }
+  .hero-copy { width: 100%; padding: 18px 0; }
+  .hero-title { width: 100%; min-height: 80px; font-size: clamp(24px, 7.8vw, 32px); gap: .05em; letter-spacing: -.12em; }
+  .hero-glow-field { inset: -3%; box-shadow: inset 0 0 120px 20px rgb(116 91 67 / 8%); }
+  .hero-glow-field::before, .hero-glow-field::after { left: -5%; right: auto; width: 110%; height: 60%; filter: blur(44px); }
+  .hero-glow-field::before { top: 0; background: radial-gradient(ellipse at var(--hero-pointer-x, 50%) var(--hero-pointer-y, 48%), rgb(207 149 97 / 18%), transparent 55%), radial-gradient(ellipse at 52% 45%, rgb(237 201 160 / 20%), transparent 72%); }
+  .hero-glow-field::after { bottom: -8%; background: radial-gradient(ellipse at 42% 48%, rgb(225 191 149 / 16%), transparent 66%), radial-gradient(ellipse at 68% 58%, rgb(136 159 139 / 13%), transparent 74%); }
+  .hero-blob { opacity: .12; filter: blur(34px); }
+  .hero-blob--one { right: -12%; width: 120%; }
+  .hero-blob--two { right: -8%; width: 116%; }
+  .hero-blob--three { right: -6%; width: 112%; }
+  .section-heading { align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+  .section-heading h2 { font-size: 22px; }
+  .article-list { grid-template-columns: 1fr; gap: 12px; }
+  .article-row { min-height: 0; padding: 22px; }
+  .article-body h3 { font-size: 18px; }
+  .category-list, .category-skeleton { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .category-row { padding: 16px; }
+  .home-page { padding-bottom: 40px; }
+}
 @media (prefers-reduced-motion: reduce) { .hero-button, .hero-scroll-cue span, .hero-title, .hero-particle-canvas, .home-hero::before, .home-hero::after, .hero-glow-field, .hero-glow-field::before, .hero-glow-field::after, .hero-blob, .article-row, .category-row { animation: none; transition: none; } }
 </style>

@@ -70,6 +70,8 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('context.ellipse(')
     expect(source).toContain('drawFlowRibbons')
     expect(source).toContain('hero-ribbon-breathe')
+    expect(source).toContain('compactScreen')
+    expect(source).toContain('titleReadyTimer = window.setTimeout(() => { titleReady.value = true }, compactScreen ? 450 : 2200)')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
