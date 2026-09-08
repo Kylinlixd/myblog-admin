@@ -119,7 +119,7 @@ function startParticleTitle() {
     }
     for (const particle of particles) {
       const duration = particle.color === '#27342f' ? 1050 : 1450; const progress = reduceMotion ? 1 : Math.min(1, Math.max(0, (elapsed - particle.delay) / duration)); const eased = 1 - Math.pow(1 - progress, 3); const drift = progress === 1 && !reduceMotion ? Math.sin(now / 1700 + particle.x) * 0.45 : 0
-      context.globalAlpha = 0.28 + eased * 0.72; context.fillStyle = particle.color; context.shadowBlur = particle.color === '#b85e2d' ? 7 : 0; context.shadowColor = 'rgb(184 94 45 / 35%)'; context.fillRect(particle.startX + (particle.x - particle.startX) * eased, particle.startY + (particle.y - particle.startY) * eased + drift, particleSize, particleSize)
+      const titleAlpha = titleReady.value ? 0 : 1; context.globalAlpha = (0.28 + eased * 0.72) * titleAlpha; context.fillStyle = particle.color; context.shadowBlur = particle.color === '#b85e2d' ? 7 : 0; context.shadowColor = 'rgb(184 94 45 / 35%)'; context.fillRect(particle.startX + (particle.x - particle.startX) * eased, particle.startY + (particle.y - particle.startY) * eased + drift, particleSize, particleSize)
     }
     context.shadowBlur = 0; context.globalAlpha = 1; particleFrame = requestAnimationFrame(render)
   }
@@ -148,7 +148,7 @@ onBeforeUnmount(() => { categoryObserver?.disconnect(); latestObserver?.disconne
 .home-hero { position: relative; display: flex; width: 100%; max-width: none; min-height: calc(100dvh - var(--header-height)); align-items: center; justify-content: center; overflow: hidden; isolation: isolate; padding-block: 80px 72px; }
 .home-hero::before { position: absolute; z-index: -2; inset: 7% 5% 10% 42%; border-radius: 48% 36% 42% 30%; background: radial-gradient(circle at 56% 48%, rgb(211 187 149 / 25%), transparent 68%); content: ''; filter: blur(18px); }
 .home-hero::after { position: absolute; z-index: -3; inset: 0; background: radial-gradient(ellipse at 75% 18%, rgb(219 177 126 / 20%), transparent 30%), radial-gradient(ellipse at 88% 74%, rgb(154 171 151 / 17%), transparent 34%), linear-gradient(112deg, transparent 35%, rgb(255 250 241 / 42%) 52%, transparent 72%); content: ''; }
-.hero-particle-canvas { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; transition: opacity 1.1s cubic-bezier(.22, .8, .25, 1); }.hero-particle-canvas--settled { opacity: 0; }
+.hero-particle-canvas { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; }.hero-particle-canvas--settled { opacity: 1; }
 .hero-glow-field { position: absolute; z-index: -1; inset: 0; overflow: hidden; pointer-events: none; }.hero-glow { position: absolute; display: block; border-radius: 50%; filter: blur(2px); opacity: .7; }.hero-glow--one { top: 16%; right: 15%; width: 18px; height: 18px; background: #d8a36e; box-shadow: 0 0 38px 16px rgb(216 163 110 / 22%); }.hero-glow--two { top: 29%; right: 27%; width: 8px; height: 8px; background: #9aa78f; box-shadow: 0 0 30px 11px rgb(154 167 143 / 22%); }.hero-glow--three { right: 7%; bottom: 22%; width: 12px; height: 12px; background: #d6b895; box-shadow: 0 0 34px 14px rgb(214 184 149 / 18%); }
 .hero-inner { display: flex; width: 100%; max-width: 1120px; align-items: center; justify-content: center; }
 .hero-copy { position: relative; z-index: 1; display: flex; max-width: 1120px; flex-direction: column; align-items: center; padding: 24px; }
