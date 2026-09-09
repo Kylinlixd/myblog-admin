@@ -33,6 +33,9 @@ describe('focused warm technology blog homepage', () => {
   it('provides a first-screen hero with a static title and scroll guidance', () => {
     expect(source).toContain('aria-label="滚动到最新文章"')
     expect(source).toContain('href="#latest-posts"')
+    expect(source).toContain('@click="scrollToLatest"')
+    expect(source).toContain('function scrollToLatest(event)')
+    expect(source).toContain("latestSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })")
     expect(source).toContain('id="latest-posts"')
     expect(source).toContain('min-height: calc(100dvh - var(--header-height))')
     expect(source).toContain('white-space: nowrap')

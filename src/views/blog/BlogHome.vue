@@ -14,7 +14,7 @@
           </div>
         </div>
       </div>
-      <a class="hero-scroll-cue" href="#latest-posts" aria-label="滚动到最新文章"><span aria-hidden="true" /></a>
+      <a class="hero-scroll-cue" href="#latest-posts" aria-label="滚动到最新文章" @click="scrollToLatest"><span aria-hidden="true" /></a>
     </section>
 
     <section id="latest-posts" ref="latestSection" class="latest-section home-lazy-section app-container" aria-labelledby="latest-title">
@@ -93,6 +93,10 @@ function observeCategories() {
 }
 function activateFluidCursor(event) {
   if (event.pointerType !== 'touch') fluidCursorVisible.value = true
+}
+function scrollToLatest(event) {
+  event.preventDefault()
+  latestSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 function startTitleTyping() {
   const lead = '探索技术'
