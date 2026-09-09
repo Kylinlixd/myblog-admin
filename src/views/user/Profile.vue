@@ -412,7 +412,7 @@ onMounted(() => {
 .card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
 .edit-state { padding: 5px 10px; border-radius: 999px; color: var(--color-primary); background: var(--color-primary-soft); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .edit-state--dirty { color: #a16207; background: #fff7df; }
-.profile-layout, .password-layout { display: grid; grid-template-columns: 200px minmax(0, 460px); align-items: start; gap: 28px; }
+.profile-layout, .password-layout { display: grid; grid-template-columns: 200px minmax(0, 360px); align-items: start; gap: 28px; }
 .profile-identity, .password-identity { min-width: 0; padding-top: 4px; }
 .identity-avatar-wrap { display: flex; align-items: flex-start; flex-direction: column; gap: 8px; }
 .identity-avatar { display: grid; place-items: center; color: #315bea; background: #e9efff; font-size: 32px; font-weight: 700; }
@@ -422,7 +422,7 @@ onMounted(() => {
 .identity-copy span { color: var(--color-text-secondary); font-size: 13px; overflow-wrap: anywhere; }
 .identity-copy small { color: var(--color-primary); font-size: 12px; font-weight: 650; }
 .identity-hint { margin: 10px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.55; }
-.profile-fields, .password-fields { width: 100%; min-width: 0; max-width: 460px; }
+.profile-fields, .password-fields { width: 100%; min-width: 0; max-width: 360px; }
 .profile-fields :deep(.ant-form), .password-fields :deep(.ant-form) { width: 100%; }
 .profile-field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .profile-field :deep(.ant-form-item-label), .password-fields :deep(.ant-form-item-label) { padding: 0 0 4px; }
