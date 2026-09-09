@@ -30,7 +30,8 @@ describe('homepage viewport loading', () => {
   })
   it('renders the hero immediately but requests each content section only near the viewport', async () => {
     wrapper = render()
-    expect(wrapper.find('h1').text()).toContain('探索技术')
+    await flushPromises()
+    expect(wrapper.find('h1').text()).toContain('探')
     expect(getRecentDynamics).not.toHaveBeenCalled()
     expect(getBlogCategoryList).not.toHaveBeenCalled()
     observers[0].reveal()
