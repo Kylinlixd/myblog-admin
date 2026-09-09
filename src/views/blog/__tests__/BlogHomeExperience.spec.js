@@ -48,8 +48,21 @@ describe('focused warm technology blog homepage', () => {
     expect(source).not.toContain('hero-light-sheet')
     expect(source).not.toContain('hero-trace')
     expect(source).not.toContain('startParticleTitle')
-    expect(source).not.toContain('@pointermove="handleHeroPointer"')
     expect(source).not.toContain('titleReady')
+  })
+
+  it('provides a cursor reactive light trail without turning the hero into a permanent particle field', () => {
+    expect(source).toContain('class="hero-effect-canvas"')
+    expect(source).toContain('class="hero-light-field"')
+    expect(source).toContain('@pointermove="handleHeroPointer"')
+    expect(source).toContain('@pointerleave="resetHeroPointer"')
+    expect(source).toContain('requestAnimationFrame')
+    expect(source).toContain('heroTrail')
+    expect(source).toContain('drawHeroStar')
+    expect(source).toContain("pointerType === 'touch'")
+    expect(source).toContain('prefers-reduced-motion')
+    expect(source).toContain('maxTrailPoints')
+    expect(source).toContain('pointerFresh')
   })
 
   it('defers topic data and below-fold rendering until it is near the viewport', () => {
