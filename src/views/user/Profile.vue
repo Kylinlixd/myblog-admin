@@ -225,6 +225,7 @@ const handleAvatarSuccess = (res) => {
   const avatarUrl = res?.url
   if (avatarUrl) {
     profileForm.avatar = avatarUrl
+    savedProfile.value.avatar = avatarUrl
     AntMessage.success('头像上传成功')
     return true
   } else {

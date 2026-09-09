@@ -113,6 +113,8 @@ describe('Profile mounted interactions', () => {
     expect(uploadAvatar).toHaveBeenCalledWith(file)
     expect(wrapper.vm.profileForm.avatar).toBe('/media/uploaded-avatar.png')
     expect(mockUserStore.userInfo.avatar).toBe('/media/uploaded-avatar.png')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="save-profile"]').element.disabled).toBe(true)
     expect(onSuccess).toHaveBeenCalledWith({ url: '/media/uploaded-avatar.png' })
     expect(onError).not.toHaveBeenCalled()
     wrapper.unmount()
