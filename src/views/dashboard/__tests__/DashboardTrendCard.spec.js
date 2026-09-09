@@ -40,4 +40,17 @@ describe('Dashboard operations workspace', () => {
     expect(source).not.toContain("color: '#d97706'")
     expect(source).not.toContain("color: '#7c3aed'")
   })
+
+  it('keeps the dashboard first view focused on actions and vertical metrics', () => {
+    const source = readDashboard()
+
+    expect(source).toContain('class="intro-actions"')
+    expect(source).toContain('class="metric-label"')
+    expect(source).toContain('class="metric-value"')
+    expect(source).not.toContain('totalEntities')
+    expect(source).not.toContain('metric-index')
+    expect(source).not.toContain('metric-arrow')
+    expect(source).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
+    expect(source).toContain('grid-template-rows: auto auto auto')
+  })
 })
