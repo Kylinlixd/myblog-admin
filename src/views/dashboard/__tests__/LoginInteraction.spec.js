@@ -1,4 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils'
+import fs from 'node:fs'
+import path from 'node:path'
 
 import Login from '@/views/Login.vue'
 
@@ -64,5 +66,11 @@ describe('Login mounted interactions', () => {
 
     expect(wrapper.find('.login-error').text()).toContain('用户名或密码错误')
     wrapper.unmount()
+  })
+
+  it('uses the light brand mark on the dark login introduction panel', () => {
+    const source = fs.readFileSync(path.join(process.cwd(), 'src/views/Login.vue'), 'utf8')
+    expect(source).toContain('/logo-coffee-code-white.svg')
+    expect(source).not.toContain('/logo-coffee-code.png')
   })
 })

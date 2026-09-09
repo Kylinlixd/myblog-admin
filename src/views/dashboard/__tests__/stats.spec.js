@@ -24,6 +24,7 @@ describe('mapDashboardStats', () => {
     })).toEqual({
       total: { dynamics: 12, categories: 4, tags: 9, comments: 0 },
       daily: [{ day: '07-28', count: 3, pv: 0 }],
+      range: { start: '', end: '', timezone: '' },
       categories: [
         { name: '分类1', count: 6, views: 0 },
         { name: '分类2', count: 5, views: 0 },
@@ -41,6 +42,7 @@ describe('mapDashboardStats', () => {
     expect(mapDashboardData(null)).toEqual({
       total: { dynamics: 0, categories: 0, tags: 0, comments: 0 },
       daily: [],
+      range: { start: '', end: '', timezone: '' },
       categories: [],
       tags: [],
       visits: { pv: 0, uv: 0, average: 0, bounceRate: null },
@@ -52,5 +54,11 @@ describe('mapDashboardStats', () => {
 
   it('normalizes access overview without inventing values', () => {
     expect(mapDashboardData({ data: { access: { requests: 12, unique_ips: 4 } } }).access).toEqual({ requests: 12, uniqueIps: 4 })
+  })
+
+  it('keeps the server reporting range and timezone visible to the dashboard', () => {
+    expect(mapDashboardData({ data: {
+      range: { start: '2026-09-03', end: '2026-09-09', timezone: 'Asia/Shanghai' }
+    } }).range).toEqual({ start: '2026-09-03', end: '2026-09-09', timezone: 'Asia/Shanghai' })
   })
 })

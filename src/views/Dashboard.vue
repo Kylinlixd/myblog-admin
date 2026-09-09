@@ -37,17 +37,22 @@
     <section class="operations-grid">
       <article class="workspace-panel content-pulse">
         <header class="panel-heading">
-          <div><span class="section-label">发布节奏</span><h2>近七天内容&访问趋势</h2></div>
+          <div><span class="section-label">发布节奏</span><h2>近七天内容&访问趋势</h2><small class="panel-range">{{ rangeLabel }}</small></div>
           <router-link to="/dashboard/dynamics">查看全部内容 &gt;</router-link>
         </header>
 
         <div class="trend-summary" aria-label="近七天发布统计">
-          <div><span>七天发布</span><strong>{{ totalDaily }}</strong><small>篇</small></div>
-          <div><span>日均发布</span><strong>{{ averageDaily }}</strong><small>篇/天</small></div>
-          <div><span>单日峰值</span><strong>{{ maxDaily }}</strong><small>篇</small></div>
+          <div><span>七天发布</span><strong>{{ summaryValue(totalDaily) }}</strong><small>篇</small></div>
+          <div><span>日均发布</span><strong>{{ summaryValue(averageDaily) }}</strong><small>篇/天</small></div>
+          <div><span>单日峰值</span><strong>{{ summaryValue(maxDaily) }}</strong><small>篇</small></div>
         </div>
 
         <DashboardChart v-if="daily.length" class="trend-line-chart" :option="publishingOption(daily)" :label="`近七天内容与访问趋势，共发布 ${totalDaily} 篇，访问 ${dashboardData.visits.pv} PV`" />
+        <div v-else-if="error" class="panel-empty panel-empty--error">
+          <warning-outlined />
+          <strong>发布统计暂时不可用</strong>
+          <span>数据请求失败，请点击上方“重试”。</span>
+        </div>
         <div v-else-if="!loading" class="panel-empty">
           <read-outlined />
           <strong>最近还没有发布记录</strong>
@@ -150,7 +155,8 @@ import {
   PlusOutlined,
   ReadOutlined,
   RightOutlined,
-  TagsOutlined
+  TagsOutlined,
+  WarningOutlined
 } from '@ant-design/icons-vue'
 
 import request from '@/services/http/client'
@@ -183,6 +189,11 @@ const averageDaily = computed(() => {
   const average = totalDaily.value / daily.value.length
   return Number.isInteger(average) ? String(average) : average.toFixed(1)
 })
+const rangeLabel = computed(() => {
+  const range = dashboardData.value.range
+  if (!range?.start || !range?.end) return '北京时间 · 近七天'
+  return `${range.start.slice(5)}—${range.end.slice(5)} · ${range.timezone === 'Asia/Shanghai' ? '北京时间' : range.timezone}`
+})
 const hasTaxonomy = computed(() => dashboardData.value.categories.length || dashboardData.value.tags.length)
 
 const quickActions = [
@@ -197,6 +208,7 @@ function taxonomyShare(item, items) {
 }
 
 const formatNumber = value => new Intl.NumberFormat('zh-CN').format(Number(value) || 0)
+const summaryValue = value => (loading.value || error.value ? '—' : value)
 const riskLabel = level => ({ medium: '中风险', high: '高风险', critical: '严重风险' }[level] || '低风险')
 
 async function loadStats() {
@@ -244,6 +256,7 @@ onMounted(loadStats)
 .content-pulse { min-width: 0; min-height: 510px; padding: clamp(24px, 3vw, 38px); }
 .panel-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
 .panel-heading h2, .quick-heading h2 { margin: 5px 0 0; font-size: 21px; letter-spacing: -.025em; }
+.panel-range { display: block; margin-top: 6px; color: var(--color-text-muted); font-size: 11px; }
 .panel-heading > a { display: inline-flex; min-height: 44px; align-items: center; gap: 7px; color: var(--color-primary); font-size: 12px; font-weight: 700; }
 .trend-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid var(--color-border); }
 .trend-summary div { display: flex; min-width: 0; align-items: baseline; gap: 7px; padding: 18px 0; }
@@ -254,6 +267,7 @@ onMounted(loadStats)
 .trend-line-chart { margin-top: 20px; }
 .panel-empty { display: grid; min-height: 330px; place-content: center; justify-items: center; gap: 8px; color: var(--color-text-muted); text-align: center; }
 .panel-empty svg { margin-bottom: 6px; color: #a8b5c8; font-size: 28px; }
+.panel-empty--error svg { color: #f59e0b; }
 .panel-empty strong { color: var(--color-text); }
 .panel-empty span, .compact-empty { color: var(--color-text-muted); font-size: 12px; }
 .operations-side { display: grid; min-width: 0; }

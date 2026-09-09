@@ -122,6 +122,11 @@ export const useUserStore = defineStore('user', {
       this.userInfo = { ...this.userInfo, ...updated }
       localStorage.setItem(USER_KEY, JSON.stringify(this.userInfo))
       return this.userInfo
+    },
+
+    syncAvatar(avatar) {
+      this.userInfo = { ...this.userInfo, avatar }
+      localStorage.setItem(USER_KEY, JSON.stringify(this.userInfo))
     }
   }
 })

@@ -9,7 +9,7 @@
     </div>
     
     <a-card class="profile-card">
-      <template #header>
+      <template #title>
         <div class="card-header">
           <div>
             <strong>基本信息</strong>
@@ -29,7 +29,7 @@
           :label-col="{ span: 4 }"
           :wrapper-col="{ span: 18 }"
         >
-          <a-form-item label="用户名" prop="username">
+          <a-form-item label="用户名" name="username">
             <a-input v-model:value="profileForm.username" placeholder="请输入用户名" />
           </a-form-item>
 
@@ -49,15 +49,15 @@
             </div>
           </a-form-item>
           
-          <a-form-item label="昵称" prop="nickname">
+          <a-form-item label="昵称" name="nickname">
             <a-input v-model:value="profileForm.nickname" placeholder="请输入昵称" />
           </a-form-item>
           
-          <a-form-item label="邮箱" prop="email">
+          <a-form-item label="邮箱" name="email">
             <a-input v-model:value="profileForm.email" placeholder="请输入邮箱" />
           </a-form-item>
           
-          <a-form-item label="个人简介" prop="bio">
+          <a-form-item label="个人简介" name="bio">
             <a-textarea
               v-model:value="profileForm.bio"
               :rows="4"
@@ -68,8 +68,8 @@
           </a-form-item>
           
           <div class="form-actions profile-actions">
-            <a-button type="primary" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
-            <a-button @click="cancelProfileEdit">重置</a-button>
+            <a-button data-testid="save-profile" type="primary" :disabled="!profileDirty" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
+            <a-button @click="cancelProfileEdit">撤销修改</a-button>
           </div>
           <p v-if="profileError" data-testid="profile-save-error" class="form-error" role="alert">{{ profileError }}</p>
         </a-form>
@@ -77,7 +77,7 @@
     </a-card>
     
     <a-card class="password-card">
-      <template #header>
+      <template #title>
         <div class="card-header">
           <div>
             <strong>修改密码</strong>
@@ -96,33 +96,36 @@
         :wrapper-col="{ span: 18 }"
         @submit.prevent="handlePasswordChange"
       >
-        <a-form-item label="原密码" prop="oldPassword">
+        <a-form-item label="原密码" name="oldPassword">
           <a-input-password
             v-model:value="passwordForm.oldPassword"
+            autocomplete="current-password"
             placeholder="请输入原密码"
           />
         </a-form-item>
         
-          <a-form-item label="新密码" prop="newPassword">
+          <a-form-item label="新密码" name="newPassword">
             <a-input-password
               v-model:value="passwordForm.newPassword"
+              autocomplete="new-password"
               placeholder="请输入新密码"
             />
             <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
         </a-form-item>
         
-        <a-form-item label="确认密码" prop="confirmPassword">
+        <a-form-item label="确认密码" name="confirmPassword">
           <a-input-password
             v-model:value="passwordForm.confirmPassword"
+            autocomplete="new-password"
             placeholder="请再次输入新密码"
           />
         </a-form-item>
         
         <div class="form-actions password-actions">
           <a-button type="primary" :loading="loading" @click="handlePasswordChange">
-            保存修改
+            更新密码
           </a-button>
-          <a-button @click="resetForm">重置</a-button>
+          <a-button @click="resetForm">清空输入</a-button>
         </div>
         <p v-if="passwordError" class="form-error" role="alert">{{ passwordError }}</p>
       </a-form>
@@ -145,6 +148,7 @@ const loading = ref(false)
 const profileLoading = ref(false)
 const profileError = ref('')
 const passwordError = ref('')
+const savedProfile = ref({ username: '', nickname: '', email: '', bio: '', avatar: '' })
 
 const userInfo = computed(() => userStore.userInfo || {})
 
@@ -171,11 +175,17 @@ const initProfileForm = () => {
   profileForm.email = userInfo.value.email || ''
   profileForm.bio = userInfo.value.bio || ''
   profileForm.avatar = userInfo.value.avatar || ''
+  savedProfile.value = { ...profileForm }
 }
+
+const profileDirty = computed(() =>
+  ['username', 'nickname', 'email', 'bio', 'avatar'].some((field) => profileForm[field] !== savedProfile.value[field])
+)
 
 // 取消编辑个人资料
 const cancelProfileEdit = () => {
-  initProfileForm()
+  Object.assign(profileForm, savedProfile.value)
+  profileError.value = ''
 }
 
 // 格式化日期
@@ -230,6 +240,7 @@ const handleAvatarUpload = async ({ file, onSuccess, onError }) => {
       onError?.(new TypeError('头像上传响应缺少可用 URL'))
       return
     }
+    userStore.syncAvatar?.(profileForm.avatar)
     onSuccess?.(result)
   } catch (error) {
     AntMessage.error(error.message || '头像上传失败')
@@ -372,12 +383,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.profile-container { max-width: 920px; margin: 0 auto; padding: 12px 20px 40px; }
+.profile-container { max-width: 1040px; margin: 0 auto; padding: 12px 20px 40px; }
 .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
 .eyebrow { display: block; margin-bottom: 8px; color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
 .page-title { margin: 0; color: var(--color-text); font-size: 30px; font-weight: 780; letter-spacing: -.03em; }
 .page-subtitle { margin: 7px 0 0; color: var(--color-text-secondary); font-size: 13px; }
 .profile-card, .password-card { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
+.profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 68px; padding-inline: 24px; border-bottom-color: var(--color-border); }
+.profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 24px; }
 .card-header { display: flex; align-items: center; justify-content: space-between; }
 .card-header strong { display: block; color: var(--color-text); font-size: 15px; }
 .card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
@@ -388,7 +401,7 @@ onMounted(() => {
 .info-item { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
 .label { color: var(--color-text-secondary); font-weight: 650; }
 .value { min-width: 0; overflow-wrap: anywhere; color: var(--color-text); }
-.profile-edit { margin-top: 4px; max-width: 760px; }
+.profile-edit { margin-top: 4px; max-width: 820px; }
 .profile-edit :deep(.ant-form-item), .password-card :deep(.ant-form-item) { margin-bottom: 18px; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--color-border); }
 .form-error { margin: 12px 0 0; color: var(--color-danger); font-size: 13px; white-space: pre-wrap; }
@@ -398,6 +411,10 @@ onMounted(() => {
 .password-card :deep(.ant-form-item-extra) { color: var(--color-text-muted); font-size: 12px; }
 .avatar-upload { display: flex; align-items: center; gap: 10px; }
 .upload-btn { margin-left: 10px; }
+@media (min-width: 900px) {
+  .profile-edit :deep(.ant-form-item:nth-of-type(3)), .profile-edit :deep(.ant-form-item:nth-of-type(4)) { display: inline-flex; width: calc(50% - 10px); }
+  .profile-edit :deep(.ant-form-item:nth-of-type(4)) { margin-left: 16px; }
+}
 @media (max-width: 640px) {
   .profile-container { padding: 8px 14px 28px; }
   .page-header { align-items: flex-start; }
@@ -408,6 +425,7 @@ onMounted(() => {
   .profile-edit :deep(.ant-form-item-label), .password-card :deep(.ant-form-item-label) { padding-bottom: 5px; text-align: left; }
   .profile-form-stackable :deep(.ant-form-item) { display: block; }
   .profile-form-stackable :deep(.ant-form-item-label), .profile-form-stackable :deep(.ant-form-item-control) { width: 100%; max-width: none; text-align: left; }
+  .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head), .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding-inline: 16px; }
   .form-actions { justify-content: stretch; }
   .form-actions .ant-btn { flex: 1; }
 }

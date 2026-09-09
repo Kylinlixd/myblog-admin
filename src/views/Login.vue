@@ -1,7 +1,7 @@
 <template>
   <main class="login-page">
     <section class="login-intro" aria-label="产品介绍">
-      <router-link class="login-brand" to="/blog"><span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span><strong>时不语之间</strong></router-link>
+      <router-link class="login-brand" to="/blog"><span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><strong>时不语之间</strong></router-link>
       <div>
         <span class="login-kicker">CONTENT WORKSPACE</span>
         <h1>让创作保持专注，<br />让管理回归简单。</h1>
@@ -80,7 +80,7 @@ async function handleLogin() {
 .login-brand .brand-mark { display: grid; width: 44px; height: 44px; place-items: center; }
 .login-brand .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .login-kicker { color: #7694ff; font-size: 10px; font-weight: 800; letter-spacing: .18em; }
-.login-intro h1 { max-width: 640px; margin: 18px 0; font-size: clamp(38px, 5vw, 68px); line-height: 1.12; letter-spacing: -.045em; }
+.login-intro h1 { max-width: 640px; margin: 18px 0; font-size: clamp(38px, 5vw, 68px); line-height: 1.12; letter-spacing: -.045em; text-wrap: balance; }
 .login-intro p { max-width: 560px; color: #aeb9ce; font-size: 17px; line-height: 1.8; }
 .login-intro small { color: #8290ab; }
 .login-panel { display: grid; padding: 32px; place-items: center; }

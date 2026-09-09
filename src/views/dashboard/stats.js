@@ -31,6 +31,11 @@ export function mapDashboardData(response) {
         pv: Number(item?.pv) || 0
       }))
       : [],
+    range: {
+      start: String(payload.range?.start || ''),
+      end: String(payload.range?.end || ''),
+      timezone: String(payload.range?.timezone || '')
+    },
     categories: mapSeries(payload.categories, 5),
     tags: mapSeries(payload.tags, 5),
     visits: {

@@ -12,7 +12,8 @@ const mockUserStore = {
     avatar: '/media/avatar.png'
   },
   updateProfile: jest.fn(),
-  getUserInfo: jest.fn()
+  getUserInfo: jest.fn(),
+  syncAvatar: jest.fn((avatar) => { mockUserStore.userInfo.avatar = avatar })
 }
 
 jest.mock('@/stores/user', () => ({
@@ -38,7 +39,7 @@ const FormStub = {
 }
 
 const globalStubs = {
-  'a-card': { template: '<section><slot name="header" /><slot /></section>' },
+  'a-card': { template: '<section><slot name="title" /><slot /></section>' },
   'a-form': FormStub,
   'a-form-item': { template: '<label><slot /></label>' },
   'a-input': true,
@@ -46,12 +47,16 @@ const globalStubs = {
   'a-textarea': true,
   'a-avatar': true,
   'a-upload': true,
-  'a-button': true
+  'a-button': {
+    inheritAttrs: false,
+    template: '<button v-bind="$attrs"><slot /></button>'
+  }
 }
 
 describe('Profile mounted interactions', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockUserStore.userInfo.avatar = '/media/avatar.png'
     mockUserStore.updateProfile.mockResolvedValue(mockUserStore.userInfo)
     mockUserStore.getUserInfo.mockResolvedValue(mockUserStore.userInfo)
     changePassword.mockResolvedValue({})
@@ -82,6 +87,20 @@ describe('Profile mounted interactions', () => {
     wrapper.unmount()
   })
 
+  it('shows explicit sections and keeps profile save disabled until fields change', async () => {
+    const wrapper = mount(Profile, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('基本信息')
+    expect(wrapper.text()).toContain('修改密码')
+    expect(wrapper.find('[data-testid="save-profile"]').attributes('disabled')).toBeDefined()
+
+    wrapper.vm.profileForm.nickname = 'Updated nickname'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="save-profile"]').element.disabled).toBe(false)
+    wrapper.unmount()
+  })
+
   it('consumes the canonical avatar result from the API upload boundary', async () => {
     const wrapper = mount(Profile, { global: { stubs: globalStubs } })
     await flushPromises()
@@ -93,6 +112,7 @@ describe('Profile mounted interactions', () => {
 
     expect(uploadAvatar).toHaveBeenCalledWith(file)
     expect(wrapper.vm.profileForm.avatar).toBe('/media/uploaded-avatar.png')
+    expect(mockUserStore.userInfo.avatar).toBe('/media/uploaded-avatar.png')
     expect(onSuccess).toHaveBeenCalledWith({ url: '/media/uploaded-avatar.png' })
     expect(onError).not.toHaveBeenCalled()
     wrapper.unmount()
