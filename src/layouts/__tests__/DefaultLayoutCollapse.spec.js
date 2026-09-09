@@ -176,6 +176,11 @@ describe('DefaultLayout navigation controls', () => {
     expect(layoutSource).toContain('.admin-brand--drawer { padding-inline: 22px; gap: 11px; }')
   })
 
+  it('uses the white brand mark across the dark workspace sidebar and drawer', () => {
+    expect(layoutSource).toContain('/logo-coffee-code-white.svg')
+    expect(layoutSource).not.toContain('/logo-coffee-code.png')
+  })
+
   it('uses a compact visual scale for the mobile header controls', () => {
     expect(layoutSource).toContain('.header-left { min-width: 0; gap: 8px; overflow: hidden; }')
     expect(layoutSource).toContain('.icon-button { display: grid; width: 36px; height: 36px;')
