@@ -15,49 +15,58 @@
             <strong>基本信息</strong>
             <small class="card-hint">昵称和个人简介会展示在博客公开页面</small>
           </div>
-          <span class="edit-state">可编辑</span>
+          <span class="edit-state" :class="{ 'edit-state--dirty': profileDirty }">{{ profileDirty ? '有未保存修改' : '已保存' }}</span>
         </div>
       </template>
 
-      <div class="profile-edit">
+      <div class="profile-layout">
+        <aside class="profile-identity" aria-label="身份信息">
+          <div class="identity-avatar-wrap">
+            <a-avatar class="identity-avatar" :size="80" :src="profileForm.avatar || undefined">
+              {{ profileInitial }}
+            </a-avatar>
+            <a-upload
+              class="upload-btn"
+              :custom-request="handleAvatarUpload"
+              :show-file-list="false"
+              :before-upload="beforeAvatarUpload"
+            >
+              <a-button type="default" size="small">更换头像</a-button>
+            </a-upload>
+          </div>
+          <div class="identity-copy">
+            <strong>{{ profileForm.nickname || '未设置昵称' }}</strong>
+            <span>@{{ profileForm.username || '未设置用户名' }}</span>
+            <small>{{ roleLabel }}</small>
+          </div>
+          <p class="identity-hint">JPG / PNG，小于 2MB<br />上传成功后立即生效</p>
+        </aside>
+
+        <div class="profile-fields">
         <a-form
           ref="profileFormRef"
           :model="profileForm"
           :rules="profileRules"
           class="profile-form-stackable"
+          layout="vertical"
           data-mobile-stack="true"
-          :label-col="{ span: 4 }"
-          :wrapper-col="{ span: 18 }"
         >
-          <a-form-item label="用户名" name="username">
+          <a-form-item class="profile-field profile-field--full" label="用户名" name="username">
             <a-input v-model:value="profileForm.username" placeholder="请输入用户名" />
+            <template #extra>修改后请使用新用户名登录。</template>
           </a-form-item>
 
-          <a-form-item label="头像">
-            <div class="avatar-upload">
-              <a-avatar :size="100" :src="profileForm.avatar || defaultAvatar">
-                {{ profileForm.nickname?.charAt(0) || userInfo.username?.charAt(0) }}
-              </a-avatar>
-              <a-upload
-                class="upload-btn"
-                :custom-request="handleAvatarUpload"
-                :show-file-list="false"
-                :before-upload="beforeAvatarUpload"
-              >
-                <a-button type="primary" size="small">更换头像</a-button>
-              </a-upload>
-            </div>
-          </a-form-item>
-          
-          <a-form-item label="昵称" name="nickname">
+          <div class="profile-field-pair">
+          <a-form-item class="profile-field" label="昵称" name="nickname">
             <a-input v-model:value="profileForm.nickname" placeholder="请输入昵称" />
           </a-form-item>
           
-          <a-form-item label="邮箱" name="email">
+          <a-form-item class="profile-field" label="邮箱" name="email">
             <a-input v-model:value="profileForm.email" placeholder="请输入邮箱" />
           </a-form-item>
+          </div>
           
-          <a-form-item label="个人简介" name="bio">
+          <a-form-item class="profile-field profile-field--full" label="个人简介" name="bio">
             <a-textarea
               v-model:value="profileForm.bio"
               :rows="4"
@@ -73,6 +82,7 @@
           </div>
           <p v-if="profileError" data-testid="profile-save-error" class="form-error" role="alert">{{ profileError }}</p>
         </a-form>
+        </div>
       </div>
     </a-card>
     
@@ -86,17 +96,21 @@
         </div>
       </template>
       
-      <a-form
-        ref="passwordFormRef"
-        :model="passwordForm"
-        :rules="passwordRules"
-        class="profile-form-stackable"
-        data-mobile-stack="true"
-        :label-col="{ span: 4 }"
-        :wrapper-col="{ span: 18 }"
-        @submit.prevent="handlePasswordChange"
-      >
-        <a-form-item label="原密码" name="oldPassword">
+      <div class="password-layout">
+        <aside class="password-identity">
+          <strong>登录安全</strong>
+          <span>定期更新密码，保护管理账户安全。</span>
+        </aside>
+        <a-form
+          ref="passwordFormRef"
+          :model="passwordForm"
+          :rules="passwordRules"
+          class="profile-form-stackable password-fields"
+          layout="vertical"
+          data-mobile-stack="true"
+          @submit.prevent="handlePasswordChange"
+        >
+        <a-form-item class="profile-field" label="原密码" name="oldPassword">
           <a-input-password
             v-model:value="passwordForm.oldPassword"
             autocomplete="current-password"
@@ -104,7 +118,7 @@
           />
         </a-form-item>
         
-          <a-form-item label="新密码" name="newPassword">
+          <a-form-item class="profile-field" label="新密码" name="newPassword">
             <a-input-password
               v-model:value="passwordForm.newPassword"
               autocomplete="new-password"
@@ -113,7 +127,7 @@
             <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
         </a-form-item>
         
-        <a-form-item label="确认密码" name="confirmPassword">
+        <a-form-item class="profile-field" label="确认密码" name="confirmPassword">
           <a-input-password
             v-model:value="passwordForm.confirmPassword"
             autocomplete="new-password"
@@ -128,7 +142,8 @@
           <a-button @click="resetForm">清空输入</a-button>
         </div>
         <p v-if="passwordError" class="form-error" role="alert">{{ passwordError }}</p>
-      </a-form>
+        </a-form>
+      </div>
     </a-card>
   </div>
 </template>
@@ -138,8 +153,6 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { message as AntMessage } from 'ant-design-vue'
 import { useUserStore } from '../../stores/user'
 import { changePassword, uploadAvatar } from '../../api/auth'
-
-const defaultAvatar = '/default-avatar.png'
 
 const userStore = useUserStore()
 const passwordFormRef = ref(null)
@@ -151,6 +164,8 @@ const passwordError = ref('')
 const savedProfile = ref({ username: '', nickname: '', email: '', bio: '', avatar: '' })
 
 const userInfo = computed(() => userStore.userInfo || {})
+const profileInitial = computed(() => (profileForm.nickname || profileForm.username || '用').trim().slice(0, 1).toUpperCase())
+const roleLabel = computed(() => ({ admin: '站点管理员', editor: '内容编辑', author: '内容作者' }[userInfo.value.role] || '内容管理成员'))
 
 // 资料表单
 const profileForm = reactive({
@@ -384,50 +399,60 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.profile-container { max-width: 1040px; margin: 0 auto; padding: 12px 20px 40px; }
-.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 22px; }
+.profile-container { width: min(100%, 960px); margin: 0 auto; padding: 12px 20px 40px; }
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
 .eyebrow { display: block; margin-bottom: 8px; color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
-.page-title { margin: 0; color: var(--color-text); font-size: 30px; font-weight: 780; letter-spacing: -.03em; }
-.page-subtitle { margin: 7px 0 0; color: var(--color-text-secondary); font-size: 13px; }
+.page-title { margin: 0; color: var(--color-text); font-size: 28px; font-weight: 780; letter-spacing: -.03em; }
+.page-subtitle { margin: 7px 0 0; color: var(--color-text-secondary); font-size: 14px; }
 .profile-card, .password-card { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
 .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 68px; padding-inline: 24px; border-bottom-color: var(--color-border); }
 .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 24px; }
-.card-header { display: flex; align-items: center; justify-content: space-between; }
-.card-header strong { display: block; color: var(--color-text); font-size: 15px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.card-header strong { display: block; color: var(--color-text); font-size: 16px; font-weight: 700; }
 .card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
-.edit-state { padding: 5px 10px; border-radius: 999px; color: var(--color-primary); background: var(--color-primary-soft); font-size: 12px; font-weight: 700; }
-.profile-info { display: grid; grid-template-columns: 160px 1fr; align-items: start; gap: 28px; }
-.profile-info .avatar-container { display: grid; min-height: 160px; margin: 0; place-items: center; border-radius: 14px; background: linear-gradient(145deg, #eef3ff, #f8faff); }
-.info-list { display: grid; gap: 0; padding-top: 4px; }
-.info-item { display: grid; grid-template-columns: 92px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
-.label { color: var(--color-text-secondary); font-weight: 650; }
-.value { min-width: 0; overflow-wrap: anywhere; color: var(--color-text); }
-.profile-edit { margin-top: 4px; max-width: 820px; }
-.profile-edit :deep(.ant-form-item), .password-card :deep(.ant-form-item) { margin-bottom: 18px; }
-.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--color-border); }
-.form-error { margin: 12px 0 0; color: var(--color-danger); font-size: 13px; white-space: pre-wrap; }
-.profile-edit :deep(.ant-form-item-label > label), .password-card :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-weight: 650; }
-.profile-edit :deep(.ant-input), .profile-edit :deep(.ant-input-affix-wrapper), .password-card :deep(.ant-input-affix-wrapper) { border-radius: 9px; }
-.password-card :deep(.ant-form) { max-width: 760px; padding: 4px 8px 0; }
-.password-card :deep(.ant-form-item-extra) { color: var(--color-text-muted); font-size: 12px; }
-.avatar-upload { display: flex; align-items: center; gap: 10px; }
-.upload-btn { margin-left: 10px; }
-@media (min-width: 900px) {
-  .profile-edit :deep(.ant-form-item:nth-of-type(3)), .profile-edit :deep(.ant-form-item:nth-of-type(4)) { display: inline-flex; width: calc(50% - 10px); }
-  .profile-edit :deep(.ant-form-item:nth-of-type(4)) { margin-left: 16px; }
-}
-@media (max-width: 640px) {
-  .profile-container { padding: 8px 14px 28px; }
-  .page-header { align-items: flex-start; }
+.edit-state { padding: 5px 10px; border-radius: 999px; color: var(--color-primary); background: var(--color-primary-soft); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.edit-state--dirty { color: #a16207; background: #fff7df; }
+.profile-layout, .password-layout { display: grid; grid-template-columns: 200px minmax(0, 560px); align-items: start; gap: 28px; }
+.profile-identity, .password-identity { min-width: 0; padding-top: 4px; }
+.identity-avatar-wrap { display: flex; align-items: flex-start; flex-direction: column; gap: 12px; }
+.identity-avatar { display: grid; place-items: center; color: #315bea; background: #e9efff; font-size: 32px; font-weight: 700; }
+.upload-btn { margin: 0; }
+.identity-copy { display: grid; gap: 4px; margin-top: 16px; }
+.identity-copy strong { color: var(--color-text); font-size: 17px; font-weight: 750; overflow-wrap: anywhere; }
+.identity-copy span { color: var(--color-text-secondary); font-size: 13px; overflow-wrap: anywhere; }
+.identity-copy small { color: var(--color-primary); font-size: 12px; font-weight: 650; }
+.identity-hint { margin: 16px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.75; }
+.profile-fields, .password-fields { width: 100%; min-width: 0; max-width: 560px; }
+.profile-fields :deep(.ant-form), .password-fields :deep(.ant-form) { width: 100%; }
+.profile-field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.profile-field :deep(.ant-form-item-label), .password-fields :deep(.ant-form-item-label) { padding: 0 0 8px; }
+.profile-field :deep(.ant-form-item-label > label), .password-fields :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
+.profile-field :deep(.ant-form-item), .password-fields :deep(.ant-form-item) { margin-bottom: 20px; }
+.profile-field :deep(.ant-input), .profile-field :deep(.ant-input-affix-wrapper), .profile-field :deep(.ant-input-textarea), .password-fields :deep(.ant-input-affix-wrapper) { border-radius: 8px; }
+.profile-field :deep(.ant-form-item-extra), .password-fields :deep(.ant-form-item-extra) { margin-top: 6px; color: var(--color-text-muted); font-size: 12px; line-height: 1.6; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+.form-error { margin: 12px 0 0; color: var(--color-danger); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+.password-identity { display: grid; gap: 7px; }
+.password-identity strong { color: var(--color-text); font-size: 15px; }
+.password-identity span { color: var(--color-text-muted); font-size: 12px; line-height: 1.7; }
+@media (max-width: 760px) {
+  .profile-container { width: auto; padding: 8px 14px 28px; }
+  .page-header { align-items: flex-start; margin-bottom: 18px; }
   .page-title { font-size: 26px; }
-  .profile-info { grid-template-columns: 1fr; }
-  .profile-info .avatar-container { min-height: 132px; }
-  .profile-edit :deep(.ant-form), .password-card :deep(.ant-form) { padding-inline: 0; }
-  .profile-edit :deep(.ant-form-item-label), .password-card :deep(.ant-form-item-label) { padding-bottom: 5px; text-align: left; }
-  .profile-form-stackable :deep(.ant-form-item) { display: block; }
-  .profile-form-stackable :deep(.ant-form-item-label), .profile-form-stackable :deep(.ant-form-item-control) { width: 100%; max-width: none; text-align: left; }
   .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head), .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding-inline: 16px; }
+  .profile-layout, .password-layout { grid-template-columns: 1fr; gap: 20px; }
+  .profile-fields, .password-fields { max-width: none; }
+  .profile-identity { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; align-items: center; }
+  .identity-avatar-wrap { grid-row: span 2; }
+  .identity-copy { margin-top: 0; }
+  .identity-hint { grid-column: 2; margin: 0; }
+  .password-identity { padding-bottom: 0; }
+  .profile-field-pair { grid-template-columns: 1fr; gap: 0; }
   .form-actions { justify-content: stretch; }
   .form-actions .ant-btn { flex: 1; }
+}
+@media (max-width: 520px) {
+  .card-header { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .identity-avatar-wrap { align-items: flex-start; }
 }
 </style>
