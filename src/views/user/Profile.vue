@@ -8,6 +8,7 @@
       </div>
     </div>
     
+    <div class="settings-grid">
     <a-card class="profile-card">
       <template #title>
         <div class="card-header">
@@ -77,8 +78,8 @@
           </a-form-item>
           
           <div class="form-actions profile-actions">
-            <a-button data-testid="save-profile" type="primary" :disabled="!profileDirty" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
             <a-button @click="cancelProfileEdit">撤销修改</a-button>
+            <a-button data-testid="save-profile" type="primary" :disabled="!profileDirty" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
           </div>
           <p v-if="profileError" data-testid="profile-save-error" class="form-error" role="alert">{{ profileError }}</p>
         </a-form>
@@ -97,10 +98,6 @@
       </template>
       
       <div class="password-layout">
-        <aside class="password-identity">
-          <strong>登录安全</strong>
-          <span>定期更新密码，保护管理账户安全。</span>
-        </aside>
         <a-form
           ref="passwordFormRef"
           :model="passwordForm"
@@ -110,41 +107,44 @@
           data-mobile-stack="true"
           @submit.prevent="handlePasswordChange"
         >
-        <a-form-item class="profile-field" label="原密码" name="oldPassword">
-          <a-input-password
-            v-model:value="passwordForm.oldPassword"
-            autocomplete="current-password"
-            placeholder="请输入原密码"
-          />
-        </a-form-item>
-        
-          <a-form-item class="profile-field" label="新密码" name="newPassword">
+        <div class="password-group password-group--current">
+          <a-form-item class="profile-field" label="原密码" name="oldPassword">
             <a-input-password
-              v-model:value="passwordForm.newPassword"
-              autocomplete="new-password"
-              placeholder="请输入新密码"
+              v-model:value="passwordForm.oldPassword"
+              autocomplete="current-password"
+              placeholder="请输入原密码"
             />
-            <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
-        </a-form-item>
-        
-        <a-form-item class="profile-field" label="确认密码" name="confirmPassword">
-          <a-input-password
-            v-model:value="passwordForm.confirmPassword"
-            autocomplete="new-password"
-            placeholder="请再次输入新密码"
-          />
-        </a-form-item>
+          </a-form-item>
+        </div>
+
+        <div class="password-group password-group--new">
+          <a-form-item class="profile-field" label="新密码" name="newPassword">
+              <a-input-password
+                v-model:value="passwordForm.newPassword"
+                autocomplete="new-password"
+                placeholder="请输入新密码"
+              />
+              <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
+          </a-form-item>
+
+          <a-form-item class="profile-field" label="确认密码" name="confirmPassword">
+            <a-input-password
+              v-model:value="passwordForm.confirmPassword"
+              autocomplete="new-password"
+              placeholder="请再次输入新密码"
+            />
+          </a-form-item>
+        </div>
         
         <div class="form-actions password-actions">
-          <a-button type="primary" :loading="loading" @click="handlePasswordChange">
-            更新密码
-          </a-button>
-          <a-button @click="resetForm">清空输入</a-button>
+          <a-button class="password-reset-button" @click="resetForm">清空输入</a-button>
+          <a-button type="primary" :loading="loading" @click="handlePasswordChange">更新密码</a-button>
         </div>
         <p v-if="passwordError" class="form-error" role="alert">{{ passwordError }}</p>
         </a-form>
       </div>
     </a-card>
+    </div>
   </div>
 </template>
 
@@ -404,17 +404,22 @@ onMounted(() => {
 .eyebrow { display: block; margin-bottom: 4px; color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
 .page-title { margin: 0; color: var(--color-text); font-size: 26px; font-weight: 780; letter-spacing: -.03em; }
 .page-subtitle { margin: 4px 0 0; color: var(--color-text-secondary); font-size: 13px; }
-.profile-card, .password-card { margin-bottom: 14px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
+.settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 14px; }
+.profile-card, .password-card { display: flex; height: 100%; flex-direction: column; margin-bottom: 0; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
 .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 56px; padding-inline: 20px; border-bottom-color: var(--color-border); }
-.profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 18px 20px; }
+.profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { display: flex; flex: 1; flex-direction: column; }
+.profile-card :deep(.ant-card-body) { padding: 18px 20px; }
+.password-card :deep(.ant-card-body) { padding: 18px 20px; }
 .card-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .card-header strong { display: block; color: var(--color-text); font-size: 16px; font-weight: 700; }
 .card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
 .edit-state { padding: 5px 10px; border-radius: 999px; color: var(--color-primary); background: var(--color-primary-soft); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .edit-state--dirty { color: #a16207; background: #fff7df; }
-.profile-layout, .password-layout { display: grid; grid-template-columns: 200px minmax(0, 360px); align-items: start; gap: 28px; }
-.profile-identity, .password-identity { min-width: 0; padding-top: 4px; }
+.profile-layout { display: grid; min-height: 100%; grid-template-columns: 120px minmax(0, 360px); align-items: start; gap: 18px; }
+.password-layout { display: flex; min-height: 100%; justify-content: center; }
+.profile-identity { min-width: 0; padding-top: 4px; text-align: center; }
 .identity-avatar-wrap { display: flex; align-items: flex-start; flex-direction: column; gap: 8px; }
+.profile-identity .identity-avatar-wrap { align-items: center; }
 .identity-avatar { display: grid; place-items: center; color: #315bea; background: #e9efff; font-size: 32px; font-weight: 700; }
 .upload-btn { margin: 0; }
 .identity-copy { display: grid; gap: 3px; margin-top: 10px; }
@@ -424,30 +429,49 @@ onMounted(() => {
 .identity-hint { margin: 10px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.55; }
 .profile-fields, .password-fields { width: 100%; min-width: 0; max-width: 360px; }
 .profile-fields :deep(.ant-form), .password-fields :deep(.ant-form) { width: 100%; }
+.password-fields { display: grid; grid-template-columns: 1fr; align-content: space-between; padding-top: 16px; }
+.password-group { display: contents; }
+.password-fields .profile-field { min-height: 86px; }
 .profile-field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .profile-field :deep(.ant-form-item-label), .password-fields :deep(.ant-form-item-label) { padding: 0 0 4px; }
 .profile-field :deep(.ant-form-item-label > label), .password-fields :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
+.profile-fields :deep(.ant-form-item-required::before), .password-fields :deep(.ant-form-item-required::before) { color: #f28b82 !important; }
 .profile-field :deep(.ant-form-item), .password-fields :deep(.ant-form-item) { margin-bottom: 12px; }
-.profile-field :deep(.ant-input), .profile-field :deep(.ant-input-affix-wrapper), .profile-field :deep(.ant-input-textarea), .password-fields :deep(.ant-input-affix-wrapper) { border-radius: 8px; }
-.profile-field :deep(.ant-form-item-extra), .password-fields :deep(.ant-form-item-extra) { margin-top: 4px; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
+.profile-field :deep(.ant-input), .profile-field :deep(.ant-input-affix-wrapper), .profile-field :deep(.ant-input-textarea), .password-fields :deep(.ant-input-affix-wrapper) { border: 1px solid #d8e0eb; border-radius: 8px; transition: border-color .2s ease, box-shadow .2s ease; }
+.profile-field :deep(.ant-input:hover), .profile-field :deep(.ant-input-affix-wrapper:hover), .password-fields :deep(.ant-input-affix-wrapper:hover) { border-color: #91adf7; }
+.profile-field :deep(.ant-input:focus), .profile-field :deep(.ant-input-affix-wrapper-focused), .password-fields :deep(.ant-input-affix-wrapper-focused) { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(49, 91, 234, .12); }
+.password-fields :deep(.ant-input-affix-wrapper .ant-input), .password-fields :deep(.ant-input-affix-wrapper .ant-input:focus) { border: 0 !important; box-shadow: none !important; border-radius: 0; }
+.password-fields :deep(.ant-input-password-icon) { color: #94a3b8; font-size: 14px; transition: color .2s ease; }
+.password-fields :deep(.ant-input-password-icon:hover) { color: var(--color-primary); }
+.profile-field :deep(.ant-form-item-extra), .password-fields :deep(.ant-form-item-extra) { margin-top: 4px; color: #9aa8bd; font-size: 11px; line-height: 1.5; }
+.password-fields .profile-field :deep(.ant-form-item-extra) { min-height: 18px; }
+.password-group + .password-group { margin-top: 0; }
+.password-fields .profile-field { margin-bottom: 0; }
 .form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 0; padding-top: 12px; border-top: 1px solid var(--color-border); }
 .form-error { margin: 12px 0 0; color: var(--color-danger); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
-.password-identity { display: grid; gap: 7px; }
-.password-identity strong { color: var(--color-text); font-size: 15px; }
-.password-identity span { color: var(--color-text-muted); font-size: 12px; line-height: 1.7; }
+.password-actions { justify-content: flex-end; gap: 12px; margin-top: 0; }
+.profile-actions .ant-btn:not(.ant-btn-primary), .password-reset-button { border: 1px solid #d8e0eb; color: #526175; background: #f5f7fa; box-shadow: none; }
+.profile-actions .ant-btn:not(.ant-btn-primary):hover, .password-reset-button:hover { border-color: #b8caff; color: var(--color-primary); background: var(--color-primary-soft); }
+.form-actions .ant-btn { border-radius: 8px; transition: color .2s ease, background-color .2s ease, border-color .2s ease, box-shadow .2s ease; }
 @media (max-width: 760px) {
+  .settings-grid { grid-template-columns: 1fr; gap: 14px; }
+  .profile-card, .password-card { display: block; height: auto; }
+  .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { display: block; }
   .profile-container { width: auto; padding: 8px 14px 28px; }
   .page-header { align-items: flex-start; margin-bottom: 18px; }
   .page-title { font-size: 26px; }
   .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 60px; padding-inline: 16px; }
   .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 16px; }
-  .profile-layout, .password-layout { grid-template-columns: 1fr; gap: 20px; }
+  .profile-layout { grid-template-columns: 1fr; gap: 20px; }
+  .password-layout { display: block; }
   .profile-fields, .password-fields { max-width: none; }
-  .profile-identity { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; align-items: center; }
-  .identity-avatar-wrap { grid-row: span 2; }
+  .password-fields { display: block; padding-top: 0; }
+  .password-fields .profile-field { min-height: 0; }
+  .password-fields .profile-field :deep(.ant-form-item-extra) { min-height: 0; }
+  .profile-identity { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; align-items: center; text-align: left; }
+  .profile-identity .identity-avatar-wrap { align-items: flex-start; grid-row: span 2; }
   .identity-copy { margin-top: 0; }
   .identity-hint { grid-column: 2; margin: 0; }
-  .password-identity { padding-bottom: 0; }
   .profile-field-pair { grid-template-columns: 1fr; gap: 0; }
   .form-actions { justify-content: stretch; }
   .form-actions .ant-btn { flex: 1; }
