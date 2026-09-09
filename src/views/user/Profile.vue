@@ -399,38 +399,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.profile-container { width: min(100%, 960px); margin: 0 auto; padding: 12px 20px 40px; }
-.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px; }
-.eyebrow { display: block; margin-bottom: 8px; color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
-.page-title { margin: 0; color: var(--color-text); font-size: 28px; font-weight: 780; letter-spacing: -.03em; }
-.page-subtitle { margin: 7px 0 0; color: var(--color-text-secondary); font-size: 14px; }
-.profile-card, .password-card { margin-bottom: 20px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
-.profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 68px; padding-inline: 24px; border-bottom-color: var(--color-border); }
-.profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 24px; }
+.profile-container { width: min(100%, 960px); margin: 0 auto; padding: 8px 20px 24px; }
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px; }
+.eyebrow { display: block; margin-bottom: 4px; color: var(--color-primary); font-size: 11px; font-weight: 800; letter-spacing: .14em; }
+.page-title { margin: 0; color: var(--color-text); font-size: 26px; font-weight: 780; letter-spacing: -.03em; }
+.page-subtitle { margin: 4px 0 0; color: var(--color-text-secondary); font-size: 13px; }
+.profile-card, .password-card { margin-bottom: 14px; border: 1px solid var(--color-border); border-radius: 16px; box-shadow: var(--shadow-card); }
+.profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 56px; padding-inline: 20px; border-bottom-color: var(--color-border); }
+.profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 18px 20px; }
 .card-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .card-header strong { display: block; color: var(--color-text); font-size: 16px; font-weight: 700; }
 .card-hint { display: block; margin-top: 4px; color: var(--color-text-muted); font-size: 12px; font-weight: 400; }
 .edit-state { padding: 5px 10px; border-radius: 999px; color: var(--color-primary); background: var(--color-primary-soft); font-size: 12px; font-weight: 700; white-space: nowrap; }
 .edit-state--dirty { color: #a16207; background: #fff7df; }
-.profile-layout, .password-layout { display: grid; grid-template-columns: 200px minmax(0, 560px); align-items: start; gap: 28px; }
+.profile-layout, .password-layout { display: grid; grid-template-columns: 200px minmax(0, 460px); align-items: start; gap: 28px; }
 .profile-identity, .password-identity { min-width: 0; padding-top: 4px; }
-.identity-avatar-wrap { display: flex; align-items: flex-start; flex-direction: column; gap: 12px; }
+.identity-avatar-wrap { display: flex; align-items: flex-start; flex-direction: column; gap: 8px; }
 .identity-avatar { display: grid; place-items: center; color: #315bea; background: #e9efff; font-size: 32px; font-weight: 700; }
 .upload-btn { margin: 0; }
-.identity-copy { display: grid; gap: 4px; margin-top: 16px; }
+.identity-copy { display: grid; gap: 3px; margin-top: 10px; }
 .identity-copy strong { color: var(--color-text); font-size: 17px; font-weight: 750; overflow-wrap: anywhere; }
 .identity-copy span { color: var(--color-text-secondary); font-size: 13px; overflow-wrap: anywhere; }
 .identity-copy small { color: var(--color-primary); font-size: 12px; font-weight: 650; }
-.identity-hint { margin: 16px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.75; }
-.profile-fields, .password-fields { width: 100%; min-width: 0; max-width: 560px; }
+.identity-hint { margin: 10px 0 0; color: var(--color-text-muted); font-size: 12px; line-height: 1.55; }
+.profile-fields, .password-fields { width: 100%; min-width: 0; max-width: 460px; }
 .profile-fields :deep(.ant-form), .password-fields :deep(.ant-form) { width: 100%; }
-.profile-field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-.profile-field :deep(.ant-form-item-label), .password-fields :deep(.ant-form-item-label) { padding: 0 0 8px; }
+.profile-field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.profile-field :deep(.ant-form-item-label), .password-fields :deep(.ant-form-item-label) { padding: 0 0 4px; }
 .profile-field :deep(.ant-form-item-label > label), .password-fields :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
-.profile-field :deep(.ant-form-item), .password-fields :deep(.ant-form-item) { margin-bottom: 20px; }
+.profile-field :deep(.ant-form-item), .password-fields :deep(.ant-form-item) { margin-bottom: 12px; }
 .profile-field :deep(.ant-input), .profile-field :deep(.ant-input-affix-wrapper), .profile-field :deep(.ant-input-textarea), .password-fields :deep(.ant-input-affix-wrapper) { border-radius: 8px; }
-.profile-field :deep(.ant-form-item-extra), .password-fields :deep(.ant-form-item-extra) { margin-top: 6px; color: var(--color-text-muted); font-size: 12px; line-height: 1.6; }
-.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+.profile-field :deep(.ant-form-item-extra), .password-fields :deep(.ant-form-item-extra) { margin-top: 4px; color: var(--color-text-muted); font-size: 12px; line-height: 1.5; }
+.form-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 0; padding-top: 12px; border-top: 1px solid var(--color-border); }
 .form-error { margin: 12px 0 0; color: var(--color-danger); font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
 .password-identity { display: grid; gap: 7px; }
 .password-identity strong { color: var(--color-text); font-size: 15px; }
@@ -439,7 +439,8 @@ onMounted(() => {
   .profile-container { width: auto; padding: 8px 14px 28px; }
   .page-header { align-items: flex-start; margin-bottom: 18px; }
   .page-title { font-size: 26px; }
-  .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head), .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding-inline: 16px; }
+  .profile-card :deep(.ant-card-head), .password-card :deep(.ant-card-head) { min-height: 60px; padding-inline: 16px; }
+  .profile-card :deep(.ant-card-body), .password-card :deep(.ant-card-body) { padding: 16px; }
   .profile-layout, .password-layout { grid-template-columns: 1fr; gap: 20px; }
   .profile-fields, .password-fields { max-width: none; }
   .profile-identity { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; align-items: center; }
