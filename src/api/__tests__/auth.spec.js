@@ -43,7 +43,7 @@ describe('authentication API contract', () => {
     const file = new File(['avatar'], 'avatar.png', { type: 'image/png' })
 
     await expect(uploadAvatar(file)).resolves.toEqual(expect.objectContaining({ url }))
-    expect(request.post).toHaveBeenCalledWith('/api/upload/avatar', expect.any(FormData))
+    expect(request.post).toHaveBeenCalledWith('/api/upload/avatar/', expect.any(FormData))
   })
 
   it('rejects avatar uploads without a usable URL', async () => {

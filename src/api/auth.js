@@ -41,7 +41,7 @@ export async function uploadAvatar(file) {
   const formData = new FormData()
   formData.append('file', file)
   const payload = unwrapApiResponse(
-    await request.post('/api/upload/avatar', formData),
+    await request.post('/api/upload/avatar/', formData),
     '头像上传失败'
   )
 

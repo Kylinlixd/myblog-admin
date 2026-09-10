@@ -39,12 +39,19 @@
           </button>
         </div>
         <div class="header-actions">
-          <span class="workspace-status"><i /> 系统在线</span>
+          <ServiceStatus
+            class="workspace-status"
+            :state="serviceHealth.state.value"
+            :checked-at="serviceHealth.checkedAt.value"
+            :latency="serviceHealth.latency.value"
+            :error="serviceHealth.error.value"
+            @check="serviceHealth.check"
+          />
           <router-link class="blog-link" to="/blog" :title="isMobile ? '查看博客' : undefined" aria-label="查看博客"><home-outlined /> <span v-if="isMobile">博客</span><span v-else>查看博客</span></router-link>
           <a-dropdown trigger="click">
             <button class="user-button" type="button">
-              <a-avatar :src="userStore.avatar" :size="36">{{ userInitial }}</a-avatar>
-              <span class="user-copy"><strong>{{ userStore.nickname || '管理员' }}</strong><small>内容管理员</small></span>
+              <UserAvatar :src="userStore.avatar" :nickname="userStore.nickname" :username="userStore.username" :size="36" />
+              <span class="user-copy"><strong>{{ userStore.nickname || '管理员' }}</strong><small>{{ userRoleLabel }}</small></span>
               <down-outlined />
             </button>
             <template #overlay>
@@ -74,16 +81,20 @@ import { CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderO
 import { Modal } from 'ant-design-vue'
 import { adminMenu } from '@/config/adminMenu'
 import { useUserStore } from '@/stores/user'
+import UserAvatar from '@/components/common/UserAvatar.vue'
+import ServiceStatus from '@/components/common/ServiceStatus.vue'
+import { useServiceHealth } from '@/composables/useServiceHealth'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const serviceHealth = useServiceHealth()
 const collapsed = ref(localStorage.getItem('admin.sidebarCollapsed') === 'true')
 const isMobile = ref(window.innerWidth < 992)
 const mobileOpen = ref(false)
 const iconMap = { dashboard: DashboardOutlined, content: ReadOutlined, category: FolderOutlined, tags: TagsOutlined, comments: CommentOutlined, files: FileOutlined, logs: HistoryOutlined }
 const selectedKey = computed(() => [...adminMenu].sort((a, b) => b.path.length - a.path.length).find((item) => route.path === item.path || route.path.startsWith(`${item.path}/`))?.key || 'dashboard')
-const userInitial = computed(() => (userStore.nickname || '管').slice(0, 1))
+const userRoleLabel = computed(() => ({ admin: '站点管理员', editor: '内容编辑', moderator: '内容审核员', author: '内容作者' }[userStore.userInfo?.role] || '内容管理成员'))
 const groupedMenu = computed(() => adminMenu.reduce((groups, item) => {
   const group = groups.find((entry) => entry.key === item.group)
   if (group) group.items.push(item)

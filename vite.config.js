@@ -36,7 +36,8 @@ export default defineConfig(({ mode }) => {
           bypass(request) {
             if (shouldBypassBlogProxy(request.headers.accept)) return '/index.html'
           }
-        }
+        },
+        '/media': { target: apiTarget, changeOrigin: true }
       }
     },
     build: {

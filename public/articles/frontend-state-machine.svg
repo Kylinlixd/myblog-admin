@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc" style="display:block;width:100%;height:auto;max-width:100%;">
+  <title id="title">前端异步页面状态机</title>
+  <desc id="desc">展示前端页面从初始、加载、成功、空数据到失败和重试的状态转换。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#10223a"/><stop offset="1" stop-color="#214356"/></linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 Z" fill="#9de1d5"/></marker>
+  </defs>
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <text x="110" y="108" fill="#f8efe4" font-size="48" font-family="Arial, sans-serif" font-weight="700">别让 loading 统治页面</text>
+  <text x="112" y="154" fill="#b9c6d8" font-size="24" font-family="Arial, sans-serif">UI State Machine · 每个状态都能被解释、被重试</text>
+  <g font-family="Arial, sans-serif" font-weight="700">
+    <rect x="120" y="330" width="210" height="100" rx="50" fill="#d98756"/><text x="225" y="392" text-anchor="middle" fill="#fffaf2" font-size="26">初始 idle</text>
+    <rect x="470" y="330" width="230" height="100" rx="50" fill="#f8efe4"/><text x="585" y="392" text-anchor="middle" fill="#182538" font-size="26">加载 loading</text>
+    <rect x="870" y="190" width="230" height="100" rx="50" fill="#68c6bc"/><text x="985" y="252" text-anchor="middle" fill="#10223a" font-size="26">成功 success</text>
+    <rect x="870" y="330" width="230" height="100" rx="50" fill="#ead18d"/><text x="985" y="392" text-anchor="middle" fill="#182538" font-size="26">空数据 empty</text>
+    <rect x="870" y="470" width="230" height="100" rx="50" fill="#ef8d82"/><text x="985" y="532" text-anchor="middle" fill="#182538" font-size="26">失败 error</text>
+    <rect x="1270" y="470" width="210" height="100" rx="50" fill="#d98756"/><text x="1375" y="532" text-anchor="middle" fill="#fffaf2" font-size="26">重试 retry</text>
+  </g>
+  <g fill="none" stroke="#9de1d5" stroke-width="6" marker-end="url(#arrow)">
+    <path d="M330 380 H460"/><path d="M700 350 C760 280 800 250 860 245"/><path d="M700 380 H860"/><path d="M700 410 C760 480 800 510 860 515"/><path d="M1100 520 H1260"/><path d="M1375 460 C1375 220 1200 140 985 180"/>
+  </g>
+  <g font-family="Arial, sans-serif" font-size="20" fill="#b9c6d8">
+    <text x="395" y="350" text-anchor="middle">发起请求</text><text x="765" y="255" text-anchor="middle">有数据</text><text x="765" y="365" text-anchor="middle">结果为空</text><text x="765" y="500" text-anchor="middle">网络 / 业务异常</text><text x="1185" y="500" text-anchor="middle">点击重试</text>
+  </g>
+  <rect x="120" y="690" width="1360" height="86" rx="18" fill="#091728" stroke="#36506f"/>
+  <text x="800" y="744" fill="#f8efe4" font-size="25" text-anchor="middle" font-family="Arial, sans-serif">组件真正要渲染的不是“有没有数据”，而是“请求现在处于什么状态”。</text>
+</svg>

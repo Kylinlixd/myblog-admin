@@ -23,13 +23,11 @@
       <div class="profile-layout">
         <aside class="profile-identity" aria-label="身份信息">
           <div class="identity-avatar-wrap">
-            <a-avatar class="identity-avatar" :size="80" :src="profileForm.avatar || undefined">
-              {{ profileInitial }}
-            </a-avatar>
+            <UserAvatar class="identity-avatar" :size="80" :src="profileForm.avatar" :nickname="profileForm.nickname" :username="profileForm.username" tone="cool" />
             <a-upload
               class="upload-btn"
               :custom-request="handleAvatarUpload"
-              :show-file-list="false"
+              :show-upload-list="false"
               :before-upload="beforeAvatarUpload"
             >
               <a-button type="default" size="small">更换头像</a-button>
@@ -153,6 +151,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { message as AntMessage } from 'ant-design-vue'
 import { useUserStore } from '../../stores/user'
 import { changePassword, uploadAvatar } from '../../api/auth'
+import UserAvatar from '../../components/common/UserAvatar.vue'
 
 const userStore = useUserStore()
 const passwordFormRef = ref(null)
@@ -164,7 +163,6 @@ const passwordError = ref('')
 const savedProfile = ref({ username: '', nickname: '', email: '', bio: '', avatar: '' })
 
 const userInfo = computed(() => userStore.userInfo || {})
-const profileInitial = computed(() => (profileForm.nickname || profileForm.username || '用').trim().slice(0, 1).toUpperCase())
 const roleLabel = computed(() => ({ admin: '站点管理员', editor: '内容编辑', author: '内容作者' }[userInfo.value.role] || '内容管理成员'))
 
 // 资料表单

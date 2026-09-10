@@ -18,14 +18,14 @@
       <p v-else>正在加载访问统计…</p>
     </section>
     <section class="security-summary" aria-label="安全概览">
-      <div class="summary-card"><span>活跃 IP</span><strong>{{ total }}</strong></div>
-      <div class="summary-card summary-card--danger"><span>高风险 IP</span><strong>{{ highRiskCount }}</strong></div>
-      <div class="summary-card summary-card--rule"><span>生效防护规则</span><strong>{{ activeRules.length }}</strong></div>
-      <div class="summary-card"><span>封禁/限流命中</span><strong>{{ blockedCount }}</strong></div>
+      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'profiles' }" type="button" @click="selectSummary('profiles')"><span>活跃 IP</span><strong>{{ total }}</strong><small>查看 IP 画像 →</small></button>
+      <button class="summary-card summary-card--danger" :class="{ 'summary-card--selected': currentView === 'high-risk' }" type="button" @click="selectSummary('high-risk')"><span>高风险 IP</span><strong>{{ highRiskCount }}</strong><small>查看高风险画像 →</small></button>
+      <button class="summary-card summary-card--rule" :class="{ 'summary-card--selected': currentView === 'rules' }" type="button" @click="selectSummary('rules')"><span>生效防护规则</span><strong>{{ activeRules.length }}</strong><small>查看规则明细 →</small></button>
+      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'blocks' }" type="button" @click="selectSummary('blocks')"><span>封禁/限流命中</span><strong>{{ blockedCount }}</strong><small>查看拦截记录 →</small></button>
     </section>
 
     <div class="access-log-toolbar">
-      <a-form layout="inline" class="access-log-filters" @submit.prevent="applyFilters">
+      <a-form class="access-log-filters" @submit.prevent="applyFilters">
         <a-form-item label="IP"><a-input v-model:value="filters.ip" allow-clear placeholder="IP 或 CIDR" /></a-form-item>
         <a-form-item label="风险">
           <a-select v-model:value="filters.risk" allow-clear placeholder="全部" style="width: 150px">
@@ -42,13 +42,27 @@
           </a-select>
         </a-form-item>
         <a-form-item label="地区"><a-input v-model:value="filters.region" allow-clear placeholder="国家 / 省份 / 城市" /></a-form-item>
-        <a-button type="primary" html-type="submit">筛选</a-button>
-        <a-button @click="resetFilters">重置</a-button>
+        <div class="filter-actions">
+          <a-button @click="resetFilters">重置</a-button>
+          <a-button type="primary" html-type="submit">筛选</a-button>
+        </div>
       </a-form>
-      <a-button @click="loadAll" :loading="loadingProfiles">刷新</a-button>
+      <a-button class="access-log-refresh" @click="loadAll" :loading="loadingProfiles || loadingRules">刷新</a-button>
     </div>
 
-    <DataTable
+    <section v-if="currentView === 'rules'" class="summary-detail-card">
+      <header><div><h2>当前生效防护规则</h2><p>已排除撤销和已过期规则。</p></div></header>
+      <div v-if="activeRules.length" class="rules-list">
+        <div v-for="rule in activeRules" :key="rule.id" class="rule-summary-row"><a-tag :color="ruleColor(rule.rule_type)">{{ ruleLabel(rule.rule_type) }}</a-tag><strong>{{ rule.target }}</strong><span>{{ rule.reason || '无原因说明' }}</span><small>{{ rule.expires_at ? `至 ${formatDate(rule.expires_at)}` : '长期有效' }}</small></div>
+      </div>
+      <div v-else class="state-box">暂无生效规则</div>
+    </section>
+    <section v-else-if="currentView === 'blocks'" class="summary-detail-card">
+      <header><div><h2>拦截记录</h2><p>当前仅展示已归因的安全拦截请求；历史日志未记录归因时不会推断为命中。</p></div></header>
+      <div class="state-box">暂无已归因的拦截记录</div>
+    </section>
+
+    <DataTable v-if="currentView !== 'rules' && currentView !== 'blocks'"
       :data="profiles"
       :columns="columns"
       :loading="loadingProfiles"
@@ -231,8 +245,8 @@ const columns = [
 
 const profiles = ref([])
 const rules = ref([])
-const activeRules = computed(() => rules.value.filter((rule) => rule.status === 'active'))
-const blockedCount = computed(() => rules.value.filter((rule) => ['blacklist', 'ban', 'rate_limit'].includes(rule.rule_type) && rule.status === 'active').length)
+const activeRules = computed(() => rules.value.filter((rule) => rule.status === 'active' && (!rule.expires_at || new Date(rule.expires_at) > new Date())))
+const blockedCount = ref(0)
 const loadingProfiles = ref(false)
 const loadingRules = ref(false)
 const total = ref(0)
@@ -249,6 +263,7 @@ const savingRule = ref(false)
 const ruleForm = ref(emptyRuleForm())
 
 const highRiskCount = ref(0)
+const currentView = ref(route.query.view === 'high-risk' ? 'high-risk' : route.query.view === 'rules' ? 'rules' : route.query.view === 'blocks' ? 'blocks' : 'profiles')
 
 function emptyRuleForm() {
   return {
@@ -297,10 +312,12 @@ async function loadProfiles() {
       pageSize: pageSize.value,
       ...Object.fromEntries(Object.entries(filters.value).filter(([, value]) => value))
     }
+    if (currentView.value === 'high-risk') params.riskGroup = 'high_plus'
     const response = await getAccessLogProfiles(params)
     profiles.value = response?.data?.list || []
     total.value = response?.data?.total || 0
     highRiskCount.value = response?.data?.summary?.high_risk || 0
+    blockedCount.value = response?.data?.summary?.blocked_requests ?? 0
   } catch (error) {
     message.error(error?.message || 'IP 画像加载失败')
   } finally {
@@ -326,7 +343,22 @@ async function loadAll() {
 }
 
 function applyFilters() { page.value = 1; loadProfiles() }
-function resetFilters() { filters.value = { ip: '', risk: undefined, network: undefined, region: '' }; applyFilters() }
+function replaceViewQuery(view) {
+  const url = new URL(window.location.href)
+  if (view) url.searchParams.set('view', view)
+  else url.searchParams.delete('view')
+  window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+}
+function resetFilters() { filters.value = { ip: '', risk: undefined, network: undefined, region: '' }; currentView.value = 'profiles'; replaceViewQuery('profiles'); applyFilters() }
+function selectSummary(view) {
+  currentView.value = view
+  replaceViewQuery(view)
+  if (view === 'high-risk') {
+    filters.value = { ip: '', risk: undefined, network: undefined, region: '' }
+    page.value = 1
+    loadProfiles()
+  }
+}
 function changePage(value) { page.value = value; loadProfiles() }
 function changeSize(value) { pageSize.value = value; page.value = 1; loadProfiles() }
 
@@ -396,14 +428,26 @@ onMounted(() => {
 .access-log-page { max-width: 1440px; }
 .security-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
 .summary-card { padding: 16px 18px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; box-shadow: 0 2px 8px rgb(20 32 58 / 4%); }
+.summary-card { display: block; width: 100%; text-align: left; cursor: pointer; transition: border-color .18s ease, background-color .18s ease, transform .18s ease; }
+.summary-card:hover { border-color: #9bb3f5; background: #fbfcff; transform: translateY(-1px); }
+.summary-card--selected { border-color: var(--color-primary); box-shadow: 0 0 0 2px rgb(49 91 234 / 12%); }
 .summary-card span { display: block; color: var(--color-text-muted); font-size: 12px; }
 .summary-card strong { display: block; margin-top: 8px; color: var(--color-text); font-size: 26px; font-weight: 750; }
+.summary-card small { display: block; margin-top: 8px; color: var(--color-primary); font-size: 11px; }
 .summary-card--danger { border-color: #fbc4c4; background: #fff5f5; }
 .summary-card--danger strong { color: #c0392b; }
 .summary-card--rule { border-color: #ead2a7; background: #fffaf0; }
 .summary-card--rule strong { color: #9a5b11; }
-.access-log-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-.access-log-filters { padding: 12px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; }
+.access-log-toolbar { display: flex; align-items: stretch; gap: 12px; margin-bottom: 16px; }
+.access-log-filters { display: grid; min-width: 0; flex: 1 1 auto; grid-template-columns: minmax(190px, 1.25fr) minmax(140px, .8fr) minmax(140px, .8fr) minmax(190px, 1.15fr) auto; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; }
+.access-log-filters :deep(.ant-form-item) { display: flex; min-width: 0; align-items: center; margin: 0; }
+.access-log-filters :deep(.ant-form-item-label) { flex: 0 0 auto; padding: 0 8px 0 0; }
+.access-log-filters :deep(.ant-form-item-label > label) { color: var(--color-text-secondary); }
+.access-log-filters :deep(.ant-form-item-control) { min-width: 0; flex: 1; }
+.access-log-filters :deep(.ant-form-item-control-input), .access-log-filters :deep(.ant-form-item-control-input-content) { min-width: 0; width: 100%; }
+.access-log-filters :deep(.ant-input), .access-log-filters :deep(.ant-select) { width: 100% !important; }
+.filter-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.access-log-refresh { align-self: flex-end; flex: 0 0 auto; }
 .ip-cell { display: grid; gap: 4px; }
 .ip-cell strong { color: var(--color-text); font-size: 13px; }
 .ip-cell .ant-tag { width: fit-content; font-size: 11px; }
@@ -429,11 +473,24 @@ onMounted(() => {
 .rule-row, .log-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid #eef1f5; }
 .log-row code { min-width: 0; flex: 1; overflow: hidden; color: #344054; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .log-row .ant-tag { flex: 0 0 auto; }
-@media (max-width: 900px) { .security-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .security-summary { grid-template-columns: 1fr; } .access-log-toolbar { align-items: stretch; flex-direction: column; } }
+@media (max-width: 1100px) {
+  .access-log-toolbar { flex-wrap: wrap; }
+  .access-log-filters { flex-basis: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .filter-actions { grid-column: 4; }
+  .access-log-refresh { margin-left: auto; }
+}
+@media (max-width: 900px) { .security-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .access-log-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-actions { grid-column: 1 / -1; justify-self: end; } }
+@media (max-width: 560px) { .security-summary { grid-template-columns: 1fr; } .access-log-toolbar { align-items: stretch; flex-direction: column; } .access-log-filters { grid-template-columns: 1fr; } .filter-actions { grid-column: auto; justify-self: stretch; } .filter-actions .ant-btn { flex: 1; } .access-log-refresh { margin-left: 0; } }
 .visits-panel { margin-bottom: 20px; padding: 24px; background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; }
 .visits-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .visits-heading h2 { margin: 0; font-size: 20px; }
 .visits-panel p { color: #8691a4; font-size: 12px; }
 .visits-heading a { color: #315bea; }
+.summary-detail-card { padding: 18px; border: 1px solid var(--color-border); border-radius: 10px; background: #fff; }
+.summary-detail-card header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.summary-detail-card h2 { margin: 0; color: var(--color-text); font-size: 16px; }
+.summary-detail-card p { margin: 4px 0 0; color: var(--color-text-muted); font-size: 12px; }
+.rule-summary-row { display: grid; grid-template-columns: 90px minmax(120px, 180px) minmax(0, 1fr) 140px; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px solid #eef1f5; color: var(--color-text-secondary); font-size: 12px; }
+.rule-summary-row strong { color: var(--color-text); }
+@media (max-width: 720px) { .rule-summary-row { grid-template-columns: 1fr 1fr; } .rule-summary-row span, .rule-summary-row small { grid-column: span 2; } }
 </style>

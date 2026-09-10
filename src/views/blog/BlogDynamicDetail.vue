@@ -164,22 +164,22 @@
         <!-- 评论列表 -->
         <div class="comment-list">
           <div v-if="commentList && commentList.length > 0">
-            <div
-              v-for="comment in commentList"
-              :key="comment.id"
-              class="comment-item"
-            >
-              <div class="comment-user">
-                <a-avatar :src="comment.avatar || '/default-avatar.png'" />
-                <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
-                <span class="time">{{ formatDate(comment.createTime) }}</span>
-              </div>
-              <div class="comment-content">{{ comment.content }}</div>
-            </div>
+              <CommentThread
+                v-for="comment in commentList"
+                :key="comment.id"
+                :comment="comment"
+                @reply="startReply"
+              />
           </div>
           <div v-else class="no-comments">
             暂无评论，快来发表第一条评论吧！
           </div>
+        </div>
+
+        <div v-if="replyingTo" class="reply-editor">
+          <div class="reply-editor__meta">回复 @{{ replyingTo.nickname || '匿名用户' }} <button type="button" @click="cancelReply">取消</button></div>
+          <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
+          <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
         </div>
 
         <!-- 评论分页 -->
@@ -217,6 +217,7 @@ import xml from 'highlight.js/lib/languages/xml'
 import 'highlight.js/styles/atom-one-light.css'
 import { message } from 'ant-design-vue'
 import DOMPurify from 'dompurify'
+import CommentThread from '@/components/blog/CommentThread.vue'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
   ([language, definition]) => hljs.registerLanguage(language, definition)
@@ -328,6 +329,8 @@ const commentList = ref([])
 const commentPage = ref(1)
 const commentPageSize = ref(10)
 const commentTotal = ref(0)
+const replyingTo = ref(null)
+const replyContent = ref('')
 
 // 评论表单验证规则
 const commentRules = {
@@ -388,7 +391,8 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
   try {
     const result = await getDynamicComments(dynamicId, {
       page: commentPage.value,
-      pageSize: commentPageSize.value
+      pageSize: commentPageSize.value,
+      thread: 1
     })
     
     
@@ -396,7 +400,7 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
 
     if (result && result.code === 200 && result.data) {
       commentList.value = result.data.list || []
-      commentTotal.value = result.data.total || 0
+      commentTotal.value = result.data.commentTotal ?? result.data.total ?? 0
       commentPageSize.value = result.data.pageSize || 10
     } else {
       console.error('获取评论列表失败:', result?.message)
@@ -438,7 +442,8 @@ const submitComment = async () => {
       dynamic_id: dynamic.value.id,
       content: DOMPurify.sanitize(commentContent.value),
       nickname: DOMPurify.sanitize(nickname.value || '匿名用户'),
-      email: DOMPurify.sanitize(email.value || '')
+      email: DOMPurify.sanitize(email.value || ''),
+      ...(replyingTo.value ? { parent_id: replyingTo.value.id } : {})
     }
     
     const result = await commentDynamic(dynamic.value.id, commentData)
@@ -452,6 +457,8 @@ const submitComment = async () => {
       commentContent.value = ''
       nickname.value = ''
       email.value = ''
+      replyContent.value = ''
+      replyingTo.value = null
       commentPage.value = 1
       await fetchComments()
     } else {
@@ -467,6 +474,18 @@ const submitComment = async () => {
   } finally {
     isSubmittingComment.value = false
   }
+}
+
+const startReply = (comment) => {
+  replyingTo.value = comment
+  replyContent.value = ''
+}
+const cancelReply = () => { replyingTo.value = null; replyContent.value = '' }
+const submitReply = async () => {
+  const content = replyContent.value.trim()
+  if (!replyingTo.value || !content || isSubmittingComment.value) return
+  commentContent.value = content
+  await submitComment()
 }
 
 // 评论分页

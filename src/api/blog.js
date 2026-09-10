@@ -69,7 +69,8 @@ export const commentDynamic = (id, data) =>
     dynamic_id: id,
     content: data.content,
     nickname: data.nickname,
-    email: data.email
+    email: data.email,
+    ...(data.parent_id ? { parent_id: data.parent_id } : {})
   })
 
 export const getDynamicComments = (id, params) =>
