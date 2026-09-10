@@ -127,11 +127,12 @@ describe('FileList upload handling', () => {
     await wrapper.vm.handleCustomUpload({ file, onSuccess, onError })
     await flushPromises()
 
-    expect(uploadFile).toHaveBeenCalledWith({
+    expect(uploadFile).toHaveBeenCalledWith(expect.objectContaining({
       file,
       file_type: 'image',
-      onProgress: expect.any(Function)
-    })
+      onProgress: expect.any(Function),
+      onProgressDetails: expect.any(Function)
+    }))
     expect(onSuccess).toHaveBeenCalledWith(uploadResult)
     expect(onError).not.toHaveBeenCalled()
     expect(message.success).toHaveBeenCalledWith('上传成功')
@@ -176,6 +177,34 @@ describe('FileList upload handling', () => {
     finishUpload({ id: 13, name: 'guide.pdf' })
     await uploadPromise
     expect(onSuccess).toHaveBeenCalled()
+    expect(wrapper.vm.uploadingName).toBe('')
+    wrapper.unmount()
+  })
+
+  it('keeps a processing state after transfer reaches 100 percent until the server confirms', async () => {
+    let finishUpload
+    uploadFile.mockImplementationOnce(({ onProgress, onProgressDetails }) => {
+      onProgress(100)
+      onProgressDetails({ loaded: 100, total: 100, lengthComputable: true })
+      return new Promise((resolve) => { finishUpload = resolve })
+    })
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    const uploadPromise = wrapper.vm.handleCustomUpload({
+      file: { name: 'processing.mp4', type: 'video/mp4' },
+      onSuccess: jest.fn(),
+      onError: jest.fn()
+    })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.vm.uploadStage).toBe('processing')
+    expect(wrapper.vm.uploadProgress).toBe(100)
+    expect(wrapper.vm.uploadingName).toBe('processing.mp4')
+
+    finishUpload({ id: 19, name: 'processing.mp4' })
+    await uploadPromise
+    expect(wrapper.vm.uploadStage).toBe('success')
     expect(wrapper.vm.uploadingName).toBe('')
     wrapper.unmount()
   })

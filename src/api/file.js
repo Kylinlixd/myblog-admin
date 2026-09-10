@@ -53,8 +53,16 @@ export const uploadFile = async (params) => {
   const options = params.onProgress
     ? {
         onUploadProgress: ({ loaded, total }) => {
-          if (!total) return
-          params.onProgress(Math.min(100, Math.round((loaded / total) * 100)))
+          const lengthComputable = Number.isFinite(total) && total > 0
+          const percent = lengthComputable
+            ? Math.min(100, Math.round((loaded / total) * 100))
+            : null
+          params.onProgress(percent)
+          params.onProgressDetails?.({
+            loaded: Number(loaded) || 0,
+            total: lengthComputable ? total : null,
+            lengthComputable
+          })
         }
       }
     : {}
@@ -94,6 +102,14 @@ export const downloadFile = (fileId) =>
   request.post(`/api/upload/files/${fileId}/download/`, null, {
     responseType: 'blob',
     timeout: FILE_TRANSFER_TIMEOUT_MS
+  })
+
+export const previewPdf = (fileId, options = {}) =>
+  request.get(`/api/upload/files/${fileId}/preview/`, {
+    responseType: 'arraybuffer',
+    timeout: FILE_TRANSFER_TIMEOUT_MS,
+    signal: options.signal,
+    onDownloadProgress: options.onDownloadProgress
   })
 
 export const deleteFile = (fileId) =>

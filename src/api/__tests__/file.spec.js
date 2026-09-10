@@ -1,4 +1,4 @@
-import { downloadFile, getFileList, searchFiles, uploadFile } from '../file'
+import { downloadFile, getFileList, previewPdf, searchFiles, uploadFile } from '../file'
 import request from '@/utils/request'
 
 describe('file API normalization', () => {
@@ -114,6 +114,7 @@ describe('file API normalization', () => {
       })
     })
     const onProgress = jest.fn()
+    const onProgressDetails = jest.fn()
     const file = new File(['document'], 'guide.pdf', { type: 'application/pdf' })
 
     const result = await uploadFile({ file, file_type: 'document', onProgress })
@@ -134,5 +135,36 @@ describe('file API normalization', () => {
       null,
       { responseType: 'blob', timeout: 1800000 }
     )
+  })
+
+  it('reports upload byte details without changing the percentage callback', async () => {
+    const onProgress = jest.fn()
+    const onProgressDetails = jest.fn()
+    jest.spyOn(request, 'post').mockImplementationOnce(async (_url, _data, options) => {
+      options.onUploadProgress({ loaded: 5, total: 10 })
+      return { code: 200, data: { id: 10, name: 'a.pdf', file_type: 'document' } }
+    })
+
+    await uploadFile({ file: new File(['12345'], 'a.pdf'), file_type: 'document', onProgress, onProgressDetails })
+
+    expect(onProgress).toHaveBeenCalledWith(50)
+    expect(onProgressDetails).toHaveBeenCalledWith({
+      loaded: 5,
+      total: 10,
+      lengthComputable: true
+    })
+  })
+
+  it('requests an authenticated PDF preview without using the download endpoint', async () => {
+    const data = new ArrayBuffer(8)
+    jest.spyOn(request, 'get').mockResolvedValueOnce(data)
+
+    await expect(previewPdf(17)).resolves.toBe(data)
+    expect(request.get).toHaveBeenCalledWith('/api/upload/files/17/preview/', {
+      responseType: 'arraybuffer',
+      timeout: 1800000,
+      signal: undefined,
+      onDownloadProgress: undefined
+    })
   })
 })

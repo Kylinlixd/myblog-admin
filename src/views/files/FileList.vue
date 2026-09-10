@@ -60,12 +60,25 @@
           </div>
         </div>
       </a-upload-dragger>
-      <div v-if="uploadingName" class="upload-progress" aria-live="polite">
+      <div v-if="uploadStage !== 'idle'" class="upload-progress" :class="`upload-progress--${uploadStage}`" aria-live="polite">
         <div>
-          <span>正在上传</span>
-          <strong>{{ uploadingName }}</strong>
+          <span>{{ uploadStageLabel }}</span>
+          <strong :title="uploadStatusName">{{ uploadStatusName }}</strong>
         </div>
-        <a-progress :percent="uploadProgress" :show-info="true" size="small" />
+        <a-progress
+          :percent="uploadProgress"
+          :status="uploadStage === 'error' ? 'exception' : uploadStage === 'success' ? 'success' : 'active'"
+          :show-info="uploadStage !== 'processing'"
+          size="small"
+        />
+        <small v-if="uploadDetails.lengthComputable && uploadStage === 'uploading'">
+          已发送 {{ formatFileSize(uploadDetails.loaded) }} / {{ formatFileSize(uploadDetails.total) }}
+        </small>
+        <small v-else-if="uploadStage === 'processing'">传输完成，服务器正在处理文件</small>
+        <small v-else-if="uploadStage === 'error'">{{ uploadErrorMessage }}</small>
+        <a-button v-if="uploadRefreshFailed" type="link" size="small" @click="retryUploadRefresh">
+          刷新列表
+        </a-button>
       </div>
     </section>
 
@@ -121,7 +134,7 @@
     </div>
 
     <AsyncState
-      v-if="loading || errorMessage || !fileList.length"
+      v-if="loading || (!fileList.length && (errorMessage || !loading))"
       data-testid="file-async-state"
       :loading="loading"
       :error="errorMessage"
@@ -130,6 +143,11 @@
       empty-description="上传一个文件来开始管理资源。"
       @retry="fetchFiles"
     />
+
+    <div v-if="errorMessage && fileList.length" class="file-list-refresh-error" role="alert">
+      <span>{{ errorMessage }}，当前仍显示上一次结果。</span>
+      <a-button type="link" size="small" @click="fetchFiles">刷新列表</a-button>
+    </div>
 
     <a-card v-else class="data-card admin-table-card">
       <a-table
@@ -180,6 +198,11 @@
             <template v-else-if="record.type === 'video'">
               <a-button type="link" size="small" @click="previewMedia('video', record.url)">
                 <VideoCameraOutlined /> 视频
+              </a-button>
+            </template>
+            <template v-else-if="isPdfFile(record)">
+              <a-button type="link" size="small" @click="previewPdfFile(record)">
+                <FileTextOutlined /> 预览
               </a-button>
             </template>
             <template v-else>
@@ -251,6 +274,7 @@
           </div>
         </div>
         <div class="file-mobile-row__actions">
+          <a-button v-if="isPdfFile(record)" type="text" size="small" @click="previewPdfFile(record)">预览</a-button>
           <a-button type="text" size="small" @click="handleDownload(record)">下载</a-button>
           <a-button type="text" size="small" @click="copyFileUrl(record.url)">复制链接</a-button>
           <a-popconfirm
@@ -293,12 +317,18 @@
       </div>
     </a-modal>
 
+    <PdfPreviewModal
+      v-model:open="pdfPreviewVisible"
+      :file="pdfPreviewFile"
+      @download="handleDownload"
+    />
+
     <FileTutorialDrawer v-model:open="tutorialOpen" />
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   UploadOutlined,
@@ -319,6 +349,7 @@ import { buildApiUrl } from '@/utils/apiBaseUrl'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
 import FileTutorialDrawer from './FileTutorialDrawer.vue'
+import PdfPreviewModal from '@/components/files/PdfPreviewModal.vue'
 import { useResizableColumns } from '@/composables/useResizableColumns'
 
 const loading = ref(false)
@@ -332,6 +363,12 @@ const deletingIds = reactive(new Set())
 const batchDeleting = ref(false)
 const uploadProgress = ref(0)
 const uploadingName = ref('')
+const uploadStatusName = ref('')
+const uploadStage = ref('idle')
+const uploadDetails = ref({ loaded: 0, total: null, lengthComputable: false })
+const uploadErrorMessage = ref('')
+const uploadRefreshFailed = ref(false)
+let uploadStatusTimer
 const tutorialOpen = ref(false)
 const tutorialHintVisible = ref(false)
 let requestGeneration = 0
@@ -347,6 +384,8 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('')
+const pdfPreviewVisible = ref(false)
+const pdfPreviewFile = ref(null)
 
 const visibleBytes = computed(() => fileList.value.reduce((sum, file) => sum + (Number(file.size) || 0), 0))
 const backendSummary = computed(() => {
@@ -361,6 +400,13 @@ const backendSummary = computed(() => {
     label: '本地媒体兼容模式',
     description: '现有文件保持可用，新上传会按服务器配置选择存储后端。'
   }
+})
+
+const uploadStageLabel = computed(() => {
+  if (uploadStage.value === 'processing') return '服务器处理中'
+  if (uploadStage.value === 'success') return '上传成功'
+  if (uploadStage.value === 'error') return '上传失败'
+  return '正在上传'
 })
 
 // 表格列定义
@@ -510,12 +556,16 @@ const fetchFiles = async (allowPageReset = true) => {
     if (generation !== requestGeneration) return
     console.error('获取文件列表异常:', error)
     errorMessage.value = error.message || '获取文件列表失败'
-    fileList.value = []
-    total.value = 0
+    if (!fileList.value.length) {
+      fileList.value = []
+      total.value = 0
+    }
     message.error(error.message || '获取文件列表失败')
+    return false
   } finally {
     if (generation === requestGeneration) loading.value = false
   }
+  return true
 }
 
 // 处理搜索
@@ -617,33 +667,80 @@ const beforeUpload = (file) => {
 
 // 处理自定义上传
 const handleCustomUpload = async ({ file, onSuccess, onError }) => {
+  if (uploadStage.value === 'uploading' || uploadStage.value === 'processing') {
+    const error = new Error('已有文件正在上传，请稍候')
+    onError?.(error)
+    return
+  }
+  clearUploadStatusTimer()
   uploadingName.value = file.name
+  uploadStatusName.value = file.name
+  uploadStage.value = 'uploading'
+  uploadErrorMessage.value = ''
+  uploadRefreshFailed.value = false
   uploadProgress.value = 0
+  uploadDetails.value = { loaded: 0, total: null, lengthComputable: false }
   try {
     const result = await uploadFile({
       file,
       file_type: inferFileType(file),
       onProgress: (percent) => {
-        uploadProgress.value = percent
+        uploadProgress.value = Number.isFinite(percent) ? Math.min(99, percent) : 0
+        uploadStage.value = 'uploading'
+      },
+      onProgressDetails: (details = {}) => {
+        uploadDetails.value = details
+        if (details.lengthComputable && details.loaded >= details.total) {
+          uploadProgress.value = 100
+          uploadStage.value = 'processing'
+        }
       }
     })
     
-    if (result) {
+    if (result && typeof result === 'object') {
       uploadProgress.value = 100
+      uploadStage.value = 'success'
       message.success('上传成功')
-      onSuccess(result)
-      await fetchFiles()
+      onSuccess?.(result)
+      currentPage.value = 1
+      const refreshed = await fetchFiles()
+      uploadRefreshFailed.value = refreshed === false
+      if (uploadRefreshFailed.value) message.warning('文件已上传，列表刷新失败')
     } else {
       const error = new Error('上传失败')
+      uploadStage.value = 'error'
+      uploadErrorMessage.value = error.message
       message.error(error.message)
-      onError(error)
+      onError?.(error)
     }
   } catch (error) {
     console.error('上传失败:', error)
+    uploadStage.value = 'error'
+    uploadErrorMessage.value = error.message || '上传失败'
     message.error(error.message || '上传失败')
-    onError(error)
+    onError?.(error)
   } finally {
     uploadingName.value = ''
+    if (uploadStage.value === 'success') {
+      uploadStatusTimer = window.setTimeout(() => {
+        uploadStage.value = 'idle'
+        uploadStatusName.value = ''
+        uploadRefreshFailed.value = false
+      }, 3000)
+    }
+  }
+}
+
+const retryUploadRefresh = async () => {
+  uploadRefreshFailed.value = false
+  const refreshed = await fetchFiles()
+  uploadRefreshFailed.value = refreshed === false
+}
+
+function clearUploadStatusTimer() {
+  if (uploadStatusTimer) {
+    window.clearTimeout(uploadStatusTimer)
+    uploadStatusTimer = undefined
   }
 }
 
@@ -683,6 +780,16 @@ const previewMedia = (type, url) => {
   previewUrl.value = fullUrl;
   previewTitle.value = type === 'audio' ? '音频预览' : '视频预览';
   previewVisible.value = true;
+}
+
+const isPdfFile = (file) => {
+  const contentType = String(file?.contentType || '').toLowerCase().split(';', 1)[0]
+  return contentType === 'application/pdf' || (file?.type === 'document' && /\.pdf$/i.test(file?.name || ''))
+}
+
+const previewPdfFile = async (file) => {
+  pdfPreviewFile.value = file
+  pdfPreviewVisible.value = true
 }
 
 // 复制文件链接
@@ -802,6 +909,8 @@ const handlePreviewClose = () => {
   previewVisible.value = false
 }
 
+onUnmounted(() => clearUploadStatusTimer())
+
 // 处理图片加载错误
 const handleImageError = (e) => {
   // 设置默认图片
@@ -819,6 +928,19 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
+.file-list-refresh-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #f3c7c4;
+  border-radius: var(--radius-sm);
+  background: #fff8f7;
+  color: #b42318;
+  font-size: 13px;
+}
+
 .storage-brief {
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) auto;
