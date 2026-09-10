@@ -10,7 +10,7 @@
 
 **目录：**下文 F 指 `/Users/leexd/Documents/ChatGPT/blog-admin`；B 指 `/Users/leexd/Documents/ChatGPT/blog_li`。所有命令分别在对应仓库执行。
 
-**本次执行状态（2026-09-10）：**上传状态、列表局部刷新、PDF 权限预览接口和前端 PDF.js 组件已在本地实现；前端 72 个测试套件 / 345 个测试、后端 `apps.upload` 34 个测试通过，生产构建和 PDF worker 静态资源检查通过。已用临时本地管理员和真实 PDF 做桌面（1418px）及手机（390px）浏览器检查，测试账号与文件已清理。当前仍是本地待用户验收，未提交、未推送、未发布；线上存储、真实手机设备和用户指定的 25 MB 多页 PDF 尚待验收。
+**本次执行状态（2026-09-10）：**上传状态、列表局部刷新、PDF 权限预览接口和前端 PDF.js 组件已实现并通过用户验收；前端 72 个测试套件 / 345 个测试、后端 `apps.upload` 34 个测试通过，生产构建和 PDF worker 静态资源检查通过。已用临时本地管理员和真实 PDF 做桌面（1418px）及手机（390px）浏览器检查，测试账号与文件已清理。前端提交 `2e789bc`、后端提交 `eab6def` 已推送 `main` 并发布；线上前端 release 为 `/var/www/myblog-admin/releases/2e789bcfc362fedd59a63362bb40c6dcdf58ce97`，后端 `/opt/blog_li` 已备份至 `/opt/blog_li-rollback-20260910-file-preview` 后更新并重启 `blog-li`。线上 worker 返回 `application/javascript`，未认证 PDF 预览返回 401，Nginx 与 blog-li 均 active。真实手机设备、Xion 存储和用户指定的 25 MB 多页 PDF 仍未单独验证。
 
 ## 1. 已核对的现状
 
