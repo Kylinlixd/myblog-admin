@@ -115,7 +115,10 @@
 }
 
 .blog-code-window .blog-code-run {
+  display: inline-flex;
   align-self: flex-end;
+  align-items: center;
+  justify-content: center;
   width: auto;
   min-width: 92px;
   margin: 10px 14px;
