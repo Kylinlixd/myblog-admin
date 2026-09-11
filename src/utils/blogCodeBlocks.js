@@ -112,6 +112,12 @@ const runHtml = (pre, rawCode) => {
   const target = panel?.querySelector('.blog-code-run-preview-target')
   if (!panel || !target) return
   pre._blogCodePreviewCleanup?.()
+  panel.classList.remove('is-collapsed')
+  const previewToggle = panel.querySelector('[data-blog-code-preview-collapse]')
+  previewToggle?.setAttribute('aria-expanded', 'true')
+  previewToggle?.setAttribute('aria-label', '折叠预览')
+  previewToggle?.setAttribute('title', '折叠预览')
+  previewToggle?.querySelector('.blog-code-collapse-icon')?.classList.remove('is-collapsed')
   target.replaceChildren()
   const frame = document.createElement('iframe')
   const messageId = `blog-preview-${Date.now()}-${Math.random().toString(36).slice(2)}`

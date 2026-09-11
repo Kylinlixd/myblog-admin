@@ -118,6 +118,12 @@ describe('enhanceCodeBlocks', () => {
     toggle.click()
     expect(panel).not.toHaveClass('is-collapsed')
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
+
+    toggle.click()
+    expect(panel).toHaveClass('is-collapsed')
+    pre.querySelector('[data-blog-code-action="run"]').click()
+    expect(panel).not.toHaveClass('is-collapsed')
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('adapts the html sandbox height to content messages', () => {
