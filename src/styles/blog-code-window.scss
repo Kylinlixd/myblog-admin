@@ -266,6 +266,16 @@
   transform: translateY(0);
 }
 
+.blog-code-window.is-collapsed .blog-code-copy-feedback {
+  top: 50%;
+  right: calc(100% + 6px);
+  transform: translateY(-50%);
+}
+
+.blog-code-window.is-collapsed .blog-code-copy-feedback.is-visible {
+  transform: translateY(-50%);
+}
+
 .blog-code-window .blog-code-body {
   display: flex;
   max-height: 560px;
