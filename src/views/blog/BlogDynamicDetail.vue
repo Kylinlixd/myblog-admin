@@ -105,6 +105,7 @@
 
         <aside v-if="tocItems.length" class="article-side-column">
           <div class="article-toc">
+            <span class="article-toc__cursor" aria-hidden="true"></span>
             <div class="article-toc__label">ON THIS PAGE</div>
             <div class="article-toc__title">目录</div>
             <nav aria-label="文章目录">
@@ -1375,10 +1376,33 @@ onBeforeUnmount(() => {
     }
 
     .article-toc {
+      position: relative;
       max-height: inherit;
       overflow: auto;
-      padding: 18px 0 18px 18px;
-      border-left: 1px solid var(--article-line);
+      padding: 18px 0 18px 22px;
+    }
+
+    .article-toc::before {
+      position: absolute;
+      inset: 18px auto 18px 0;
+      width: 1px;
+      background: var(--article-line);
+      content: '';
+    }
+
+    .article-toc__cursor {
+      position: absolute;
+      z-index: 1;
+      top: 18px;
+      left: -1px;
+      width: 3px;
+      height: 25px;
+      border-radius: 999px;
+      background: #c66b32;
+      box-shadow: 0 0 0 4px rgb(198 107 50 / 12%);
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity .25s ease, transform .3s ease;
     }
 
     .article-toc__title {
@@ -1395,6 +1419,7 @@ onBeforeUnmount(() => {
 
     .article-toc button,
     .mobile-toc-list button {
+      position: relative;
       width: 100%;
       padding: 7px 8px;
       border: 0;
@@ -1420,6 +1445,20 @@ onBeforeUnmount(() => {
       color: #9b5e2f;
       font-weight: 700;
     }
+
+    .article-toc button.is-active::before {
+      position: absolute;
+      top: 50%;
+      left: -22px;
+      width: 3px;
+      height: 22px;
+      border-radius: 999px;
+      background: #c66b32;
+      box-shadow: 0 0 0 4px rgb(198 107 50 / 10%);
+      content: '';
+      transform: translateY(-50%);
+    }
+
 
     .article-toc .toc-level-3,
     .mobile-toc-list .toc-level-3 { padding-left: 20px; }
@@ -1466,36 +1505,41 @@ onBeforeUnmount(() => {
       background: #fbf3e8;
       color: #596779;
     }
-    .article-main-column :deep(.markdown-body pre) {
+    .article-main-column :deep(.markdown-body pre.blog-code-window) {
       overflow: hidden;
       padding: 0;
-      border: 1px solid #e3ddd4;
-      border-radius: 16px;
-      background: #fbfaf8;
-      box-shadow: 0 14px 30px rgb(88 65 37 / 9%);
+      border: 1px solid #dedbd6;
+      border-radius: 18px;
+      background: #fffefa;
+      box-shadow: 0 18px 42px rgb(72 58 43 / 12%), 0 2px 5px rgb(72 58 43 / 6%);
     }
     .article-main-column :deep(.blog-code-header) {
       display: flex;
       align-items: center;
       gap: 10px;
-      min-height: 42px;
-      padding: 0 13px;
-      border-bottom: 1px solid #ebe6df;
-      background: #f7f5f2;
-      color: #82786e;
+      min-height: 50px;
+      padding: 0 16px;
+      border-bottom: 1px solid #e8e5e1;
+      background: #f8f7f5;
+      color: #6f6d69;
       font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
     }
-    .article-main-column :deep(.blog-code-dots) { display: flex; gap: 5px; }
-    .article-main-column :deep(.blog-code-dots i) { width: 9px; height: 9px; border-radius: 50%; background: #e1a18c; }
-    .article-main-column :deep(.blog-code-dots i:nth-child(2)) { background: #e4bd72; }
-    .article-main-column :deep(.blog-code-dots i:nth-child(3)) { background: #9bc39f; }
-    .article-main-column :deep(.blog-code-actions) { display: flex; gap: 4px; margin-left: auto; }
-    .article-main-column :deep(.blog-code-action) { border: 0; background: transparent; color: #82786e; cursor: pointer; font: inherit; }
-    .article-main-column :deep(.blog-code-action:hover) { color: #a96235; }
-    .article-main-column :deep(.blog-code-body) { display: flex; max-height: 560px; overflow: auto; transition: max-height .28s ease, opacity .28s ease; }
-    .article-main-column :deep(.blog-code-lines) { flex: 0 0 42px; padding: 16px 10px 16px 0; border-right: 1px solid #eee9e3; color: #b1a89f; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; user-select: none; white-space: pre; }
+    .article-main-column :deep(.blog-code-dots) { display: flex; gap: 7px; }
+    .article-main-column :deep(.blog-code-dots i) { width: 11px; height: 11px; border-radius: 50%; background: #ff605c; box-shadow: inset 0 0 0 1px rgb(94 64 42 / 9%); }
+    .article-main-column :deep(.blog-code-dots i:nth-child(2)) { background: #ffbd44; }
+    .article-main-column :deep(.blog-code-dots i:nth-child(3)) { background: #00ca4e; }
+    .article-main-column :deep(.blog-code-language) { margin-left: 4px; color: #444341; font-size: 12px; font-weight: 700; }
+    .article-main-column :deep(.blog-code-actions) { display: flex; gap: 6px; margin-left: auto; }
+    .article-main-column :deep(.blog-code-action) { min-width: 28px; padding: 5px 7px; border: 0; border-radius: 7px; background: transparent; color: #77746f; cursor: pointer; font: inherit; transition: background .2s ease, color .2s ease; }
+    .article-main-column :deep(.blog-code-action:hover),
+    .article-main-column :deep(.blog-code-action:focus-visible) { background: #ece9e5; color: #a96235; outline: none; }
+    .article-main-column :deep(.blog-code-collapse) { font-size: 19px; line-height: 12px; }
+    .article-main-column :deep(.blog-code-copy) { font-size: 0; }
+    .article-main-column :deep(.blog-code-copy::before) { content: '▣'; font-size: 15px; }
+    .article-main-column :deep(.blog-code-body) { display: flex; max-height: 560px; overflow: auto; background: #fffefa; transition: max-height .32s ease, opacity .32s ease; }
+    .article-main-column :deep(.blog-code-lines) { flex: 0 0 48px; padding: 18px 12px 18px 0; border-right: 1px solid #eeeae5; color: #b6b0a8; font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; user-select: none; white-space: pre; }
     .article-main-column :deep(.blog-code-content) { min-width: 0; flex: 1; }
-    .article-main-column :deep(.blog-code-content code) { display: block; padding: 16px; color: #3b4652; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .article-main-column :deep(.blog-code-content code) { display: block; min-width: max-content; padding: 18px 20px; color: #34383b; font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace; }
     .article-main-column :deep(.markdown-body pre.is-collapsed .blog-code-body) { max-height: 0; opacity: 0; overflow: hidden; }
     .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; }
     .article-main-column :deep(.markdown-body img) { display: block; margin-inline: auto; }

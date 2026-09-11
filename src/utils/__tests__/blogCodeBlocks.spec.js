@@ -11,6 +11,7 @@ describe('enhanceCodeBlocks', () => {
     expect(document.querySelector('.blog-code-lines').textContent).toBe('1\n2')
 
     const first = document.querySelector('pre')
+    expect(first).toHaveClass('blog-code-window')
     document.querySelector('.blog-code-collapse').click()
     expect(first).toHaveClass('is-collapsed')
     expect(document.querySelector('.blog-code-collapse')).toHaveAttribute('aria-expanded', 'false')

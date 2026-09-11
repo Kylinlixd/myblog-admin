@@ -392,12 +392,25 @@ const handleLike = async (item) => {
       // 更新点赞状态和数量
       item.liked = response.data.liked
       item.likes = response.data.like_count
-      message.success(item.liked ? '点赞成功' : '取消点赞成功')
+      if (response.data.already_liked) {
+        message.info('你已点赞，无需重复操作')
+      } else {
+        message.success(item.liked ? '点赞成功' : '取消点赞成功')
+      }
     } else {
       message.error(response.message || '操作失败')
     }
   } catch (error) {
     console.error('点赞失败:', error)
+    const payload = error.response?.data || {}
+    const duplicateLike = payload.data?.already_liked
+      || (error.response?.status === 400 && /已经点过赞|已点赞/.test(payload.message || ''))
+    if (duplicateLike) {
+      item.liked = payload.data?.liked ?? true
+      if (payload.data?.like_count != null) item.likes = payload.data.like_count
+      message.info('你已点赞，无需重复操作')
+      return
+    }
     message.error(error.response?.data?.message || '点赞失败')
   } finally {
     item.isLiking = false

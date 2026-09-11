@@ -12,6 +12,8 @@ export function enhanceCodeBlocks(root) {
     const code = pre.querySelector('code')
     if (!code) return pre
 
+    pre.classList.add('blog-code-window')
+
     const languageClass = [...code.classList].find((name) => name.startsWith('language-'))
     const language = languageClass ? languageClass.slice('language-'.length) : 'text'
     const rawCode = code.textContent || ''
