@@ -325,7 +325,7 @@ onUpdated(() => {
           font-family: monospace;
         }
         
-        :deep(pre) {
+        :deep(pre:not(.blog-code-window)) {
           background: #f5f5f5;
           padding: 1em;
           border-radius: 4px;

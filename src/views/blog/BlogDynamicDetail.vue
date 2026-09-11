@@ -165,7 +165,7 @@
 </template>
 
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, ref, nextTick, onMounted, onBeforeUnmount, onUpdated, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
@@ -314,6 +314,12 @@ const syncArticleNavigation = async () => {
   activeTocId.value = tocItems.value[0]?.id || ''
   bindCodeBlockInteractions(articleBodyRef.value)
 }
+
+// The article body is rendered only after the loading branch is removed. Bind
+// again after that Vue update so controls are attached to the final v-html DOM.
+onUpdated(() => {
+  bindCodeBlockInteractions(articleBodyRef.value)
+})
 
 const hydrateLazyMedia = async () => {
   await nextTick()
@@ -741,7 +747,7 @@ onBeforeUnmount(() => {
   color: #4f46e5;
 }
 
-:deep(.markdown-body pre) {
+:deep(.markdown-body pre:not(.blog-code-window)) {
   margin: 1.5rem 0;
   padding: 1.5rem;
   overflow: auto;
@@ -752,7 +758,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-:deep(.markdown-body pre code) {
+:deep(.markdown-body pre:not(.blog-code-window) code) {
   padding: 0;
   margin: 0;
   font-size: 100%;
