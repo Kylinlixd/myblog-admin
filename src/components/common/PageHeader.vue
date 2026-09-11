@@ -1,5 +1,5 @@
 <template>
-  <header class="page-header">
+  <header class="page-header" :class="{ 'page-header--compact': compact }">
     <div class="page-header__copy">
       <div class="page-header__title">
         <slot name="icon">
@@ -28,6 +28,10 @@ defineProps({
   subtitle: {
     type: String,
     default: ''
+  },
+  compact: {
+    type: Boolean,
+    default: false
   }
 })
 </script>

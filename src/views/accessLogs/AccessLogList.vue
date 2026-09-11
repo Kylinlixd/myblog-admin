@@ -1,6 +1,6 @@
 <template>
   <div class="admin-page access-log-page">
-    <PageHeader title="访问日志与安全防护" subtitle="识别 IP 类型、归属与行为画像，并对风险来源执行人工防护规则。" />
+    <PageHeader compact title="访问日志与安全防护" subtitle="识别 IP 类型、归属与行为画像，并对风险来源执行人工防护规则。" />
 
     <section v-if="showVisits" class="visits-panel">
       <div class="visits-heading"><h2>近7天文章访问统计</h2><router-link to="/dashboard">返回仪表盘 &gt;</router-link></div>
@@ -18,13 +18,13 @@
       <p v-else>正在加载访问统计…</p>
     </section>
     <section class="security-summary" aria-label="安全概览">
-      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'profiles' }" type="button" @click="selectSummary('profiles')"><span>活跃 IP</span><strong>{{ total }}</strong><small>查看 IP 画像 →</small></button>
-      <button class="summary-card summary-card--danger" :class="{ 'summary-card--selected': currentView === 'high-risk' }" type="button" @click="selectSummary('high-risk')"><span>高风险 IP</span><strong>{{ highRiskCount }}</strong><small>查看高风险画像 →</small></button>
-      <button class="summary-card summary-card--rule" :class="{ 'summary-card--selected': currentView === 'rules' }" type="button" @click="selectSummary('rules')"><span>生效防护规则</span><strong>{{ activeRules.length }}</strong><small>查看规则明细 →</small></button>
-      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'blocks' }" type="button" @click="selectSummary('blocks')"><span>封禁/限流命中</span><strong>{{ blockedCount }}</strong><small>查看拦截记录 →</small></button>
+      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'profiles' }" type="button" @click="selectSummary('profiles')"><span>活跃 IP</span><strong>{{ overviewValue('active_ips') }}</strong><small>查看 IP 画像 →</small></button>
+      <button class="summary-card summary-card--danger" :class="{ 'summary-card--selected': currentView === 'high-risk' }" type="button" @click="selectSummary('high-risk')"><span>高风险 IP</span><strong>{{ overviewValue('high_risk_ips') }}</strong><small>查看高风险画像 →</small></button>
+      <button class="summary-card summary-card--rule" :class="{ 'summary-card--selected': currentView === 'rules' }" type="button" @click="selectSummary('rules')"><span>生效防护规则</span><strong>{{ overviewValue('active_rules') }}</strong><small>查看规则明细 →</small></button>
+      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'blocks' }" type="button" @click="selectSummary('blocks')"><span>封禁/限流命中</span><strong>{{ overviewValue('blocked_requests') }}</strong><small>查看拦截记录 →</small></button>
     </section>
 
-    <div class="access-log-toolbar">
+    <div v-if="currentView === 'profiles' || currentView === 'high-risk'" class="access-log-toolbar">
       <a-form class="access-log-filters" @submit.prevent="applyFilters">
         <a-form-item label="IP"><a-input v-model:value="filters.ip" allow-clear placeholder="IP 或 CIDR" /></a-form-item>
         <a-form-item label="风险">
@@ -47,7 +47,6 @@
           <a-button type="primary" html-type="submit">筛选</a-button>
         </div>
       </a-form>
-      <a-button class="access-log-refresh" @click="loadAll" :loading="loadingProfiles || loadingRules">刷新</a-button>
     </div>
 
     <section v-if="currentView === 'rules'" class="summary-detail-card">
@@ -59,7 +58,17 @@
     </section>
     <section v-else-if="currentView === 'blocks'" class="summary-detail-card">
       <header><div><h2>拦截记录</h2><p>当前仅展示已归因的安全拦截请求；历史日志未记录归因时不会推断为命中。</p></div></header>
-      <div class="state-box">暂无已归因的拦截记录</div>
+      <div v-if="blockedLoading" class="state-box">正在加载拦截记录…</div>
+      <div v-else-if="blockedError" class="state-box" role="alert">{{ blockedError }}</div>
+      <div v-else-if="blockedLogs.length" class="blocked-log-list">
+        <div v-for="log in blockedLogs" :key="log.id" class="blocked-log-row">
+          <strong>{{ log.ip_address || '未识别 IP' }}</strong>
+          <code>{{ log.method }} {{ log.path }}</code>
+          <a-tag color="error">{{ log.security_action === 'rate_limited' ? '限流' : '封禁' }}</a-tag>
+          <span>{{ formatDate(log.created_at) }}</span>
+        </div>
+      </div>
+      <div v-else class="state-box">暂无已归因的拦截记录</div>
     </section>
 
     <DataTable v-if="currentView !== 'rules' && currentView !== 'blocks'"
@@ -108,7 +117,7 @@
         </a-space>
       </template>
     </DataTable>
-    <Pagination
+    <Pagination v-if="currentView === 'profiles' || currentView === 'high-risk' || currentView === 'blocks'"
       :total="total"
       :current-page="page"
       :page-size="pageSize"
@@ -204,7 +213,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import request from '@/services/http/client'
 import DashboardChart from '@/views/dashboard/DashboardChart.vue'
@@ -213,6 +222,8 @@ import { mapDashboardData } from '@/views/dashboard/stats'
 import { message } from 'ant-design-vue'
 import {
   createAccessLogRule,
+  getAccessLogList,
+  getAccessLogOverview,
   getAccessLogProfileDetail,
   getAccessLogProfiles,
   getAccessLogRules,
@@ -246,10 +257,18 @@ const columns = [
 const profiles = ref([])
 const rules = ref([])
 const activeRules = computed(() => rules.value.filter((rule) => rule.status === 'active' && (!rule.expires_at || new Date(rule.expires_at) > new Date())))
-const blockedCount = ref(0)
 const loadingProfiles = ref(false)
 const loadingRules = ref(false)
+const overview = ref(null)
+const overviewLoading = ref(false)
+const blockedLogs = ref([])
+const blockedTotal = ref(0)
+const blockedLoading = ref(false)
+const blockedError = ref('')
 const total = ref(0)
+const profileRequestId = ref(0)
+const overviewRequestId = ref(0)
+const blockedRequestId = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
 const filters = ref({ ip: '', risk: undefined, network: undefined, region: '' })
@@ -262,8 +281,9 @@ const ruleModalOpen = ref(false)
 const savingRule = ref(false)
 const ruleForm = ref(emptyRuleForm())
 
-const highRiskCount = ref(0)
 const currentView = ref(route.query.view === 'high-risk' ? 'high-risk' : route.query.view === 'rules' ? 'rules' : route.query.view === 'blocks' ? 'blocks' : 'profiles')
+
+const overviewValue = (key) => overview.value?.[key] ?? '—'
 
 function emptyRuleForm() {
   return {
@@ -305,23 +325,58 @@ const geoText = (row) => {
 const riskReasonsText = (row) => (row.risk_reasons || []).join('，') || '未发现明显异常'
 
 async function loadProfiles() {
+  const requestId = ++profileRequestId.value
   loadingProfiles.value = true
   try {
     const params = {
       page: page.value,
       pageSize: pageSize.value,
+      window: '7d',
       ...Object.fromEntries(Object.entries(filters.value).filter(([, value]) => value))
     }
     if (currentView.value === 'high-risk') params.riskGroup = 'high_plus'
     const response = await getAccessLogProfiles(params)
+    if (requestId !== profileRequestId.value) return
     profiles.value = response?.data?.list || []
     total.value = response?.data?.total || 0
-    highRiskCount.value = response?.data?.summary?.high_risk || 0
-    blockedCount.value = response?.data?.summary?.blocked_requests ?? 0
   } catch (error) {
     message.error(error?.message || 'IP 画像加载失败')
   } finally {
-    loadingProfiles.value = false
+    if (requestId === profileRequestId.value) loadingProfiles.value = false
+  }
+}
+
+async function loadOverview() {
+  if (typeof getAccessLogOverview !== 'function') return
+  const requestId = ++overviewRequestId.value
+  overviewLoading.value = true
+  try {
+    const response = await getAccessLogOverview()
+    if (requestId !== overviewRequestId.value) return
+    overview.value = response?.data || response || null
+  } catch (error) {
+    message.error(error?.message || '安全概览加载失败')
+  } finally {
+    if (requestId === overviewRequestId.value) overviewLoading.value = false
+  }
+}
+
+async function loadBlockedLogs() {
+  if (typeof getAccessLogList !== 'function') return
+  const requestId = ++blockedRequestId.value
+  blockedLoading.value = true
+  blockedError.value = ''
+  try {
+    const response = await getAccessLogList({ page: page.value, pageSize: pageSize.value, securityGroup: 'blocked', window: '7d' })
+    if (requestId !== blockedRequestId.value) return
+    const data = response?.data || response || {}
+    blockedLogs.value = data.list || data.results || []
+    blockedTotal.value = data.total ?? data.count ?? blockedLogs.value.length
+    total.value = blockedTotal.value
+  } catch (error) {
+    blockedError.value = error?.message || '拦截记录加载失败'
+  } finally {
+    if (requestId === blockedRequestId.value) blockedLoading.value = false
   }
 }
 
@@ -339,7 +394,12 @@ async function loadRules() {
 }
 
 async function loadAll() {
-  await Promise.all([loadProfiles(), loadRules()])
+  const viewRequest = currentView.value === 'blocks'
+    ? loadBlockedLogs()
+    : currentView.value === 'rules'
+      ? Promise.resolve()
+      : loadProfiles()
+  await Promise.all([loadOverview(), loadRules(), viewRequest])
 }
 
 function applyFilters() { page.value = 1; loadProfiles() }
@@ -353,14 +413,17 @@ function resetFilters() { filters.value = { ip: '', risk: undefined, network: un
 function selectSummary(view) {
   currentView.value = view
   replaceViewQuery(view)
-  if (view === 'high-risk') {
+  if (view === 'profiles' || view === 'high-risk') {
     filters.value = { ip: '', risk: undefined, network: undefined, region: '' }
     page.value = 1
     loadProfiles()
+  } else if (view === 'blocks') {
+    page.value = 1
+    loadBlockedLogs()
   }
 }
-function changePage(value) { page.value = value; loadProfiles() }
-function changeSize(value) { pageSize.value = value; page.value = 1; loadProfiles() }
+function changePage(value) { page.value = value; currentView.value === 'blocks' ? loadBlockedLogs() : loadProfiles() }
+function changeSize(value) { pageSize.value = value; page.value = 1; currentView.value === 'blocks' ? loadBlockedLogs() : loadProfiles() }
 
 async function openProfile(row) {
   drawerOpen.value = true
@@ -418,10 +481,12 @@ async function revokeRule(rule) {
   }
 }
 
+const handleResize = () => { documentWidth.value = window.innerWidth }
 onMounted(() => {
-  window.addEventListener('resize', () => { documentWidth.value = window.innerWidth })
+  window.addEventListener('resize', handleResize)
   loadAll()
 })
+onBeforeUnmount(() => window.removeEventListener('resize', handleResize))
 </script>
 
 <style scoped>
@@ -447,7 +512,6 @@ onMounted(() => {
 .access-log-filters :deep(.ant-form-item-control-input), .access-log-filters :deep(.ant-form-item-control-input-content) { min-width: 0; width: 100%; }
 .access-log-filters :deep(.ant-input), .access-log-filters :deep(.ant-select) { width: 100% !important; }
 .filter-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.access-log-refresh { align-self: flex-end; flex: 0 0 auto; }
 .ip-cell { display: grid; gap: 4px; }
 .ip-cell strong { color: var(--color-text); font-size: 13px; }
 .ip-cell .ant-tag { width: fit-content; font-size: 11px; }
@@ -477,10 +541,9 @@ onMounted(() => {
   .access-log-toolbar { flex-wrap: wrap; }
   .access-log-filters { flex-basis: 100%; grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .filter-actions { grid-column: 4; }
-  .access-log-refresh { margin-left: auto; }
 }
 @media (max-width: 900px) { .security-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } .access-log-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-actions { grid-column: 1 / -1; justify-self: end; } }
-@media (max-width: 560px) { .security-summary { grid-template-columns: 1fr; } .access-log-toolbar { align-items: stretch; flex-direction: column; } .access-log-filters { grid-template-columns: 1fr; } .filter-actions { grid-column: auto; justify-self: stretch; } .filter-actions .ant-btn { flex: 1; } .access-log-refresh { margin-left: 0; } }
+@media (max-width: 560px) { .security-summary { grid-template-columns: 1fr; } .access-log-toolbar { align-items: stretch; flex-direction: column; } .access-log-filters { grid-template-columns: 1fr; } .filter-actions { grid-column: auto; justify-self: stretch; } .filter-actions .ant-btn { flex: 1; } }
 .visits-panel { margin-bottom: 20px; padding: 24px; background: #fff; border: 1px solid #e5eaf2; border-radius: 16px; }
 .visits-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .visits-heading h2 { margin: 0; font-size: 20px; }
@@ -492,5 +555,10 @@ onMounted(() => {
 .summary-detail-card p { margin: 4px 0 0; color: var(--color-text-muted); font-size: 12px; }
 .rule-summary-row { display: grid; grid-template-columns: 90px minmax(120px, 180px) minmax(0, 1fr) 140px; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px solid #eef1f5; color: var(--color-text-secondary); font-size: 12px; }
 .rule-summary-row strong { color: var(--color-text); }
+.blocked-log-list { display: grid; }
+.blocked-log-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 60px 170px; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid #eef1f5; color: var(--color-text-secondary); font-size: 12px; }
+.blocked-log-row strong { color: var(--color-text); }
+.blocked-log-row code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 720px) { .rule-summary-row { grid-template-columns: 1fr 1fr; } .rule-summary-row span, .rule-summary-row small { grid-column: span 2; } }
+@media (max-width: 720px) { .blocked-log-row { grid-template-columns: 1fr 1fr; } .blocked-log-row code { grid-column: span 2; } }
 </style>

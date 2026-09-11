@@ -1,6 +1,6 @@
 <template>
   <div class="file-list admin-page">
-    <PageHeader title="文件管理" subtitle="上传、筛选并管理内容资源。">
+    <PageHeader compact title="文件管理" subtitle="上传、筛选并管理内容资源。">
       <template #actions>
         <a-space>
           <a-button @click="openTutorial">
@@ -119,7 +119,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations admin-toolbar">
+    <div v-if="selectedRowKeys.length" class="table-operations admin-toolbar">
       <a-space>
         <a-button
           danger

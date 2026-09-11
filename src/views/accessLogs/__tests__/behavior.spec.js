@@ -1,9 +1,11 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import AccessLogList from '../AccessLogList.vue'
-import { getAccessLogProfiles, getAccessLogRules } from '@/api/accessLog'
+import { getAccessLogOverview, getAccessLogProfiles, getAccessLogRules } from '@/api/accessLog'
 
 jest.mock('@/api/accessLog', () => ({
+  getAccessLogOverview: jest.fn(),
+  getAccessLogList: jest.fn(),
   getAccessLogProfiles: jest.fn(),
   getAccessLogRules: jest.fn()
 }))
@@ -60,9 +62,23 @@ const stubs = {
 
 function mountPage(list = [profile]) {
   getAccessLogProfiles.mockResolvedValue({ data: { list, total: list.length, summary: { high_risk: 1 } } })
+  getAccessLogOverview.mockResolvedValue({ data: { active_ips: 265, high_risk_ips: 6, active_rules: 0, blocked_requests: 0 } })
   getAccessLogRules.mockResolvedValue([])
   return mount(AccessLogList, { global: { stubs } })
 }
+
+it('keeps overview card totals independent from the selected profile list', async () => {
+  const wrapper = mountPage([])
+  await flushPromises()
+
+  expect(wrapper.findAll('.summary-card')[0].text()).toContain('265')
+  wrapper.vm.selectSummary('high-risk')
+  await flushPromises()
+
+  expect(wrapper.findAll('.summary-card')[0].text()).toContain('265')
+  expect(wrapper.findAll('.summary-card')[1].text()).toContain('6')
+  wrapper.unmount()
+})
 
 it('renders window behavior counts and anomaly details with separate error classes', async () => {
   const wrapper = mountPage()

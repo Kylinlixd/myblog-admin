@@ -5,6 +5,9 @@ export const getAccessLogList = (params) => request.get('/api/access-logs/', { p
 export const getAccessLogProfiles = (params) =>
   request.get('/api/access-logs/profiles/', { params })
 
+export const getAccessLogOverview = () =>
+  request.get('/api/access-logs/overview/')
+
 export const getAccessLogProfileDetail = (ip) =>
   request.get('/api/access-logs/profile/', { params: { ip } })
 

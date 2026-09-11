@@ -1,6 +1,6 @@
 <template>
   <div class="comment-list admin-page">
-    <PageHeader title="评论管理" subtitle="审核读者反馈并维护讨论秩序。" />
+    <PageHeader compact title="评论管理" subtitle="审核读者反馈并维护讨论秩序。" />
     
     <!-- 搜索表单 -->
     <SearchForm 

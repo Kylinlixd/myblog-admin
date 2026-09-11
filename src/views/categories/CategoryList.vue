@@ -1,6 +1,6 @@
 <template>
   <div class="category-list admin-page">
-    <PageHeader title="分类管理" subtitle="整理内容分类与展示状态。">
+    <PageHeader compact title="分类管理" subtitle="整理内容分类与展示状态。">
       <template #actions>
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>
@@ -47,7 +47,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations admin-toolbar">
+    <div v-if="selectedRowKeys.length" class="table-operations admin-toolbar">
       <a-space size="middle">
         <a-popconfirm
           title="确定要删除选中的分类吗？"

@@ -1,6 +1,6 @@
 <template>
   <div class="tag-list admin-page">
-    <PageHeader title="标签管理" subtitle="维护跨文章使用的主题标签。">
+    <PageHeader compact title="标签管理" subtitle="维护跨文章使用的主题标签。">
       <template #actions>
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>
@@ -39,7 +39,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations admin-toolbar">
+    <div v-if="selectedRowKeys.length" class="table-operations admin-toolbar">
       <a-space>
         <a-popconfirm
           title="确定要删除选中的标签吗？"

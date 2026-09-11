@@ -1,13 +1,14 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import AccessLogList from '../AccessLogList.vue'
-import { getAccessLogProfiles, getAccessLogRules } from '@/api/accessLog'
+import { getAccessLogOverview, getAccessLogProfiles, getAccessLogRules } from '@/api/accessLog'
 
-jest.mock('@/api/accessLog', () => ({ getAccessLogProfiles: jest.fn(), getAccessLogRules: jest.fn() }))
+jest.mock('@/api/accessLog', () => ({ getAccessLogOverview: jest.fn(), getAccessLogProfiles: jest.fn(), getAccessLogRules: jest.fn() }))
 jest.mock('vue-router', () => ({ useRoute: () => ({ query: {} }) }))
 jest.mock('@/views/dashboard/DashboardChart.vue', () => ({ template: '<div />' }))
 
 it('sends all filters together and resets them with pagination; uses global risk summary', async () => {
   getAccessLogProfiles.mockResolvedValue({ data: { list: [], total: 83, summary: { high_risk: 12 } } })
+  getAccessLogOverview.mockResolvedValue({ data: { active_ips: 83, high_risk_ips: 12, active_rules: 0, blocked_requests: 0 } })
   getAccessLogRules.mockResolvedValue([])
   const wrapper = mount(AccessLogList, { global: { stubs: {
     PageHeader: true, DataTable: true, Pagination: true, 'router-link': true, 'a-tag': true, 'a-space': true, 'a-checkbox': true, 'a-input-number': true, 'a-textarea': true,
@@ -22,10 +23,10 @@ it('sends all filters together and resets them with pagination; uses global risk
   wrapper.vm.page = 3
   wrapper.vm.applyFilters()
   await flushPromises()
-  expect(getAccessLogProfiles).toHaveBeenLastCalledWith({ page: 1, pageSize: 20, ip: '36.28.0.0/16', risk: 'medium', network: 'public', region: '杭州' })
+  expect(getAccessLogProfiles).toHaveBeenLastCalledWith({ page: 1, pageSize: 20, window: '7d', ip: '36.28.0.0/16', risk: 'medium', network: 'public', region: '杭州' })
   wrapper.vm.resetFilters()
   await flushPromises()
-  expect(getAccessLogProfiles).toHaveBeenLastCalledWith({ page: 1, pageSize: 20 })
+  expect(getAccessLogProfiles).toHaveBeenLastCalledWith({ page: 1, pageSize: 20, window: '7d' })
   for (const label of ['低风险', '中风险', '高风险', '严重风险']) expect(wrapper.text()).toContain(label)
   wrapper.unmount()
 })

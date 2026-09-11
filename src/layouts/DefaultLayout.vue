@@ -37,6 +37,7 @@
           <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
           </button>
+          <Breadcrumb v-if="!isMobile" class="workspace-breadcrumb" />
         </div>
         <div class="header-actions">
           <ServiceStatus
@@ -83,6 +84,7 @@ import { adminMenu } from '@/config/adminMenu'
 import { useUserStore } from '@/stores/user'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import ServiceStatus from '@/components/common/ServiceStatus.vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
 import { useServiceHealth } from '@/composables/useServiceHealth'
 
 const route = useRoute()
@@ -185,6 +187,8 @@ function handleLogout() {
 .workspace-header { position: fixed; z-index: 50; top: 0; right: 0; left: var(--admin-sidebar-width); display: flex; box-sizing: border-box; min-width: 0; height: 72px; padding: 0 28px 0 0 !important; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--color-border); background: var(--color-surface) !important; line-height: normal; }
 .header-left, .header-actions, .user-button, .blog-link { display: flex; align-items: center; }
 .header-left { min-width: 0; gap: 8px; overflow: hidden; }
+.workspace-breadcrumb { min-width: 0; overflow: hidden; font-size: 11px; }
+.workspace-breadcrumb :deep(.breadcrumb-item:last-child .current) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { min-width: 0; gap: 16px; }
@@ -195,7 +199,7 @@ function handleLogout() {
 .user-copy { display: flex; align-items: flex-start; flex-direction: column; justify-content: center; gap: 2px; line-height: 1.1; }
 .user-copy strong { display: block; color: var(--color-text); font-size: 13px; line-height: 1.2; }
 .user-copy small { display: block; color: var(--color-text-muted); font-size: 10px; line-height: 1.2; }
-.workspace-content { min-width: 0; max-width: 100%; padding: 30px; overflow-x: hidden; }
+.workspace-content { min-width: 0; max-width: 100%; padding: 22px 24px; overflow-x: hidden; }
 .account-menu { min-width: 168px; }
 .logout-confirm .ant-modal-confirm-title { font-weight: 750; }
 .logout-confirm .ant-modal-confirm-content { color: var(--color-text-secondary); }

@@ -1,11 +1,11 @@
 <template>
-  <div class="breadcrumb">
+  <nav class="breadcrumb" aria-label="面包屑导航">
     <div class="breadcrumb-item" v-for="(item, index) in breadcrumbs" :key="index">
       <span v-if="index === breadcrumbs.length - 1" class="current">{{ item.title }}</span>
       <router-link v-else :to="item.path">{{ item.title }}</router-link>
       <span v-if="index < breadcrumbs.length - 1" class="separator">/</span>
     </div>
-  </div>
+  </nav>
 </template>
 
 <script setup>
@@ -16,7 +16,7 @@ const route = useRoute()
 
 const breadcrumbs = computed(() => {
   const items = []
-  const matched = route.matched.filter(item => item.meta && item.meta.title)
+  const matched = (route.matched || []).filter(item => item.meta && item.meta.title)
   
   items.push({
     path: '/dashboard',
@@ -49,23 +49,23 @@ const breadcrumbs = computed(() => {
     align-items: center;
     
     a {
-      color: var(--text-secondary);
+      color: var(--color-text-muted);
       text-decoration: none;
       transition: color 0.2s;
       
       &:hover {
-        color: var(--primary-color);
+        color: var(--color-primary);
       }
     }
     
     .current {
-      color: var(--text-primary);
+      color: var(--color-text-secondary);
       font-weight: 500;
     }
     
     .separator {
       margin: 0 8px;
-      color: var(--text-tertiary);
+      color: var(--color-border-strong, #c7d0df);
     }
   }
 }

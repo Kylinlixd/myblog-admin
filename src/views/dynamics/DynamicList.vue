@@ -1,6 +1,6 @@
 <template>
   <div class="dynamic-list admin-page">
-    <PageHeader title="内容管理" subtitle="发布、筛选并维护数字花园中的文章。">
+    <PageHeader compact title="内容管理" subtitle="发布、筛选并维护数字花园中的文章。">
       <template #actions>
         <a-button type="primary" @click="navigateToCreate">
           <PlusOutlined /> 新建动态
@@ -76,7 +76,7 @@
     </a-form>
 
     <!-- 操作按钮 -->
-    <div class="table-operations admin-toolbar">
+    <div v-if="selectedRowKeys.length" class="table-operations admin-toolbar">
       <a-space size="middle">
         <a-button danger :disabled="!selectedRowKeys.length || deleting" :loading="deleting" @click="handleBatchDelete">
           <DeleteOutlined />

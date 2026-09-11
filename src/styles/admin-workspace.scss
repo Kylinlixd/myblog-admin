@@ -16,7 +16,7 @@
 
 .admin-page {
   display: grid;
-  gap: 18px;
+  gap: 12px;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -68,6 +68,27 @@
   line-height: 1.55;
 }
 
+.page-header--compact {
+  align-items: center;
+  padding-block: 0 2px;
+}
+
+.page-header--compact .page-header__title h1 {
+  font-size: 18px;
+  letter-spacing: -.015em;
+}
+
+.page-header--compact .page-header__copy p {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.page-header--compact .page-header__actions .ant-btn {
+  min-height: 34px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+
 .page-header__actions {
   display: flex;
   flex: 0 0 auto;
@@ -115,7 +136,7 @@
   align-items: flex-start;
   justify-content: space-between;
   margin: 0;
-  padding: 18px;
+  padding: 12px 14px;
 }
 
 .admin-filter .search-form-left,
