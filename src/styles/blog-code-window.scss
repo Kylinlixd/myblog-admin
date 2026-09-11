@@ -78,11 +78,19 @@
   line-height: 12px;
 }
 
-.blog-code-window .blog-code-copy { font-size: 0; }
+.blog-code-window .blog-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 58px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 .blog-code-window .blog-code-copy::before {
-  content: '▣';
+  content: '⧉';
   font-size: 15px;
+  line-height: 1;
 }
 
 .blog-code-window .blog-code-body {

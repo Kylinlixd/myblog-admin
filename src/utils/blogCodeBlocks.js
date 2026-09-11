@@ -94,6 +94,7 @@ const wrapLegacyCodeBlock = (pre) => {
   collapseButton.setAttribute('data-blog-code-action', 'collapse')
   collapseButton.setAttribute('aria-expanded', 'true')
   collapseButton.setAttribute('aria-label', `折叠${language}代码`)
+  collapseButton.setAttribute('title', `折叠${language}代码`)
   collapseButton.textContent = '⌄'
 
   const copyButton = document.createElement('button')
@@ -101,6 +102,7 @@ const wrapLegacyCodeBlock = (pre) => {
   copyButton.className = 'blog-code-action blog-code-copy'
   copyButton.setAttribute('data-blog-code-action', 'copy')
   copyButton.setAttribute('aria-label', `复制${language}代码`)
+  copyButton.setAttribute('title', `复制${language}代码`)
   copyButton.textContent = '复制'
 
   actions.append(collapseButton, copyButton)

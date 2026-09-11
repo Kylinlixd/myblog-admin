@@ -12,6 +12,12 @@ describe('createMarkdownRenderer', () => {
     expect(html).toContain('1\n2')
     expect(html).toContain('data-blog-code-action="collapse"')
     expect(html).toContain('data-blog-code-action="copy"')
+    expect(html).toContain('title="折叠json代码"')
+    expect(html).toContain('title="复制json代码"')
+    expect(html).toContain('>复制</button>')
+    expect(html).toContain('<pre class="blog-code-window"')
+    expect(html).toContain('<div class="blog-code-header">')
+    expect(html).not.toContain('<pre class="blog-code-window" data-blog-code-window="true" data-language="json">\n')
   })
 
   it('escapes unknown-language code and attributes without executing markup', () => {
