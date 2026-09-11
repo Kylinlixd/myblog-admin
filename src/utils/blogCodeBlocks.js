@@ -91,7 +91,7 @@ const runHtml = (pre, rawCode) => {
   if (!panel || !target) return
   target.replaceChildren()
   const frame = document.createElement('iframe')
-  frame.className = 'blog-code-run-preview-frame'
+  frame.className = 'blog-code-run-preview-frame blog-code-run-preview-frame--expanded'
   frame.setAttribute('sandbox', 'allow-scripts')
   frame.setAttribute('title', 'HTML 试运行预览')
   frame.srcdoc = rawCode

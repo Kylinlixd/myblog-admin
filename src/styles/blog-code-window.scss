@@ -175,7 +175,7 @@
 .blog-code-window .blog-code-run-preview-frame {
   display: block;
   width: 100%;
-  min-height: 180px;
+  height: 520px;
   border: 1px solid #e8e5e1;
   border-radius: 8px;
   background: #fff;
@@ -269,4 +269,6 @@
   .blog-code-window .blog-code-content code { padding: 22px 16px; }
 
   .blog-code-window .blog-code-run { align-self: stretch; justify-content: center; margin: 10px 12px; }
+
+  .blog-code-window .blog-code-run-preview-frame--expanded { height: 420px; }
 }

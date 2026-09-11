@@ -106,5 +106,6 @@ describe('enhanceCodeBlocks', () => {
     expect(pre.querySelector('[data-blog-code-run-preview]')).not.toHaveAttribute('hidden')
     expect(frame).toHaveAttribute('sandbox', 'allow-scripts')
     expect(frame.srcdoc).toContain('<h1>Hello</h1>')
+    expect(frame).toHaveClass('blog-code-run-preview-frame--expanded')
   })
 })
