@@ -61,4 +61,21 @@ describe('enhanceCodeBlocks', () => {
     expect(execCommand).toHaveBeenCalledWith('copy')
     expect(document.body.querySelector('textarea')).toBeNull()
   })
+
+  it('keeps the copy control icon-only and shows explicit copied feedback', async () => {
+    const root = document.createElement('div')
+    root.innerHTML = createMarkdownRenderer().render('```json\n{"ok":true}\n```')
+    const writeText = jest.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+
+    bindCodeBlockInteractions(root)
+    const copyButton = root.querySelector('[data-blog-code-action="copy"]')
+    expect(copyButton.textContent).toBe('')
+    await copyButton.click()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(copyButton).toHaveAttribute('aria-label', '已复制')
+    expect(root.querySelector('.blog-code-copy-feedback')).toHaveTextContent('已复制')
+    expect(root.querySelector('.blog-code-copy-feedback')).toHaveClass('is-visible')
+  })
 })

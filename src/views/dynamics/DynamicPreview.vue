@@ -324,6 +324,10 @@ onUpdated(() => {
           border-radius: 3px;
           font-family: monospace;
         }
+
+        :deep(.blog-code-window .blog-code-content code) {
+          background: transparent;
+        }
         
         :deep(pre:not(.blog-code-window)) {
           background: #f5f5f5;

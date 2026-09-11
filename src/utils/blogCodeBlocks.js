@@ -6,9 +6,23 @@ const getLanguage = (pre, code) => {
 }
 
 const setCopyState = (button, text) => {
-  button.textContent = text
-  if (text === '已复制') {
-    window.setTimeout(() => { button.textContent = '复制' }, 1400)
+  const feedback = button.parentElement?.querySelector('.blog-code-copy-feedback')
+  const copied = text === '已复制'
+  button.classList.toggle('is-copied', copied)
+  button.setAttribute('aria-label', text)
+  button.setAttribute('title', text)
+  if (feedback) {
+    feedback.textContent = text
+    feedback.classList.toggle('is-visible', copied)
+  }
+  if (copied) {
+    window.setTimeout(() => {
+      feedback?.classList.remove('is-visible')
+      button.classList.remove('is-copied')
+      const defaultLabel = button.dataset.copyLabel || '复制代码'
+      button.setAttribute('aria-label', defaultLabel)
+      button.setAttribute('title', defaultLabel)
+    }, 1400)
   }
 }
 
@@ -44,6 +58,9 @@ export function bindCodeBlockInteractions(root) {
     const rawCode = code?.textContent || ''
     const collapseButton = pre.querySelector('[data-blog-code-action="collapse"]') || pre.querySelector('.blog-code-collapse')
     const copyButton = pre.querySelector('[data-blog-code-action="copy"]') || pre.querySelector('.blog-code-copy')
+    if (copyButton && !copyButton.dataset.copyLabel) {
+      copyButton.dataset.copyLabel = copyButton.getAttribute('aria-label') || '复制代码'
+    }
 
     collapseButton?.addEventListener('click', () => {
       const collapsed = pre.classList.toggle('is-collapsed')
@@ -103,9 +120,15 @@ const wrapLegacyCodeBlock = (pre) => {
   copyButton.setAttribute('data-blog-code-action', 'copy')
   copyButton.setAttribute('aria-label', `复制${language}代码`)
   copyButton.setAttribute('title', `复制${language}代码`)
-  copyButton.textContent = '复制'
+  copyButton.innerHTML = '<svg class="blog-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>'
 
-  actions.append(collapseButton, copyButton)
+  const copyFeedback = document.createElement('span')
+  copyFeedback.className = 'blog-code-copy-feedback'
+  copyFeedback.setAttribute('role', 'status')
+  copyFeedback.setAttribute('aria-live', 'polite')
+  copyFeedback.textContent = '已复制'
+
+  actions.append(collapseButton, copyButton, copyFeedback)
   header.append(dots, label, actions)
 
   const body = document.createElement('div')

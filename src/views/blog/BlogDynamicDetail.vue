@@ -747,6 +747,10 @@ onBeforeUnmount(() => {
   color: #4f46e5;
 }
 
+:deep(.markdown-body .blog-code-window .blog-code-content code) {
+  background: transparent;
+}
+
 :deep(.markdown-body pre:not(.blog-code-window)) {
   margin: 1.5rem 0;
   padding: 1.5rem;
