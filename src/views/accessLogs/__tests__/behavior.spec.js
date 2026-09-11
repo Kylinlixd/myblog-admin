@@ -80,11 +80,12 @@ it('keeps overview card totals independent from the selected profile list', asyn
   wrapper.unmount()
 })
 
-it('renders window behavior counts and anomaly details with separate error classes', async () => {
+it('renders historical total requests separately from the seven-day risk window', async () => {
   const wrapper = mountPage()
   await flushPromises()
 
-  expect(wrapper.text()).toContain('近7天总请求：68次')
+  expect(wrapper.text()).toContain('总请求：688次')
+  expect(wrapper.text()).not.toContain('近7天总请求：68次')
   expect(wrapper.text()).toContain('失败率：97.1%')
   wrapper.vm.selectedProfile = profile
   await nextTick()
@@ -92,7 +93,6 @@ it('renders window behavior counts and anomaly details with separate error class
   expect(wrapper.text()).toContain('服务端错误（5xx）：0次')
   expect(wrapper.text()).toContain('高度异常')
   expect(wrapper.text()).toContain('请求失败集中（失败 66/68，97.1%）')
-  expect(wrapper.text()).not.toContain('近7天总请求：688次')
   wrapper.unmount()
 })
 
@@ -108,17 +108,16 @@ it('keeps anomaly details visible for a whitelisted profile', async () => {
   wrapper.unmount()
 })
 
-it('shows em dashes when old responses lack window behavior fields', async () => {
+it('shows an em dash when old responses lack historical total fields', async () => {
   const oldProfile = {
     ...profile,
-    behavior: { total_requests: 688, risk: { client_errors: 66, server_errors: 0, write_count: 3 } }
+    behavior: { risk: { client_errors: 66, server_errors: 0, write_count: 3 } }
   }
   const wrapper = mountPage([oldProfile])
   await flushPromises()
 
-  expect(wrapper.text()).toContain('近7天总请求：—')
+  expect(wrapper.text()).toContain('总请求：—')
   expect(wrapper.text()).toContain('失败率：—')
-  expect(wrapper.text()).not.toContain('近7天总请求：688次')
   wrapper.unmount()
 })
 

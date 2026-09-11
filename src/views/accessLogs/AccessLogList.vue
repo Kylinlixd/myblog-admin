@@ -89,7 +89,7 @@
       </template>
       <template #behavior="{ row }">
         <div class="behavior-cell">
-          <strong>近7天总请求：{{ windowRequestsText(row) }}</strong>
+          <strong>总请求：{{ totalRequestsText(row) }}</strong>
           <small>失败率：{{ failureRateText(row) }}</small>
           <a-tag v-if="hasAnomaly(row)" :color="anomalyColor(row.behavior?.risk?.anomaly_level)">{{ anomalyLabel(row.behavior?.risk?.anomaly_level) }}</a-tag>
         </div>
@@ -142,9 +142,9 @@
           </dl>
         </section>
         <section>
-          <h3>行为画像（近7天）</h3>
+          <h3>行为画像</h3>
           <div class="behavior-chips">
-            <span>总请求：{{ windowRequestsText(selectedProfile) }}</span>
+            <span>总请求：{{ totalRequestsText(selectedProfile) }}</span>
             <span>认证失败：{{ countText(selectedProfile.behavior?.risk?.auth_failures) }}</span>
             <span>客户端错误（4xx）：{{ countText(selectedProfile.behavior?.risk?.client_errors) }}</span>
             <span>服务端错误（5xx）：{{ countText(selectedProfile.behavior?.risk?.server_errors) }}</span>
@@ -305,8 +305,8 @@ const ruleColor = (type) => ({ whitelist: 'green', blacklist: 'red', ban: 'volca
 const ipColor = (scope) => ({ public: 'blue', private: 'orange', loopback: 'green', reserved: 'red', unknown: 'default' }[scope] || 'default')
 const formatDate = (value) => value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-'
 const countText = (value) => `${value ?? 0}次`
-const windowRequestsText = (row) => {
-  const value = row?.behavior?.risk?.total_requests
+const totalRequestsText = (row) => {
+  const value = row?.behavior?.total_requests
   return value == null ? '—' : countText(value)
 }
 const failureRateText = (row) => {
