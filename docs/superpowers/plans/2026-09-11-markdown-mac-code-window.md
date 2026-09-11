@@ -1,6 +1,6 @@
 # Markdown Mac Code Window Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Render every fenced Markdown code block in the blog list, blog detail, and admin preview as a consistent light Mac-style code window with safe syntax highlighting, line numbers, copy, collapse, and mobile overflow behavior.
 
@@ -28,7 +28,7 @@
 **Files:**
 - Create: `src/utils/__tests__/markdownRenderer.spec.js`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```js
 import { createMarkdownRenderer } from '../markdownRenderer'
@@ -64,7 +64,7 @@ describe('createMarkdownRenderer', () => {
 })
 ```
 
-- [ ] **Step 2: Run the focused test and confirm it fails**
+- [x] **Step 2: Run the focused test and confirm it fails**
 
 Run:
 
@@ -74,7 +74,7 @@ npm test -- --runInBand src/utils/__tests__/markdownRenderer.spec.js
 
 Expected: FAIL because `src/utils/markdownRenderer.js` does not exist.
 
-- [ ] **Step 3: Commit the red tests**
+- [x] **Step 3: Commit the red tests**
 
 ```bash
 git add src/utils/__tests__/markdownRenderer.spec.js
@@ -86,7 +86,7 @@ git commit -m "test: specify markdown mac code renderer"
 **Files:**
 - Create: `src/utils/markdownRenderer.js`
 
-- [ ] **Step 1: Implement the shared factory and fence renderer**
+- [x] **Step 1: Implement the shared factory and fence renderer**
 
 Implement `createMarkdownRenderer({ highlight } = {})` with the existing options `html: true`, `linkify: true`, and `typographer: true`. Register a `macCodeWindow` plugin that replaces `md.renderer.rules.fence` and emits this exact semantic shape:
 
@@ -109,7 +109,7 @@ Implement `createMarkdownRenderer({ highlight } = {})` with the existing options
 
 Use `token.info.trim().split(/\s+/)[0] || 'text'` for the language, `md.utils.escapeHtml` for language and attributes, `token.content` for raw copy data, and `highlight(token.content, language)` only when the callback returns highlighted HTML. When highlighting is unavailable, escape the code text. Preserve the final newline behavior so line numbers equal `Math.max(1, token.content.split('\n').length)`.
 
-- [ ] **Step 2: Run the focused renderer tests**
+- [x] **Step 2: Run the focused renderer tests**
 
 Run:
 
@@ -119,7 +119,7 @@ npm test -- --runInBand src/utils/__tests__/markdownRenderer.spec.js
 
 Expected: PASS.
 
-- [ ] **Step 3: Commit the renderer**
+- [x] **Step 3: Commit the renderer**
 
 ```bash
 git add src/utils/markdownRenderer.js src/utils/__tests__/markdownRenderer.spec.js
@@ -132,7 +132,7 @@ git commit -m "feat: render markdown code as mac windows"
 - Modify: `src/utils/blogCodeBlocks.js`
 - Modify: `src/utils/__tests__/blogCodeBlocks.spec.js`
 
-- [ ] **Step 1: Extend tests for plugin output and idempotent binding**
+- [x] **Step 1: Extend tests for plugin output and idempotent binding**
 
 Add tests that render a code window with `createMarkdownRenderer`, call `bindCodeBlockInteractions(root)` twice, click the collapse button, and assert `aria-expanded="false"` plus `.is-collapsed`. Mock `navigator.clipboard.writeText` and assert the exact raw code is copied. Delete `navigator.clipboard` in a second test and assert the textarea fallback receives the raw code. Keep the existing legacy `enhanceCodeBlocks` tests until all page consumers are migrated.
 
@@ -146,7 +146,7 @@ expect(root.querySelector('pre')).toHaveClass('is-collapsed')
 expect(root.querySelector('[data-blog-code-action="collapse"]')).toHaveAttribute('aria-expanded', 'false')
 ```
 
-- [ ] **Step 2: Run the focused interaction tests and confirm the new cases fail**
+- [x] **Step 2: Run the focused interaction tests and confirm the new cases fail**
 
 Run:
 
@@ -156,11 +156,11 @@ npm test -- --runInBand src/utils/__tests__/blogCodeBlocks.spec.js
 
 Expected: the existing compatibility tests pass, while the new binder assertions fail because `bindCodeBlockInteractions` is not exported.
 
-- [ ] **Step 3: Implement `bindCodeBlockInteractions(root)`**
+- [x] **Step 3: Implement `bindCodeBlockInteractions(root)`**
 
 Export an idempotent binder that finds `pre[data-blog-code-window="true"]`, skips `data-blog-code-bound="true"`, stores the raw code in `data-blog-code-copy` or reads it from the nested `<code>`, and attaches only the marked collapse/copy buttons. Keep `enhanceCodeBlocks(root)` as a compatibility wrapper: it may wrap legacy plain `<pre><code>` nodes, then call `bindCodeBlockInteractions(root)`. Do not add inline event attributes.
 
-- [ ] **Step 4: Run interaction tests and commit**
+- [x] **Step 4: Run interaction tests and commit**
 
 Run:
 
@@ -182,23 +182,23 @@ git commit -m "feat: bind markdown code window actions"
 - Modify: `src/views/blog/BlogDynamicDetail.vue`
 - Modify: `src/views/dynamics/DynamicPreview.vue`
 
-- [ ] **Step 1: Update the blog list renderer**
+- [x] **Step 1: Update the blog list renderer**
 
 Replace the local `new MarkdownIt(...)` instance with `createMarkdownRenderer()`. Add a `ref` around the list content root and call `bindCodeBlockInteractions` after `nextTick` in `onMounted`, `onActivated`, and after list refresh. Keep the existing HTML stripping and 200-character truncation before `md.render`.
 
-- [ ] **Step 2: Update the blog detail renderer**
+- [x] **Step 2: Update the blog detail renderer**
 
 Replace the local Markdown-it constructor with `createMarkdownRenderer({ highlight })`, keeping the existing highlight.js registrations and callback. In `syncArticleNavigation`, replace `enhanceCodeBlocks(articleBodyRef.value)` with `bindCodeBlockInteractions(articleBodyRef.value)` so the plugin output is not wrapped a second time. Keep DOMPurify, heading collection, lazy media, and reading progress unchanged.
 
-- [ ] **Step 3: Update the admin preview renderer**
+- [x] **Step 3: Update the admin preview renderer**
 
 Replace its local Markdown-it instance with `createMarkdownRenderer()`. Add `ref="previewContentRef"` to the Markdown content div and call `bindCodeBlockInteractions(previewContentRef.value)` after detail load and on Vue updates. Keep full preview content and existing media behavior.
 
-- [ ] **Step 4: Add source-level regression assertions**
+- [x] **Step 4: Add source-level regression assertions**
 
 Extend the existing page tests so each file contains `createMarkdownRenderer` and `bindCodeBlockInteractions`, and the detail file no longer invokes `enhanceCodeBlocks` directly for rendered article content.
 
-- [ ] **Step 5: Run focused page tests and commit**
+- [x] **Step 5: Run focused page tests and commit**
 
 Run:
 
@@ -220,11 +220,11 @@ git commit -m "feat: share mac code windows across markdown views"
 - Modify: `src/styles/main.scss`
 - Modify: `src/views/blog/BlogDynamicDetail.vue`
 
-- [ ] **Step 1: Add global styles**
+- [x] **Step 1: Add global styles**
 
 Move the existing `.blog-code-window` rules into `blog-code-window.scss` without changing the established light palette. Keep the window border/radius, red-yellow-green dots, language label, line number divider, monospace body, `max-height: 560px`, internal `overflow: auto`, collapse transition, and focus-visible states. Add responsive rules at `max-width: 640px`: reduce header padding and line-number width, preserve 44px button hit areas, and set `code` to `min-width: max-content` so long lines scroll inside `.blog-code-body`.
 
-- [ ] **Step 2: Import the stylesheet**
+- [x] **Step 2: Import the stylesheet**
 
 Add this line to `src/styles/main.scss` with the other global imports:
 
@@ -232,11 +232,11 @@ Add this line to `src/styles/main.scss` with the other global imports:
 @use './blog-code-window';
 ```
 
-- [ ] **Step 3: Remove duplicate detail-only declarations**
+- [x] **Step 3: Remove duplicate detail-only declarations**
 
 Delete the old `.article-main-column :deep(.blog-code-...)` declarations from `BlogDynamicDetail.vue`; retain only article-specific typography and table/media rules. This prevents scoped selectors from overriding list and preview styles.
 
-- [ ] **Step 4: Run style regression tests and commit**
+- [x] **Step 4: Run style regression tests and commit**
 
 Run:
 
@@ -256,7 +256,7 @@ git commit -m "style: unify markdown code window presentation"
 **Files:**
 - Modify only if a test exposes a defect in the files above.
 
-- [ ] **Step 1: Run the complete test suite and production build**
+- [x] **Step 1: Run the complete test suite and production build**
 
 Run:
 
@@ -267,15 +267,15 @@ npm run build
 
 Expected: all Jest suites pass and Vite reports a successful production build.
 
-- [ ] **Step 2: Verify the sanitized output manually**
+- [x] **Step 2: Verify the sanitized output manually**
 
 Use the dev server and a Markdown sample containing JSON, JavaScript, an unknown language, an empty fence, a long line, and `<script>alert(1)</script>`. Confirm the script is text, each block has its own controls, copy excludes line numbers, and collapse affects only the clicked block.
 
-- [ ] **Step 3: Check desktop and mobile rendering**
+- [x] **Step 3: Check desktop and mobile rendering**
 
 At a desktop viewport of 1440×900 and a mobile viewport of 390×844, inspect all three routes. Confirm the Mac header, controls, line numbers, internal horizontal scrolling, and no document-level horizontal overflow. Use browser console output to ensure no Vue or Markdown errors.
 
-- [ ] **Step 4: Run final diff checks and report**
+- [x] **Step 4: Run final diff checks and report**
 
 Run:
 
