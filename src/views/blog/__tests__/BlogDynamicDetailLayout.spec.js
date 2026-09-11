@@ -48,11 +48,13 @@ test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
   expect(source).toContain(':deep(.markdown-body pre:not(.blog-code-window))')
   expect(source).toContain(':deep(.markdown-body pre:not(.blog-code-window) code)')
   expect(source).toContain(':deep(.markdown-body .blog-code-window .blog-code-content code)')
+  expect(source).toContain('padding: 28px 24px;')
   expect(listSource).toContain('createMarkdownRenderer')
   expect(listSource).toContain('bindCodeBlockInteractions')
   expect(previewSource).toContain('createMarkdownRenderer')
   expect(previewSource).toContain('bindCodeBlockInteractions')
   expect(previewSource).toContain(':deep(.blog-code-window .blog-code-content code)')
+  expect(previewSource).toContain('padding: 28px 24px;')
 })
 
 test('文章详情包含移动端和 reduced motion 规则', () => {

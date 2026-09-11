@@ -327,6 +327,7 @@ onUpdated(() => {
 
         :deep(.blog-code-window .blog-code-content code) {
           background: transparent;
+          padding: 28px 24px;
         }
         
         :deep(pre:not(.blog-code-window)) {

@@ -749,6 +749,7 @@ onBeforeUnmount(() => {
 
 :deep(.markdown-body .blog-code-window .blog-code-content code) {
   background: transparent;
+  padding: 28px 24px;
 }
 
 :deep(.markdown-body pre:not(.blog-code-window)) {
