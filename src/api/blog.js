@@ -70,6 +70,7 @@ export const commentDynamic = (id, data) =>
     content: data.content,
     nickname: data.nickname,
     email: data.email,
+    website: data.website,
     ...(data.parent_id ? { parent_id: data.parent_id } : {})
   })
 

@@ -3,6 +3,7 @@
     <div class="comment-user">
       <UserAvatar :src="comment.avatar" :nickname="comment.nickname" :size="depth ? 28 : 36" tone="warm" />
       <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+      <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
       <span v-if="comment.reply_to_nickname" class="reply-target">回复 @{{ comment.reply_to_nickname }}</span>
       <span class="time">{{ formatDate(comment.createTime) }}</span>
     </div>
@@ -35,6 +36,8 @@ const formatDate = (value) => dayjs(value).format('YYYY-MM-DD HH:mm')
 .comment-thread--reply { padding: 10px 0 12px; border-bottom: 0; }
 .comment-user { display: flex; align-items: center; min-width: 0; gap: 8px; }
 .nickname { color: #40382f; font-size: 14px; font-weight: 650; }
+.comment-website { color: #9b6b3e; font-size: 12px; text-decoration: none; }
+.comment-website:hover { color: #2a7180; }
 .reply-target, .time { color: #9c938a; font-size: 12px; }
 .time { margin-left: auto; }
 .comment-content { margin: 8px 0 7px 44px; color: var(--blog-comment-text); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }

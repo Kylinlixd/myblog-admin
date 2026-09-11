@@ -24,11 +24,11 @@
       </header>
 
       <div v-if="tocItems.length" class="mobile-toc-panel">
-        <button class="mobile-toc-trigger" type="button" @click="tocOpen = !tocOpen">
+        <button class="mobile-toc-trigger" type="button" :aria-expanded="tocOpen" aria-controls="mobile-article-toc" @click="tocOpen = !tocOpen">
           <span>目录</span><span>{{ tocOpen ? '收起' : `${tocItems.length} 个章节` }}</span>
         </button>
-        <nav v-if="tocOpen" class="mobile-toc-list" aria-label="文章目录">
-          <button v-for="item in tocItems" :key="item.id" type="button" :class="`toc-level-${item.level}`" @click="scrollToHeading(item.id)">{{ item.text }}</button>
+        <nav v-if="tocOpen" id="mobile-article-toc" class="mobile-toc-list" aria-label="文章目录">
+          <button v-for="item in tocItems" :key="item.id" type="button" :class="[`toc-level-${item.level}`, { 'is-active': activeTocId === item.id }]" :aria-current="activeTocId === item.id ? 'location' : undefined" @click="scrollToHeading(item.id)">{{ item.text }}</button>
         </nav>
       </div>
 
@@ -42,7 +42,7 @@
               <video v-else-if="item.type === 'video'" class="dynamic-media__video" controls preload="metadata" :src="item.url" :poster="item.posterUrl || undefined" playsinline @error="markMediaUnavailable(item.url)">您的浏览器不支持视频播放</video>
             </template>
           </div>
-          <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderMarkdown(dynamic.content)"></div>
+          <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderedArticleContent"></div>
 
           <section v-if="attachmentItems.length" class="dynamic-attachments" aria-label="附件下载">
             <div class="dynamic-attachments__heading">
@@ -108,7 +108,7 @@
             <div class="article-toc__label">ON THIS PAGE</div>
             <div class="article-toc__title">目录</div>
             <nav aria-label="文章目录">
-              <button v-for="item in tocItems" :key="item.id" type="button" :class="`toc-level-${item.level}`" @click="scrollToHeading(item.id)">{{ item.text }}</button>
+              <button v-for="item in tocItems" :key="item.id" type="button" :class="[`toc-level-${item.level}`, { 'is-active': activeTocId === item.id }]" :aria-current="activeTocId === item.id ? 'location' : undefined" @click="scrollToHeading(item.id)">{{ item.text }}</button>
             </nav>
           </div>
         </aside>
@@ -122,43 +122,7 @@
         
         <!-- 评论表单 -->
         <div class="comment-form">
-          <a-form
-            ref="commentForm"
-            :model="{ nickname, email, content: commentContent }"
-            :rules="commentRules"
-            layout="vertical"
-          >
-            <a-form-item label="昵称（选填）" name="nickname">
-              <a-input 
-                v-model:value="nickname" 
-                placeholder="请输入您的昵称，不填则显示为匿名用户" 
-              />
-            </a-form-item>
-            <a-form-item label="邮箱（选填）" name="email">
-              <a-input 
-                v-model:value="email" 
-                placeholder="请输入您的邮箱，用于接收回复通知" 
-              />
-            </a-form-item>
-            <a-form-item label="评论内容" name="content">
-              <a-textarea
-                v-model:value="commentContent"
-                placeholder="请输入评论内容"
-                :rows="4"
-                :maxLength="500"
-                show-count
-              />
-            </a-form-item>
-            <a-form-item>
-              <a-button
-                type="primary"
-                :loading="isSubmittingComment"
-                @click="submitComment"
-              >
-                发表评论
-              </a-button>
-            </a-form-item>
-          </a-form>
+          <CommentComposer :loading="isSubmittingComment" :reset-key="commentComposerResetKey" @submit="submitComment" />
         </div>
 
         <!-- 评论列表 -->
@@ -177,7 +141,10 @@
         </div>
 
         <div v-if="replyingTo" class="reply-editor">
-          <div class="reply-editor__meta">回复 @{{ replyingTo.nickname || '匿名用户' }} <button type="button" @click="cancelReply">取消</button></div>
+          <div class="reply-editor__meta">
+            <span>回复 @{{ replyingTo.nickname || '匿名用户' }}</span>
+            <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
+          </div>
           <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
           <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
         </div>
@@ -218,6 +185,9 @@ import 'highlight.js/styles/atom-one-light.css'
 import { message } from 'ant-design-vue'
 import DOMPurify from 'dompurify'
 import CommentThread from '@/components/blog/CommentThread.vue'
+import CommentComposer from '@/components/blog/CommentComposer.vue'
+import { enhanceCodeBlocks } from '@/utils/blogCodeBlocks'
+import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
   ([language, definition]) => hljs.registerLanguage(language, definition)
@@ -247,6 +217,7 @@ const renderMarkdown = (content) => {
 const route = useRoute()
 const appStore = useAppStore()
 const dynamic = ref(null)
+const renderedArticleContent = computed(() => renderMarkdown(dynamic.value?.content || ''))
 const unavailableMediaUrls = ref(new Set())
 const adjacent = ref({ prev: null, next: null })
 
@@ -316,14 +287,16 @@ let detailRequestSequence = 0
 const articleBodyRef = ref(null)
 const tocItems = ref([])
 const tocOpen = ref(false)
+const activeTocId = ref('')
 const readingProgress = ref(0)
 const readingMinutes = ref(1)
 
 // 评论相关
-const commentForm = ref(null)
 const commentContent = ref('')
 const nickname = ref('')
 const email = ref('')
+const website = ref('')
+const commentComposerResetKey = ref(0)
 const isSubmittingComment = ref(false)
 const commentList = ref([])
 const commentPage = ref(1)
@@ -332,20 +305,6 @@ const commentTotal = ref(0)
 const replyingTo = ref(null)
 const replyContent = ref('')
 
-// 评论表单验证规则
-const commentRules = {
-  content: [
-    { required: true, message: '请输入评论内容', trigger: 'blur' },
-    { min: 1, max: 500, message: '评论内容长度在1-500个字符之间', trigger: 'blur' }
-  ],
-  nickname: [
-    { max: 50, message: '昵称长度不能超过50个字符', trigger: 'blur' }
-  ],
-  email: [
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-  ]
-}
-
 const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD HH:mm')
 }
@@ -353,12 +312,9 @@ const formatDate = (date) => {
 const syncArticleNavigation = async () => {
   await nextTick()
   if (!articleBodyRef.value) return
-  const headings = [...articleBodyRef.value.querySelectorAll('h2, h3')]
-  tocItems.value = headings.map((heading, index) => {
-    const id = `article-heading-${index + 1}`
-    heading.id = id
-    return { id, level: heading.tagName === 'H2' ? 2 : 3, text: heading.textContent?.trim() || `章节 ${index + 1}` }
-  })
+  tocItems.value = collectArticleHeadings(articleBodyRef.value)
+  activeTocId.value = tocItems.value[0]?.id || ''
+  enhanceCodeBlocks(articleBodyRef.value)
 }
 
 const hydrateLazyMedia = async () => {
@@ -376,6 +332,12 @@ const updateReadingProgress = () => {
   const total = Math.max(1, element.offsetHeight - window.innerHeight * 0.65)
   const travelled = Math.min(total, Math.max(0, window.innerHeight * 0.35 - rect.top))
   readingProgress.value = Math.round((travelled / total) * 100)
+  if (tocItems.value.length) activeTocId.value = getActiveHeadingId(tocItems.value, getReadingOffset())
+}
+
+const getReadingOffset = () => {
+  const header = document.querySelector('.site-header-panel')
+  return (header?.getBoundingClientRect?.().bottom || 0) + 28
 }
 
 const scrollToHeading = (id) => {
@@ -429,20 +391,19 @@ const fetchAdjacent = async (requestedId) => {
 }
 
 // 提交评论
-const submitComment = async () => {
+const submitComment = async (payload = {}) => {
   if (!dynamic.value) return
   
   try {
-    await commentForm.value.validate()
-    
     if (isSubmittingComment.value) return
     isSubmittingComment.value = true
     
     const commentData = {
       dynamic_id: dynamic.value.id,
-      content: DOMPurify.sanitize(commentContent.value),
-      nickname: DOMPurify.sanitize(nickname.value || '匿名用户'),
-      email: DOMPurify.sanitize(email.value || ''),
+      content: DOMPurify.sanitize(payload.content || commentContent.value),
+      nickname: DOMPurify.sanitize(payload.nickname || nickname.value || '匿名用户'),
+      email: DOMPurify.sanitize(payload.email || email.value || ''),
+      website: DOMPurify.sanitize(payload.website || website.value || ''),
       ...(replyingTo.value ? { parent_id: replyingTo.value.id } : {})
     }
     
@@ -457,6 +418,8 @@ const submitComment = async () => {
       commentContent.value = ''
       nickname.value = ''
       email.value = ''
+      website.value = ''
+      commentComposerResetKey.value += 1
       replyContent.value = ''
       replyingTo.value = null
       commentPage.value = 1
@@ -465,7 +428,7 @@ const submitComment = async () => {
       message.error(result?.message || '评论失败')
     }
   } catch (error) {
-    if (error.errorFields) {
+    if (error?.errorFields) {
       message.error('请检查评论内容')
     } else {
       console.error('评论失败:', error)
@@ -484,8 +447,7 @@ const cancelReply = () => { replyingTo.value = null; replyContent.value = '' }
 const submitReply = async () => {
   const content = replyContent.value.trim()
   if (!replyingTo.value || !content || isSubmittingComment.value) return
-  commentContent.value = content
-  await submitComment()
+  await submitComment({ content, nickname: nickname.value, email: email.value, website: website.value })
 }
 
 // 评论分页
@@ -1081,6 +1043,54 @@ onBeforeUnmount(() => {
   padding: 20px 0;
 }
 
+.reply-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 22px;
+  padding: 18px;
+  border: 1px solid var(--article-line);
+  border-radius: 16px;
+  background: #fcf7ef;
+}
+
+.reply-editor__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--article-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.reply-editor__cancel {
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 1px solid #e4cdb8;
+  border-radius: 999px;
+  background: #fffaf3;
+  color: #9b5e2f;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  transition: background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.reply-editor__cancel:hover,
+.reply-editor__cancel:focus-visible {
+  background: #f1e2d1;
+  border-color: #d9ae88;
+  color: #9b5e2f;
+  box-shadow: 0 3px 10px rgb(155 94 47 / 10%);
+}
+
+.reply-editor > :deep(.ant-btn) {
+  justify-self: start;
+  border-radius: 10px;
+  border-color: #a96436;
+  background: #a96436;
+  box-shadow: none;
+}
+
     .comment-pagination {
       text-align: center;
       margin-top: 20px;
@@ -1115,8 +1125,8 @@ onBeforeUnmount(() => {
 
     .article-header {
       max-width: 880px;
-      margin: clamp(42px, 8vw, 92px) auto 44px;
-      padding: clamp(28px, 5vw, 64px);
+      margin: clamp(34px, 6vw, 68px) auto 36px;
+      padding: clamp(26px, 4vw, 52px);
       border: 1px solid var(--article-line);
       border-radius: 28px;
       background:
@@ -1136,7 +1146,7 @@ onBeforeUnmount(() => {
     .article-header .dynamic-title {
       margin: 18px 0 16px;
       color: var(--article-ink);
-      font-size: clamp(2.15rem, 5vw, 4.6rem);
+      font-size: clamp(2rem, 4vw, 3.7rem);
       font-weight: 780;
       letter-spacing: -.055em;
       line-height: 1.04;
@@ -1169,7 +1179,7 @@ onBeforeUnmount(() => {
     .article-layout {
       display: grid;
       grid-template-columns: minmax(0, 780px) 220px;
-      gap: clamp(28px, 5vw, 72px);
+      gap: clamp(32px, 4vw, 52px);
       align-items: start;
       justify-content: center;
     }
@@ -1360,10 +1370,13 @@ onBeforeUnmount(() => {
 
     .article-side-column {
       position: sticky;
-      top: 34px;
+      top: 92px;
+      max-height: calc(100vh - 112px);
     }
 
     .article-toc {
+      max-height: inherit;
+      overflow: auto;
       padding: 18px 0 18px 18px;
       border-left: 1px solid var(--article-line);
     }
@@ -1401,8 +1414,17 @@ onBeforeUnmount(() => {
       color: #a66b28;
     }
 
+    .article-toc button.is-active,
+    .mobile-toc-list button.is-active {
+      background: #fbf1e4;
+      color: #9b5e2f;
+      font-weight: 700;
+    }
+
     .article-toc .toc-level-3,
     .mobile-toc-list .toc-level-3 { padding-left: 20px; }
+    .article-toc .toc-level-4,
+    .mobile-toc-list .toc-level-4 { padding-left: 32px; font-size: 11px; }
 
     .toc-empty { color: #9aa5b1; font-size: 12px; }
 
@@ -1445,10 +1467,36 @@ onBeforeUnmount(() => {
       color: #596779;
     }
     .article-main-column :deep(.markdown-body pre) {
-      border: 1px solid #263f5b;
-      border-radius: 14px;
-      box-shadow: 0 14px 30px rgb(25 47 72 / 15%);
+      overflow: hidden;
+      padding: 0;
+      border: 1px solid #e3ddd4;
+      border-radius: 16px;
+      background: #fbfaf8;
+      box-shadow: 0 14px 30px rgb(88 65 37 / 9%);
     }
+    .article-main-column :deep(.blog-code-header) {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 0 13px;
+      border-bottom: 1px solid #ebe6df;
+      background: #f7f5f2;
+      color: #82786e;
+      font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .article-main-column :deep(.blog-code-dots) { display: flex; gap: 5px; }
+    .article-main-column :deep(.blog-code-dots i) { width: 9px; height: 9px; border-radius: 50%; background: #e1a18c; }
+    .article-main-column :deep(.blog-code-dots i:nth-child(2)) { background: #e4bd72; }
+    .article-main-column :deep(.blog-code-dots i:nth-child(3)) { background: #9bc39f; }
+    .article-main-column :deep(.blog-code-actions) { display: flex; gap: 4px; margin-left: auto; }
+    .article-main-column :deep(.blog-code-action) { border: 0; background: transparent; color: #82786e; cursor: pointer; font: inherit; }
+    .article-main-column :deep(.blog-code-action:hover) { color: #a96235; }
+    .article-main-column :deep(.blog-code-body) { display: flex; max-height: 560px; overflow: auto; transition: max-height .28s ease, opacity .28s ease; }
+    .article-main-column :deep(.blog-code-lines) { flex: 0 0 42px; padding: 16px 10px 16px 0; border-right: 1px solid #eee9e3; color: #b1a89f; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; user-select: none; white-space: pre; }
+    .article-main-column :deep(.blog-code-content) { min-width: 0; flex: 1; }
+    .article-main-column :deep(.blog-code-content code) { display: block; padding: 16px; color: #3b4652; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .article-main-column :deep(.markdown-body pre.is-collapsed .blog-code-body) { max-height: 0; opacity: 0; overflow: hidden; }
     .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; }
     .article-main-column :deep(.markdown-body img) { display: block; margin-inline: auto; }
 
@@ -1486,7 +1534,7 @@ onBeforeUnmount(() => {
     @media (max-width: 768px) {
       .article-reading-shell { width: min(100% - 20px, 780px); padding-bottom: 36px; }
       .article-header { margin: 24px auto 20px; padding: 25px 20px; border-radius: 20px; }
-      .article-header .dynamic-title { font-size: clamp(2rem, 11vw, 3.1rem); }
+      .article-header .dynamic-title { font-size: clamp(1.65rem, 8.6vw, 2.6rem); letter-spacing: -.045em; }
       .article-header .dynamic-meta span { padding: 6px 9px; }
       .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
       .article-adjacent { grid-template-columns: minmax(0, 1fr); }

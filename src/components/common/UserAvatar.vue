@@ -7,7 +7,11 @@
     @error="handleError"
   >
     <template v-if="!imageSrc">
-      <user-outlined class="user-avatar__icon" />
+      <svg v-if="tone === 'warm'" class="user-avatar__coffee" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M10 20h24v9.5A8.5 8.5 0 0 1 25.5 38h-7A8.5 8.5 0 0 1 10 29.5V20Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" />
+        <path d="M34 23h2.8a5.2 5.2 0 0 1 0 10.4H33M15 42h19M17 13c0-2.2 2.4-2.4 2.4-4.6M24 13c0-2.2 2.4-2.4 2.4-4.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+      </svg>
+      <user-outlined v-else class="user-avatar__icon" />
     </template>
   </a-avatar>
 </template>
@@ -45,4 +49,5 @@ const handleError = () => { failed.value = true }
 .user-avatar--warm { color: #735a45; background: #f1e8dc; }
 .user-avatar__letter { line-height: 1; }
 .user-avatar__icon { display: block; color: currentColor; font-size: .85em; line-height: 1; }
+.user-avatar__coffee { display: block; width: 70%; height: 70%; }
 </style>

@@ -56,6 +56,25 @@ describe('cinematic public blog pages', () => {
     expect(dynamic).toContain('selectTimelinePeriod')
   })
 
+  it('keeps the dynamic stream close to its compact page header', () => {
+    const dynamic = readPage('BlogDynamic.vue')
+
+    expect(dynamic).toContain('.blog-dynamic-container.cinematic-page')
+    expect(dynamic).toContain('padding-block: clamp(28px, 4vw, 48px)')
+    expect(dynamic).toContain('grid-template-columns: 44px minmax(0, 1fr)')
+    expect(dynamic).toContain('grid-row: 1 / span 2')
+    expect(dynamic).toContain('border: 1px solid rgb(200 111 55 / 38%)')
+  })
+
+  it('gives reply cancellation a quiet themed control instead of browser defaults', () => {
+    const detail = readPage('BlogDynamicDetail.vue')
+
+    expect(detail).toContain('class="reply-editor__cancel"')
+    expect(detail).toContain('background: #fffaf3')
+    expect(detail).toContain('border: 1px solid #e4cdb8')
+    expect(detail).toContain('.reply-editor__cancel:hover')
+  })
+
   it('separates readable article and comment colors from muted metadata', () => {
     const theme = fs.readFileSync(path.join(process.cwd(), 'src/styles/blog-cinematic.scss'), 'utf8')
     const globalStyles = fs.readFileSync(path.join(process.cwd(), 'src/styles/global.scss'), 'utf8')

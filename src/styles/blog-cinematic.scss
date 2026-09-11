@@ -130,6 +130,14 @@
   -webkit-text-fill-color: currentcolor !important;
 }
 
+/* The dynamic index uses a compact editorial header; detail pages keep their
+   own reading title scale. */
+.cinematic-hero.blog-dynamic-hero h1,
+.cinematic-hero.blog-dynamic-hero .page-title {
+  font-size: clamp(2rem, 4vw, 3.6rem) !important;
+  line-height: 1.04 !important;
+}
+
 .cinematic-hero p,
 .cinematic-hero .page-desc,
 .cinematic-hero .page-description,

@@ -2,7 +2,7 @@
   <div class="blog-dynamic-container cinematic-page">
     <div class="blog-dynamic">
       <!-- 页面标题 -->
-      <div class="page-header cinematic-hero">
+      <div class="page-header cinematic-hero blog-dynamic-hero">
         <h1 class="page-title">探索动态</h1>
         <p class="page-description">记录我的开发之路，分享生活点滴和思考</p>
       </div>
@@ -113,43 +113,7 @@
             
             <!-- 评论表单 -->
             <div class="comment-form">
-              <a-form
-                ref="commentForm"
-                :model="{ nickname, email, content: commentContent }"
-                :rules="commentRules"
-                layout="vertical"
-              >
-                <a-form-item label="昵称（选填）" name="nickname">
-                  <a-input 
-                    v-model:value="nickname" 
-                    placeholder="请输入您的昵称，不填则显示为匿名用户" 
-                  />
-                </a-form-item>
-                <a-form-item label="邮箱（选填）" name="email">
-                  <a-input 
-                    v-model:value="email" 
-                    placeholder="请输入您的邮箱，用于接收回复通知" 
-                  />
-                </a-form-item>
-                <a-form-item label="评论内容" name="content">
-                  <a-textarea
-                    v-model:value="commentContent"
-                    placeholder="请输入评论内容"
-                    :rows="4"
-                    :maxLength="500"
-                    show-count
-                  />
-                </a-form-item>
-                <a-form-item>
-                  <a-button
-                    type="primary"
-                    :loading="item.isSubmittingComment"
-                    @click="submitComment(item)"
-                  >
-                    发表评论
-                  </a-button>
-                </a-form-item>
-              </a-form>
+              <CommentComposer :loading="item.isSubmittingComment" :reset-key="commentComposerResetKey" @submit="submitComment(item, $event)" />
             </div>
 
             <!-- 评论列表 -->
@@ -161,8 +125,9 @@
                   class="comment-item"
                 >
                   <div class="comment-user">
-                    <a-avatar :src="comment.avatar || '/assets/default-avatar.png'" />
+                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname" tone="warm" :size="36" />
                     <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                    <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
                     <span class="time">{{ formatDate(comment.createTime) }}</span>
                   </div>
                   <div class="comment-content">{{ comment.content }}</div>
@@ -222,6 +187,8 @@ import {
   MessageOutlined, 
   EyeOutlined
 } from '@ant-design/icons-vue'
+import CommentComposer from '@/components/blog/CommentComposer.vue'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 
 // 创建Markdown渲染器
 const md = new MarkdownIt({
@@ -240,6 +207,8 @@ const fetchedPages = ref(new Set()) // 用于跟踪已请求的页码
 const commentContent = ref('')
 const nickname = ref('')
 const email = ref('')
+const website = ref('')
+const commentComposerResetKey = ref(0)
 const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
 const activeTimeline = ref('')
@@ -499,26 +468,11 @@ const handleComment = async (item) => {
   }
 }
 
-// 修改评论表单部分
-const commentForm = ref(null)
-const commentRules = {
-  content: [
-    { required: true, message: '请输入评论内容', trigger: 'blur' },
-    { min: 1, max: 500, message: '评论内容长度在1-500个字符之间', trigger: 'blur' }
-  ],
-  nickname: [
-    { max: 50, message: '昵称长度不能超过50个字符', trigger: 'blur' }
-  ],
-  email: [
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
-  ]
-}
-
 // 修改submitComment函数
-const submitComment = async (item) => {
+const submitComment = async (item, payload = {}) => {
   try {
     // 手动验证表单
-    if (!commentContent.value) {
+    if (!(payload.content || commentContent.value).trim()) {
       message.error('请输入评论内容')
       return
     }
@@ -527,9 +481,10 @@ const submitComment = async (item) => {
     item.isSubmittingComment = true
     
     const commentData = {
-      content: commentContent.value,
-      nickname: nickname.value || '匿名用户',
-      email: email.value || ''
+      content: payload.content || commentContent.value,
+      nickname: payload.nickname || nickname.value || '匿名用户',
+      email: payload.email || email.value || '',
+      website: payload.website || website.value || ''
     }
     
     
@@ -540,6 +495,8 @@ const submitComment = async (item) => {
       commentContent.value = ''
       nickname.value = ''
       email.value = ''
+      website.value = ''
+      commentComposerResetKey.value += 1
       // 重新获取评论列表
       item.commentPage = 1
       await fetchComments(item)
@@ -579,6 +536,10 @@ onActivated(() => {
   background: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
 }
 
+.blog-dynamic-container.cinematic-page {
+  padding-block: clamp(28px, 4vw, 48px);
+}
+
 .blog-dynamic {
   position: relative;
   z-index: 1;
@@ -590,7 +551,7 @@ onActivated(() => {
 
 .page-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: clamp(24px, 3vw, 38px);
 }
 
 .page-title {
@@ -605,6 +566,45 @@ onActivated(() => {
 .page-description {
   color: #64748b;
   font-size: 1.1rem;
+}
+
+.blog-dynamic-hero {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 18px;
+  row-gap: 8px;
+  max-width: 960px;
+  margin: 0 auto clamp(20px, 2.5vw, 28px);
+}
+
+.blog-dynamic-hero::before {
+  width: 24px;
+  height: 24px;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+  margin: 0;
+  border: 1px solid rgb(200 111 55 / 38%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--blog-accent) 0 3px, transparent 3.5px),
+    radial-gradient(circle, transparent 0 8px, rgb(200 111 55 / 12%) 8.5px 9px, transparent 9.5px);
+  box-shadow: 0 0 0 5px rgb(200 111 55 / 6%);
+}
+
+.blog-dynamic-hero .page-title {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0;
+}
+
+.blog-dynamic-hero .page-description {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0;
+  max-width: none;
 }
 
 .dynamic-list {
@@ -999,6 +999,9 @@ onActivated(() => {
   color: #1e293b;
 }
 
+.comment-website { margin-left: 8px; color: #9b6b3e; font-size: 12px; text-decoration: none; }
+.comment-website:hover { color: #2a7180; }
+
 .comment-form {
   margin-bottom: 30px;
 }
@@ -1103,8 +1106,24 @@ onActivated(() => {
 }
 
 @media (max-width: 768px) {
+  .blog-dynamic-container.cinematic-page {
+    padding-block: 20px 48px;
+  }
+
   .blog-dynamic {
     padding: 1rem;
+  }
+
+  .blog-dynamic-hero {
+    grid-template-columns: 30px minmax(0, 1fr);
+    column-gap: 12px;
+    row-gap: 6px;
+    margin-bottom: 22px;
+  }
+
+  .blog-dynamic-hero::before {
+    width: 22px;
+    height: 22px;
   }
 
   .page-title {
