@@ -47,6 +47,7 @@ describe('enhanceCodeBlocks', () => {
     expect(windows[0]).toHaveClass('is-collapsed')
     expect(windows[1]).not.toHaveClass('is-collapsed')
     expect(windows[0].querySelector('[data-blog-code-action="collapse"]')).toHaveAttribute('aria-expanded', 'false')
+    expect(windows[0].querySelector('.blog-code-run-footer')).toHaveAttribute('hidden')
     expect(root.querySelectorAll('[data-blog-code-bound="true"]')).toHaveLength(2)
   })
 

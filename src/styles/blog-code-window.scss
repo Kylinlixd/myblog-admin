@@ -120,6 +120,7 @@
   align-items: center;
   justify-content: center;
   width: auto;
+  height: 34px;
   min-width: 92px;
   margin: 10px 14px;
   padding: 0 12px;
@@ -127,6 +128,7 @@
   background: #fffaf5;
   color: #a96235;
   gap: 6px;
+  font: 600 13px/1.2 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .blog-code-window .blog-code-run:hover,

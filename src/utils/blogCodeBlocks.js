@@ -125,6 +125,8 @@ export function bindCodeBlockInteractions(root) {
 
     collapseButton?.addEventListener('click', () => {
       const collapsed = pre.classList.toggle('is-collapsed')
+      const runFooter = pre.querySelector('.blog-code-run-footer')
+      if (runFooter) runFooter.hidden = collapsed
       collapseButton.setAttribute('aria-expanded', String(!collapsed))
       collapseButton.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}${language}代码`)
       collapseButton.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
