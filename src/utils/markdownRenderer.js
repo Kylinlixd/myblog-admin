@@ -31,7 +31,7 @@ const renderCode = (md, token, options) => {
   const runPanel = language === 'js'
     ? '<div class="blog-code-run-panel blog-code-run-output-panel" data-blog-code-run-output hidden><div class="blog-code-run-panel-title">运行输出</div><div class="blog-code-run-output" role="log" aria-live="polite"></div></div>'
     : language === 'html'
-      ? '<div class="blog-code-run-panel blog-code-run-preview-panel" data-blog-code-run-preview hidden><div class="blog-code-run-panel-title">预览</div><div class="blog-code-run-preview-target"></div></div>'
+      ? `<div class="blog-code-run-panel blog-code-run-preview-panel" data-blog-code-run-preview hidden><div class="blog-code-run-panel-header"><div class="blog-code-run-panel-title">预览</div><button type="button" class="blog-code-preview-collapse" data-blog-code-preview-collapse aria-expanded="true" aria-label="折叠预览" title="折叠预览">${collapseIconMarkup}</button></div><div class="blog-code-run-preview-target"></div></div>`
       : ''
 
   // Keep the wrapper's structural nodes adjacent. Whitespace text nodes inside

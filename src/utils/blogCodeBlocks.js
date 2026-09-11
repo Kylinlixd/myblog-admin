@@ -126,7 +126,7 @@ export function bindCodeBlockInteractions(root) {
     collapseButton?.addEventListener('click', () => {
       const collapsed = pre.classList.toggle('is-collapsed')
       const runFooter = pre.querySelector('.blog-code-run-footer')
-      if (runFooter) runFooter.hidden = collapsed
+      runFooter?.classList.toggle('is-collapsed', collapsed)
       collapseButton.setAttribute('aria-expanded', String(!collapsed))
       collapseButton.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}${language}代码`)
       collapseButton.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
@@ -143,6 +143,16 @@ export function bindCodeBlockInteractions(root) {
 
     const runButton = pre.querySelector('[data-blog-code-action="run"]')
     runButton?.addEventListener('click', () => runCodeBlock(pre, language, rawCode))
+
+    const previewPanel = pre.querySelector('[data-blog-code-run-preview]')
+    const previewToggle = previewPanel?.querySelector('[data-blog-code-preview-collapse]')
+    previewToggle?.addEventListener('click', () => {
+      const collapsed = previewPanel.classList.toggle('is-collapsed')
+      previewToggle.setAttribute('aria-expanded', String(!collapsed))
+      previewToggle.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}预览`)
+      previewToggle.setAttribute('title', `${collapsed ? '展开' : '折叠'}预览`)
+      previewToggle.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
+    })
 
     pre.dataset.blogCodeBound = 'true'
     return pre
@@ -232,7 +242,7 @@ const wrapLegacyCodeBlock = (pre) => {
     panel.hidden = true
     panel.innerHTML = language === 'js'
       ? '<div class="blog-code-run-panel-title">运行输出</div><div class="blog-code-run-output" role="log" aria-live="polite"></div>'
-      : '<div class="blog-code-run-panel-title">预览</div><div class="blog-code-run-preview-target"></div>'
+      : '<div class="blog-code-run-panel-header"><div class="blog-code-run-panel-title">预览</div><button type="button" class="blog-code-preview-collapse" data-blog-code-preview-collapse aria-expanded="true" aria-label="折叠预览" title="折叠预览"><svg class="blog-code-collapse-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"></path></svg></button></div><div class="blog-code-run-preview-target"></div>'
     footer.appendChild(panel)
     pre.appendChild(footer)
   }
