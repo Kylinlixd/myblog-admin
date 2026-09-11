@@ -36,4 +36,17 @@ describe('createMarkdownRenderer', () => {
     expect(() => md.render('```\n```')).not.toThrow()
     expect(md.render('```js\nconst answer = 42\n```')).toContain('data-language="js"')
   })
+
+  it('adds a run action and output target only for js and html fences', () => {
+    const md = createMarkdownRenderer()
+    const html = md.render('```js\nconsole.log("ok")\n```\n\n```html\n<h1>Hello</h1>\n```\n\n```json\n{"ok":true}\n```')
+
+    expect(html.match(/data-blog-code-action="run"/g)).toHaveLength(2)
+    expect(html).toContain('data-blog-code-run-kind="js"')
+    expect(html).toContain('data-blog-code-run-kind="html"')
+    expect(html).toContain('data-blog-code-run-output')
+    expect(html).toContain('data-blog-code-run-preview')
+    expect(html).toContain('试运行')
+    expect(html).not.toContain('data-language="json" data-blog-code-run-kind')
+  })
 })

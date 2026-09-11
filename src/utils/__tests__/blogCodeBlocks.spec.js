@@ -80,4 +80,31 @@ describe('enhanceCodeBlocks', () => {
     expect(root.querySelector('.blog-code-copy-feedback')).toHaveTextContent('已复制')
     expect(root.querySelector('.blog-code-copy-feedback')).toHaveClass('is-visible')
   })
+
+  it('runs js fences in a sandbox and reveals the console output panel', () => {
+    const root = document.createElement('div')
+    root.innerHTML = createMarkdownRenderer().render('```js\nconsole.log("ok")\n```')
+    bindCodeBlockInteractions(root)
+
+    const pre = root.querySelector('pre')
+    pre.querySelector('[data-blog-code-action="run"]').click()
+
+    expect(pre.querySelector('[data-blog-code-run-output]')).not.toHaveAttribute('hidden')
+    expect(pre.querySelector('iframe')).toHaveAttribute('sandbox', 'allow-scripts')
+    expect(pre.querySelector('iframe').srcdoc).toContain('console.log')
+  })
+
+  it('renders html fences into a sandbox preview iframe', () => {
+    const root = document.createElement('div')
+    root.innerHTML = createMarkdownRenderer().render('```html\n<h1>Hello</h1>\n```')
+    bindCodeBlockInteractions(root)
+
+    const pre = root.querySelector('pre')
+    pre.querySelector('[data-blog-code-action="run"]').click()
+    const frame = pre.querySelector('.blog-code-run-preview-frame')
+
+    expect(pre.querySelector('[data-blog-code-run-preview]')).not.toHaveAttribute('hidden')
+    expect(frame).toHaveAttribute('sandbox', 'allow-scripts')
+    expect(frame.srcdoc).toContain('<h1>Hello</h1>')
+  })
 })
