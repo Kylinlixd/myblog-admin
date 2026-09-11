@@ -52,6 +52,28 @@ const createJavascriptSrcdoc = (rawCode, messageId) => {
   return `<!doctype html><meta charset="utf-8"><script>\nconst source=${source};\nconst id=${id};\nconst send=(type,args)=>parent.postMessage({source:'blog-code-runner',id,type,args},'*');\nconst stringify=(value)=>{try{return typeof value==='string'?value:JSON.stringify(value)}catch{return String(value)}};\nconsole.log=(...args)=>send('log',args.map(stringify));\nconsole.warn=(...args)=>send('warn',args.map(stringify));\nconsole.error=(...args)=>send('error',args.map(stringify));\nwindow.onerror=(message)=>send('error',[String(message)]);\ntry{new Function(source)()}catch(error){send('error',[error?.stack||String(error)])}\n<\/script>`
 }
 
+const createHtmlPreviewSrcdoc = (rawCode, messageId) => {
+  const id = JSON.stringify(messageId)
+  const resizeScript = `<script>
+(() => {
+  const id = ${id}
+  let lastHeight = 0
+  const reportHeight = () => {
+    const height = Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight || 0)
+    if (height === lastHeight) return
+    lastHeight = height
+    parent.postMessage({ source: 'blog-code-preview', id, height }, '*')
+  }
+  window.addEventListener('load', reportHeight)
+  window.setTimeout(reportHeight, 0)
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(reportHeight).observe(document.documentElement)
+  }
+})()
+<\/script>`
+  return `${rawCode}\n${resizeScript}`
+}
+
 const runJavascript = (pre, rawCode) => {
   const panel = pre.querySelector('[data-blog-code-run-output]')
   const output = panel?.querySelector('.blog-code-run-output')
@@ -89,12 +111,27 @@ const runHtml = (pre, rawCode) => {
   const panel = pre.querySelector('[data-blog-code-run-preview]')
   const target = panel?.querySelector('.blog-code-run-preview-target')
   if (!panel || !target) return
+  pre._blogCodePreviewCleanup?.()
   target.replaceChildren()
   const frame = document.createElement('iframe')
+  const messageId = `blog-preview-${Date.now()}-${Math.random().toString(36).slice(2)}`
   frame.className = 'blog-code-run-preview-frame blog-code-run-preview-frame--expanded'
   frame.setAttribute('sandbox', 'allow-scripts')
   frame.setAttribute('title', 'HTML 试运行预览')
-  frame.srcdoc = rawCode
+  frame.dataset.blogCodePreviewId = messageId
+  frame.style.height = '220px'
+  const onMessage = (event) => {
+    if (event.data?.source !== 'blog-code-preview' || event.data.id !== messageId) return
+    const height = Number(event.data.height)
+    if (!Number.isFinite(height)) return
+    frame.style.height = `${Math.min(Math.max(height, 220), 620)}px`
+  }
+  window.addEventListener('message', onMessage)
+  pre._blogCodePreviewCleanup = () => {
+    window.removeEventListener('message', onMessage)
+    frame.remove()
+  }
+  frame.srcdoc = createHtmlPreviewSrcdoc(rawCode, messageId)
   target.appendChild(frame)
   panel.hidden = false
 }

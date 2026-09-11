@@ -119,4 +119,21 @@ describe('enhanceCodeBlocks', () => {
     expect(panel).not.toHaveClass('is-collapsed')
     expect(toggle).toHaveAttribute('aria-expanded', 'true')
   })
+
+  it('adapts the html sandbox height to content messages', () => {
+    const root = document.createElement('div')
+    root.innerHTML = createMarkdownRenderer().render('```html\n<div>Short preview</div>\n```')
+    bindCodeBlockInteractions(root)
+
+    const pre = root.querySelector('pre')
+    pre.querySelector('[data-blog-code-action="run"]').click()
+    const frame = pre.querySelector('.blog-code-run-preview-frame')
+    const messageId = frame.dataset.blogCodePreviewId
+
+    window.dispatchEvent(new MessageEvent('message', {
+      data: { source: 'blog-code-preview', id: messageId, height: 284 }
+    }))
+
+    expect(frame.style.height).toBe('284px')
+  })
 })
