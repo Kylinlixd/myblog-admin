@@ -9,6 +9,10 @@ const listSource = fs.readFileSync(
   path.join(process.cwd(), 'src/views/blog/BlogDynamic.vue'),
   'utf8'
 )
+const previewSource = fs.readFileSync(
+  path.join(process.cwd(), 'src/views/dynamics/DynamicPreview.vue'),
+  'utf8'
+)
 
 test('文章详情包含编辑型头部元信息与阅读结构', () => {
   expect(source).toContain('article-reading-shell')
@@ -33,6 +37,13 @@ test('文章详情包含目录与移动端折叠入口', () => {
 
 test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
   expect(source).toContain('blog-code-window')
+  expect(source).toContain('createMarkdownRenderer')
+  expect(source).toContain('bindCodeBlockInteractions')
+  expect(source).not.toContain('enhanceCodeBlocks(articleBodyRef.value)')
+  expect(listSource).toContain('createMarkdownRenderer')
+  expect(listSource).toContain('bindCodeBlockInteractions')
+  expect(previewSource).toContain('createMarkdownRenderer')
+  expect(previewSource).toContain('bindCodeBlockInteractions')
 })
 
 test('文章详情包含移动端和 reduced motion 规则', () => {

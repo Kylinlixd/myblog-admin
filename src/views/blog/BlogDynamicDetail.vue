@@ -172,7 +172,6 @@ import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
 import { DownloadOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
-import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
 import css from 'highlight.js/lib/languages/css'
@@ -187,7 +186,8 @@ import { message } from 'ant-design-vue'
 import DOMPurify from 'dompurify'
 import CommentThread from '@/components/blog/CommentThread.vue'
 import CommentComposer from '@/components/blog/CommentComposer.vue'
-import { enhanceCodeBlocks } from '@/utils/blogCodeBlocks'
+import { createMarkdownRenderer } from '@/utils/markdownRenderer'
+import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
@@ -195,10 +195,7 @@ Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).fo
 )
 
 // 创建 Markdown 渲染器
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
+const md = createMarkdownRenderer({
   highlight: function (str, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
@@ -315,7 +312,7 @@ const syncArticleNavigation = async () => {
   if (!articleBodyRef.value) return
   tocItems.value = collectArticleHeadings(articleBodyRef.value)
   activeTocId.value = tocItems.value[0]?.id || ''
-  enhanceCodeBlocks(articleBodyRef.value)
+  bindCodeBlockInteractions(articleBodyRef.value)
 }
 
 const hydrateLazyMedia = async () => {

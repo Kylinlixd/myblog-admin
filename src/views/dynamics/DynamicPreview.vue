@@ -26,7 +26,7 @@
 
       <div class="preview-content">
         <!-- Markdown内容 -->
-        <div v-if="dynamic.content" class="content-text markdown-body" v-html="renderMarkdown(dynamic.content)"></div>
+        <div v-if="dynamic.content" ref="previewContentRef" class="content-text markdown-body" v-html="renderMarkdown(dynamic.content)"></div>
         
         <!-- 媒体内容 -->
         <div v-if="mediaItems.length" class="media-content">
@@ -64,15 +64,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUpdated } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { getDynamicDetail } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { EditOutlined, CloseOutlined } from '@ant-design/icons-vue'
-import MarkdownIt from 'markdown-it'
 import DOMPurify from 'dompurify'
+import { createMarkdownRenderer } from '@/utils/markdownRenderer'
+import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 
 const route = useRoute()
 const router = useRouter()
@@ -92,6 +93,7 @@ const defaultDynamic = {
 
 const dynamic = ref({ ...defaultDynamic })
 const unavailableMediaUrls = ref(new Set())
+const previewContentRef = ref(null)
 
 const normalizeMediaItem = (item, fallbackType) => {
   const rawUrl = typeof item === 'string' ? item : item?.url || item?.file_url
@@ -140,11 +142,7 @@ const normalizeDynamic = (data = {}) => ({
 const categories = ref([])
 
 // 创建Markdown渲染器
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true
-})
+const md = createMarkdownRenderer()
 
 // 渲染Markdown内容
 const renderMarkdown = (content) => {
@@ -238,6 +236,10 @@ onMounted(async () => {
     fetchDynamicDetail(),
     fetchCategories()
   ])
+})
+
+onUpdated(() => {
+  bindCodeBlockInteractions(previewContentRef.value)
 })
 </script>
 

@@ -41,7 +41,7 @@
 
         <div class="blog-dynamic-stream">
           <!-- 动态列表 -->
-          <div v-if="dynamicList.length > 0" class="dynamic-list">
+          <div v-if="dynamicList.length > 0" ref="dynamicListRef" class="dynamic-list">
         <div
           v-for="(item, index) in dynamicList"
           :key="item.id || index"
@@ -170,8 +170,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated } from 'vue'
-import MarkdownIt from 'markdown-it'
+import { ref, onMounted, onActivated, onUpdated } from 'vue'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
@@ -189,13 +188,11 @@ import {
 } from '@ant-design/icons-vue'
 import CommentComposer from '@/components/blog/CommentComposer.vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
+import { createMarkdownRenderer } from '@/utils/markdownRenderer'
+import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 
 // 创建Markdown渲染器
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true
-})
+const md = createMarkdownRenderer()
 
 // 状态
 const loading = ref(false)
@@ -212,6 +209,7 @@ const commentComposerResetKey = ref(0)
 const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
 const activeTimeline = ref('')
+const dynamicListRef = ref(null)
 
 const mediaItems = (dynamic) => {
   const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
@@ -529,6 +527,10 @@ const submitComment = async (item, payload = {}) => {
 onMounted(() => {
   fetchTimeline()
   fetchDynamicList()
+})
+
+onUpdated(() => {
+  bindCodeBlockInteractions(dynamicListRef.value)
 })
 
 onActivated(() => {
