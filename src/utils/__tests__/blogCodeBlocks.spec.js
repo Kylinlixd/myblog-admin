@@ -1,4 +1,5 @@
-import { enhanceCodeBlocks } from '../blogCodeBlocks'
+import { createMarkdownRenderer } from '../markdownRenderer'
+import { bindCodeBlockInteractions, enhanceCodeBlocks } from '../blogCodeBlocks'
 
 describe('enhanceCodeBlocks', () => {
   it('adds an independent macOS-style header, line numbers and collapse control', () => {
@@ -30,5 +31,34 @@ describe('enhanceCodeBlocks', () => {
     await root.querySelector('.blog-code-copy').click()
     expect(writeText).toHaveBeenCalledWith('<script>alert(1)</script>')
     expect(root.querySelector('script')).toBeNull()
+  })
+
+  it('binds plugin output once and collapses only the clicked window', () => {
+    const root = document.createElement('div')
+    root.innerHTML = createMarkdownRenderer().render('```js\nconst answer = 42\n```\n\n```json\n{"ok":true}\n```')
+
+    bindCodeBlockInteractions(root)
+    bindCodeBlockInteractions(root)
+    const windows = root.querySelectorAll('pre[data-blog-code-window="true"]')
+    windows[0].querySelector('[data-blog-code-action="collapse"]').click()
+
+    expect(windows[0]).toHaveClass('is-collapsed')
+    expect(windows[1]).not.toHaveClass('is-collapsed')
+    expect(windows[0].querySelector('[data-blog-code-action="collapse"]')).toHaveAttribute('aria-expanded', 'false')
+    expect(root.querySelectorAll('[data-blog-code-bound="true"]')).toHaveLength(2)
+  })
+
+  it('uses the textarea fallback when Clipboard API is unavailable', async () => {
+    const root = document.createElement('div')
+    root.innerHTML = createMarkdownRenderer().render('```text\ncopy me\n```')
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
+    const execCommand = jest.fn(() => true)
+    document.execCommand = execCommand
+
+    bindCodeBlockInteractions(root)
+    await root.querySelector('[data-blog-code-action="copy"]').click()
+
+    expect(execCommand).toHaveBeenCalledWith('copy')
+    expect(document.body.querySelector('textarea')).toBeNull()
   })
 })
