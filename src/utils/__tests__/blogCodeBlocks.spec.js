@@ -9,13 +9,15 @@ describe('enhanceCodeBlocks', () => {
     expect(blocks).toHaveLength(2)
     expect(document.querySelectorAll('.blog-code-header')).toHaveLength(2)
     expect(document.querySelector('.blog-code-language').textContent).toBe('json')
-    expect(document.querySelector('.blog-code-lines').textContent).toBe('1\n2')
+    expect(document.querySelector('.blog-code-lines').textContent).toBe('1')
+    expect(document.querySelector('.blog-code-collapse-icon')).toBeTruthy()
 
     const first = document.querySelector('pre')
     expect(first).toHaveClass('blog-code-window')
     document.querySelector('.blog-code-collapse').click()
     expect(first).toHaveClass('is-collapsed')
     expect(document.querySelector('.blog-code-collapse')).toHaveAttribute('aria-expanded', 'false')
+    expect(document.querySelector('.blog-code-collapse-icon')).toHaveClass('is-collapsed')
     expect(document.querySelectorAll('pre.is-collapsed')).toHaveLength(1)
   })
 

@@ -5,6 +5,8 @@ const getLanguage = (pre, code) => {
   return language || 'text'
 }
 
+const collapseIconMarkup = '<svg class="blog-code-collapse-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"></path></svg>'
+
 const setCopyState = (button, text) => {
   const feedback = button.parentElement?.querySelector('.blog-code-copy-feedback')
   const copied = text === '已复制'
@@ -66,7 +68,7 @@ export function bindCodeBlockInteractions(root) {
       const collapsed = pre.classList.toggle('is-collapsed')
       collapseButton.setAttribute('aria-expanded', String(!collapsed))
       collapseButton.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}${language}代码`)
-      collapseButton.textContent = collapsed ? '›' : '⌄'
+      collapseButton.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
     })
 
     copyButton?.addEventListener('click', async () => {
@@ -112,7 +114,7 @@ const wrapLegacyCodeBlock = (pre) => {
   collapseButton.setAttribute('aria-expanded', 'true')
   collapseButton.setAttribute('aria-label', `折叠${language}代码`)
   collapseButton.setAttribute('title', `折叠${language}代码`)
-  collapseButton.textContent = '⌄'
+  collapseButton.innerHTML = collapseIconMarkup
 
   const copyButton = document.createElement('button')
   copyButton.type = 'button'
@@ -136,7 +138,8 @@ const wrapLegacyCodeBlock = (pre) => {
   const lines = document.createElement('span')
   lines.className = 'blog-code-lines'
   lines.setAttribute('aria-hidden', 'true')
-  lines.textContent = Array.from({ length: Math.max(1, rawCode.split('\n').length) }, (_, index) => index + 1).join('\n')
+  const visibleCode = rawCode.endsWith('\n') ? rawCode.slice(0, -1) : rawCode
+  lines.textContent = Array.from({ length: Math.max(1, visibleCode.split('\n').length) }, (_, index) => index + 1).join('\n')
 
   const codeContent = document.createElement('div')
   codeContent.className = 'blog-code-content'
