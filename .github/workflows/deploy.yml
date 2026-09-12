@@ -65,3 +65,8 @@ jobs:
             rm -f /tmp/release.tgz
             nginx -t
             systemctl reload nginx
+            # Keep the active release plus the immediately previous release.
+            find /var/www/myblog-admin/releases -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+              | sort -nr \
+              | awk 'NR > 2 { sub(/^[^ ]+ /, ""); print }' \
+              | xargs -r rm -rf
