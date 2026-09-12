@@ -21,7 +21,7 @@
       <template v-if="loading">
         <a-skeleton v-for="item in 4" :key="item" active :paragraph="false" class="metric-skeleton" />
       </template>
-      <router-link v-else v-for="item in metrics" :key="item.key" :to="item.path" class="metric-item" @click="item.key === 'comments' && acknowledgeCommentCount()">
+      <router-link v-else v-for="item in metrics" :key="item.key" :to="item.path" class="metric-item">
         <component :is="item.icon" class="metric-icon" />
         <span class="metric-label">{{ item.label }}</span>
         <span class="metric-value-wrap">
@@ -224,12 +224,6 @@ function syncCommentCount(total) {
   } catch {
     commentCountChanged.value = false
   }
-}
-
-function acknowledgeCommentCount() {
-  const current = Number(dashboardData.value.total.comments) || 0
-  try { localStorage.setItem(COMMENT_COUNT_SEEN_KEY, String(current)) } catch { /* storage unavailable */ }
-  commentCountChanged.value = false
 }
 
 function taxonomyShare(item, items) {
