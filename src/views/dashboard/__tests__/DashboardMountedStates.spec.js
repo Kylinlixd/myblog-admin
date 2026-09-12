@@ -85,6 +85,16 @@ describe('Dashboard mounted states', () => {
     localStorage.removeItem('dashboard.comments.seenCount')
   })
 
+  it('shows the marker on the first dashboard load when comments already exist', async () => {
+    localStorage.removeItem('dashboard.comments.seenCount')
+    request.get.mockResolvedValueOnce({ data: { total: { comments: 15 } } })
+    const wrapper = mount(Dashboard, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.find('.metric-unread-dot').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
   it('offers an accessible retry action after a failed request', async () => {
     request.get.mockRejectedValueOnce(new Error('网络不可用'))
     const wrapper = mount(Dashboard, { global: { stubs: globalStubs } })
