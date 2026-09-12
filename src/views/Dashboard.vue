@@ -228,7 +228,10 @@ async function loadStats() {
   }
 }
 
-onMounted(loadStats)
+onMounted(() => {
+  loadStats()
+  commentNotifications.refresh()
+})
 </script>
 
 <style scoped>

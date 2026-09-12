@@ -14,15 +14,17 @@ jest.mock('@/stores/user', () => ({
   useUserStore: () => ({ nickname: '管理员' })
 }))
 
+const mockNotifications = {
+  hasUnread: false,
+  unreadCount: 0,
+  refresh: jest.fn(),
+  markRead: jest.fn(),
+  startPolling: jest.fn(),
+  stopPolling: jest.fn()
+}
+
 jest.mock('@/stores/commentNotifications', () => ({
-  useCommentNotificationsStore: () => ({
-    hasUnread: false,
-    unreadCount: 0,
-    refresh: jest.fn(),
-    markRead: jest.fn(),
-    startPolling: jest.fn(),
-    stopPolling: jest.fn()
-  })
+  useCommentNotificationsStore: () => mockNotifications
 }))
 
 const ButtonStub = {
@@ -62,6 +64,14 @@ describe('Dashboard mounted states', () => {
     expect(wrapper.find('.panel-empty').exists()).toBe(true)
     expect(wrapper.find('.compact-empty').exists()).toBe(true)
     wrapper.unmount()
+  })
+
+  it('refreshes unread comments when the dashboard is opened', async () => {
+    request.get.mockResolvedValueOnce({ data: {} })
+    mount(Dashboard, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(mockNotifications.refresh).toHaveBeenCalled()
   })
 
   it('offers an accessible retry action after a failed request', async () => {
