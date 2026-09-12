@@ -209,7 +209,8 @@ function handleLogout() {
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { min-width: 0; gap: 16px; }
-.icon-button { position: relative; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
+.icon-button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
+.icon-button { position: relative; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
 .user-button { min-height: 46px; gap: 10px; padding: 5px 7px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
 .user-button:hover { background: var(--color-surface-muted); }
