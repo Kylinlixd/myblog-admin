@@ -19,6 +19,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { UserOutlined } from '@ant-design/icons-vue'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 
 const props = defineProps({
   src: { type: String, default: '' },
@@ -35,7 +36,7 @@ const normalisedSrc = computed(() => {
   // Legacy placeholder paths should use the same initials/icon fallback as
   // an account that has never uploaded an avatar.
   if (!value || /(?:default-avatar|about-avatar|placeholder-avatar)/i.test(value)) return ''
-  return value
+  return buildApiUrl(value)
 })
 const imageSrc = computed(() => failed.value ? '' : normalisedSrc.value)
 const label = computed(() => props.nickname || props.username || '用户')

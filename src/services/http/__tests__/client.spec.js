@@ -44,6 +44,22 @@ describe('HTTP client', () => {
     expect(adapter.mock.calls[0][0].headers.Authorization).toBeUndefined()
   })
 
+  it('attaches the logged-in token to public comment submissions', async () => {
+    saveSession({ access: 'blogger-token' })
+    const adapter = jest.fn(async (config) => ({
+      config,
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      data: { code: 200, data: { id: 8 }, message: 'success' }
+    }))
+    const client = createHttpClient({ adapter })
+
+    await client.post('/api/blog/comments/', { dynamic_id: 8, content: '博主回复' })
+
+    expect(adapter.mock.calls[0][0].headers.Authorization).toBe('Bearer blogger-token')
+  })
+
   it('retries a transient public GET request before returning a network error', async () => {
     const adapter = jest.fn(async (config) => {
       if (adapter.mock.calls.length === 1) {

@@ -170,6 +170,7 @@ import { useRoute } from 'vue-router'
 import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
 import { DownloadOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
 import hljs from 'highlight.js/lib/core'
@@ -214,6 +215,7 @@ const renderMarkdown = (content) => {
 
 const route = useRoute()
 const appStore = useAppStore()
+const userStore = useUserStore()
 const dynamic = ref(null)
 const renderedArticleContent = computed(() => renderMarkdown(dynamic.value?.content || ''))
 const unavailableMediaUrls = ref(new Set())
@@ -405,7 +407,7 @@ const submitComment = async (payload = {}) => {
     const commentData = {
       dynamic_id: dynamic.value.id,
       content: DOMPurify.sanitize(payload.content || commentContent.value),
-      nickname: DOMPurify.sanitize(payload.nickname || nickname.value || '匿名用户'),
+      nickname: DOMPurify.sanitize(payload.nickname || nickname.value || (userStore.isLoggedIn ? (userStore.nickname || userStore.username) : '') || ''),
       email: DOMPurify.sanitize(payload.email || email.value || ''),
       website: DOMPurify.sanitize(payload.website || website.value || ''),
       ...(replyingTo.value ? { parent_id: replyingTo.value.id } : {})

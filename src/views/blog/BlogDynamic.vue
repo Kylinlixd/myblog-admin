@@ -174,6 +174,7 @@ import { ref, onMounted, onActivated, onUpdated } from 'vue'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
+import { useUserStore } from '@/stores/user'
 import { 
   getBlogDynamics, 
   getBlogDynamicTimeline,
@@ -210,6 +211,7 @@ const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
 const activeTimeline = ref('')
 const dynamicListRef = ref(null)
+const userStore = useUserStore()
 
 const mediaItems = (dynamic) => {
   const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
@@ -493,7 +495,7 @@ const submitComment = async (item, payload = {}) => {
     
     const commentData = {
       content: payload.content || commentContent.value,
-      nickname: payload.nickname || nickname.value || '匿名用户',
+      nickname: payload.nickname || nickname.value || (userStore.isLoggedIn ? (userStore.nickname || userStore.username) : '') || '',
       email: payload.email || email.value || '',
       website: payload.website || website.value || ''
     }

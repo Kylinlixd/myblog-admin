@@ -48,10 +48,13 @@ export function createHttpClient(options = {}) {
     const token = getAccessToken()
     const requestUrl = String(config.url || '')
     const isPublicBlogRequest = requestUrl.includes('/api/blog/') || requestUrl.endsWith('/api/blog')
-    if (token && !isPublicBlogRequest) {
+    const method = (config.method || 'get').toLowerCase()
+    const isPublicCommentSubmission = isPublicBlogRequest
+      && method === 'post'
+      && requestUrl.includes('/api/blog/comments')
+    if (token && (!isPublicBlogRequest || isPublicCommentSubmission)) {
       config.headers.Authorization = `Bearer ${token}`
     }
-    const method = (config.method || 'get').toLowerCase()
     if (!['get', 'head', 'options'].includes(method)) {
       config.headers['X-Request-ID'] = crypto.randomUUID()
     }
