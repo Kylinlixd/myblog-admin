@@ -181,6 +181,11 @@ describe('DefaultLayout navigation controls', () => {
     expect(layoutSource).not.toContain('/logo-coffee-code.png')
   })
 
+  it('keeps the unread marker visible on the comments icon in every navigation state', () => {
+    expect(layoutSource).toContain("item.key === 'comments' && commentNotifications.hasUnread ? h('i', { class: 'nav-unread-dot'")
+    expect(layoutSource).not.toContain("item.key === 'comments' && collapsed.value && !isMobile.value && commentNotifications.hasUnread ? h('i', { class: 'nav-unread-dot'")
+  })
+
   it('uses a compact visual scale for the mobile header controls', () => {
     expect(layoutSource).toContain('.header-left { min-width: 0; gap: 8px; overflow: hidden; }')
     expect(layoutSource).toContain('.icon-button { display: grid; width: 36px; height: 36px;')

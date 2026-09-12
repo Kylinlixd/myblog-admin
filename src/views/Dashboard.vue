@@ -23,7 +23,7 @@
       </template>
       <router-link v-else v-for="item in metrics" :key="item.key" :to="item.key === 'comments' && commentNotifications.hasUnread ? { path: item.path, query: { unread: '1' } } : item.path" class="metric-item">
         <component :is="item.icon" class="metric-icon" />
-        <span class="metric-label">{{ item.label }} <em v-if="item.key === 'comments' && commentNotifications.hasUnread">新评论 {{ commentNotifications.unreadCount }}</em></span>
+        <span class="metric-label">{{ item.label }} <i v-if="item.key === 'comments' && commentNotifications.hasUnread" class="metric-unread-dot" aria-label="有新评论" /> <em v-if="item.key === 'comments' && commentNotifications.hasUnread">新评论 {{ commentNotifications.unreadCount }}</em></span>
         <strong class="metric-value">{{ item.value }}</strong>
       </router-link>
     </section>
@@ -244,7 +244,8 @@ onMounted(loadStats)
 .metric-item:last-child { border-right: 0; }
 .metric-item:hover { background: #f7f9ff; }
 .metric-icon { color: var(--color-primary); font-size: 17px; }
-.metric-label { color: var(--color-text-secondary); font-size: 11px; }
+.metric-label { display: inline-flex; align-items: center; gap: 4px; color: var(--color-text-secondary); font-size: 11px; }
+.metric-unread-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #ef4444; box-shadow: 0 0 0 3px rgb(239 68 68 / 14%); }
 .metric-label em { margin-left: 4px; color: #dc2626; font-size: 10px; font-style: normal; font-weight: 700; }
 .metric-value { color: var(--color-text); font-size: clamp(28px, 2.4vw, 36px); letter-spacing: -.04em; line-height: 1; }
 .metric-skeleton { min-height: 132px; padding: 28px; border-right: 1px solid var(--color-border); }

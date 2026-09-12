@@ -53,4 +53,11 @@ describe('Dashboard operations workspace', () => {
     expect(source).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
     expect(source).toContain('grid-template-rows: auto auto auto')
   })
+
+  it('shows a visible unread marker on the comments metric', () => {
+    const source = readDashboard()
+
+    expect(source).toContain('class="metric-unread-dot"')
+    expect(source).toContain('aria-label="有新评论"')
+  })
 })

@@ -33,9 +33,11 @@
           >
             <menu-unfold-outlined v-if="collapsed" />
             <menu-fold-outlined v-else />
+            <i v-if="commentNotifications.hasUnread" class="header-unread-dot" aria-label="有新评论" />
           </button>
           <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
+            <i v-if="commentNotifications.hasUnread" class="header-unread-dot" aria-label="有新评论" />
           </button>
           <Breadcrumb v-if="!isMobile" class="workspace-breadcrumb" />
         </div>
@@ -128,7 +130,7 @@ const AdminNavigation = defineComponent({
             title: collapsed.value && !isMobile.value ? `${item.label} · ${item.description}` : undefined,
             onClick: () => { router.push(item.path); emit('navigate') }
           }, [
-            h('span', { class: ['nav-item__icon', { 'nav-item__icon--unread': item.key === 'comments' && commentNotifications.hasUnread }] }, [h(iconMap[item.icon]), item.key === 'comments' && collapsed.value && !isMobile.value && commentNotifications.hasUnread ? h('i', { class: 'nav-unread-dot', 'aria-hidden': 'true' }) : null]),
+            h('span', { class: ['nav-item__icon', { 'nav-item__icon--unread': item.key === 'comments' && commentNotifications.hasUnread }] }, [h(iconMap[item.icon]), item.key === 'comments' && commentNotifications.hasUnread ? h('i', { class: 'nav-unread-dot', 'aria-hidden': 'true' }) : null]),
             !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', item.label), item.key === 'comments' && commentNotifications.hasUnread ? h('em', { class: 'nav-unread-badge', 'aria-label': `${commentNotifications.unreadCount} 条未读评论` }, commentNotifications.unreadCount > 99 ? '99+' : String(commentNotifications.unreadCount)) : null, h('small', item.description)]) : null
           ])
         )
@@ -176,6 +178,7 @@ function handleLogout() {
 .admin-sidebar .admin-navigation { min-height: 0; max-height: none; flex: 1 1 auto; overscroll-behavior: contain; scrollbar-color: rgb(174 187 208 / 38%) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
 .sidebar-collapse-control { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .workspace-sidebar-toggle { position: relative; z-index: 1; }
+.header-unread-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border: 2px solid var(--color-surface); border-radius: 50%; background: #ef4444; }
 .sidebar-collapse-control:hover { background: var(--color-surface-muted); color: var(--color-text); transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
@@ -206,7 +209,7 @@ function handleLogout() {
 .workspace-status { display: inline-flex; align-items: center; gap: 6px; color: var(--color-text-muted); font-size: 11px; white-space: nowrap; }
 .workspace-status i { width: 6px; height: 6px; border-radius: 50%; background: #35b77a; box-shadow: 0 0 0 3px rgb(53 183 122 / 14%); }
 .header-actions { min-width: 0; gap: 16px; }
-.icon-button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
+.icon-button { position: relative; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
 .user-button { min-height: 46px; gap: 10px; padding: 5px 7px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
 .user-button:hover { background: var(--color-surface-muted); }
