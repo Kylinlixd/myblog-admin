@@ -1,7 +1,7 @@
 <template>
   <article class="comment-thread" :class="{ 'comment-thread--reply': depth > 0 }">
     <div class="comment-user">
-      <UserAvatar :src="comment.avatar" :nickname="comment.nickname" :size="depth ? 28 : 36" tone="warm" />
+      <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" :size="depth ? 28 : 36" tone="warm" fallback="anonymous" :fallback-seed="comment.id" />
       <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
       <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
       <span v-if="comment.reply_to_nickname" class="reply-target">回复 @{{ comment.reply_to_nickname }}</span>

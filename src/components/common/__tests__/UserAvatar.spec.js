@@ -36,4 +36,40 @@ describe('UserAvatar', () => {
       'https://api.example.test/media/avatars/author.png'
     )
   })
+
+  it('switches to the fallback when Ant Avatar reports an image load error', async () => {
+    const wrapper = mount(UserAvatar, {
+      props: { src: '/media/avatars/missing.png', nickname: '站点作者' },
+      global: {
+        stubs: {
+          'a-avatar': {
+            props: { src: String, loadError: Function },
+            template: '<div><button type="button" @click="loadError?.()">fail</button><slot /></div>'
+          }
+        }
+      }
+    })
+
+    expect(wrapper.find('.user-avatar__icon').exists()).toBe(false)
+    await wrapper.find('button').trigger('click')
+    expect(wrapper.find('.user-avatar__icon').exists()).toBe(true)
+  })
+
+  it('uses a deterministic anonymous avatar asset when requested', () => {
+    const wrapper = mount(UserAvatar, {
+      props: { fallback: 'anonymous', fallbackSeed: 36, nickname: '匿名用户' },
+      global: {
+        stubs: {
+          'a-avatar': {
+            props: { src: String },
+            template: '<div :data-src="src"><slot /></div>'
+          }
+        }
+      }
+    })
+
+    expect(wrapper.find('[data-src]').attributes('data-src')).toBe(
+      '/assets/default-avatars/anonymous/anonymous-05.png'
+    )
+  })
 })

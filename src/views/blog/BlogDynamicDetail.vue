@@ -207,6 +207,16 @@ const md = createMarkdownRenderer({
   }
 })
 
+const hydrateCurrentUserAvatar = (comment) => {
+  if (!comment || comment.avatar || !userStore.isLoggedIn || !userStore.avatar) return comment
+  const names = [userStore.nickname, userStore.username].filter(Boolean)
+  const hydrated = names.includes(comment.nickname) ? { ...comment, avatar: userStore.avatar } : comment
+  if (hydrated.replies_preview?.length) {
+    hydrated.replies_preview = hydrated.replies_preview.map(hydrateCurrentUserAvatar)
+  }
+  return hydrated
+}
+
 // 渲染 Markdown 内容
 const renderMarkdown = (content) => {
   if (!content) return ''
@@ -367,7 +377,7 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
     if (String(route.params.id) !== String(dynamicId)) return
 
     if (result && result.code === 200 && result.data) {
-      commentList.value = result.data.list || []
+      commentList.value = (result.data.list || []).map(hydrateCurrentUserAvatar)
       commentTotal.value = result.data.commentTotal ?? result.data.total ?? 0
       commentPageSize.value = result.data.pageSize || 10
     } else {

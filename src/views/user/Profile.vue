@@ -391,7 +391,14 @@ const resetForm = () => {
   passwordForm.confirmPassword = ''
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Refresh the profile on entry so an avatar uploaded in another tab/session
+  // is rendered from the server value instead of stale local storage.
+  try {
+    await userStore.getUserInfo?.()
+  } catch {
+    // Keep the locally cached profile usable when the refresh is unavailable.
+  }
   initProfileForm()
 })
 </script>

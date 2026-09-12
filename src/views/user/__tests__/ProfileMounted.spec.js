@@ -101,6 +101,15 @@ describe('Profile mounted interactions', () => {
     wrapper.unmount()
   })
 
+  it('refreshes the server profile before rendering the avatar', async () => {
+    const wrapper = mount(Profile, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(mockUserStore.getUserInfo).toHaveBeenCalled()
+    expect(wrapper.vm.profileForm.avatar).toBe('/media/avatar.png')
+    wrapper.unmount()
+  })
+
   it('uses the two-column identity and form layout at the card level', async () => {
     const wrapper = mount(Profile, { global: { stubs: globalStubs } })
     await flushPromises()

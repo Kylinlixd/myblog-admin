@@ -125,7 +125,7 @@
                   class="comment-item"
                 >
                   <div class="comment-user">
-                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname" tone="warm" :size="36" />
+                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
                     <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
                     <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
                     <span class="time">{{ formatDate(comment.createTime) }}</span>
@@ -212,6 +212,12 @@ const timelineGroups = ref([])
 const activeTimeline = ref('')
 const dynamicListRef = ref(null)
 const userStore = useUserStore()
+
+const hydrateCurrentUserAvatar = (comment) => {
+  if (comment?.avatar || !userStore.isLoggedIn || !userStore.avatar) return comment
+  const names = [userStore.nickname, userStore.username].filter(Boolean)
+  return names.includes(comment.nickname) ? { ...comment, avatar: userStore.avatar } : comment
+}
 
 const mediaItems = (dynamic) => {
   const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
@@ -434,11 +440,11 @@ const fetchComments = async (item) => {
       // 兼容不同的返回格式
       if (Array.isArray(result.data)) {
         // 如果直接返回数组
-        item.commentList = result.data;
+        item.commentList = result.data.map(hydrateCurrentUserAvatar);
         item.commentTotal = result.data.length;
       } else if (result.data.list) {
         // 返回标准格式
-        item.commentList = result.data.list || [];
+        item.commentList = (result.data.list || []).map(hydrateCurrentUserAvatar);
         item.commentTotal = result.data.total || 0;
         item.commentPageSize = result.data.pageSize || 10;
       } else {

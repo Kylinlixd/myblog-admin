@@ -4,7 +4,7 @@
     :class="['user-avatar', `user-avatar--${tone}`]"
     :src="imageSrc || undefined"
     :alt="alt || label"
-    @error="handleError"
+    :load-error="handleError"
   >
     <template v-if="!imageSrc">
       <svg v-if="tone === 'warm'" class="user-avatar__coffee" viewBox="0 0 48 48" aria-hidden="true">
@@ -27,10 +27,24 @@ const props = defineProps({
   username: { type: String, default: '' },
   size: { type: [Number, String], default: 36 },
   alt: { type: String, default: '' },
-  tone: { type: String, default: 'cool' }
+  tone: { type: String, default: 'cool' },
+  fallback: { type: String, default: '' },
+  fallbackSeed: { type: [Number, String], default: '' }
 })
 
 const failed = ref(false)
+const fallbackSrc = computed(() => {
+  if (props.fallback !== 'anonymous') return ''
+  const seed = String(props.fallbackSeed || props.nickname || props.username || '0')
+  const numericSeed = Number(seed)
+  if (Number.isFinite(numericSeed) && seed.trim() !== '') {
+    return `/assets/default-avatars/anonymous/anonymous-${String((Math.abs(numericSeed) % 16) + 1).padStart(2, '0')}.png`
+  }
+  let hash = 0
+  for (const character of seed) hash = (hash * 31 + character.charCodeAt(0)) >>> 0
+  const index = (hash % 16) + 1
+  return `/assets/default-avatars/anonymous/anonymous-${String(index).padStart(2, '0')}.png`
+})
 const normalisedSrc = computed(() => {
   const value = String(props.src || '').trim()
   // Legacy placeholder paths should use the same initials/icon fallback as
@@ -38,10 +52,10 @@ const normalisedSrc = computed(() => {
   if (!value || /(?:default-avatar|about-avatar|placeholder-avatar)/i.test(value)) return ''
   return buildApiUrl(value)
 })
-const imageSrc = computed(() => failed.value ? '' : normalisedSrc.value)
+const imageSrc = computed(() => failed.value ? '' : (normalisedSrc.value || fallbackSrc.value))
 const label = computed(() => props.nickname || props.username || '用户')
 
-watch(normalisedSrc, () => { failed.value = false })
+watch([normalisedSrc, fallbackSrc], () => { failed.value = false })
 const handleError = () => { failed.value = true }
 </script>
 
