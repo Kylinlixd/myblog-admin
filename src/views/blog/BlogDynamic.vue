@@ -1079,6 +1079,10 @@ onActivated(() => {
   color: #1e293b;
 }
 
+.comment-user__identity .nickname {
+  margin-left: 0;
+}
+
 .comment-user .time {
   margin-left: 12px;
   color: #94a3b8;
