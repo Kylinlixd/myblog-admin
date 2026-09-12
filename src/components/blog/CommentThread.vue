@@ -15,8 +15,13 @@
     </div>
     <div class="comment-content">{{ comment.content }}</div>
     <button class="comment-reply" type="button" @click="$emit('reply', comment)">回复</button>
+    <slot name="reply-editor" :comment="comment" />
     <div v-if="depth === 0 && comment.replies_preview?.length" class="comment-replies">
-      <CommentThread v-for="reply in comment.replies_preview" :key="reply.id" :comment="reply" :depth="1" @reply="$emit('reply', $event)" />
+      <CommentThread v-for="reply in comment.replies_preview" :key="reply.id" :comment="reply" :depth="1" @reply="$emit('reply', $event)">
+        <template #reply-editor="slotProps">
+          <slot name="reply-editor" v-bind="slotProps" />
+        </template>
+      </CommentThread>
       <button v-if="comment.reply_count > comment.replies_preview.length" class="comment-more" type="button" @click="$emit('more', comment)">
         查看更多回复（{{ comment.reply_count - comment.replies_preview.length }}）
       </button>

@@ -134,20 +134,22 @@
                 :key="comment.id"
                 :comment="comment"
                 @reply="startReply"
-              />
+              >
+                <template #reply-editor="{ comment: target }">
+                  <div v-if="replyingTo?.id === target.id" class="reply-editor reply-editor--inline">
+                    <div class="reply-editor__meta">
+                      <span>回复 @{{ target.nickname || '匿名用户' }}</span>
+                      <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
+                    </div>
+                    <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
+                    <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
+                  </div>
+                </template>
+              </CommentThread>
           </div>
           <div v-else class="no-comments">
             暂无评论，快来发表第一条评论吧！
           </div>
-        </div>
-
-        <div v-if="replyingTo" class="reply-editor">
-          <div class="reply-editor__meta">
-            <span>回复 @{{ replyingTo.nickname || '匿名用户' }}</span>
-            <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
-          </div>
-          <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
-          <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
         </div>
 
         <!-- 评论分页 -->
@@ -1079,6 +1081,10 @@ onBeforeUnmount(() => {
   background: #fcf7ef;
 }
 
+.reply-editor--inline {
+  margin: 12px 0 4px 44px;
+}
+
 .reply-editor__meta {
   display: flex;
   align-items: center;
@@ -1574,6 +1580,7 @@ onBeforeUnmount(() => {
       .article-adjacent__item--next { align-items: flex-start; text-align: left; }
       .article-adjacent__item--next .article-adjacent__direction { justify-content: flex-start; }
       .comment-section { width: 100%; padding: 22px 18px; }
+      .reply-editor--inline { margin-left: 36px; }
       .comment-form .ant-input, .comment-form .ant-input-affix-wrapper, .comment-form textarea { max-width: 100%; }
     }
 
