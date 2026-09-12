@@ -33,11 +33,9 @@
           >
             <menu-unfold-outlined v-if="collapsed" />
             <menu-fold-outlined v-else />
-            <i v-if="commentNotifications.hasUnread" class="header-unread-dot" aria-label="有新评论" />
           </button>
           <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
-            <i v-if="commentNotifications.hasUnread" class="header-unread-dot" aria-label="有新评论" />
           </button>
           <Breadcrumb v-if="!isMobile" class="workspace-breadcrumb" />
         </div>
@@ -130,8 +128,8 @@ const AdminNavigation = defineComponent({
             title: collapsed.value && !isMobile.value ? `${item.label} · ${item.description}` : undefined,
             onClick: () => { router.push(item.path); emit('navigate') }
           }, [
-            h('span', { class: ['nav-item__icon', { 'nav-item__icon--unread': item.key === 'comments' && commentNotifications.hasUnread }] }, [h(iconMap[item.icon]), item.key === 'comments' && commentNotifications.hasUnread ? h('i', { class: 'nav-unread-dot', 'aria-hidden': 'true' }) : null]),
-            !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', item.label), item.key === 'comments' && commentNotifications.hasUnread ? h('em', { class: 'nav-unread-badge', 'aria-label': `${commentNotifications.unreadCount} 条未读评论` }, commentNotifications.unreadCount > 99 ? '99+' : String(commentNotifications.unreadCount)) : null, h('small', item.description)]) : null
+            h('span', { class: 'nav-item__icon' }, [h(iconMap[item.icon])]),
+            !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', item.label), h('small', item.description)]) : null
           ])
         )
       ])
@@ -178,7 +176,6 @@ function handleLogout() {
 .admin-sidebar .admin-navigation { min-height: 0; max-height: none; flex: 1 1 auto; overscroll-behavior: contain; scrollbar-color: rgb(174 187 208 / 38%) transparent; scrollbar-gutter: stable; scrollbar-width: thin; }
 .sidebar-collapse-control { display: grid; width: 36px; height: 36px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .workspace-sidebar-toggle { position: relative; z-index: 1; }
-.header-unread-dot { position: absolute; top: 3px; right: 3px; width: 8px; height: 8px; border: 2px solid var(--color-surface); border-radius: 50%; background: #ef4444; }
 .sidebar-collapse-control:hover { background: var(--color-surface-muted); color: var(--color-text); transform: none; }
 .sidebar-collapse-control:active { transform: translateY(1px) scale(.96); }
 .sidebar-collapse-control:focus-visible { outline: 2px solid #8ba7ff; outline-offset: 3px; }
@@ -190,9 +187,6 @@ function handleLogout() {
 .nav-item__icon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: rgb(255 255 255 / 5%); }
 .nav-item__copy { display: flex; min-width: 0; flex-direction: column; line-height: 1.25; }
 .nav-item__copy strong { display: flex; align-items: center; gap: 6px; }
-.nav-unread-badge { display: inline-flex; min-width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0 4px; border-radius: 999px; background: #ef4444; color: white; font-size: 9px; font-style: normal; font-weight: 800; line-height: 1; }
-.nav-item__icon { position: relative; }
-.nav-unread-dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border: 2px solid #10182b; border-radius: 50%; background: #ef4444; }
 .nav-item__copy strong { overflow: hidden; color: inherit; font-size: 13px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .nav-item__copy small { overflow: hidden; margin-top: 3px; color: #6f7e98; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .admin-navigation .nav-item svg { width: 16px; height: 16px; }

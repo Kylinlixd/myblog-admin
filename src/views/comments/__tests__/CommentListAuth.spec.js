@@ -12,4 +12,15 @@ describe('CommentList authentication', () => {
     expect(source).not.toContain('useRouter')
     expect(source).toContain('getCommentList')
   })
+
+  it('does not render a separate unread-comments indicator', () => {
+    const source = fs.readFileSync(
+      path.join(process.cwd(), 'src/views/comments/CommentList.vue'),
+      'utf8'
+    )
+
+    expect(source).not.toContain('comment-unread-filter')
+    expect(source).not.toContain('新评论')
+    expect(source).not.toContain('comment-unread-tag')
+  })
 })
