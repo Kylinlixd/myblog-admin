@@ -39,6 +39,12 @@ test('文章详情包含目录与移动端折叠入口', () => {
   expect(source).toContain('article-layout--without-toc')
 })
 
+test('动态列表评论展示客户端系统与浏览器标签', () => {
+  expect(listSource).toContain('comment-client-tags')
+  expect(listSource).toContain('comment.client_browser')
+  expect(listSource).toContain('comment.client_os')
+})
+
 test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
   expect(codeWindowStyles).toContain('.blog-code-window')
   expect(source).toContain('createMarkdownRenderer')

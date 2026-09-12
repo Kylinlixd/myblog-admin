@@ -126,7 +126,13 @@
                 >
                   <div class="comment-user">
                     <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
-                    <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                    <div class="comment-user__identity">
+                      <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                      <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
+                        <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
+                        <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
+                      </div>
+                    </div>
                     <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
                     <span class="time">{{ formatDate(comment.createTime) }}</span>
                   </div>
@@ -1042,6 +1048,29 @@ onActivated(() => {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
+  gap: 8px;
+}
+
+.comment-user__identity {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.comment-client-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.comment-client-tag {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #ebecef;
+  color: #6b7078;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
 }
 
 .comment-user .nickname {
