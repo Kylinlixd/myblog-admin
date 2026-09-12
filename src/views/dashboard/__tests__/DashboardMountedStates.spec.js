@@ -14,6 +14,17 @@ jest.mock('@/stores/user', () => ({
   useUserStore: () => ({ nickname: '管理员' })
 }))
 
+jest.mock('@/stores/commentNotifications', () => ({
+  useCommentNotificationsStore: () => ({
+    hasUnread: false,
+    unreadCount: 0,
+    refresh: jest.fn(),
+    markRead: jest.fn(),
+    startPolling: jest.fn(),
+    stopPolling: jest.fn()
+  })
+}))
+
 const ButtonStub = {
   template: '<button v-bind="$attrs"><slot /></button>'
 }

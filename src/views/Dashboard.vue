@@ -21,9 +21,9 @@
       <template v-if="loading">
         <a-skeleton v-for="item in 4" :key="item" active :paragraph="false" class="metric-skeleton" />
       </template>
-      <router-link v-else v-for="item in metrics" :key="item.key" :to="item.path" class="metric-item">
+      <router-link v-else v-for="item in metrics" :key="item.key" :to="item.key === 'comments' && commentNotifications.hasUnread ? { path: item.path, query: { unread: '1' } } : item.path" class="metric-item">
         <component :is="item.icon" class="metric-icon" />
-        <span class="metric-label">{{ item.label }}</span>
+        <span class="metric-label">{{ item.label }} <em v-if="item.key === 'comments' && commentNotifications.hasUnread">新评论 {{ commentNotifications.unreadCount }}</em></span>
         <strong class="metric-value">{{ item.value }}</strong>
       </router-link>
     </section>
@@ -161,11 +161,13 @@ import {
 
 import request from '@/services/http/client'
 import { useUserStore } from '@/stores/user'
+import { useCommentNotificationsStore } from '@/stores/commentNotifications'
 import { mapDashboardData } from './dashboard/stats'
 import DashboardChart from './dashboard/DashboardChart.vue'
 import { publishingOption, visitsOption } from './dashboard/charts'
 
 const userStore = useUserStore()
+const commentNotifications = useCommentNotificationsStore()
 const currentDate = new Intl.DateTimeFormat('zh-CN', {
   month: 'long',
   day: 'numeric',
@@ -243,6 +245,7 @@ onMounted(loadStats)
 .metric-item:hover { background: #f7f9ff; }
 .metric-icon { color: var(--color-primary); font-size: 17px; }
 .metric-label { color: var(--color-text-secondary); font-size: 11px; }
+.metric-label em { margin-left: 4px; color: #dc2626; font-size: 10px; font-style: normal; font-weight: 700; }
 .metric-value { color: var(--color-text); font-size: clamp(28px, 2.4vw, 36px); letter-spacing: -.04em; line-height: 1; }
 .metric-skeleton { min-height: 132px; padding: 28px; border-right: 1px solid var(--color-border); }
 .access-overview { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 24px; margin-top: 16px; padding: 16px 22px; border: 1px solid #dbe5ff; border-radius: 14px; background: linear-gradient(105deg, #f8faff, #fff); }

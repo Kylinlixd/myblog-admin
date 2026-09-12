@@ -82,6 +82,7 @@ import { CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderO
 import { Modal } from 'ant-design-vue'
 import { adminMenu } from '@/config/adminMenu'
 import { useUserStore } from '@/stores/user'
+import { useCommentNotificationsStore } from '@/stores/commentNotifications'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import ServiceStatus from '@/components/common/ServiceStatus.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
@@ -90,6 +91,7 @@ import { useServiceHealth } from '@/composables/useServiceHealth'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const commentNotifications = useCommentNotificationsStore()
 const serviceHealth = useServiceHealth()
 const collapsed = ref(localStorage.getItem('admin.sidebarCollapsed') === 'true')
 const isMobile = ref(window.innerWidth < 992)
@@ -103,6 +105,14 @@ const groupedMenu = computed(() => adminMenu.reduce((groups, item) => {
   else groups.push({ key: item.group, label: item.groupLabel, items: [item] })
   return groups
 }, []))
+
+watch(() => userStore.isLoggedIn, (loggedIn) => {
+  if (loggedIn) commentNotifications.startPolling()
+  else {
+    commentNotifications.stopPolling()
+    commentNotifications.unreadCount = null
+  }
+}, { immediate: true })
 
 const AdminNavigation = defineComponent({
   emits: ['navigate'],
@@ -118,8 +128,8 @@ const AdminNavigation = defineComponent({
             title: collapsed.value && !isMobile.value ? `${item.label} · ${item.description}` : undefined,
             onClick: () => { router.push(item.path); emit('navigate') }
           }, [
-            h('span', { class: 'nav-item__icon' }, [h(iconMap[item.icon])]),
-            !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', item.label), h('small', item.description)]) : null
+            h('span', { class: ['nav-item__icon', { 'nav-item__icon--unread': item.key === 'comments' && commentNotifications.hasUnread }] }, [h(iconMap[item.icon]), item.key === 'comments' && collapsed.value && !isMobile.value && commentNotifications.hasUnread ? h('i', { class: 'nav-unread-dot', 'aria-hidden': 'true' }) : null]),
+            !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', item.label), item.key === 'comments' && commentNotifications.hasUnread ? h('em', { class: 'nav-unread-badge', 'aria-label': `${commentNotifications.unreadCount} 条未读评论` }, commentNotifications.unreadCount > 99 ? '99+' : String(commentNotifications.unreadCount)) : null, h('small', item.description)]) : null
           ])
         )
       ])
@@ -176,6 +186,10 @@ function handleLogout() {
 .admin-navigation .nav-item { display: flex; width: 100%; min-height: 50px; align-items: center; gap: 11px; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; color: #9daac1; cursor: pointer; text-align: left; transition: color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast), opacity var(--transition-fast); }
 .nav-item__icon { display: grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 8px; background: rgb(255 255 255 / 5%); }
 .nav-item__copy { display: flex; min-width: 0; flex-direction: column; line-height: 1.25; }
+.nav-item__copy strong { display: flex; align-items: center; gap: 6px; }
+.nav-unread-badge { display: inline-flex; min-width: 16px; height: 16px; align-items: center; justify-content: center; padding: 0 4px; border-radius: 999px; background: #ef4444; color: white; font-size: 9px; font-style: normal; font-weight: 800; line-height: 1; }
+.nav-item__icon { position: relative; }
+.nav-unread-dot { position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border: 2px solid #10182b; border-radius: 50%; background: #ef4444; }
 .nav-item__copy strong { overflow: hidden; color: inherit; font-size: 13px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .nav-item__copy small { overflow: hidden; margin-top: 3px; color: #6f7e98; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .admin-navigation .nav-item svg { width: 16px; height: 16px; }

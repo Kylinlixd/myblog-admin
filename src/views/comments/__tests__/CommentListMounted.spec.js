@@ -11,6 +11,17 @@ jest.mock('@/api/comment', () => ({
   deleteComment: jest.fn()
 }))
 
+jest.mock('@/stores/commentNotifications', () => ({
+  useCommentNotificationsStore: () => ({
+    hasUnread: false,
+    unreadCount: 0,
+    markRead: jest.fn(),
+    refresh: jest.fn(),
+    startPolling: jest.fn(),
+    stopPolling: jest.fn()
+  })
+}))
+
 let confirmAction
 jest.mock('ant-design-vue', () => ({
   message: {

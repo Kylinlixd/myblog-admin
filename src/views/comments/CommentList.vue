@@ -22,6 +22,12 @@
       </a-form-item>
     </SearchForm>
 
+    <div class="comment-unread-filter">
+      <a-button :type="unreadOnly ? 'primary' : 'default'" size="small" @click="toggleUnreadOnly">
+        {{ unreadOnly ? '查看全部评论' : `新评论 ${commentNotifications.unreadCount || 0}` }}
+      </a-button>
+    </div>
+
     <div class="comment-batch-toolbar" :class="{ 'comment-batch-toolbar--active': selectedCommentIds.length }">
       <span>
         <strong>{{ selectedCommentIds.length }}</strong>
@@ -82,6 +88,11 @@
         </a-tag>
       </template>
       
+      <template #nickname="{ row }">
+        <span>{{ row.nickname || '匿名用户' }}</span>
+        <a-tag v-if="row.is_unread" color="red" class="comment-unread-tag">新</a-tag>
+      </template>
+
       <template #createTime="{ row }">
         {{ formatDate(row.createTime) }}
       </template>
@@ -147,9 +158,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import { getCommentList, approveComment, rejectComment, deleteComment } from '../../api/comment'
+import { useCommentNotificationsStore } from '../../stores/commentNotifications'
 import { CheckOutlined, CloseOutlined, DeleteOutlined } from '@ant-design/icons-vue'
 
 // 导入通用组件
@@ -163,7 +176,7 @@ import AsyncState from '../../components/common/AsyncState.vue'
 const columns = [
   { key: 'serialNo', label: '序号', prop: 'serialNo', width: '72px' },
   { key: 'content', label: '评论内容', prop: 'content', slot: 'content', width: '300px' },
-  { key: 'nickname', label: '评论者', prop: 'nickname', width: '120px' },
+  { key: 'nickname', label: '评论者', prop: 'nickname', slot: 'nickname', width: '120px' },
   { key: 'email', label: '邮箱', prop: 'email', width: '180px' },
   { key: 'status', label: '状态', prop: 'status', slot: 'status', width: '100px' },
   { key: 'createTime', label: '评论时间', prop: 'createTime', slot: 'createTime', width: '150px' },
@@ -181,6 +194,10 @@ const batchActionPending = ref('')
 const batchDeleting = computed(() => batchActionPending.value === 'delete')
 const batchApproving = computed(() => batchActionPending.value === 'approve')
 const errorMessage = ref('')
+const route = useRoute() || { query: {} }
+const router = useRouter() || { push: () => {} }
+const commentNotifications = useCommentNotificationsStore()
+const unreadOnly = computed(() => route.query?.unread === '1')
 const pendingActions = reactive({})
 let requestGeneration = 0
 
@@ -205,6 +222,7 @@ const getComments = async (allowPageReset = true) => {
     const response = await getCommentList({
       page: requestedPage,
       pageSize: requestedPageSize,
+      ...(unreadOnly.value ? { unread: 1 } : {}),
       ...activeFilters
     })
     if (generation !== requestGeneration) return
@@ -217,6 +235,15 @@ const getComments = async (allowPageReset = true) => {
       serialNo: (requestedPage - 1) * requestedPageSize + index + 1
     }))
     total.value = response.count
+    if (unreadOnly.value && comments.value.length) {
+      await nextTick()
+      try {
+        await commentNotifications.markRead(comments.value.map((comment) => comment.id))
+      } catch (markReadError) {
+        // 已读回执失败不应阻断评论列表；保留“新”标记，等待下次轮询重试。
+        console.warn('标记新评论失败:', markReadError)
+      }
+    }
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('获取评论列表失败:', error);
@@ -235,6 +262,10 @@ const getComments = async (allowPageReset = true) => {
   } finally {
     if (generation === requestGeneration) loading.value = false;
   }
+}
+
+const toggleUnreadOnly = () => {
+  router.push({ query: { ...route.query, ...(unreadOnly.value ? { unread: undefined } : { unread: '1' }) } })
 }
 
 // 搜索
@@ -418,6 +449,11 @@ const formatDate = (dateString) => {
 onMounted(() => {
   getComments()
 })
+
+watch(unreadOnly, () => {
+  currentPage.value = 1
+  getComments()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -431,6 +467,7 @@ onMounted(() => {
 }
 
 .content-cell--wrapping { overflow-wrap: anywhere; }
+.comment-unread-tag { margin-left: 5px; font-size: 10px; }
 
 .comment-batch-toolbar {
   display: flex;
@@ -454,6 +491,7 @@ onMounted(() => {
 }
 
 .comment-batch-toolbar strong { margin-right: 4px; color: var(--color-primary); font-size: 17px; }
+.comment-unread-filter { display: flex; justify-content: flex-end; margin: -4px 0 12px; }
 
 @media (max-width: 560px) {
   .comment-batch-toolbar { align-items: stretch; flex-direction: column; }
