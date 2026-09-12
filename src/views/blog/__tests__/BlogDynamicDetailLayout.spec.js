@@ -13,6 +13,10 @@ const previewSource = fs.readFileSync(
   path.join(process.cwd(), 'src/views/dynamics/DynamicPreview.vue'),
   'utf8'
 )
+const commentThreadSource = fs.readFileSync(
+  path.join(process.cwd(), 'src/components/blog/CommentThread.vue'),
+  'utf8'
+)
 const codeWindowStyles = fs.readFileSync(
   path.join(process.cwd(), 'src/styles/blog-code-window.scss'),
   'utf8'
@@ -40,9 +44,9 @@ test('文章详情包含目录与移动端折叠入口', () => {
 })
 
 test('文章详情评论展示客户端系统与浏览器标签', () => {
-  expect(source).toContain('comment-client-tags')
-  expect(source).toContain('comment.client_browser')
-  expect(source).toContain('comment.client_os')
+  expect(commentThreadSource).toContain('comment-client-tags')
+  expect(commentThreadSource).toContain('comment.client_browser')
+  expect(commentThreadSource).toContain('comment.client_os')
 })
 
 test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
