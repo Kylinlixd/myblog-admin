@@ -214,8 +214,7 @@ function syncCommentCount(total) {
   try {
     const seenValue = localStorage.getItem(COMMENT_COUNT_SEEN_KEY)
     if (seenValue === null) {
-      localStorage.setItem(COMMENT_COUNT_SEEN_KEY, String(current))
-      commentCountChanged.value = false
+      commentCountChanged.value = current > 0
       return
     }
     const seen = Number(seenValue) || 0
