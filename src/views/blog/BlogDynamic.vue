@@ -84,8 +84,8 @@
           <!-- 动态底部 -->
           <div class="dynamic-footer">
             <div class="dynamic-actions">
-              <a-button 
-                type="text" 
+              <a-button
+                type="text"
                 @click="handleLike(item)"
                 :class="{ 'liked': item.liked }"
               >
@@ -105,57 +105,56 @@
             </div>
           </div>
 
+          <!-- 展开后仅展示评论，不提供编辑窗口 -->
+          <div v-if="selectedDynamic?.id === item.id" class="comment-section cinematic-card">
+            <div class="comment-header">
+              <h3>评论 ({{ item.commentTotal ?? item.comments ?? 0 }})</h3>
+            </div>
+            <div class="comment-list">
+              <div v-if="item.commentList?.length">
+                <div v-for="comment in item.commentList" :key="comment.id" class="comment-item">
+                  <div class="comment-user">
+                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
+                    <div class="comment-user__identity">
+                      <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                      <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
+                        <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
+                        <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
+                      </div>
+                    </div>
+                    <span class="time">{{ formatDate(comment.createTime) }}</span>
+                  </div>
+                  <div class="comment-content">{{ comment.content }}</div>
+                </div>
+              </div>
+              <div v-else class="no-comments">暂无评论</div>
+            </div>
+            <div v-if="item.commentTotal > (item.commentPageSize || 10)" class="comment-pagination">
+              <a-pagination
+                v-model:current="item.commentPage"
+                :total="item.commentTotal"
+                :pageSize="item.commentPageSize || 10"
+                @change="(page) => handleCommentPageChange(page, item)"
+              />
+            </div>
+          </div>
         </div>
           </div>
 
           <!-- 加载更多 -->
           <div class="load-more">
-            <a-button 
-              type="primary" 
-              :loading="loading" 
+            <a-button
+              type="primary"
+              :loading="loading"
               @click="loadMore"
               v-if="hasMore"
             >
               加载更多
             </a-button>
             <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
-              </div>
-            </div>
-
-            <!-- 展开后仅展示评论，不提供编辑窗口 -->
-            <div v-if="selectedDynamic?.id === item.id" class="comment-section cinematic-card">
-              <div class="comment-header">
-                <h3>评论 ({{ item.commentTotal ?? item.comments ?? 0 }})</h3>
-              </div>
-              <div class="comment-list">
-                <div v-if="item.commentList?.length">
-                  <div v-for="comment in item.commentList" :key="comment.id" class="comment-item">
-                    <div class="comment-user">
-                      <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
-                      <div class="comment-user__identity">
-                        <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
-                        <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
-                          <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
-                          <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
-                        </div>
-                      </div>
-                      <span class="time">{{ formatDate(comment.createTime) }}</span>
-                    </div>
-                    <div class="comment-content">{{ comment.content }}</div>
-                  </div>
-                </div>
-                <div v-else class="no-comments">暂无评论</div>
-              </div>
-              <div v-if="item.commentTotal > (item.commentPageSize || 10)" class="comment-pagination">
-                <a-pagination
-                  v-model:current="item.commentPage"
-                  :total="item.commentTotal"
-                  :pageSize="item.commentPageSize || 10"
-                  @change="(page) => handleCommentPageChange(page, item)"
-                />
-              </div>
-            </div>
-            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
