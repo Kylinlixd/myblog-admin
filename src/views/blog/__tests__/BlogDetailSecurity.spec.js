@@ -30,6 +30,18 @@ describe('blog detail sanitization', () => {
     expect(source).not.toContain('评论 ({{ dynamic.comments || 0 }})')
   })
 
+  it('renders dynamic dates from the immutable created_at field', () => {
+    const detail = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'), 'utf8')
+    const category = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogCategoryDetail.vue'), 'utf8')
+    const tag = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogTagDetail.vue'), 'utf8')
+
+    expect(detail).toContain('formatDate(dynamic.created_at)')
+    expect(category).toContain('formatDate(dynamic.created_at)')
+    expect(tag).toContain('formatDate(dynamic.created_at)')
+    expect(detail).not.toContain('formatDate(dynamic.createdAt)')
+    expect(category).not.toContain('formatDate(dynamic.createdAt)')
+  })
+
   it('distinguishes approved, pending-review, and rejected comment feedback', () => {
     const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'), 'utf8')
 

@@ -28,7 +28,7 @@
               <h3 class="dynamic-title">{{ dynamic.title }}</h3>
               <p class="dynamic-summary">{{ dynamic.summary }}</p>
               <div class="dynamic-meta">
-                <span class="dynamic-date">{{ formatDate(dynamic.createdAt) }}</span>
+                <span class="dynamic-date">{{ formatDate(dynamic.created_at) }}</span>
                 <span class="dynamic-views">{{ dynamic.views }} 阅读</span>
               </div>
             </div>

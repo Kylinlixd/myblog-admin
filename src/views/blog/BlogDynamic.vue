@@ -92,10 +92,6 @@
                 <like-outlined :style="{ color: item.liked ? '#1890ff' : 'inherit' }" />
                 <span>{{ item.likes || 0 }}</span>
               </a-button>
-              <a-button type="text" @click="handleComment(item)">
-                <message-outlined />
-                <span>{{ item.comments || 0 }}</span>
-              </a-button>
               <router-link :to="`/blog/dynamics/${item.id}`" class="view-detail-link">
                 <a-button type="text">
                   <eye-outlined />
@@ -105,55 +101,6 @@
             </div>
           </div>
 
-          <!-- 评论列表 -->
-            <div v-if="selectedDynamic && selectedDynamic.id === item.id" class="comment-section cinematic-card">
-            <div class="comment-header">
-              <h3>评论 ({{ item.comments || 0 }})</h3>
-            </div>
-            
-            <!-- 评论表单 -->
-            <div class="comment-form">
-              <CommentComposer :loading="item.isSubmittingComment" :reset-key="commentComposerResetKey" @submit="submitComment(item, $event)" />
-            </div>
-
-            <!-- 评论列表 -->
-            <div class="comment-list">
-              <div v-if="item.commentList && item.commentList.length > 0">
-                <div
-                  v-for="comment in item.commentList"
-                  :key="comment.id"
-                  class="comment-item"
-                >
-                  <div class="comment-user">
-                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
-                    <div class="comment-user__identity">
-                      <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
-                      <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
-                        <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
-                        <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
-                      </div>
-                    </div>
-                    <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
-                    <span class="time">{{ formatDate(comment.createTime) }}</span>
-                  </div>
-                  <div class="comment-content">{{ comment.content }}</div>
-                </div>
-              </div>
-              <div v-else class="no-comments">
-                暂无评论，快来发表第一条评论吧！
-              </div>
-            </div>
-
-            <!-- 评论分页 -->
-            <div v-if="item.commentList && item.commentList.length > 0" class="comment-pagination">
-              <a-pagination
-                v-model:current="item.commentPage"
-                :total="item.commentTotal"
-                :pageSize="item.commentPageSize"
-                @change="handleCommentPageChange"
-              />
-            </div>
-          </div>
         </div>
           </div>
 
@@ -180,21 +127,15 @@ import { ref, onMounted, onActivated, onUpdated } from 'vue'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
-import { useUserStore } from '@/stores/user'
 import { 
   getBlogDynamics, 
   getBlogDynamicTimeline,
-  likeDynamic, 
-  commentDynamic, 
-  getDynamicComments 
+  likeDynamic
 } from '../../api/blog'
 import { 
   LikeOutlined, 
-  MessageOutlined, 
   EyeOutlined
 } from '@ant-design/icons-vue'
-import CommentComposer from '@/components/blog/CommentComposer.vue'
-import UserAvatar from '@/components/common/UserAvatar.vue'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 
@@ -208,22 +149,10 @@ const page = ref(1)
 const pageSize = ref(10)
 const hasMore = ref(true)
 const fetchedPages = ref(new Set()) // 用于跟踪已请求的页码
-const commentContent = ref('')
-const nickname = ref('')
-const email = ref('')
-const website = ref('')
-const commentComposerResetKey = ref(0)
 const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
 const activeTimeline = ref('')
 const dynamicListRef = ref(null)
-const userStore = useUserStore()
-
-const hydrateCurrentUserAvatar = (comment) => {
-  if (comment?.avatar || !userStore.isLoggedIn || !userStore.avatar) return comment
-  const names = [userStore.nickname, userStore.username].filter(Boolean)
-  return names.includes(comment.nickname) ? { ...comment, avatar: userStore.avatar } : comment
-}
 
 const mediaItems = (dynamic) => {
   const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
@@ -255,16 +184,6 @@ const openMedia = async (item) => {
     popup.close()
     message.error('媒体加载失败，请稍后重试')
   }
-}
-
-// 选中的动态
-const selectedDynamic = ref(null)
-
-// 评论分页相关
-const handleCommentPageChange = async (page) => {
-  if (!selectedDynamic.value) return
-  selectedDynamic.value.commentPage = page
-  await fetchComments(selectedDynamic.value)
 }
 
 // 渲染Markdown内容
@@ -426,115 +345,6 @@ const handleLike = async (item) => {
     message.error(error.response?.data?.message || '点赞失败')
   } finally {
     item.isLiking = false
-  }
-}
-
-// 获取评论
-const fetchComments = async (item) => {
-  if (item.isLoadingComments) return
-  
-  item.isLoadingComments = true
-  try {
-    const result = await getDynamicComments(item.id, {
-      page: item.commentPage || 1,
-      pageSize: item.commentPageSize || 10
-    })
-    
-    if (result && result.code === 200 && result.data) {
-      // 检查返回的数据格式
-      
-      // 兼容不同的返回格式
-      if (Array.isArray(result.data)) {
-        // 如果直接返回数组
-        item.commentList = result.data.map(hydrateCurrentUserAvatar);
-        item.commentTotal = result.data.length;
-      } else if (result.data.list) {
-        // 返回标准格式
-        item.commentList = (result.data.list || []).map(hydrateCurrentUserAvatar);
-        item.commentTotal = result.data.total || 0;
-        item.commentPageSize = result.data.pageSize || 10;
-      } else {
-        // 其他可能的格式
-        item.commentList = [];
-        item.commentTotal = 0;
-      }
-      
-      item.commentsLoaded = true;
-    } else {
-      console.error('获取评论列表响应格式错误:', result);
-      message.error('获取评论列表失败：响应格式错误');
-      // 设置空数据避免UI错误
-      item.commentList = [];
-      item.commentTotal = 0;
-    }
-  } catch (error) {
-    console.error('获取评论异常:', error);
-    message.error(error?.message || '获取评论失败，请稍后重试');
-    // 设置空数据避免UI错误
-    item.commentList = [];
-    item.commentTotal = 0;
-  } finally {
-    item.isLoadingComments = false;
-  }
-}
-
-// 修改handleComment函数
-const handleComment = async (item) => {
-  // 如果点击的是当前选中的动态，则关闭评论列表
-  if (selectedDynamic.value && selectedDynamic.value.id === item.id) {
-    selectedDynamic.value = null
-    return
-  }
-  
-  // 选中新的动态并加载评论
-  selectedDynamic.value = item
-  if (!item.commentsLoaded) {
-    await fetchComments(item)
-  }
-}
-
-// 修改submitComment函数
-const submitComment = async (item, payload = {}) => {
-  try {
-    // 手动验证表单
-    if (!(payload.content || commentContent.value).trim()) {
-      message.error('请输入评论内容')
-      return
-    }
-    
-    if (item.isSubmittingComment) return
-    item.isSubmittingComment = true
-    
-    const commentData = {
-      content: payload.content || commentContent.value,
-      nickname: payload.nickname || nickname.value || (userStore.isLoggedIn ? (userStore.nickname || userStore.username) : '') || '',
-      email: payload.email || email.value || '',
-      website: payload.website || website.value || ''
-    }
-    
-    
-    const result = await commentDynamic(item.id, commentData)
-    
-    if (result.code === 200) {
-      message.success('评论成功')
-      commentContent.value = ''
-      nickname.value = ''
-      email.value = ''
-      website.value = ''
-      commentComposerResetKey.value += 1
-      // 重新获取评论列表
-      item.commentPage = 1
-      await fetchComments(item)
-      // 更新评论数
-      item.comments = (item.comments || 0) + 1
-    } else {
-      message.error(result.message || '评论失败')
-    }
-  } catch (error) {
-      console.error('评论失败:', error)
-      message.error(error.response?.data?.message || '评论失败，请稍后重试')
-  } finally {
-    item.isSubmittingComment = false
   }
 }
 
@@ -1004,106 +814,6 @@ onActivated(() => {
 .more-images a:hover {
   color: #6366f1;
   text-decoration: underline;
-}
-
-.comment-section {
-  margin-top: 20px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  backdrop-filter: blur(10px);
-}
-
-.comment-header {
-  margin-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 10px;
-}
-
-.comment-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #1e293b;
-}
-
-.comment-website { margin-left: 8px; color: #9b6b3e; font-size: 12px; text-decoration: none; }
-.comment-website:hover { color: #2a7180; }
-
-.comment-form {
-  margin-bottom: 30px;
-}
-
-.comment-list {
-  margin-bottom: 20px;
-}
-
-.comment-item {
-  padding: 15px 0;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.comment-user {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  gap: 8px;
-}
-
-.comment-user__identity {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-}
-
-.comment-client-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.comment-client-tag {
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: #ebecef;
-  color: #6b7078;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.comment-user .nickname {
-  margin-left: 8px;
-  font-weight: 500;
-  color: #1e293b;
-}
-
-.comment-user__identity .nickname {
-  margin-left: 0;
-}
-
-.comment-user .time {
-  margin-left: 12px;
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.comment-content {
-  color: var(--blog-comment-text);
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-}
-
-.no-comments {
-  text-align: center;
-  color: #94a3b8;
-  padding: 20px 0;
-}
-
-.comment-pagination {
-  text-align: center;
-  margin-top: 20px;
 }
 
 @media (max-width: 900px) {

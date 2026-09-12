@@ -37,4 +37,14 @@ describe('comment notification store', () => {
     expect(store.unreadCount).toBe(2)
     expect(store.hasUnread).toBe(true)
   })
+
+  it('reads the API envelope returned by the authenticated comments endpoint', async () => {
+    request.get.mockResolvedValueOnce({ code: 200, data: { unread_count: 4 } })
+    const store = useCommentNotificationsStore()
+
+    await store.refresh()
+
+    expect(store.unreadCount).toBe(4)
+    expect(store.hasUnread).toBe(true)
+  })
 })

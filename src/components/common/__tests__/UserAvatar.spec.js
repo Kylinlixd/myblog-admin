@@ -69,7 +69,7 @@ describe('UserAvatar', () => {
     })
 
     expect(wrapper.find('[data-src]').attributes('data-src')).toBe(
-      '/assets/default-avatars/anonymous/anonymous-05.svg'
+      '/assets/default-avatars/anonymous/anonymous-05.webp'
     )
   })
 })

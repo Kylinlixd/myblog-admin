@@ -11,13 +11,20 @@ export const useCommentNotificationsStore = defineStore('commentNotifications', 
 
   const hasUnread = computed(() => Number(unreadCount.value) > 0)
 
+  const readUnreadCount = (response) => Number(
+    response?.data?.unread_count
+      ?? response?.data?.data?.unread_count
+      ?? response?.unread_count
+      ?? 0
+  ) || 0
+
   async function refresh() {
     const version = ++requestVersion
     loading.value = true
     try {
       const response = await request.get('/api/comments/unread-summary/')
       if (version !== requestVersion) return
-      unreadCount.value = Number(response?.data?.unread_count) || 0
+      unreadCount.value = readUnreadCount(response)
       error.value = ''
     } catch (reason) {
       if (version === requestVersion) error.value = reason?.message || '未读评论加载失败'
@@ -31,7 +38,7 @@ export const useCommentNotificationsStore = defineStore('commentNotifications', 
     const version = ++requestVersion
     const response = await request.post('/api/comments/mark-read/', { ids })
     if (version !== requestVersion) return
-    unreadCount.value = Number(response?.data?.unread_count) || 0
+    unreadCount.value = readUnreadCount(response)
   }
 
   function startPolling() {

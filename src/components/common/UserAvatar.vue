@@ -38,12 +38,12 @@ const fallbackSrc = computed(() => {
   const seed = String(props.fallbackSeed || props.nickname || props.username || '0')
   const numericSeed = Number(seed)
   if (Number.isFinite(numericSeed) && seed.trim() !== '') {
-    return `/assets/default-avatars/anonymous/anonymous-${String((Math.abs(numericSeed) % 16) + 1).padStart(2, '0')}.svg`
+    return `/assets/default-avatars/anonymous/anonymous-${String((Math.abs(numericSeed) % 16) + 1).padStart(2, '0')}.webp`
   }
   let hash = 0
   for (const character of seed) hash = (hash * 31 + character.charCodeAt(0)) >>> 0
   const index = (hash % 16) + 1
-  return `/assets/default-avatars/anonymous/anonymous-${String(index).padStart(2, '0')}.svg`
+  return `/assets/default-avatars/anonymous/anonymous-${String(index).padStart(2, '0')}.webp`
 })
 const normalisedSrc = computed(() => {
   const value = String(props.src || '').trim()

@@ -16,7 +16,7 @@
         <h1 class="dynamic-title">{{ dynamic.title }}</h1>
         <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
         <div class="dynamic-meta">
-          <span class="dynamic-date">{{ formatDate(dynamic.createdAt) }}</span>
+          <span class="dynamic-date">{{ formatDate(dynamic.created_at) }}</span>
           <span>{{ dynamic.views || 0 }} 阅读</span>
           <span aria-label="阅读时长">{{ readingMinutes }} 分钟阅读</span>
           <span v-if="dynamic.category?.name">{{ dynamic.category.name }}</span>
