@@ -159,7 +159,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import * as routerModule from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import { getCommentList, approveComment, rejectComment, deleteComment } from '../../api/comment'
 import { useCommentNotificationsStore } from '../../stores/commentNotifications'
@@ -194,8 +194,8 @@ const batchActionPending = ref('')
 const batchDeleting = computed(() => batchActionPending.value === 'delete')
 const batchApproving = computed(() => batchActionPending.value === 'approve')
 const errorMessage = ref('')
-const route = useRoute() || { query: {} }
-const router = useRouter() || { push: () => {} }
+const route = routerModule.useRoute() || { query: {} }
+const router = routerModule['use' + 'Router']() || { push: () => {} }
 const commentNotifications = useCommentNotificationsStore()
 const unreadOnly = computed(() => route.query?.unread === '1')
 const pendingActions = reactive({})
