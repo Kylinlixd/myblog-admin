@@ -74,6 +74,17 @@ describe('Dashboard mounted states', () => {
     expect(mockNotifications.refresh).toHaveBeenCalled()
   })
 
+  it('shows the marker when the comments total grows since the last visit', async () => {
+    localStorage.setItem('dashboard.comments.seenCount', '13')
+    request.get.mockResolvedValueOnce({ data: { total: { comments: 14 } } })
+    const wrapper = mount(Dashboard, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.find('.metric-unread-dot').exists()).toBe(true)
+    wrapper.unmount()
+    localStorage.removeItem('dashboard.comments.seenCount')
+  })
+
   it('offers an accessible retry action after a failed request', async () => {
     request.get.mockRejectedValueOnce(new Error('网络不可用'))
     const wrapper = mount(Dashboard, { global: { stubs: globalStubs } })
