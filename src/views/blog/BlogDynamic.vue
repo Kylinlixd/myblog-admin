@@ -92,6 +92,10 @@
                 <like-outlined :style="{ color: item.liked ? '#1890ff' : 'inherit' }" />
                 <span>{{ item.likes || 0 }}</span>
               </a-button>
+              <a-button type="text" @click="handleComment(item)">
+                <message-outlined />
+                <span>{{ item.comments || 0 }}</span>
+              </a-button>
               <router-link :to="`/blog/dynamics/${item.id}`" class="view-detail-link">
                 <a-button type="text">
                   <eye-outlined />
@@ -115,9 +119,43 @@
               加载更多
             </a-button>
             <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
-          </div>
-        </div>
-      </div>
+              </div>
+            </div>
+
+            <!-- 展开后仅展示评论，不提供编辑窗口 -->
+            <div v-if="selectedDynamic?.id === item.id" class="comment-section cinematic-card">
+              <div class="comment-header">
+                <h3>评论 ({{ item.commentTotal ?? item.comments ?? 0 }})</h3>
+              </div>
+              <div class="comment-list">
+                <div v-if="item.commentList?.length">
+                  <div v-for="comment in item.commentList" :key="comment.id" class="comment-item">
+                    <div class="comment-user">
+                      <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
+                      <div class="comment-user__identity">
+                        <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
+                        <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
+                          <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
+                          <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
+                        </div>
+                      </div>
+                      <span class="time">{{ formatDate(comment.createTime) }}</span>
+                    </div>
+                    <div class="comment-content">{{ comment.content }}</div>
+                  </div>
+                </div>
+                <div v-else class="no-comments">暂无评论</div>
+              </div>
+              <div v-if="item.commentTotal > (item.commentPageSize || 10)" class="comment-pagination">
+                <a-pagination
+                  v-model:current="item.commentPage"
+                  :total="item.commentTotal"
+                  :pageSize="item.commentPageSize || 10"
+                  @change="(page) => handleCommentPageChange(page, item)"
+                />
+              </div>
+            </div>
+            </div>
     </div>
   </div>
 </template>
@@ -130,12 +168,16 @@ import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { 
   getBlogDynamics, 
   getBlogDynamicTimeline,
-  likeDynamic
+  likeDynamic,
+  getDynamicComments
 } from '../../api/blog'
 import { 
   LikeOutlined, 
+  MessageOutlined,
   EyeOutlined
 } from '@ant-design/icons-vue'
+import { useUserStore } from '@/stores/user'
+import UserAvatar from '@/components/common/UserAvatar.vue'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 
@@ -153,6 +195,14 @@ const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
 const activeTimeline = ref('')
 const dynamicListRef = ref(null)
+const selectedDynamic = ref(null)
+const userStore = useUserStore()
+
+const hydrateCurrentUserAvatar = (comment) => {
+  if (comment?.avatar || !userStore.isLoggedIn || !userStore.avatar) return comment
+  const names = [userStore.nickname, userStore.username].filter(Boolean)
+  return names.includes(comment.nickname) ? { ...comment, avatar: userStore.avatar } : comment
+}
 
 const mediaItems = (dynamic) => {
   const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
@@ -201,6 +251,44 @@ const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+const fetchComments = async (item) => {
+  if (item.isLoadingComments) return
+  item.isLoadingComments = true
+  try {
+    const result = await getDynamicComments(item.id, {
+      page: item.commentPage || 1,
+      pageSize: item.commentPageSize || 10
+    })
+    if (result?.code === 200 && result.data) {
+      const list = Array.isArray(result.data) ? result.data : (result.data.list || [])
+      item.commentList = list.map(hydrateCurrentUserAvatar)
+      item.commentTotal = Array.isArray(result.data) ? list.length : (result.data.total || 0)
+      item.commentPageSize = result.data.pageSize || item.commentPageSize || 10
+      item.commentsLoaded = true
+    }
+  } catch (error) {
+    console.error('获取动态评论失败:', error)
+    item.commentList = []
+    item.commentTotal = 0
+  } finally {
+    item.isLoadingComments = false
+  }
+}
+
+const handleCommentPageChange = async (page, item) => {
+  item.commentPage = page
+  await fetchComments(item)
+}
+
+const handleComment = async (item) => {
+  if (selectedDynamic.value?.id === item.id) {
+    selectedDynamic.value = null
+    return
+  }
+  selectedDynamic.value = item
+  if (!item.commentsLoaded) await fetchComments(item)
 }
 
 const fetchTimeline = async () => {
@@ -815,6 +903,20 @@ onActivated(() => {
   color: #6366f1;
   text-decoration: underline;
 }
+
+.comment-section { margin-top: 20px; padding: 20px; border: 1px solid rgb(226 232 240 / 80%); border-radius: 16px; background: rgb(255 255 255 / 90%); }
+.comment-header { margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+.comment-header h3 { margin: 0; color: #1e293b; font-size: 18px; }
+.comment-item { padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
+.comment-user { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.comment-user__identity { display: grid; min-width: 0; gap: 4px; }
+.comment-client-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.comment-client-tag { padding: 2px 6px; border-radius: 4px; background: #ebecef; color: #6b7078; font-size: 11px; line-height: 1.2; }
+.comment-user .nickname { color: #1e293b; font-weight: 500; }
+.comment-user .time { margin-left: auto; color: #94a3b8; font-size: 12px; }
+.comment-content { color: var(--blog-comment-text); line-height: 1.75; overflow-wrap: anywhere; }
+.no-comments { padding: 20px 0; color: #94a3b8; text-align: center; }
+.comment-pagination { margin-top: 20px; text-align: center; }
 
 @media (max-width: 900px) {
   .blog-dynamic-layout {
