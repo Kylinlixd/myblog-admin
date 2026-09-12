@@ -273,13 +273,16 @@ const handleProfileUpdate = async () => {
     profileLoading.value = true
     
     // 调用更新用户资料的API
-    await userStore.updateProfile({
+    const profileData = {
       username: values.username,
       nickname: values.nickname,
       email: values.email,
-      bio: values.bio,
-      avatar: profileForm.avatar
-    })
+      bio: values.bio
+    }
+    if (profileForm.avatar !== savedProfile.value.avatar) {
+      profileData.avatar = profileForm.avatar
+    }
+    await userStore.updateProfile(profileData)
     await userStore.getUserInfo()
     
     AntMessage.success('个人资料更新成功')

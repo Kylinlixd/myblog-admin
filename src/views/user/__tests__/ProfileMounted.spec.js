@@ -78,6 +78,23 @@ describe('Profile mounted interactions', () => {
     wrapper.unmount()
   })
 
+  it('does not resubmit an unchanged avatar when saving profile text fields', async () => {
+    const wrapper = mount(Profile, { global: { stubs: globalStubs } })
+    await flushPromises()
+    wrapper.vm.profileForm.nickname = '仅修改昵称'
+    wrapper.vm.profileFormRef = { validate: jest.fn().mockResolvedValue({ ...wrapper.vm.profileForm }) }
+
+    await wrapper.vm.handleProfileUpdate()
+
+    expect(mockUserStore.updateProfile).toHaveBeenCalledWith({
+      username: 'reader',
+      nickname: '仅修改昵称',
+      email: 'reader@example.com',
+      bio: 'About me'
+    })
+    wrapper.unmount()
+  })
+
   it('marks both forms as stackable for mobile layouts', async () => {
     const wrapper = mount(Profile, { global: { stubs: globalStubs } })
     await flushPromises()
