@@ -1186,8 +1186,9 @@ onBeforeUnmount(() => {
       --article-muted: #718096;
       --article-paper: #fffdf8;
       --article-line: #e9e3d8;
-      --article-main-width: 900px;
-      width: min(1180px, calc(100% - 32px));
+      --article-main-width: 840px;
+      --article-shell-width: 1120px;
+      width: min(var(--article-shell-width), calc(100% - 32px));
       margin: 0 auto;
       padding: 0 0 72px;
       color: var(--article-ink);
@@ -1463,7 +1464,7 @@ onBeforeUnmount(() => {
       position: fixed;
       z-index: 12;
       top: 96px;
-      right: max(16px, calc((100vw - 1180px) / 2));
+      right: max(16px, calc((100vw - var(--article-shell-width)) / 2));
       width: 220px;
       max-height: calc(100vh - 120px);
     }

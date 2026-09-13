@@ -2,7 +2,7 @@ import { mount } from '@vue/test-utils'
 import CommentComposer from '../CommentComposer.vue'
 
 describe('CommentComposer', () => {
-  it('shows optional identity fields and emits all values after content validation', async () => {
+  it('shows identity fields without optional labels and emits all values after content validation', async () => {
     const wrapper = mount(CommentComposer)
     const inputs = wrapper.findAll('input')
     await inputs[0].setValue('访客')
@@ -14,7 +14,8 @@ describe('CommentComposer', () => {
     expect(wrapper.emitted('submit')[0][0]).toEqual({
       nickname: '访客', email: 'visitor@example.com', website: 'https://example.com', content: '很有帮助'
     })
-    expect(wrapper.text()).toContain('可选')
+    expect(wrapper.text()).not.toContain('可选')
+    expect(wrapper.findAll('.comment-composer__fields > .comment-composer__field')).toHaveLength(3)
   })
 
   it('does not emit empty comments and explains the validation state', async () => {
