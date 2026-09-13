@@ -150,6 +150,7 @@
 
         <aside v-if="tocItems.length" class="article-side-column" :style="{ top: `${tocTop}px` }">
           <div class="article-toc">
+            <span class="article-toc__cursor" aria-hidden="true"></span>
             <div class="article-toc__title">目录</div>
             <nav aria-label="文章目录">
               <button v-for="item in tocItems" :key="item.id" type="button" :class="[`toc-level-${item.level}`, { 'is-active': activeTocId === item.id }]" :aria-current="activeTocId === item.id ? 'location' : undefined" @click="scrollToHeading(item.id)">{{ item.text }}</button>
@@ -1480,6 +1481,8 @@ onBeforeUnmount(() => {
       background: var(--article-line);
       content: '';
     }
+
+    .article-toc__cursor { display: none; }
 
     .article-toc__title {
       margin: 8px 0 16px;
