@@ -33,8 +33,7 @@
       </div>
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
-        <div class="article-content-card cinematic-card">
-          <main class="article-main-column">
+        <main class="article-main-column article-content-card cinematic-card">
           <div v-if="topMediaItems.length" class="dynamic-media">
             <template v-for="item in topMediaItems" :key="item.url">
               <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
@@ -102,8 +101,6 @@
             </router-link>
             <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
           </nav>
-          </main>
-
           <!-- 正文、标签、相邻文章和评论共用同一张内容卡片。 -->
           <div class="comment-section">
             <div class="comment-header">
@@ -146,7 +143,7 @@
               />
             </div>
           </div>
-        </div>
+        </main>
 
         <aside v-if="tocItems.length" class="article-side-column" :style="{ top: `${tocTop}px` }">
           <div class="article-toc">
@@ -1263,6 +1260,7 @@ onBeforeUnmount(() => {
       gap: clamp(24px, 4vw, 60px);
       align-items: start;
       width: 100%;
+      transition: grid-template-columns .35s ease, gap .35s ease, justify-content .35s ease;
     }
 
     .article-layout--without-toc {
@@ -1278,6 +1276,7 @@ onBeforeUnmount(() => {
       background: var(--article-paper);
       box-shadow: 0 26px 70px rgb(88 65 37 / 10%);
       box-sizing: border-box;
+      transition: width .35s ease, transform .35s ease, opacity .35s ease;
     }
 
     .article-main-column { min-width: 0; }
@@ -1467,16 +1466,26 @@ onBeforeUnmount(() => {
       right: max(16px, calc((100vw - var(--article-shell-width)) / 2));
       width: 220px;
       max-height: calc(100vh - 120px);
+      transition: opacity .28s ease, transform .28s ease, visibility 0s linear .28s;
     }
 
     @media (max-width: 1280px) {
       .article-layout {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns: minmax(0, var(--article-main-width));
+        justify-content: center;
+        gap: 0;
       }
 
+      .article-header { margin-inline: auto; }
+
       .article-side-column {
-        display: none;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(16px);
       }
+
+      .article-content-card { animation: article-center-in .35s ease both; }
     }
 
     .article-toc {
@@ -1604,8 +1613,13 @@ onBeforeUnmount(() => {
       to { opacity: 1; transform: translateY(0); }
     }
 
+    @keyframes article-center-in {
+      from { opacity: .86; transform: translateX(-12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
     @media (max-width: 900px) {
-      .article-layout { width: 100%; }
+      .article-layout { width: 100%; grid-template-columns: minmax(0, 1fr); }
       .article-content-card { width: 100%; padding: 22px 18px; }
       .article-header { width: 100%; }
       .article-side-column { display: none; }

@@ -2,15 +2,15 @@
   <form class="comment-composer" @submit.prevent="handleSubmit">
     <div class="comment-composer__fields">
       <label class="comment-composer__field">
-        <span>昵称</span>
+        <span>昵称：</span>
         <input v-model="form.nickname" type="text" maxlength="50" placeholder="怎么称呼你" autocomplete="nickname" />
       </label>
       <label class="comment-composer__field">
-        <span>邮箱</span>
+        <span>邮箱：</span>
         <input v-model="form.email" type="email" maxlength="254" placeholder="用于接收回复" autocomplete="email" />
       </label>
       <label class="comment-composer__field">
-        <span>网址</span>
+        <span>网址：</span>
         <input v-model="form.website" type="url" maxlength="500" placeholder="你的主页地址" autocomplete="url" />
       </label>
     </div>
@@ -58,9 +58,10 @@ const handleSubmit = () => {
 
 <style scoped>
 .comment-composer { display: grid; gap: 0; overflow: hidden; border: 1px solid #e5dbcf; border-radius: 18px; background: #fffdf9; }
-.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; padding: 17px 18px; border-bottom: 1px dashed #e5dbcf; }
+.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-bottom: 1px dashed #e5dbcf; }
 .comment-composer__field { display: flex; min-width: 0; align-items: center; gap: 10px; color: #5d554e; font-size: 13px; font-weight: 650; }
-.comment-composer__fields > .comment-composer__field:not(:last-child) { margin-right: 18px; padding-right: 18px; border-right: 1px solid #e5dbcf; }
+.comment-composer__fields > .comment-composer__field { padding: 17px 18px; }
+.comment-composer__fields > .comment-composer__field:not(:last-child) { border-right: 1px solid #e5dbcf; }
 .comment-composer__field > span { flex: 0 0 auto; }
 .comment-composer input, .comment-composer textarea { width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: 0; background: transparent; color: #40382f; font: inherit; font-weight: 450; outline: 0; transition: background .2s ease; }
 .comment-composer input { height: 28px; padding: 0; }
@@ -73,5 +74,5 @@ const handleSubmit = () => {
 .comment-composer__footer button { border: 0; border-radius: 999px; padding: 10px 18px; background: #b96f3d; color: #fffaf3; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; transition: background .2s ease, transform .2s ease; }
 .comment-composer__footer button:hover:not(:disabled) { background: #a96136; transform: translateY(-1px); }
 .comment-composer__footer button:disabled { cursor: wait; opacity: .65; }
-@media (max-width: 680px) { .comment-composer__fields { grid-template-columns: 1fr; gap: 8px; } .comment-composer__fields > .comment-composer__field:not(:last-child) { margin-right: 0; padding-right: 0; border-right: 0; } .comment-composer__footer { align-items: flex-end; flex-direction: column; } }
+@media (max-width: 680px) { .comment-composer__fields { grid-template-columns: 1fr; gap: 8px; padding: 8px 18px; } .comment-composer__fields > .comment-composer__field { padding: 0; } .comment-composer__fields > .comment-composer__field:not(:last-child) { border-right: 0; } .comment-composer__footer { align-items: flex-end; flex-direction: column; } }
 </style>

@@ -15,6 +15,9 @@ describe('CommentComposer', () => {
       nickname: '访客', email: 'visitor@example.com', website: 'https://example.com', content: '很有帮助'
     })
     expect(wrapper.text()).not.toContain('可选')
+    expect(wrapper.text()).toContain('昵称：')
+    expect(wrapper.text()).toContain('邮箱：')
+    expect(wrapper.text()).toContain('网址：')
     expect(wrapper.findAll('.comment-composer__fields > .comment-composer__field')).toHaveLength(3)
   })
 
