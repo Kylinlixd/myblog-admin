@@ -1231,7 +1231,10 @@ onBeforeUnmount(() => {
     }
 
     .article-layout {
-      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, var(--article-main-width)) minmax(180px, 220px);
+      gap: clamp(24px, 4vw, 60px);
+      align-items: start;
       width: 100%;
     }
 
@@ -1431,12 +1434,21 @@ onBeforeUnmount(() => {
     }
 
     .article-side-column {
-      position: fixed;
-      z-index: 12;
+      position: sticky;
       top: 148px;
-      right: max(16px, calc((100vw - 1180px) / 2));
-      width: 220px;
+      grid-column: 2;
+      width: 100%;
       max-height: calc(100vh - 172px);
+    }
+
+    @media (max-width: 1280px) {
+      .article-layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .article-side-column {
+        display: none;
+      }
     }
 
     .article-toc {
