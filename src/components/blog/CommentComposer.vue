@@ -58,9 +58,9 @@ const handleSubmit = () => {
 
 <style scoped>
 .comment-composer { display: grid; gap: 0; overflow: hidden; border: 1px solid #e5dbcf; border-radius: 18px; background: #fffdf9; }
-.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; overflow: hidden; border-radius: 17px 17px 0 0; border-bottom: 1px dashed #e5dbcf; }
+.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; min-height: 42px; overflow: hidden; border-radius: 17px 17px 0 0; border-bottom: 1px dashed #e5dbcf; }
 .comment-composer__field { display: flex; min-width: 0; align-items: center; gap: 10px; color: #5d554e; font-size: 13px; font-weight: 650; }
-.comment-composer__fields > .comment-composer__field { padding: 17px 18px; }
+.comment-composer__fields > .comment-composer__field { padding: 0 18px; }
 .comment-composer__fields > .comment-composer__field:not(:last-child) { border-right: 1px solid #e5dbcf; }
 .comment-composer__field > span { flex: 0 0 auto; }
 .comment-composer input, .comment-composer textarea { width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: 0; background: transparent; color: #40382f; font: inherit; font-weight: 450; outline: 0; transition: background .2s ease; }
