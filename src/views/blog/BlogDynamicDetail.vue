@@ -148,7 +148,7 @@
           </div>
         </div>
 
-        <aside v-if="tocItems.length" class="article-side-column">
+        <aside v-if="tocItems.length" class="article-side-column" :style="{ top: `${tocTop}px` }">
           <div class="article-toc">
             <span class="article-toc__cursor" aria-hidden="true"></span>
             <div class="article-toc__label">ON THIS PAGE</div>
@@ -298,6 +298,7 @@ const articleBodyRef = ref(null)
 const tocItems = ref([])
 const tocOpen = ref(false)
 const activeTocId = ref('')
+const tocTop = ref(148)
 const readingProgress = ref(0)
 const readingMinutes = ref(1)
 let stopHeadingObserver = () => {}
@@ -326,6 +327,7 @@ const syncArticleNavigation = async () => {
   stopHeadingObserver()
   tocItems.value = collectArticleHeadings(articleBodyRef.value)
   activeTocId.value = tocItems.value[0]?.id || ''
+  updateTocPosition()
   // Keep a single scroll based source of truth for the active heading. The
   // previous IntersectionObserver callback could run with stale heading
   // geometry after the article DOM was hydrated, leaving the first item
@@ -350,11 +352,28 @@ const hydrateLazyMedia = async () => {
 const updateReadingProgress = () => {
   const element = articleBodyRef.value
   if (!element) return
+  updateTocPosition()
   const rect = element.getBoundingClientRect()
   const total = Math.max(1, element.offsetHeight - window.innerHeight * 0.65)
   const travelled = Math.min(total, Math.max(0, window.innerHeight * 0.35 - rect.top))
   readingProgress.value = Math.round((travelled / total) * 100)
   if (tocItems.value.length) activeTocId.value = getActiveHeadingId(tocItems.value, getReadingOffset())
+}
+
+// The site shell owns the page scroll area, which prevents native sticky
+// positioning from sticking to the viewport in some browsers. Keep the rail
+// fixed and clamp its top edge to the article card until it reaches the
+// header reading line, reproducing sticky behaviour without losing the
+// article-column anchor.
+const updateTocPosition = () => {
+  const card = document.querySelector('.article-content-card')
+  const side = document.querySelector('.article-side-column')
+  if (!card || !side) return
+  const cardTop = card.getBoundingClientRect().top
+  const sideHeight = side.getBoundingClientRect().height || 0
+  const minTop = 148
+  const maxTop = Math.max(minTop, window.innerHeight - sideHeight - 24)
+  tocTop.value = Math.round(Math.min(maxTop, Math.max(minTop, cardTop)))
 }
 
 const getReadingOffset = () => {
@@ -1434,10 +1453,11 @@ onBeforeUnmount(() => {
     }
 
     .article-side-column {
-      position: sticky;
+      position: fixed;
+      z-index: 12;
       top: 148px;
-      grid-column: 2;
-      width: 100%;
+      right: max(16px, calc((100vw - 1180px) / 2));
+      width: 220px;
       max-height: calc(100vh - 172px);
     }
 
