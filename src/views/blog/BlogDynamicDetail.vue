@@ -359,7 +359,12 @@ const updateReadingProgress = () => {
 
 const getReadingOffset = () => {
   const header = document.querySelector('.site-header-panel')
-  return (header?.getBoundingClientRect?.().bottom || 0) + 28
+  // The site header scrolls with the document, so its viewport `bottom`
+  // becomes negative after the first scroll. Use the stable rendered height
+  // instead; otherwise every heading appears below a negative reading line
+  // and the TOC falls back to its first item forever.
+  const headerHeight = header?.getBoundingClientRect?.().height || header?.offsetHeight || 0
+  return headerHeight + 28
 }
 
 const scrollToHeading = (id) => {
