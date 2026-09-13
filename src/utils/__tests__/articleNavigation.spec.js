@@ -1,4 +1,4 @@
-import { collectArticleHeadings, getActiveHeadingId } from '../articleNavigation'
+import { collectArticleHeadings, getActiveHeadingId, observeArticleHeadings } from '../articleNavigation'
 
 describe('article navigation', () => {
   it('collects h2/h3/h4 headings with stable readable ids and levels', () => {
@@ -20,4 +20,23 @@ describe('article navigation', () => {
     expect(getActiveHeadingId([first, second], 120)).toBe('first')
     expect(getActiveHeadingId([first, second], 220)).toBe('second')
   })
+})
+
+
+it('observes headings without a scroll listener and cleans up', () => {
+  const first = { id: 'first', element: document.createElement('h2') }
+  const second = { id: 'second', element: document.createElement('h2') }
+  const observe = jest.fn()
+  const disconnect = jest.fn()
+  const OriginalObserver = globalThis.IntersectionObserver
+  globalThis.IntersectionObserver = jest.fn(function (callback) {
+    this.observe = observe
+    this.disconnect = disconnect
+    callback([])
+  })
+  const cleanup = observeArticleHeadings([first, second], { onChange: () => {} })
+  expect(observe).toHaveBeenCalledTimes(2)
+  cleanup()
+  expect(disconnect).toHaveBeenCalledTimes(1)
+  globalThis.IntersectionObserver = OriginalObserver
 })

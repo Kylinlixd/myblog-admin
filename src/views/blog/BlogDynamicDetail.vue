@@ -191,7 +191,7 @@ import CommentThread from '@/components/blog/CommentThread.vue'
 import CommentComposer from '@/components/blog/CommentComposer.vue'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
-import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
+import { collectArticleHeadings, getActiveHeadingId, observeArticleHeadings } from '@/utils/articleNavigation'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
   ([language, definition]) => hljs.registerLanguage(language, definition)
@@ -302,6 +302,7 @@ const tocOpen = ref(false)
 const activeTocId = ref('')
 const readingProgress = ref(0)
 const readingMinutes = ref(1)
+let stopHeadingObserver = () => {}
 
 // 评论相关
 const commentContent = ref('')
@@ -324,8 +325,13 @@ const formatDate = (date) => {
 const syncArticleNavigation = async () => {
   await nextTick()
   if (!articleBodyRef.value) return
+  stopHeadingObserver()
   tocItems.value = collectArticleHeadings(articleBodyRef.value)
   activeTocId.value = tocItems.value[0]?.id || ''
+  stopHeadingObserver = observeArticleHeadings(tocItems.value, {
+    offset: getReadingOffset(),
+    onChange: (id) => { activeTocId.value = id }
+  })
   bindCodeBlockInteractions(articleBodyRef.value)
 }
 
@@ -546,6 +552,8 @@ onMounted(() => {
   window.addEventListener('resize', updateReadingProgress)
 })
 onBeforeUnmount(() => {
+  stopHeadingObserver()
+  stopHeadingObserver = () => {}
   window.removeEventListener('scroll', updateReadingProgress)
   window.removeEventListener('resize', updateReadingProgress)
 })

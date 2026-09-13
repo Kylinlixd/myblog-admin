@@ -29,13 +29,15 @@ describe('comment notification store', () => {
   })
 
   it('normalizes the summary envelope and exposes the unread state', async () => {
-    request.get.mockResolvedValueOnce({ data: { unread_count: 2 } })
+    request.get.mockResolvedValueOnce({ data: { unread_count: 2, latest_comment_id: 42, initialized: true } })
     const store = useCommentNotificationsStore()
 
     await store.refresh()
 
     expect(store.unreadCount).toBe(2)
     expect(store.hasUnread).toBe(true)
+    expect(store.latestCommentId).toBe(42)
+    expect(store.initialized).toBe(true)
   })
 
   it('reads the API envelope returned by the authenticated comments endpoint', async () => {
@@ -47,4 +49,13 @@ describe('comment notification store', () => {
     expect(store.unreadCount).toBe(4)
     expect(store.hasUnread).toBe(true)
   })
+})
+
+
+it('marks the server cursor instead of writing a browser count', async () => {
+  request.post.mockResolvedValueOnce({ data: { unread_count: 0, latest_comment_id: 42, initialized: true } })
+  const store = useCommentNotificationsStore()
+  await store.markRead({ latestCommentId: 42 })
+  expect(request.post).toHaveBeenCalledWith('/api/comments/mark-read/', { latest_comment_id: 42 })
+  expect(store.unreadCount).toBe(0)
 })

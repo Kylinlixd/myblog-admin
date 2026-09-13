@@ -26,7 +26,7 @@
         <span class="metric-label">{{ item.label }}</span>
         <span class="metric-value-wrap">
           <strong class="metric-value">{{ item.value }}</strong>
-          <i v-if="item.key === 'comments' && (commentNotifications.hasUnread || commentCountChanged)" class="metric-unread-dot" aria-label="有新评论" />
+          <i v-if="item.key === 'comments' && commentNotifications.hasUnread" class="metric-unread-dot" aria-label="有新评论" />
         </span>
       </router-link>
     </section>
@@ -179,8 +179,6 @@ const currentDate = new Intl.DateTimeFormat('zh-CN', {
 const loading = ref(true)
 const error = ref('')
 const dashboardData = ref(mapDashboardData())
-const commentCountChanged = ref(false)
-const COMMENT_COUNT_SEEN_KEY = 'dashboard.comments.seenCount'
 
 const metrics = computed(() => [
   { key: 'dynamics', label: '内容', value: dashboardData.value.total.dynamics, path: '/dashboard/dynamics', icon: FileTextOutlined },
@@ -209,26 +207,12 @@ const quickActions = [
   { label: '整理内容结构', description: '维护分类与主题关系', path: '/dashboard/category', icon: FolderOutlined }
 ]
 
-function syncCommentCount(total) {
-  const current = Number(total) || 0
+async function acknowledgeCommentCount() {
   try {
-    const seenValue = localStorage.getItem(COMMENT_COUNT_SEEN_KEY)
-    if (seenValue === null) {
-      commentCountChanged.value = current > 0
-      return
-    }
-    const seen = Number(seenValue) || 0
-    commentCountChanged.value = current > seen
-    if (current < seen) localStorage.setItem(COMMENT_COUNT_SEEN_KEY, String(current))
-  } catch {
-    commentCountChanged.value = false
+    await commentNotifications.markRead({ latestCommentId: commentNotifications.latestCommentId })
+  } catch (reason) {
+    console.error('确认评论已读失败:', reason)
   }
-}
-
-function acknowledgeCommentCount() {
-  const current = Number(dashboardData.value.total.comments) || 0
-  try { localStorage.setItem(COMMENT_COUNT_SEEN_KEY, String(current)) } catch { /* storage unavailable */ }
-  commentCountChanged.value = false
 }
 
 function taxonomyShare(item, items) {
@@ -245,7 +229,6 @@ async function loadStats() {
   error.value = ''
   try {
     dashboardData.value = mapDashboardData(await request.get('/api/stats/'))
-    syncCommentCount(dashboardData.value.total.comments)
   } catch (reason) {
     error.value = reason?.message || '仪表盘数据加载失败'
   } finally {

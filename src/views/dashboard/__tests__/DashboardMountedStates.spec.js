@@ -17,6 +17,7 @@ jest.mock('@/stores/user', () => ({
 const mockNotifications = {
   hasUnread: false,
   unreadCount: 0,
+  latestCommentId: 0,
   refresh: jest.fn(),
   markRead: jest.fn(),
   startPolling: jest.fn(),
@@ -74,25 +75,17 @@ describe('Dashboard mounted states', () => {
     expect(mockNotifications.refresh).toHaveBeenCalled()
   })
 
-  it('shows the marker when the comments total grows since the last visit', async () => {
-    localStorage.setItem('dashboard.comments.seenCount', '13')
+  it('shows the marker when the server reports unread comments', async () => {
+    mockNotifications.hasUnread = true
+    mockNotifications.latestCommentId = 14
     request.get.mockResolvedValueOnce({ data: { total: { comments: 14 } } })
     const wrapper = mount(Dashboard, { global: { stubs: globalStubs } })
     await flushPromises()
 
     expect(wrapper.find('.metric-unread-dot').exists()).toBe(true)
     wrapper.unmount()
-    localStorage.removeItem('dashboard.comments.seenCount')
-  })
-
-  it('shows the marker on the first dashboard load when comments already exist', async () => {
-    localStorage.removeItem('dashboard.comments.seenCount')
-    request.get.mockResolvedValueOnce({ data: { total: { comments: 15 } } })
-    const wrapper = mount(Dashboard, { global: { stubs: globalStubs } })
-    await flushPromises()
-
-    expect(wrapper.find('.metric-unread-dot').exists()).toBe(true)
-    wrapper.unmount()
+    mockNotifications.hasUnread = false
+    mockNotifications.latestCommentId = 0
   })
 
   it('offers an accessible retry action after a failed request', async () => {
