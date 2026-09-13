@@ -399,6 +399,13 @@ const scrollToHeading = (id) => {
   tocOpen.value = false
 }
 
+const resetArticleScrollPosition = () => {
+  if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
+  const scrollingElement = document.scrollingElement
+  if (scrollingElement) scrollingElement.scrollTop = 0
+  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+}
+
 // 获取评论列表
 const fetchComments = async (requestedId = dynamic.value?.id) => {
   const dynamicId = requestedId
@@ -579,7 +586,10 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
 watch(() => route.params.id, (nextId, previousId) => {
   if (nextId && nextId !== previousId) fetchDynamicDetail(nextId)
 })
-onMounted(() => fetchDynamicDetail(route.params.id))
+onMounted(() => {
+  resetArticleScrollPosition()
+  fetchDynamicDetail(route.params.id)
+})
 onMounted(() => {
   window.addEventListener('scroll', updateReadingProgress, { passive: true })
   window.addEventListener('resize', updateReadingProgress)
