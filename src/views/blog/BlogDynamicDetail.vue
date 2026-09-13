@@ -189,7 +189,7 @@ import CommentThread from '@/components/blog/CommentThread.vue'
 import CommentComposer from '@/components/blog/CommentComposer.vue'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
-import { collectArticleHeadings, getActiveHeadingId, observeArticleHeadings } from '@/utils/articleNavigation'
+import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
   ([language, definition]) => hljs.registerLanguage(language, definition)
@@ -326,10 +326,10 @@ const syncArticleNavigation = async () => {
   stopHeadingObserver()
   tocItems.value = collectArticleHeadings(articleBodyRef.value)
   activeTocId.value = tocItems.value[0]?.id || ''
-  stopHeadingObserver = observeArticleHeadings(tocItems.value, {
-    offset: getReadingOffset(),
-    onChange: (id) => { activeTocId.value = id }
-  })
+  // Keep a single scroll based source of truth for the active heading. The
+  // previous IntersectionObserver callback could run with stale heading
+  // geometry after the article DOM was hydrated, leaving the first item
+  // highlighted while the reader had already moved further down.
   bindCodeBlockInteractions(articleBodyRef.value)
 }
 
@@ -363,7 +363,11 @@ const getReadingOffset = () => {
 }
 
 const scrollToHeading = (id) => {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  const heading = document.getElementById(id)
+  if (heading) {
+    const top = heading.getBoundingClientRect().top + window.scrollY - getReadingOffset()
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  }
   tocOpen.value = false
 }
 
@@ -1019,11 +1023,12 @@ onBeforeUnmount(() => {
 .comment-section {
   width: 100%;
   margin: 46px 0 0;
-  padding: 42px 0 0;
+  padding: 42px clamp(28px, 5vw, 62px) 0;
   border-top: 1px solid var(--article-line, #e9e3d8);
   background: transparent;
   border-radius: 0;
   box-shadow: none;
+  box-sizing: border-box;
 }
 
 .comment-header {
