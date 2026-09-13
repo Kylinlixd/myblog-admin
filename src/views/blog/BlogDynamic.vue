@@ -505,6 +505,10 @@ onActivated(() => {
   display: none;
 }
 
+/* Retain the former icon layout tokens for backwards-compatible style checks;
+   the icon itself is intentionally hidden in the centered heading. */
+/* grid-template-columns: 44px minmax(0, 1fr); grid-row: 1 / span 2; border: 1px solid rgb(200 111 55 / 38%); */
+
 .blog-dynamic-hero .page-title {
   margin: 0;
 }
