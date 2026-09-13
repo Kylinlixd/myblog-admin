@@ -33,7 +33,8 @@
       </div>
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
-        <main class="article-main-column">
+        <div class="article-content-card">
+          <main class="article-main-column">
           <div v-if="topMediaItems.length" class="dynamic-media">
             <template v-for="item in topMediaItems" :key="item.url">
               <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
@@ -101,7 +102,51 @@
             </router-link>
             <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
           </nav>
-        </main>
+          </main>
+
+          <!-- 正文、标签、相邻文章和评论共用同一张内容卡片。 -->
+          <div class="comment-section cinematic-card">
+            <div class="comment-header">
+              <h3>评论 ({{ commentTotal }})</h3>
+            </div>
+
+            <div class="comment-form">
+              <CommentComposer :loading="isSubmittingComment" :reset-key="commentComposerResetKey" @submit="submitComment" />
+            </div>
+
+            <div class="comment-list">
+              <div v-if="commentList && commentList.length > 0">
+                <CommentThread
+                  v-for="comment in commentList"
+                  :key="comment.id"
+                  :comment="comment"
+                  @reply="startReply"
+                >
+                  <template #reply-editor="{ comment: target }">
+                    <div v-if="replyingTo?.id === target.id" class="reply-editor reply-editor--inline">
+                      <div class="reply-editor__meta">
+                        <span>回复 @{{ target.nickname || '匿名用户' }}</span>
+                        <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
+                      </div>
+                      <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
+                      <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
+                    </div>
+                  </template>
+                </CommentThread>
+              </div>
+              <div v-else class="no-comments">暂无评论，快来发表第一条评论吧！</div>
+            </div>
+
+            <div v-if="commentList && commentList.length > 0" class="comment-pagination">
+              <a-pagination
+                v-model:current="commentPage"
+                :total="commentTotal"
+                :pageSize="commentPageSize"
+                @change="handleCommentPageChange"
+              />
+            </div>
+          </div>
+        </div>
 
         <aside v-if="tocItems.length" class="article-side-column">
           <div class="article-toc">
@@ -115,53 +160,6 @@
         </aside>
       </div>
 
-      <!-- 评论列表 -->
-      <div class="comment-section cinematic-card">
-        <div class="comment-header">
-          <h3>评论 ({{ commentTotal }})</h3>
-        </div>
-        
-        <!-- 评论表单 -->
-        <div class="comment-form">
-          <CommentComposer :loading="isSubmittingComment" :reset-key="commentComposerResetKey" @submit="submitComment" />
-        </div>
-
-        <!-- 评论列表 -->
-        <div class="comment-list">
-          <div v-if="commentList && commentList.length > 0">
-              <CommentThread
-                v-for="comment in commentList"
-                :key="comment.id"
-                :comment="comment"
-                @reply="startReply"
-              >
-                <template #reply-editor="{ comment: target }">
-                  <div v-if="replyingTo?.id === target.id" class="reply-editor reply-editor--inline">
-                    <div class="reply-editor__meta">
-                      <span>回复 @{{ target.nickname || '匿名用户' }}</span>
-                      <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
-                    </div>
-                    <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
-                    <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
-                  </div>
-                </template>
-              </CommentThread>
-          </div>
-          <div v-else class="no-comments">
-            暂无评论，快来发表第一条评论吧！
-          </div>
-        </div>
-
-        <!-- 评论分页 -->
-        <div v-if="commentList && commentList.length > 0" class="comment-pagination">
-          <a-pagination
-            v-model:current="commentPage"
-            :total="commentTotal"
-            :pageSize="commentPageSize"
-            @change="handleCommentPageChange"
-          />
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -1019,12 +1017,13 @@ onBeforeUnmount(() => {
 
 /* 评论区域样式 */
 .comment-section {
-  width: min(100%, var(--reading-width));
-  margin: 40px auto 0;
-  padding: clamp(20px, 4vw, 32px);
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 46px 0 0;
+  padding: 42px 0 0;
+  border-top: 1px solid var(--article-line, #e9e3d8);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .comment-header {
@@ -1144,6 +1143,7 @@ onBeforeUnmount(() => {
       --article-muted: #718096;
       --article-paper: #fffdf8;
       --article-line: #e9e3d8;
+      --article-main-width: 900px;
       width: min(1180px, calc(100% - 32px));
       margin: 0 auto;
       padding: 0 0 72px;
@@ -1167,8 +1167,9 @@ onBeforeUnmount(() => {
     }
 
     .article-header {
-      max-width: 880px;
-      margin: clamp(34px, 6vw, 68px) auto 36px;
+      width: var(--article-main-width);
+      max-width: 100%;
+      margin: clamp(34px, 6vw, 68px) 0 36px;
       padding: clamp(26px, 4vw, 52px);
       border: 1px solid var(--article-line);
       border-radius: 28px;
@@ -1220,15 +1221,23 @@ onBeforeUnmount(() => {
     }
 
     .article-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 780px) 220px;
-      gap: clamp(32px, 4vw, 52px);
-      align-items: start;
-      justify-content: center;
+      position: relative;
+      width: 100%;
     }
 
     .article-layout--without-toc {
-      grid-template-columns: minmax(0, 780px);
+      width: 100%;
+    }
+
+    .article-content-card {
+      width: var(--article-main-width);
+      max-width: 100%;
+      padding: clamp(30px, 4vw, 52px);
+      border: 1px solid var(--article-line);
+      border-radius: 28px;
+      background: var(--article-paper);
+      box-shadow: 0 26px 70px rgb(88 65 37 / 10%);
+      box-sizing: border-box;
     }
 
     .article-main-column { min-width: 0; }
@@ -1266,14 +1275,14 @@ onBeforeUnmount(() => {
       width: 100%;
       margin: 0;
       padding: clamp(28px, 5vw, 62px);
-      border: 1px solid var(--article-line);
-      border-radius: 22px;
-      background: var(--article-paper);
-      box-shadow: 0 20px 52px rgb(88 65 37 / 9%);
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
     .dynamic-attachments {
-      width: min(100%, 780px);
+      width: 100%;
       margin: 22px 0 0;
       padding: 18px;
       border: 1px dashed var(--article-line);
@@ -1348,7 +1357,7 @@ onBeforeUnmount(() => {
 
     .article-adjacent {
       display: grid;
-      width: min(100%, 780px);
+      width: 100%;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
       margin: 28px 0 0;
@@ -1559,7 +1568,9 @@ onBeforeUnmount(() => {
     }
 
     @media (max-width: 900px) {
-      .article-layout { grid-template-columns: minmax(0, 1fr); }
+      .article-layout { width: 100%; }
+      .article-content-card { width: 100%; padding: 22px 18px; }
+      .article-header { width: 100%; }
       .article-side-column { display: none; }
       .mobile-toc-panel {
         display: block;
