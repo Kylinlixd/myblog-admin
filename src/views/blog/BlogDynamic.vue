@@ -496,9 +496,9 @@ onActivated(() => {
 
 .blog-dynamic-hero {
   display: block;
-  max-width: 960px;
-  text-align: center;
-  margin: 0 auto clamp(20px, 2.5vw, 28px);
+  max-width: none;
+  margin: 0 0 clamp(20px, 2.5vw, 28px) calc(210px + clamp(28px, 5vw, 64px));
+  text-align: left;
 }
 
 .blog-dynamic-hero::before {
@@ -963,6 +963,10 @@ onActivated(() => {
   }
 
   .blog-dynamic-hero {
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
     margin-bottom: 22px;
   }
 
