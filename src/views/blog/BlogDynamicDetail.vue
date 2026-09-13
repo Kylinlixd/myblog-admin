@@ -150,8 +150,6 @@
 
         <aside v-if="tocItems.length" class="article-side-column" :style="{ top: `${tocTop}px` }">
           <div class="article-toc">
-            <span class="article-toc__cursor" aria-hidden="true"></span>
-            <div class="article-toc__label">ON THIS PAGE</div>
             <div class="article-toc__title">目录</div>
             <nav aria-label="文章目录">
               <button v-for="item in tocItems" :key="item.id" type="button" :class="[`toc-level-${item.level}`, { 'is-active': activeTocId === item.id }]" :aria-current="activeTocId === item.id ? 'location' : undefined" @click="scrollToHeading(item.id)">{{ item.text }}</button>
@@ -1213,13 +1211,6 @@ onBeforeUnmount(() => {
       animation: article-enter .6s ease both;
     }
 
-    .article-toc__label {
-      color: #a66b28;
-      font: 700 11px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-    }
-
     .article-header .dynamic-title {
       margin: 18px 0 16px;
       color: var(--article-ink);
@@ -1479,30 +1470,15 @@ onBeforeUnmount(() => {
       position: relative;
       max-height: inherit;
       overflow: auto;
-      padding: 18px 0 18px 22px;
+      padding: 0 0 18px 22px;
     }
 
     .article-toc::before {
       position: absolute;
-      inset: 18px auto 18px 0;
+      inset: 0 auto 18px 0;
       width: 1px;
       background: var(--article-line);
       content: '';
-    }
-
-    .article-toc__cursor {
-      position: absolute;
-      z-index: 1;
-      top: 18px;
-      left: -1px;
-      width: 3px;
-      height: 25px;
-      border-radius: 999px;
-      background: #c66b32;
-      box-shadow: 0 0 0 4px rgb(198 107 50 / 12%);
-      opacity: 1;
-      transform: translateY(0);
-      transition: opacity .25s ease, transform .3s ease;
     }
 
     .article-toc__title {
