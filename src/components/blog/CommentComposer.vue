@@ -58,7 +58,7 @@ const handleSubmit = () => {
 
 <style scoped>
 .comment-composer { display: grid; gap: 0; overflow: hidden; border: 1px solid #e5dbcf; border-radius: 18px; background: #fffdf9; }
-.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-bottom: 1px dashed #e5dbcf; }
+.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; overflow: hidden; border-radius: 17px 17px 0 0; border-bottom: 1px dashed #e5dbcf; }
 .comment-composer__field { display: flex; min-width: 0; align-items: center; gap: 10px; color: #5d554e; font-size: 13px; font-weight: 650; }
 .comment-composer__fields > .comment-composer__field { padding: 17px 18px; }
 .comment-composer__fields > .comment-composer__field:not(:last-child) { border-right: 1px solid #e5dbcf; }
