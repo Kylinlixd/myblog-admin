@@ -328,6 +328,10 @@ const syncArticleNavigation = async () => {
   tocItems.value = collectArticleHeadings(articleBodyRef.value)
   activeTocId.value = tocItems.value[0]?.id || ''
   updateTocPosition()
+  // The aside itself is rendered by the same update as the heading list; a
+  // frame later guarantees its measured height and the card's final position
+  // are available for the initial alignment.
+  requestAnimationFrame(updateTocPosition)
   // Keep a single scroll based source of truth for the active heading. The
   // previous IntersectionObserver callback could run with stale heading
   // geometry after the article DOM was hydrated, leaving the first item
