@@ -33,7 +33,7 @@
       </div>
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
-        <div class="article-content-card">
+        <div class="article-content-card cinematic-card">
           <main class="article-main-column">
           <div v-if="topMediaItems.length" class="dynamic-media">
             <template v-for="item in topMediaItems" :key="item.url">
@@ -105,7 +105,7 @@
           </main>
 
           <!-- 正文、标签、相邻文章和评论共用同一张内容卡片。 -->
-          <div class="comment-section cinematic-card">
+          <div class="comment-section">
             <div class="comment-header">
               <h3>评论 ({{ commentTotal }})</h3>
             </div>
