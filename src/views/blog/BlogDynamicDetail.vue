@@ -105,7 +105,7 @@
           </main>
 
           <!-- 评论、标签和上一篇/下一篇与正文保持在同一内容容器内。 -->
-          <section class="comment-section">
+          <section class="comment-section cinematic-card">
             <div class="comment-header">
               <h3>评论 ({{ commentTotal }})</h3>
             </div>
