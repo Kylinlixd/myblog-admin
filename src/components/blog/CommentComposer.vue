@@ -65,9 +65,10 @@ const handleSubmit = () => {
 .comment-composer__field > span { flex: 0 0 auto; }
 .comment-composer input, .comment-composer textarea { width: 100%; min-width: 0; box-sizing: border-box; border: 1px solid #e5dbcf; border-radius: 11px; background: #fffdf9; color: #40382f; font: inherit; font-weight: 450; outline: 0; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
 .comment-composer input { height: 42px; padding: 0 12px; }
-.comment-composer textarea { min-height: 190px; resize: vertical; padding: 18px; line-height: 1.7; }
+.comment-composer textarea { min-height: 190px; resize: vertical; padding: 18px; border: 0; border-radius: 0; background: transparent; line-height: 1.7; }
 .comment-composer input::placeholder, .comment-composer textarea::placeholder { color: #b5aaa0; }
-.comment-composer input:focus, .comment-composer textarea:focus { border-color: #c88954; background: #fff; box-shadow: 0 0 0 3px rgb(200 137 84 / 12%); }
+.comment-composer input:focus { border-color: #c88954; background: #fff; box-shadow: 0 0 0 3px rgb(200 137 84 / 12%); }
+.comment-composer textarea:focus { background: #fff; }
 .comment-composer__field--content { display: block; }
 .comment-composer__error { margin: 0 18px 8px; color: #b14f3f; font-size: 12px; }
 .comment-composer__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px 14px; color: #a1978d; font-size: 11px; }
