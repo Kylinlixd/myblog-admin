@@ -3,7 +3,6 @@
     <div v-if="route.name !== 'BlogHome'" class="blog-atmosphere" aria-hidden="true">
       <span class="blog-atmosphere__orb blog-atmosphere__orb--one" />
       <span class="blog-atmosphere__orb blog-atmosphere__orb--two" />
-      <span class="blog-atmosphere__grid" />
       <span class="blog-atmosphere__noise" />
     </div>
     <header class="site-header" @keydown.esc="mobileOpen = false">

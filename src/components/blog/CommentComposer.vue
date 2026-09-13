@@ -15,8 +15,7 @@
       </label>
     </div>
     <label class="comment-composer__field comment-composer__field--content">
-      <span>评论内容</span>
-      <textarea v-model="form.content" rows="4" maxlength="500" placeholder="留下你的想法" />
+      <textarea v-model="form.content" rows="4" maxlength="500" placeholder="欢迎评论" aria-label="评论内容" />
     </label>
     <p v-if="errorMessage" class="comment-composer__error" role="alert">{{ errorMessage }}</p>
     <div class="comment-composer__footer">
@@ -58,19 +57,21 @@ const handleSubmit = () => {
 </script>
 
 <style scoped>
-.comment-composer { display: grid; gap: 18px; }
-.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.comment-composer__field { display: grid; gap: 7px; color: #5d554e; font-size: 13px; font-weight: 650; }
+.comment-composer { display: grid; gap: 0; overflow: hidden; border: 1px solid #e5dbcf; border-radius: 18px; background: #fffdf9; }
+.comment-composer__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; padding: 17px 18px; border-bottom: 1px dashed #e5dbcf; }
+.comment-composer__field { display: flex; min-width: 0; align-items: center; gap: 10px; color: #5d554e; font-size: 13px; font-weight: 650; }
+.comment-composer__field > span { flex: 0 0 auto; }
 .comment-composer__field em { margin-left: 4px; color: #b09b87; font-size: 11px; font-style: normal; font-weight: 500; }
-.comment-composer input, .comment-composer textarea { width: 100%; box-sizing: border-box; border: 1px solid #e5dbcf; border-radius: 11px; background: #fffdf9; color: #40382f; font: inherit; font-weight: 450; outline: 0; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease; }
-.comment-composer input { height: 42px; padding: 0 12px; }
-.comment-composer textarea { min-height: 112px; resize: vertical; padding: 12px; line-height: 1.7; }
+.comment-composer input, .comment-composer textarea { width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: 0; background: transparent; color: #40382f; font: inherit; font-weight: 450; outline: 0; transition: background .2s ease; }
+.comment-composer input { height: 28px; padding: 0; }
+.comment-composer textarea { min-height: 190px; resize: vertical; padding: 18px; line-height: 1.7; }
 .comment-composer input::placeholder, .comment-composer textarea::placeholder { color: #b5aaa0; }
-.comment-composer input:focus, .comment-composer textarea:focus { border-color: #c88954; background: #fff; box-shadow: 0 0 0 3px rgb(200 137 84 / 12%); }
-.comment-composer__error { margin: -8px 0 0; color: #b14f3f; font-size: 12px; }
-.comment-composer__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #a1978d; font-size: 11px; }
+.comment-composer input:focus, .comment-composer textarea:focus { background: #fff; }
+.comment-composer__field--content { display: block; }
+.comment-composer__error { margin: 0 18px 8px; color: #b14f3f; font-size: 12px; }
+.comment-composer__footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 18px 14px; color: #a1978d; font-size: 11px; }
 .comment-composer__footer button { border: 0; border-radius: 999px; padding: 10px 18px; background: #b96f3d; color: #fffaf3; cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; transition: background .2s ease, transform .2s ease; }
 .comment-composer__footer button:hover:not(:disabled) { background: #a96136; transform: translateY(-1px); }
 .comment-composer__footer button:disabled { cursor: wait; opacity: .65; }
-@media (max-width: 680px) { .comment-composer__fields { grid-template-columns: 1fr; } .comment-composer__footer { align-items: flex-end; flex-direction: column; } }
+@media (max-width: 680px) { .comment-composer__fields { grid-template-columns: 1fr; gap: 8px; } .comment-composer__footer { align-items: flex-end; flex-direction: column; } }
 </style>

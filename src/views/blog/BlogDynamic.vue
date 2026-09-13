@@ -495,40 +495,21 @@ onActivated(() => {
 }
 
 .blog-dynamic-hero {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 18px;
-  row-gap: 8px;
+  display: block;
   max-width: 960px;
+  text-align: center;
   margin: 0 auto clamp(20px, 2.5vw, 28px);
 }
 
 .blog-dynamic-hero::before {
-  width: 24px;
-  height: 24px;
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  align-self: center;
-  margin: 0;
-  border: 1px solid rgb(200 111 55 / 38%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle, var(--blog-accent) 0 3px, transparent 3.5px),
-    radial-gradient(circle, transparent 0 8px, rgb(200 111 55 / 12%) 8.5px 9px, transparent 9.5px);
-  box-shadow: 0 0 0 5px rgb(200 111 55 / 6%);
+  display: none;
 }
 
 .blog-dynamic-hero .page-title {
-  grid-column: 2;
-  grid-row: 1;
   margin: 0;
 }
 
 .blog-dynamic-hero .page-description {
-  grid-column: 2;
-  grid-row: 2;
   margin: 0;
   max-width: none;
 }
@@ -982,15 +963,11 @@ onActivated(() => {
   }
 
   .blog-dynamic-hero {
-    grid-template-columns: 30px minmax(0, 1fr);
-    column-gap: 12px;
-    row-gap: 6px;
     margin-bottom: 22px;
   }
 
   .blog-dynamic-hero::before {
-    width: 22px;
-    height: 22px;
+    display: none;
   }
 
   .page-title {

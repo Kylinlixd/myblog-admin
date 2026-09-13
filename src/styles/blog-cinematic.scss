@@ -63,16 +63,6 @@
   animation-duration: 22s;
 }
 
-.blog-atmosphere__grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgb(117 88 58 / 6%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(117 88 58 / 6%) 1px, transparent 1px);
-  background-size: 72px 72px;
-  mask-image: linear-gradient(to bottom, black, transparent 82%);
-}
-
 .blog-atmosphere__noise {
   position: absolute;
   inset: 0;
@@ -272,7 +262,6 @@
 }
 
 @media (max-width: 760px) {
-  .blog-atmosphere__grid { background-size: 48px 48px; opacity: .7; }
   .blog-atmosphere__orb { width: 86vw; filter: blur(90px); opacity: .14; }
   .cinematic-page { padding-block: 68px; }
   .cinematic-hero { margin-bottom: 36px; }
