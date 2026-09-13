@@ -342,6 +342,7 @@ const syncArticleNavigation = async () => {
 // again after that Vue update so controls are attached to the final v-html DOM.
 onUpdated(() => {
   bindCodeBlockInteractions(articleBodyRef.value)
+  if (tocItems.value.length) requestAnimationFrame(updateTocPosition)
 })
 
 const hydrateLazyMedia = async () => {
