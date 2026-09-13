@@ -540,6 +540,9 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     if (requestSequence !== detailRequestSequence) return
     loading.value = false
     appStore.endLoading()
+    // The article DOM is created only after the loading branch is removed.
+    // Sync headings on the next tick so the desktop/mobile TOC is populated.
+    void syncArticleNavigation()
   }
 }
 

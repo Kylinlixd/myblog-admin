@@ -34,6 +34,10 @@ test('文章详情不展示文章类型字段', () => {
   expect(listSource).not.toContain('class="dynamic-type"')
 })
 
+test('加载分支结束后重新同步正文目录', () => {
+  expect(source).toMatch(/loading\.value = false[\s\S]*syncArticleNavigation\(\)/)
+})
+
 test('文章详情包含目录与移动端折叠入口', () => {
   expect(source).toContain('article-toc')
   expect(source).toContain('article-toc__cursor')
