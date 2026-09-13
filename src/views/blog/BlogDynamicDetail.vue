@@ -297,7 +297,7 @@ const articleBodyRef = ref(null)
 const tocItems = ref([])
 const tocOpen = ref(false)
 const activeTocId = ref('')
-const tocTop = ref(148)
+const tocTop = ref(96)
 const readingProgress = ref(0)
 const readingMinutes = ref(1)
 let stopHeadingObserver = () => {}
@@ -375,7 +375,7 @@ const updateTocPosition = () => {
   if (!card || !side) return
   const cardTop = card.getBoundingClientRect().top
   const sideHeight = side.getBoundingClientRect().height || 0
-  const minTop = 148
+  const minTop = 96
   const maxTop = Math.max(minTop, window.innerHeight - sideHeight - 24)
   tocTop.value = Math.round(Math.min(maxTop, Math.max(minTop, cardTop)))
 }
@@ -1462,10 +1462,10 @@ onBeforeUnmount(() => {
     .article-side-column {
       position: fixed;
       z-index: 12;
-      top: 148px;
+      top: 96px;
       right: max(16px, calc((100vw - 1180px) / 2));
       width: 220px;
-      max-height: calc(100vh - 172px);
+      max-height: calc(100vh - 120px);
     }
 
     @media (max-width: 1280px) {
