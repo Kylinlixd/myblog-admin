@@ -60,12 +60,13 @@ describe('admin editor layout', () => {
   it('separates the file search bar from the result grid', () => {
     const source = readEditor()
 
-    // 选择器弹窗被 teleport 到 body，样式必须走 :global 才会生效
-    expect(source).toContain(':global(.file-selector) {')
-    expect(source).toMatch(/:global\(\.file-selector\)\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?padding-bottom: 18px/)
-    expect(source).toMatch(/:global\(\.file-selector\)\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?border-bottom: 1px solid #eef1f5/)
-    expect(source).toMatch(/:global\(\.file-selector\)\s*\{[\s\S]*?\.file-list\s*\{[\s\S]*?margin: 20px 0 0/)
+    // 选择器弹窗被 teleport 到 body，样式块必须放在 .dynamic-edit 之外
+    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?padding-bottom: 18px/)
+    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?border-bottom: 1px solid #eef1f5/)
+    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-list\s*\{[\s\S]*?margin: 20px 0 0/)
     expect(source).not.toMatch(/\.dynamic-edit \{[\s\S]*?\n  \.file-selector \{/)
+    // :global(容器) { 子选择器 } 的嵌套写法会被构建管线压平成同一个选择器，禁止再出现
+    expect(source).not.toContain(':global(.file-selector) {')
   })
 
   it('offers page navigation and explains both file picker actions', () => {

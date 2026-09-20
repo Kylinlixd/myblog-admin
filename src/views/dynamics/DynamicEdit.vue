@@ -1123,9 +1123,11 @@ onBeforeUnmount(() => {
   }
 }
 
-// 文件选择器挂在 a-modal 的 teleport 容器里，作用域样式够不到它，
-// 所以这里用 :global(.file-selector) 只放开容器本身，子选择器仍然带组件作用域。
-:global(.file-selector) {
+// 文件选择器挂在 a-modal 的 teleport 容器里，样式块必须放在 .dynamic-edit 之外：
+// 元素仍带组件作用域标记，但祖先不再是 .dynamic-edit。
+// 注意：不要写成「:global 包住 .file-selector 再嵌套子选择器」的形式，
+// 当前构建管线会把每一层子选择器都压成 .file-selector，导致整个弹窗样式错乱。
+.file-selector {
   .file-selector-header {
     display: flex;
     flex-wrap: wrap;
@@ -1372,31 +1374,36 @@ onBeforeUnmount(() => {
   }
 }
 
-:global([data-theme='dark']) {
-  .edit-form {
-    background: #1f1f1f;
-
-    .editor-tiles,
-    .editor-form-actions {
-      border-color: #303030;
-    }
-
-    .editor-tile {
-      border-color: #303030;
-      background: #262626;
-    }
-
-    .editor-tile :deep(.ant-form-item-label > label) {
-      color: #c7ced9;
-    }
-  }
+:global([data-theme='dark'] .dynamic-edit .edit-form) {
+  background: #1f1f1f;
 }
 
-:global([data-theme='dark'] .file-selector) {
-  .file-selector-header,
-  .file-pagination,
-  .file-selector-footer {
-    border-color: #303030;
-  }
+:global([data-theme='dark'] .dynamic-edit .editor-tiles) {
+  border-color: #303030;
+}
+
+:global([data-theme='dark'] .dynamic-edit .editor-form-actions) {
+  border-color: #303030;
+}
+
+:global([data-theme='dark'] .dynamic-edit .editor-tile) {
+  border-color: #303030;
+  background: #262626;
+}
+
+:global([data-theme='dark'] .dynamic-edit .editor-tile .ant-form-item-label > label) {
+  color: #c7ced9;
+}
+
+:global([data-theme='dark'] .file-selector .file-selector-header) {
+  border-color: #303030;
+}
+
+:global([data-theme='dark'] .file-selector .file-pagination) {
+  border-color: #303030;
+}
+
+:global([data-theme='dark'] .file-selector .file-selector-footer) {
+  border-color: #303030;
 }
 </style>
