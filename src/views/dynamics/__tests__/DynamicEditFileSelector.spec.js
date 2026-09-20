@@ -88,6 +88,7 @@ describe('DynamicEdit file selector responses', () => {
         'a-select': true,
         'a-select-option': true,
         'a-spin': true,
+        'a-pagination': true,
         'a-upload': true
       },
       config: {
@@ -115,6 +116,7 @@ describe('DynamicEdit file selector responses', () => {
           'a-select': true,
           'a-select-option': true,
           'a-spin': true,
+          'a-pagination': true,
           'a-upload': true
         },
         config: {
@@ -163,6 +165,7 @@ describe('DynamicEdit file selector responses', () => {
           'a-select': true,
           'a-select-option': true,
           'a-spin': true,
+          'a-pagination': true,
           'a-upload': true
         },
         config: {
@@ -299,6 +302,68 @@ describe('DynamicEdit file selector responses', () => {
 
     expect(wrapper.vm.form.content).toBe('原有正文')
     expect(mockMarkdownInsert).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('skips the insertion when the body already references the file', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    wrapper.vm.markdownEditorRef = { insertContent: mockMarkdownInsert, focus: mockMarkdownFocus }
+    wrapper.vm.form.content = '已有 ![cover.png](/media/cover.png)'
+    wrapper.vm.fileSelectorVisible = true
+    wrapper.vm.selectedFiles = [{ id: 7, name: 'cover.png', type: 'image', url: '/media/cover.png' }]
+
+    wrapper.vm.handleFileInsert()
+    await flushPromises()
+
+    expect(mockMarkdownInsert).not.toHaveBeenCalled()
+    // 附件关联照常补上，正文不会出现重复引用
+    expect(wrapper.vm.form.fileIds).toEqual([7])
+    expect(wrapper.vm.form.mediaUrls).toEqual(['/media/cover.png'])
+    expect(wrapper.vm.fileSelectorVisible).toBe(false)
+    expect(wrapper.vm.selectedFiles).toEqual([])
+    wrapper.unmount()
+  })
+
+  it('drops the pending selection when the picker is cancelled', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+
+    await wrapper.vm.showFileSelector()
+    await flushPromises()
+    wrapper.vm.handleFileSelect(wrapper.vm.fileListData[0])
+    expect(wrapper.vm.selectedFiles).toHaveLength(1)
+
+    wrapper.vm.closeFileSelector()
+
+    expect(wrapper.vm.selectedFiles).toEqual([])
+    expect(wrapper.vm.fileSelectorVisible).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('requests the selected page and resets it for search and type filters', async () => {
+    const wrapper = mountEditor()
+    await flushPromises()
+    wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
+    getFileList.mockResolvedValue({ count: 30, results: normalizedFiles.results })
+
+    await wrapper.vm.showFileSelector()
+    await flushPromises()
+    expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1 }))
+
+    wrapper.vm.handleFilePageChange(2)
+    await flushPromises()
+    expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }))
+
+    await wrapper.vm.handleFileSearch('cover')
+    expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, keyword: 'cover' }))
+
+    wrapper.vm.handleFilePageChange(3)
+    await flushPromises()
+    await wrapper.vm.handleFileTypeChange('image')
+    expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, type: 'image' }))
     wrapper.unmount()
   })
 })

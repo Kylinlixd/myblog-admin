@@ -58,6 +58,7 @@ const globalStubs = {
   'a-select': { props: ['options', 'loading', 'value'], template: '<div><slot /></div>' },
   'a-select-option': { template: '<option><slot /></option>' },
   'a-spin': { template: '<div><slot /></div>' },
+  'a-pagination': true,
   'a-upload': { template: '<div><slot /></div>' },
   'router-link': { template: '<a><slot /></a>' }
 }

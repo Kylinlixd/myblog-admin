@@ -92,6 +92,7 @@ const globalStubs = {
   'a-select': true,
   'a-select-option': true,
   'a-spin': true,
+  'a-pagination': true,
   'a-upload': true
 }
 

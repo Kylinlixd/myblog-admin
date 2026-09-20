@@ -19,71 +19,80 @@
       ref="formRef"
       :model="form"
       :rules="rules"
-      :label-col="{ span: 3 }"
-      :wrapper-col="{ span: 18 }"
+      layout="vertical"
       class="edit-form"
     >
-      <!-- 标题输入框 -->
-      <a-form-item class="editor-title-field" label="标题" name="title" :rules="rules.title">
-        <a-input
-          v-model:value="form.title"
-          placeholder="请输入动态标题"
-          :maxLength="100"
-          show-count
-        />
-      </a-form-item>
+      <!-- 编辑模块平铺在内容编辑器上方：先确认元信息与附件，再专注写正文 -->
+      <section class="editor-tiles" aria-label="动态设置">
+        <!-- 标题输入框 -->
+        <a-form-item class="editor-title-field editor-tile" label="标题" name="title" :rules="rules.title">
+          <a-input
+            v-model:value="form.title"
+            placeholder="请输入动态标题"
+            :maxLength="100"
+            show-count
+          />
+        </a-form-item>
 
-      <a-form-item class="editor-settings-field" label="分类" name="categoryId">
-        <div class="taxonomy-control">
-          <a-select v-model:value="form.categoryId" placeholder="请选择分类" :loading="categoriesLoading" :options="categoryOptions" />
-          <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('category')">+ 新建</a-button>
-        </div>
-      </a-form-item>
+        <a-form-item class="editor-settings-field editor-tile" label="分类" name="categoryId">
+          <div class="taxonomy-control">
+            <a-select v-model:value="form.categoryId" placeholder="请选择分类" :loading="categoriesLoading" :options="categoryOptions" />
+            <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('category')">+ 新建</a-button>
+          </div>
+        </a-form-item>
 
-      <a-form-item class="editor-settings-field" label="标签" name="tags">
-        <div class="taxonomy-control">
-          <a-select v-model:value="form.tags" mode="multiple" placeholder="请选择标签" :loading="tagsLoading" :options="tagOptions" />
-          <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('tag')">+ 新建</a-button>
-        </div>
-      </a-form-item>
+        <a-form-item class="editor-settings-field editor-tile" label="标签" name="tags">
+          <div class="taxonomy-control">
+            <a-select v-model:value="form.tags" mode="multiple" placeholder="请选择标签" :loading="tagsLoading" :options="tagOptions" />
+            <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('tag')">+ 新建</a-button>
+          </div>
+        </a-form-item>
 
-      <a-form-item class="editor-settings-field media-upload-field" label="附件" name="mediaUrls">
-        <div class="media-upload-container">
-          <a-upload
-            :file-list="fileList"
-            :open-file-dialog-on-click="true"
-            :before-upload="beforeMediaUpload"
-            :custom-request="handleCustomUpload"
-            @remove="handleMediaRemove"
-            :preview="handlePreviewMedia"
-            multiple
-          >
-            <a-button type="primary">
-              <template #icon><upload-outlined /></template>
-              添加附件
+        <a-form-item class="editor-settings-field editor-tile" label="状态" name="status">
+          <a-radio-group v-model:value="form.status">
+            <a-radio value="draft">草稿</a-radio>
+            <a-radio value="published">发布</a-radio>
+          </a-radio-group>
+        </a-form-item>
+
+        <a-form-item class="editor-settings-field media-upload-field editor-tile editor-tile--wide" label="附件" name="mediaUrls">
+          <div class="media-upload-container">
+            <a-upload
+              :file-list="fileList"
+              :open-file-dialog-on-click="true"
+              :before-upload="beforeMediaUpload"
+              :custom-request="handleCustomUpload"
+              @remove="handleMediaRemove"
+              :preview="handlePreviewMedia"
+              multiple
+            >
+              <a-button type="primary">
+                <template #icon><upload-outlined /></template>
+                添加附件
+              </a-button>
+            </a-upload>
+            <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
+              <template #icon><folder-outlined /></template>
+              从文件库选择
             </a-button>
-          </a-upload>
-          <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
-            <template #icon><folder-outlined /></template>
-            从文件库选择
-          </a-button>
-        </div>
-        <div class="upload-tip">可混合添加图片、音频、视频、文档和其他文件，单个文件不超过 1GB</div>
-        <div class="media-upload-status" :class="`is-${uploadState.stage}`">
-          <strong>视频会自动生成网页可播放版本和封面</strong>
-          <span v-if="uploadState.stage === 'uploading'">正在上传 {{ uploadState.progress }}%</span>
-          <span v-else-if="uploadState.stage === 'processing'">正在优化视频，完成后会自动生成封面</span>
-          <span v-else-if="uploadState.stage === 'success'">{{ uploadState.message }}</span>
-          <span v-else-if="uploadState.stage === 'error'">{{ uploadState.message }}</span>
-          <span v-else>附件类型由文件自动识别，无需手动选择</span>
-        </div>
-      </a-form-item>
+          </div>
+          <div class="upload-tip">可混合添加图片、音频、视频、文档和其他文件，单个文件不超过 1GB</div>
+          <div class="media-upload-status" :class="`is-${uploadState.stage}`">
+            <strong>视频会自动生成网页可播放版本和封面</strong>
+            <span v-if="uploadState.stage === 'uploading'">正在上传 {{ uploadState.progress }}%</span>
+            <span v-else-if="uploadState.stage === 'processing'">正在优化视频，完成后会自动生成封面</span>
+            <span v-else-if="uploadState.stage === 'success'">{{ uploadState.message }}</span>
+            <span v-else-if="uploadState.stage === 'error'">{{ uploadState.message }}</span>
+            <span v-else>附件类型由文件自动识别，无需手动选择</span>
+          </div>
+        </a-form-item>
+      </section>
 
       <a-form-item class="editor-content-field" label="内容" name="content">
         <markdown-editor
           ref="markdownEditorRef"
           v-model="form.content"
-          :height="'400px'"
+          :height="'560px'"
           :theme="'light'"
           :preview-theme="'default'"
           :code-theme="'atom-one-light'"
@@ -92,13 +101,6 @@
         />
       </a-form-item>
 
-      <a-form-item class="editor-settings-field" label="状态" name="status">
-        <a-radio-group v-model:value="form.status">
-          <a-radio value="draft">草稿</a-radio>
-          <a-radio value="published">发布</a-radio>
-        </a-radio-group>
-      </a-form-item>
-      
       <a-form-item class="editor-form-actions" :wrapper-col="{ span: 24 }">
         <a-button type="primary" @click="handleSave" :loading="saving" :disabled="saving">保存</a-button>
         <a-button style="margin-left: 10px" @click="handleCancel">取消</a-button>
@@ -120,8 +122,9 @@
     <a-modal
       v-model:open="fileSelectorVisible"
       title="选择文件"
-      width="800px"
+      width="860px"
       :footer="null"
+      @cancel="closeFileSelector"
     >
       <div class="file-selector">
         <div class="file-selector-header">
@@ -199,14 +202,43 @@
           </a-spin>
         </div>
         
+        <div v-if="fileTotal > filePageSize" class="file-pagination">
+          <a-pagination
+            :current="fileCurrentPage"
+            :page-size="filePageSize"
+            :total="fileTotal"
+            :show-size-changer="false"
+            size="small"
+            @change="handleFilePageChange"
+          />
+        </div>
+
         <div class="file-selector-footer">
-          <div class="selected-info" v-if="selectedFiles.length > 0">
-            已选择 {{ selectedFiles.length }} 个文件
+          <div class="selected-summary">
+            <div class="selected-info" v-if="selectedFiles.length > 0">
+              已选择 {{ selectedFiles.length }} 个文件：{{ selectedFiles.map(file => file.name).join('、') }}
+            </div>
+            <p class="file-selector-hint">
+              仅关联媒体：把文件挂成动态附件，正文一个字都不改；插入正文：在附件之外，再把媒体引用写到光标处。
+            </p>
           </div>
           <div class="file-selector-actions">
-            <a-button @click="fileSelectorVisible = false">取消</a-button>
-            <a-button :disabled="selectedFiles.length === 0" @click="handleFileConfirm">仅关联媒体</a-button>
-            <a-button type="primary" :disabled="selectedFiles.length === 0" @click="handleFileInsert">插入正文</a-button>
+            <a-button @click="closeFileSelector">取消</a-button>
+            <a-button
+              title="只把所选文件挂成动态附件，不改动正文"
+              :disabled="selectedFiles.length === 0"
+              @click="handleFileConfirm"
+            >
+              仅关联媒体
+            </a-button>
+            <a-button
+              type="primary"
+              title="挂成动态附件，并把媒体引用插入正文光标处"
+              :disabled="selectedFiles.length === 0"
+              @click="handleFileInsert"
+            >
+              插入正文
+            </a-button>
           </div>
         </div>
       </div>
@@ -242,6 +274,7 @@ import { getFileList } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { buildApiUrl, stripApiBaseUrl } from '@/utils/apiBaseUrl'
 import { clearEditorDraft, loadEditorDraft, saveEditorDraft } from './editorDraft'
+import { buildMediaReferences, filterUnreferencedFiles } from './mediaReference'
 
 const route = useRoute()
 const router = useRouter()
@@ -743,12 +776,20 @@ const beforeMediaUpload = (file) => {
 // 显示文件选择器
 const showFileSelector = () => {
   fileSelectorVisible.value = true
-  fetchFileList()
+  loadFileLibrary()
 }
 
-// 获取文件列表
-const fetchFileList = async () => {
+// 关闭文件选择器并丢弃未确认的勾选，避免下次打开还留着上次的选择
+const closeFileSelector = () => {
+  fileSelectorVisible.value = false
+  selectedFiles.value = []
+}
+
+// 唯一的文件库加载入口：打开、搜索、切类型、翻页都复用它
+const loadFileLibrary = async ({ resetPage = false } = {}) => {
+  if (resetPage) fileCurrentPage.value = 1
   fileListLoading.value = true
+
   try {
     const params = {
       page: fileCurrentPage.value,
@@ -756,7 +797,7 @@ const fetchFileList = async () => {
       keyword: fileSearchKeyword.value,
       type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
     }
-    
+
     applyFileListResponse(await getFileList(params))
   } catch (error) {
     console.error('获取文件列表失败:', error)
@@ -771,57 +812,19 @@ const fetchFileList = async () => {
 // 处理文件搜索
 const handleFileSearch = async (value) => {
   fileSearchKeyword.value = value
-  fileCurrentPage.value = 1
-  fileListLoading.value = true
-  
-  try {
-    const params = {
-      page: fileCurrentPage.value,
-      pageSize: filePageSize.value,
-      keyword: value,
-      type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
-    }
-    
-    applyFileListResponse(await getFileList(params))
-  } catch (error) {
-    console.error('搜索文件失败:', error)
-    message.error('搜索文件失败')
-    fileListData.value = []
-    fileTotal.value = 0
-  } finally {
-    fileListLoading.value = false
-  }
+  await loadFileLibrary({ resetPage: true })
 }
 
 // 处理文件类型筛选
 const handleFileTypeChange = async (value) => {
   fileTypeFilter.value = value
-  fileCurrentPage.value = 1
-  fileListLoading.value = true
-  
-  try {
-    const params = {
-      page: fileCurrentPage.value,
-      pageSize: filePageSize.value,
-      keyword: fileSearchKeyword.value,
-      type: value === 'all' ? undefined : value
-    }
-    
-    applyFileListResponse(await getFileList(params))
-  } catch (error) {
-    console.error('获取文件列表失败:', error)
-    message.error('获取文件列表失败')
-    fileListData.value = []
-    fileTotal.value = 0
-  } finally {
-    fileListLoading.value = false
-  }
+  await loadFileLibrary({ resetPage: true })
 }
 
 // 处理分页变化
 const handleFilePageChange = (page) => {
   fileCurrentPage.value = page
-  fetchFileList()
+  loadFileLibrary()
 }
 
 // 检查文件是否被选中
@@ -834,7 +837,7 @@ const handleFileSelect = (file) => {
   const index = selectedFiles.value.findIndex(f => f.id === file.id)
   if (index === -1) {
     selectedFiles.value.push(file)
-    message.success('已选择附件')
+    message.success(`已选择 ${selectedFiles.value.length} 个附件`)
   } else {
     selectedFiles.value.splice(index, 1)
     message.info('已取消选择')
@@ -878,47 +881,55 @@ const applySelectedFiles = () => {
 }
 
 // 处理文件确认，仅关联媒体，不修改正文。
-const handleFileConfirm = () => {
+const handleFileConfirm = async () => {
+  if (!validateSelectedFiles()) return
+
+  const picked = selectedFiles.value.length
   if (!applySelectedFiles()) return
 
-  fileSelectorVisible.value = false
-  selectedFiles.value = []
+  closeFileSelector()
 
   // 触发表单验证
   formRef.value?.validateFields(['mediaUrls'])
-  fetchFileList()
-}
-
-// 根据媒体类型生成可直接渲染的 Markdown/HTML 引用。
-const buildMarkdownMediaReference = (file) => {
-  if (file.type === 'image') return `![${file.name}](${file.url})`
-  if (file.type === 'audio') return `<audio controls src="${file.url}"></audio>`
-  if (file.type === 'video') return `<video controls src="${file.url}"></video>`
-  return `[${file.name}](${file.url})`
+  await loadFileLibrary()
+  message.success(`已关联 ${picked} 个附件，正文未改动`)
 }
 
 // 将选中文件插入当前光标位置，同时保留媒体关联。
-const handleFileInsert = () => {
+const handleFileInsert = async () => {
   if (!validateSelectedFiles()) return
   if (!markdownEditorRef.value?.insertContent) {
     message.error('编辑器暂不可用，请刷新页面后重试')
     return
   }
 
-  const references = selectedFiles.value.map(buildMarkdownMediaReference).join('\n\n')
+  // 正文里已经有该地址的文件不再重复插入，只补上附件关联
+  const pending = filterUnreferencedFiles(form.value.content, selectedFiles.value)
+  const skipped = selectedFiles.value.length - pending.length
+
   if (!applySelectedFiles()) return
 
-  const inserted = markdownEditorRef.value.insertContent(references)
-  if (inserted === false) {
-    message.error('插入正文失败，请重试')
-    return
+  if (pending.length) {
+    const references = buildMediaReferences(pending).join('\n\n')
+    const inserted = markdownEditorRef.value.insertContent(references)
+    if (inserted === false) {
+      message.error('插入正文失败，请重试')
+      return
+    }
   }
 
-  fileSelectorVisible.value = false
-  selectedFiles.value = []
+  closeFileSelector()
   formRef.value?.validateFields(['mediaUrls'])
-  fetchFileList()
+  await loadFileLibrary()
   nextTick(() => markdownEditorRef.value?.focus?.())
+
+  if (!pending.length) {
+    message.info('所选文件都已在正文中，仅更新了附件关联')
+  } else if (skipped) {
+    message.success(`已插入 ${pending.length} 条引用，${skipped} 个文件已在正文中，只更新附件关联`)
+  } else {
+    message.success(`已插入 ${pending.length} 条媒体引用并关联附件`)
+  }
 }
 
 // 格式化文件大小
@@ -996,32 +1007,52 @@ onBeforeUnmount(() => {
   }
   
   .edit-form {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: start;
-    gap: 0 28px;
+    display: block;
     background: #fff;
     padding: 24px;
     border: 1px solid #e8edf4;
     border-radius: 16px;
     box-shadow: 0 16px 50px rgba(15, 35, 65, 0.06);
 
-    :deep(.editor-title-field),
-    :deep(.editor-content-field) {
-      grid-column: 1;
+    // 分类 / 标签 / 状态 / 附件平铺在正文编辑器上方，编辑区独占整宽
+    .editor-tiles {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #eef1f5;
     }
 
-    :deep(.editor-settings-field) {
-      grid-column: 2;
+    .editor-tile {
+      grid-column: span 4;
+      margin-bottom: 0;
+      padding: 12px 14px;
+      border: 1px solid #e8edf4;
+      border-radius: 12px;
+      background: #fbfcff;
+
+      :deep(.ant-form-item-label) {
+        padding-bottom: 6px;
+      }
+
+      :deep(.ant-form-item-label > label) {
+        color: #5b6b85;
+        font-size: 12px;
+        font-weight: 700;
+      }
     }
 
-    :deep(.editor-content-field) {
-      grid-row: 2 / span 8;
+    .editor-title-field,
+    .editor-tile--wide {
+      grid-column: 1 / -1;
+    }
+
+    .editor-content-field {
       min-width: 0;
     }
 
-    :deep(.editor-form-actions) {
-      grid-column: 1 / -1;
+    .editor-form-actions {
       margin: 8px 0 0;
       padding-top: 20px;
       border-top: 1px solid #eef1f5;
@@ -1090,125 +1121,158 @@ onBeforeUnmount(() => {
     display: flex;
     align-items: flex-start;
   }
-  
-  .file-selector {
-    .file-selector-header {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-      margin-bottom: 16px;
+}
 
-      .file-search {
-        width: min(100%, 280px);
-        max-width: 280px;
-      }
+// 文件选择器挂在 a-modal 的 teleport 容器里，作用域样式够不到它，
+// 所以这里用 :global(.file-selector) 只放开容器本身，子选择器仍然带组件作用域。
+:global(.file-selector) {
+  .file-selector-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    // 搜索条件与结果网格之间留出分隔和留白
+    padding-bottom: 18px;
+    border-bottom: 1px solid #eef1f5;
 
-      .file-type-filter {
-        width: 140px;
-      }
+    .file-search {
+      width: min(100%, 280px);
+      max-width: 280px;
     }
-    
-    .file-list {
-      min-height: 400px;
-      max-height: 600px;
-      overflow-y: auto;
-      margin-bottom: 16px;
-      
-      .file-item {
+
+    .file-type-filter {
+      width: 140px;
+    }
+  }
+
+  .file-list {
+    min-height: 400px;
+    max-height: 560px;
+    overflow-y: auto;
+    margin: 20px 0 0;
+    padding: 2px 4px 6px;
+
+    .file-item {
+      position: relative;
+      border: 1px solid #d9d9d9;
+      border-radius: 4px;
+      padding: 8px;
+      cursor: pointer;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+
+      &:hover {
+        border-color: #1890ff;
+        box-shadow: 0 0 8px rgba(24, 144, 255, 0.2);
+      }
+
+      &.file-item-selected {
+        border-color: #1890ff;
+        background-color: #e6f7ff;
+        box-shadow: 0 0 8px rgba(24, 144, 255, 0.3);
+      }
+
+      .file-preview {
         position: relative;
-        border: 1px solid #d9d9d9;
+        width: 100%;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #fafafa;
+        margin-bottom: 8px;
         border-radius: 4px;
-        padding: 8px;
-        cursor: pointer;
-        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
-        
-        &:hover {
-          border-color: #1890ff;
-          box-shadow: 0 0 8px rgba(24, 144, 255, 0.2);
-        }
-        
-        &.file-item-selected {
-          border-color: #1890ff;
-          background-color: #e6f7ff;
-          box-shadow: 0 0 8px rgba(24, 144, 255, 0.3);
-        }
-        
-        .file-preview {
-          position: relative;
+        overflow: hidden;
+
+        .file-preview-content {
           width: 100%;
-          height: 120px;
+          height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #fafafa;
-          margin-bottom: 8px;
-          border-radius: 4px;
-          overflow: hidden;
-          
-          .file-preview-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            
-            img, video, audio {
-              max-width: 100%;
-              max-height: 100%;
-              object-fit: contain;
-            }
-          }
-          
-          .file-selected-icon {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 24px;
-            height: 24px;
-            background-color: #1890ff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+          img, video, audio {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
           }
         }
-        
-        .file-info {
-          .file-name {
-            font-size: 12px;
-            color: #333;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          
-          .file-size {
-            font-size: 12px;
-            color: #999;
-          }
+
+        .file-selected-icon {
+          position: absolute;
+          top: 8px;
+          right: 8px;
+          width: 24px;
+          height: 24px;
+          background-color: #1890ff;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 14px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      .file-info {
+        .file-name {
+          font-size: 12px;
+          color: #333;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .file-size {
+          font-size: 12px;
+          color: #999;
         }
       }
     }
-    
-    .file-selector-footer {
+  }
+
+  .file-pagination {
+    display: flex;
+    justify-content: center;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #eef1f5;
+  }
+
+  .file-selector-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid #eef1f5;
+
+    .selected-summary {
+      min-width: 0;
+      flex: 1 1 260px;
+    }
+
+    .selected-info {
+      color: #1890ff;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .file-selector-hint {
+      margin: 4px 0 0;
+      color: #8a94a6;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .file-selector-actions {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 16px;
-      
-      .selected-info {
-        color: #1890ff;
-        font-size: 14px;
-      }
-      
-      .file-selector-actions {
-        display: flex;
-        gap: 8px;
-      }
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      gap: 8px;
     }
   }
 }
@@ -1226,15 +1290,20 @@ onBeforeUnmount(() => {
     }
 
     .edit-form {
-      grid-template-columns: minmax(0, 1fr);
       padding: 18px;
 
-      :deep(.editor-title-field),
-      :deep(.editor-content-field),
-      :deep(.editor-settings-field),
-      :deep(.editor-form-actions) {
-        grid-column: 1;
-        grid-row: auto;
+      .editor-tiles {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .editor-tile {
+        grid-column: span 3;
+      }
+
+      .editor-title-field,
+      .editor-tile--wide {
+        grid-column: 1 / -1;
       }
     }
   }
@@ -1266,6 +1335,17 @@ onBeforeUnmount(() => {
       display: flex;
       flex-direction: column;
 
+      .editor-tiles {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+      }
+
+      .editor-tile,
+      .editor-title-field,
+      .editor-tile--wide {
+        grid-column: 1 / -1;
+      }
+
       :deep(.editor-title-field),
       :deep(.editor-content-field),
       :deep(.editor-settings-field),
@@ -1295,6 +1375,28 @@ onBeforeUnmount(() => {
 :global([data-theme='dark']) {
   .edit-form {
     background: #1f1f1f;
+
+    .editor-tiles,
+    .editor-form-actions {
+      border-color: #303030;
+    }
+
+    .editor-tile {
+      border-color: #303030;
+      background: #262626;
+    }
+
+    .editor-tile :deep(.ant-form-item-label > label) {
+      color: #c7ced9;
+    }
+  }
+}
+
+:global([data-theme='dark'] .file-selector) {
+  .file-selector-header,
+  .file-pagination,
+  .file-selector-footer {
+    border-color: #303030;
   }
 }
 </style>
