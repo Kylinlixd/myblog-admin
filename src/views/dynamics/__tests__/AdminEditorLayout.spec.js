@@ -61,12 +61,26 @@ describe('admin editor layout', () => {
     const source = readEditor()
 
     // 选择器弹窗被 teleport 到 body，样式块必须放在 .dynamic-edit 之外
-    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?padding-bottom: 18px/)
-    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?border-bottom: 1px solid #eef1f5/)
-    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-list\s*\{[\s\S]*?margin: 20px 0 0/)
+    expect(source).toMatch(/\n\.file-selector\s*\{[\s\S]*?\.file-selector-header\s*\{[\s\S]*?margin-bottom: 20px/)
     expect(source).not.toMatch(/\.dynamic-edit \{[\s\S]*?\n  \.file-selector \{/)
     // :global(容器) { 子选择器 } 的嵌套写法会被构建管线压平成同一个选择器，禁止再出现
     expect(source).not.toContain(':global(.file-selector) {')
+  })
+
+  it('keeps the picker thumbnail and file info presentation untouched', () => {
+    const source = readEditor()
+    const pickerStyles = source
+      .slice(source.indexOf('\n.file-selector {'), source.indexOf('@media (max-width: 1080px)'))
+      .replace(/\/\/[^\n]*/g, '')
+
+    // 缩略图与文件信息沿用组件默认观感：不要再给卡片 / 列表 / 预览 / 文件名 / 文件大小加样式
+    expect(pickerStyles).not.toContain('.file-item')
+    expect(pickerStyles).not.toContain('.file-preview')
+    expect(pickerStyles).not.toContain('.file-list')
+    expect(pickerStyles).not.toContain('.file-name')
+    expect(pickerStyles).not.toContain('.file-size')
+    expect(source).not.toContain('height: 120px')
+    expect(source).not.toContain('max-height: 560px')
   })
 
   it('offers page navigation and explains both file picker actions', () => {

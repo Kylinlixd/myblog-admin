@@ -1124,19 +1124,16 @@ onBeforeUnmount(() => {
 }
 
 // 文件选择器挂在 a-modal 的 teleport 容器里，样式块必须放在 .dynamic-edit 之外：
-// 元素仍带组件作用域标记，但祖先不再是 .dynamic-edit。
-// 注意：不要写成「:global 包住 .file-selector 再嵌套子选择器」的形式，
-// 当前构建管线会把每一层子选择器都压成 .file-selector，导致整个弹窗样式错乱。
+// teleport 之后祖先不再是 .dynamic-edit，但元素仍带组件作用域标记。
+// 注意两点：
+// 1. 不要写成「:global 包住 .file-selector 再嵌套子选择器」，构建管线会把每一层子选择器都压成 .file-selector；
+// 2. 这里只负责搜索条件与文件列表之间的间距，以及分页 / 已选摘要 / 操作按钮的排版。
+//    缩略图与文件信息保持组件默认观感，不要再给 .file-item / .file-preview / .file-name / .file-size 加样式。
 .file-selector {
   .file-selector-header {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    // 搜索条件与结果网格之间留出分隔和留白
-    padding-bottom: 18px;
-    border-bottom: 1px solid #eef1f5;
+    margin-bottom: 20px;
 
+    // 与输入框内联宽度一致，保证窄屏下搜索条件仍是紧凑的一行
     .file-search {
       width: min(100%, 280px);
       max-width: 280px;
@@ -1147,98 +1144,10 @@ onBeforeUnmount(() => {
     }
   }
 
-  .file-list {
-    min-height: 400px;
-    max-height: 560px;
-    overflow-y: auto;
-    margin: 20px 0 0;
-    padding: 2px 4px 6px;
-
-    .file-item {
-      position: relative;
-      border: 1px solid #d9d9d9;
-      border-radius: 4px;
-      padding: 8px;
-      cursor: pointer;
-      transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
-
-      &:hover {
-        border-color: #1890ff;
-        box-shadow: 0 0 8px rgba(24, 144, 255, 0.2);
-      }
-
-      &.file-item-selected {
-        border-color: #1890ff;
-        background-color: #e6f7ff;
-        box-shadow: 0 0 8px rgba(24, 144, 255, 0.3);
-      }
-
-      .file-preview {
-        position: relative;
-        width: 100%;
-        height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #fafafa;
-        margin-bottom: 8px;
-        border-radius: 4px;
-        overflow: hidden;
-
-        .file-preview-content {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          img, video, audio {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-          }
-        }
-
-        .file-selected-icon {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 24px;
-          height: 24px;
-          background-color: #1890ff;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 14px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      }
-
-      .file-info {
-        .file-name {
-          font-size: 12px;
-          color: #333;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .file-size {
-          font-size: 12px;
-          color: #999;
-        }
-      }
-    }
-  }
-
   .file-pagination {
     display: flex;
     justify-content: center;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px solid #eef1f5;
+    margin-top: 20px;
   }
 
   .file-selector-footer {
@@ -1247,9 +1156,7 @@ onBeforeUnmount(() => {
     justify-content: space-between;
     align-items: flex-end;
     gap: 12px;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px solid #eef1f5;
+    margin-top: 20px;
 
     .selected-summary {
       min-width: 0;
@@ -1257,9 +1164,7 @@ onBeforeUnmount(() => {
     }
 
     .selected-info {
-      color: #1890ff;
-      font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.7;
       overflow-wrap: anywhere;
     }
 
