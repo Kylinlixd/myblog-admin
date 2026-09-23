@@ -36,14 +36,33 @@
 
         <a-form-item class="editor-settings-field editor-tile" label="分类" name="categoryId">
           <div class="taxonomy-control">
-            <a-select v-model:value="form.categoryId" placeholder="请选择分类" :loading="categoriesLoading" :options="categoryOptions" />
+            <a-select
+              v-model:value="form.categoryId"
+              show-search
+              :filter-option="false"
+              placeholder="请选择分类"
+              :loading="categoriesLoading"
+              :options="categorySelectOptions"
+              @search="handleCategorySearch"
+              @change="handleCategoryChange"
+            />
             <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('category')">+ 新建</a-button>
           </div>
         </a-form-item>
 
         <a-form-item class="editor-settings-field editor-tile" label="标签" name="tags">
           <div class="taxonomy-control">
-            <a-select v-model:value="form.tags" mode="multiple" placeholder="请选择标签" :loading="tagsLoading" :options="tagOptions" />
+            <a-select
+              v-model:value="form.tags"
+              mode="multiple"
+              show-search
+              :filter-option="false"
+              placeholder="请选择标签"
+              :loading="tagsLoading"
+              :options="tagSelectOptions"
+              @search="handleTagSearch"
+              @change="handleTagsChange"
+            />
             <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('tag')">+ 新建</a-button>
           </div>
         </a-form-item>
@@ -269,6 +288,7 @@ import {
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadFile, checkFileSize } from '../../utils/upload'
 import { getCategoryList, createCategory } from '../../api/category'
+import { collectAllPages } from '../../api/collections'
 import { getTagList, createTag } from '../../api/tag'
 import { getFileList } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
@@ -376,6 +396,28 @@ const tagOptions = computed(() => {
   }))
 })
 
+// 用户在标签框里输入的关键字：既用于过滤，也用于「新建标签」兜底项
+const tagSearchKeyword = ref('')
+const NEW_TAG_SENTINEL = '__create-tag__'
+
+const tagSelectOptions = computed(() => {
+  const keyword = tagSearchKeyword.value.trim()
+  const lowered = keyword.toLowerCase()
+  const matched = keyword
+    ? tagOptions.value.filter(option => String(option.label).toLowerCase().includes(lowered))
+    : tagOptions.value
+  const exists = tagOptions.value.some(option => String(option.label).toLowerCase() === lowered)
+
+  // 输入了库里还没有的名字时，给一条「新建标签」选项，回车即可创建并选中
+  return keyword && !exists
+    ? [...matched, { value: NEW_TAG_SENTINEL, label: `新建标签「${keyword}」` }]
+    : matched
+})
+
+const handleTagSearch = (value) => {
+  tagSearchKeyword.value = value || ''
+}
+
 const mergeTags = (items = []) => {
   const merged = new Map((tags.value || [])
     .filter(item => item?.id != null)
@@ -394,10 +436,79 @@ const categoryOptions = computed(() => {
   }))
 })
 
+// 分类是单选，输入库里没有的名字时给一条「新建分类」选项，点开新建弹窗并带上名字
+const categorySearchKeyword = ref('')
+const NEW_CATEGORY_SENTINEL = '__create-category__'
+
+const categorySelectOptions = computed(() => {
+  const keyword = categorySearchKeyword.value.trim()
+  const lowered = keyword.toLowerCase()
+  const matched = keyword
+    ? categoryOptions.value.filter(option => String(option.label).toLowerCase().includes(lowered))
+    : categoryOptions.value
+  const exists = categoryOptions.value.some(option => String(option.label).toLowerCase() === lowered)
+
+  return keyword && !exists
+    ? [...matched, { value: NEW_CATEGORY_SENTINEL, label: `新建分类「${keyword}」` }]
+    : matched
+})
+
+const handleCategorySearch = (value) => {
+  categorySearchKeyword.value = value || ''
+}
+
+const handleCategoryChange = (value) => {
+  if (value !== NEW_CATEGORY_SENTINEL) return
+
+  // 哨兵值不能留在表单里，改成打开新建弹窗
+  form.value.categoryId = undefined
+  openTaxonomyModal('category')
+}
+
 const openTaxonomyModal = (type) => {
   taxonomyModalType.value = type
-  taxonomyName.value = ''
+  // 把刚在分类 / 标签框里输入的名字带进新建弹窗，省得再打一遍
+  taxonomyName.value = type === 'tag'
+    ? tagSearchKeyword.value.trim()
+    : categorySearchKeyword.value.trim()
   taxonomyModalVisible.value = true
+}
+
+// 标签下拉里的「新建标签」选项：创建成功后立刻选中它
+const createTagFromSearch = async (name) => {
+  const keyword = String(name || '').trim()
+  if (!keyword) return
+
+  try {
+    const created = await createTag({ name: keyword })
+    if (created?.id != null && created?.name) mergeTags([created])
+    else await fetchTags()
+
+    const id = created?.id ?? tags.value.find(item => item?.name === keyword)?.id
+    if (id != null) {
+      form.value.tags = [...new Set([...(form.value.tags || []), id])]
+      message.success(`已创建标签「${keyword}」`)
+    }
+  } catch (error) {
+    // 并发创建同名标签时会命中唯一约束，优先复用已有标签
+    const existing = tags.value.find(item => String(item?.name) === keyword)
+    if (existing?.id != null) {
+      form.value.tags = [...new Set([...(form.value.tags || []), existing.id])]
+    } else {
+      message.error(error?.message || '标签创建失败，请稍后重试')
+    }
+  } finally {
+    tagSearchKeyword.value = ''
+  }
+}
+
+const handleTagsChange = (values) => {
+  if (!Array.isArray(values) || !values.includes(NEW_TAG_SENTINEL)) return
+
+  const name = tagSearchKeyword.value.trim()
+  // 先把哨兵值从选中项里摘掉，form.tags 始终只存真实标签 id
+  form.value.tags = values.filter(value => value !== NEW_TAG_SENTINEL)
+  createTagFromSearch(name)
 }
 
 const createTaxonomy = async () => {
@@ -422,6 +533,8 @@ const createTaxonomy = async () => {
       if (id) form.value.tags = [...new Set([...(form.value.tags || []), id])]
     }
     taxonomyModalVisible.value = false
+    if (taxonomyModalType.value === 'tag') tagSearchKeyword.value = ''
+    else categorySearchKeyword.value = ''
     message.success('创建成功')
   } catch (error) {
     message.error(error?.message || '创建失败，请稍后重试')
@@ -440,10 +553,11 @@ const rules = {
 }
 
 // 获取标签列表
+// 后端每页固定 10 条且不开放 page_size，必须逐页取全，否则下拉框只有前 10 个标签
 const fetchTags = async () => {
   tagsLoading.value = true
   try {
-    const { results = [] } = (await getTagList()) || {}
+    const { results } = await collectAllPages(page => getTagList({ page }))
     mergeTags(results)
   } catch (error) {
     console.error('获取标签列表失败:', error)
@@ -454,11 +568,11 @@ const fetchTags = async () => {
   }
 }
 
-// 获取分类列表
+// 获取分类列表（同样要逐页取全，分类数超过一页时下拉框会缺项）
 const fetchCategories = async () => {
   categoriesLoading.value = true
   try {
-    const { results = [] } = (await getCategoryList()) || {}
+    const { results } = await collectAllPages(page => getCategoryList({ page }))
     categories.value = results
   } catch (error) {
     console.error('获取分类列表失败:', error)

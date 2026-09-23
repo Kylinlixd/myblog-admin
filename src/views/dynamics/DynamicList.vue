@@ -212,6 +212,7 @@ import {
 import { getDynamicList, deleteDynamic as deleteAdminDynamic } from '@/api/dynamic'
 import { getCategoryList } from '@/api/category'
 import { getTagList } from '@/api/tag'
+import { collectAllPages } from '@/api/collections'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useResizableColumns } from '@/composables/useResizableColumns'
 
@@ -495,9 +496,10 @@ const categories = ref([])
 const tags = ref([])
 
 // 获取分类列表
+// 后端每页固定 10 条且不开放 page_size，逐页取全，避免筛选项缺项
 const fetchCategories = async () => {
   try {
-    const { results = [] } = (await getCategoryList()) || {}
+    const { results } = await collectAllPages(page => getCategoryList({ page }))
     categories.value = results
   } catch (error) {
     console.error('获取分类列表失败:', error)
@@ -521,10 +523,10 @@ const formatDate = (dateString) => {
   })
 }
 
-// 获取标签列表
+// 获取标签列表（同样逐页取全）
 const fetchTags = async () => {
   try {
-    const { results = [] } = (await getTagList()) || {}
+    const { results } = await collectAllPages(page => getTagList({ page }))
     tags.value = results
   } catch (error) {
     console.error('获取标签列表失败:', error)
