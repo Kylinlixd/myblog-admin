@@ -851,9 +851,13 @@ onBeforeUnmount(() => {
 }
 
 :deep(.markdown-body img) {
+  display: block;
+  width: auto;
   max-width: 100%;
   height: auto;
-  margin: 1.5rem 0;
+  /* 竖版截图不再一张占满整屏，宽图仍按容器宽度铺满 */
+  max-height: min(78vh, 820px);
+  margin: 1.5rem auto;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
@@ -1278,13 +1282,43 @@ onBeforeUnmount(() => {
 
     .article-main-column { min-width: 0; }
 
+    /*
+     * 附件图片的「汇总」展示：多张图排成自适应网格，单张图按原始比例居中，
+     * 不再塞进固定的 16:9 深蓝框里（竖图此前会被左右两条黑边包住）。
+     */
     .dynamic-media {
       display: grid;
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+      align-items: start;
+      gap: 14px;
       margin-bottom: 22px;
+      padding: 14px;
+      border: 1px solid var(--article-line);
+      border-radius: 18px;
+      background: rgb(255 255 255 / 58%);
     }
 
-    .dynamic-media__image,
+    .dynamic-media:has(.dynamic-media__image:only-child),
+    .dynamic-media:has(.dynamic-media__video:only-child) {
+      padding: 0;
+      border: 0;
+      background: none;
+    }
+
+    .dynamic-media__image {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      max-height: min(62vh, 560px);
+      margin-inline: auto;
+      object-fit: contain;
+      border: 1px solid var(--article-line);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 12px 32px rgb(88 65 37 / 8%);
+    }
+
     .dynamic-media__video {
       display: block;
       width: 100%;
@@ -1292,7 +1326,7 @@ onBeforeUnmount(() => {
       object-fit: contain;
       max-height: min(68vh, 680px);
       border: 1px solid var(--article-line);
-      border-radius: 22px;
+      border-radius: 18px;
       background: #10243a;
       box-shadow: 0 20px 52px rgb(88 65 37 / 9%);
     }

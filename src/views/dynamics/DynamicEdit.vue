@@ -90,7 +90,7 @@
                 添加附件
               </a-button>
             </a-upload>
-            <a-button type="primary" @click="showFileSelector" style="margin-left: 8px">
+            <a-button type="primary" class="media-pick-button" @click="showFileSelector">
               <template #icon><folder-outlined /></template>
               从文件库选择
             </a-button>
@@ -117,6 +117,7 @@
           :code-theme="'atom-one-light'"
           :language="'zh-CN'"
           @onSave="handleSave"
+          @on-image-uploaded="handleEditorImageUploaded"
         />
       </a-form-item>
 
@@ -848,6 +849,35 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
   }
 }
 
+/**
+ * 编辑器自带图片上传（md-editor 的「上传图片」）成功后回调。
+ * 图片已经进入正文，这里补上附件登记，保持附件列表与正文一致。
+ */
+const handleEditorImageUploaded = (result) => {
+  if (!result?.url) return
+
+  const url = buildApiUrl(result.url)
+  form.value.mediaUrls = [...(form.value.mediaUrls || []), url]
+  if (result.id != null) {
+    form.value.fileIds = [...(form.value.fileIds || []), result.id]
+  }
+
+  fileList.value = [...fileList.value, {
+    uid: `-${result.id ?? url}`,
+    name: result.name || url.split('/').pop(),
+    status: 'done',
+    url,
+    thumbUrl: url,
+    type: result.type || 'image',
+    id: result.id,
+    posterUrl: result.posterUrl || result.poster_url || undefined,
+    size: result.size
+  }]
+
+  syncDynamicType()
+  formRef.value?.validateFields?.(['mediaUrls'])
+}
+
 // 处理媒体文件移除
 const handleMediaRemove = (file) => {
   const index = fileList.value.findIndex(item => item.uid === file.uid)
@@ -1233,7 +1263,13 @@ onBeforeUnmount(() => {
   
   .media-upload-container {
     display: flex;
-    align-items: flex-start;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+
+    .media-pick-button {
+      margin-inline-start: 0;
+    }
   }
 }
 
@@ -1377,10 +1413,26 @@ onBeforeUnmount(() => {
       }
     }
 
+    // 两个附件按钮保持同一排，各自占一半宽度，避免纵向堆叠浪费首屏
     .media-upload-container {
-      flex-direction: column;
+      flex-wrap: wrap;
       gap: 10px;
       width: 100%;
+
+      :deep(.ant-upload-wrapper) {
+        flex: 1 1 140px;
+        min-width: 0;
+      }
+
+      :deep(.ant-upload) {
+        width: 100%;
+      }
+
+      .media-pick-button {
+        flex: 1 1 140px;
+        min-width: 0;
+        margin-inline-start: 0;
+      }
     }
 
         .media-upload-field :deep(.ant-upload-select-picture-card),

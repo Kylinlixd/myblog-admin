@@ -8,6 +8,7 @@
       :code-theme="codeTheme"
       :language="language"
       :height="height"
+      :on-upload-img="handleUploadImg"
       @onSave="handleSave"
       @onChange="handleChange"
     />
@@ -17,7 +18,11 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { MdEditor } from 'md-editor-v3'
+import { message } from 'ant-design-vue'
 import 'md-editor-v3/lib/style.css'
+
+import { uploadImage } from '@/utils/upload'
+import { buildApiUrl } from '@/utils/apiBaseUrl'
 
 const editorRef = ref(null)
 
@@ -48,7 +53,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['update:modelValue', 'onSave'])
+const emit = defineEmits(['update:modelValue', 'onSave', 'on-image-uploaded'])
 
 const content = ref(props.modelValue)
 
@@ -68,6 +73,36 @@ const handleChange = (value) => {
 // 处理保存事件
 const handleSave = () => {
   emit('onSave')
+}
+
+/**
+ * md-editor 自带的「上传图片 / 裁剪上传」入口。
+ * 没有接这个事件时，编辑器的图片上传是空转的；这里接到文件管理系统
+ * （POST /api/upload/upload/），上传成功后再把引用插回正文，
+ * 同时把结果抛给父组件，让它挂成动态附件。
+ */
+const handleUploadImg = async (files, callback) => {
+  const uploaded = []
+  const urls = []
+
+  try {
+    for (const file of files || []) {
+      const result = await uploadImage(file)
+      if (!result?.url) continue
+      uploaded.push(result)
+      urls.push(buildApiUrl(result.url))
+    }
+
+    if (!urls.length) throw new Error('图片上传失败，请重试')
+
+    callback(urls)
+    uploaded.forEach((item) => emit('on-image-uploaded', item))
+    message.success(`已上传 ${uploaded.length} 张图片`)
+  } catch (error) {
+    console.error('编辑器图片上传失败:', error)
+    message.error(error?.message || '图片上传失败，请重试')
+    callback([])
+  }
 }
 
 // 暴露方法给父组件
@@ -96,5 +131,46 @@ defineExpose({
   border: 1px solid var(--border-color);
   border-radius: 4px;
   overflow: hidden;
+}
+
+/*
+ * 窄屏下编辑器与预览并排会把正文编辑区压得太窄，
+ * 这里改成上下排布：上面编辑、下面预览，并给整体留出更高的可视高度。
+ *
+ * md-editor 的分栏宽度、拖拽条显示都是写在行内样式上的
+ * （input-wrapper 是 style="width: 50%"，拖拽条是 style="display: initial"），
+ * 所以这里必须用 !important 才能覆盖。
+ */
+@media (max-width: 768px) {
+  .markdown-editor-wrapper :deep(.md-editor) {
+    height: min(760px, 80vh) !important;
+  }
+
+  .markdown-editor-wrapper :deep(.md-editor-content),
+  .markdown-editor-wrapper :deep(.md-editor-content-wrapper) {
+    flex-direction: column;
+  }
+
+  .markdown-editor-wrapper :deep(.md-editor-content-wrapper) {
+    width: auto;
+    height: auto;
+  }
+
+  .markdown-editor-wrapper :deep(.md-editor-input-wrapper),
+  .markdown-editor-wrapper :deep(.md-editor-preview-wrapper) {
+    width: 100% !important;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 50%;
+  }
+
+  .markdown-editor-wrapper :deep(.md-editor-preview-wrapper) {
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* 上下排布时横向拖拽条没有意义 */
+  .markdown-editor-wrapper :deep(.md-editor-resize-operate) {
+    display: none !important;
+  }
 }
 </style>
