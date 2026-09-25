@@ -101,6 +101,20 @@
   text-align: left !important;
 }
 
+/*
+ * admin-workspace.scss 里有一条全局的 .page-header{display:flex;justify-content:space-between}，
+ * 博客的几个 hero 复用了同名 class，于是 kicker / 标题 / 描述 / 徽标被挤成一行：
+ * 标题窄到四行、徽标窄到一字一行。这里按博客自己的语义改回纵向栅格。
+ * （分类详情页`.category-detail-container .page-header.cinematic-hero` 的专属排布优先级更高，不受影响）
+ */
+.cinematic-page .page-header.cinematic-hero {
+  display: grid;
+  align-items: initial;
+  justify-content: initial;
+  gap: 14px;
+  padding: 0;
+}
+
 .cinematic-hero::before {
   width: 44px;
   height: 2px;

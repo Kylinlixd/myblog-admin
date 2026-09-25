@@ -21,6 +21,22 @@ describe('cinematic blog theme', () => {
     expect(styles).toContain('.cinematic-card')
   })
 
+  it('keeps the admin page-header layout out of the public hero', () => {
+    const styles = read('src/styles/blog-cinematic.scss')
+    const admin = read('src/styles/admin-workspace.scss')
+
+    // admin 侧确实是全局的 .page-header 横排规则
+    expect(admin).toMatch(/\.page-header\s*\{[\s\S]*?justify-content: space-between/)
+
+    // 博客 hero 明确改回自己的纵向栅格
+    expect(styles).toMatch(
+      /\.cinematic-page \.page-header\.cinematic-hero\s*\{[\s\S]*?display: grid;/
+    )
+    expect(styles).toMatch(
+      /\.cinematic-page \.page-header\.cinematic-hero\s*\{[\s\S]*?justify-content: initial;/
+    )
+  })
+
   it('keeps decorative motion optional', () => {
     const styles = read('src/styles/blog-cinematic.scss')
 

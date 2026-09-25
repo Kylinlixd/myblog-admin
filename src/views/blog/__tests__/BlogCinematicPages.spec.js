@@ -30,13 +30,29 @@ describe('cinematic public blog pages', () => {
       .forEach((name) => expect(readPage(name)).toContain('cinematic-hero'))
   })
 
-  it('keeps the category archive title readable instead of forming a text block', () => {
+  it('keeps the category archive hero readable instead of one squeezed row', () => {
     const categories = readPage('BlogCategories.vue')
 
-    expect(categories).toContain('max-width: 920px')
-    expect(categories).toContain('font-size: clamp(40px, 5vw, 64px)')
+    // 标题独占左列、说明与徽标在右列；列宽要放得下小半句，避免碎成四行
+    expect(categories).toContain('class="page-header cinematic-hero archive-hero"')
+    expect(categories).toMatch(/\.page-header\.cinematic-hero\.archive-hero\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1\.32fr\) minmax\(300px, \.78fr\)/)
+    // 装饰线也是栅格项，必须显式占位，否则会多出一行把内容挤下去
+    expect(categories).toMatch(/grid-template-areas:\s*\n\s*'rule rule'/)
+    expect(categories).toMatch(/\.archive-hero::before\s*\{[\s\S]*?grid-area: rule;/)
+    expect(categories).toMatch(/\.page-title\s*\{[\s\S]*?font-size: clamp\(34px, 4\.3vw, 58px\)/)
     expect(categories).toContain('line-height: 1.08')
-    expect(categories).toContain('margin: 18px 0 0')
+    expect(categories).toContain('text-wrap: balance')
+
+    // 说明与徽标是右侧一整列，整体与标题末行对齐
+    expect(categories).toContain('class="archive-aside"')
+    expect(categories).toMatch(/\.archive-aside\s*\{[\s\S]*?grid-area: aside;[\s\S]*?align-self: end;/)
+
+    // 徽标不能再被挤成一字一行
+    expect(categories).toMatch(/\.archive-meta span\s*\{[\s\S]*?white-space: nowrap/)
+
+    // 窄屏落回单列，标题同步收小
+    expect(categories).toMatch(/@media \(max-width: 980px\)[\s\S]*?\.archive-hero\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\)/)
+    expect(categories).toMatch(/@media \(max-width: 620px\)[\s\S]*?font-size: clamp\(30px, 8\.6vw, 42px\)/)
   })
 
   it('does not expose development fixtures on the public dynamic stream', () => {
