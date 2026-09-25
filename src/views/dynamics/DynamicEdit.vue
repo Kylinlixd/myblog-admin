@@ -78,14 +78,13 @@
           <div class="media-upload-container">
             <a-upload
               :file-list="fileList"
+              :show-upload-list="false"
               :open-file-dialog-on-click="true"
               :before-upload="beforeMediaUpload"
               :custom-request="handleCustomUpload"
-              @remove="handleMediaRemove"
-              :preview="handlePreviewMedia"
               multiple
             >
-              <a-button type="primary">
+              <a-button type="primary" class="media-add-button">
                 <template #icon><upload-outlined /></template>
                 添加附件
               </a-button>
@@ -95,6 +94,28 @@
               从文件库选择
             </a-button>
           </div>
+          <!-- 附件列表自己渲染：a-upload 内置列表会把「添加附件」和列表包成一块，两个按钮就没法排在同一行 -->
+          <ul v-if="fileList.length" class="media-attachment-list">
+            <li v-for="file in fileList" :key="file.uid || file.url" class="media-attachment-item">
+              <button
+                type="button"
+                class="media-attachment-main"
+                :title="file.name"
+                @click="handlePreviewMedia(file)"
+              >
+                <paper-clip-outlined />
+                <span>{{ file.name }}</span>
+              </button>
+              <button
+                type="button"
+                class="media-attachment-remove"
+                :aria-label="`移除 ${file.name}`"
+                @click="handleMediaRemove(file)"
+              >
+                <close-outlined />
+              </button>
+            </li>
+          </ul>
           <div class="upload-tip">可混合添加图片、音频、视频、文档和其他文件，单个文件不超过 1GB</div>
           <div class="media-upload-status" :class="`is-${uploadState.stage}`">
             <strong>视频会自动生成网页可播放版本和封面</strong>
@@ -284,7 +305,8 @@ import {
   CloseOutlined, 
   UploadOutlined,
   FolderOutlined,
-  FileOutlined
+  FileOutlined,
+  PaperClipOutlined
 } from '@ant-design/icons-vue'
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadFile, checkFileSize } from '../../utils/upload'
@@ -1261,14 +1283,80 @@ onBeforeUnmount(() => {
     }
   }
   
+  // 两个按钮固定同一排：上传组件只保留触发器，附件列表在容器之外
   .media-upload-container {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 10px;
 
+    :deep(.ant-upload-wrapper) {
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
     .media-pick-button {
       margin-inline-start: 0;
+    }
+  }
+
+  .media-attachment-list {
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+
+    .media-attachment-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 6px;
+      border-radius: 8px;
+      color: #5b6b85;
+      font-size: 13px;
+      transition: background var(--transition-fast, 160ms ease);
+
+      &:hover {
+        background: rgb(16 36 58 / 4%);
+      }
+    }
+
+    .media-attachment-main {
+      display: flex;
+      flex: 1 1 auto;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      font: inherit;
+      text-align: start;
+      cursor: pointer;
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .media-attachment-remove {
+      flex: 0 0 auto;
+      padding: 2px;
+      border: 0;
+      background: none;
+      color: #97a2b3;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+
+      &:hover {
+        color: #c63838;
+      }
     }
   }
 }
@@ -1415,23 +1503,31 @@ onBeforeUnmount(() => {
 
     // 两个附件按钮保持同一排，各自占一半宽度，避免纵向堆叠浪费首屏
     .media-upload-container {
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 10px;
       width: 100%;
 
-      :deep(.ant-upload-wrapper) {
-        flex: 1 1 140px;
-        min-width: 0;
-      }
-
-      :deep(.ant-upload) {
+      :deep(.ant-upload-wrapper),
+      :deep(.ant-upload-wrapper .ant-upload) {
         width: 100%;
       }
 
-      .media-pick-button {
-        flex: 1 1 140px;
+      :deep(.ant-upload-wrapper) {
+        flex: 1 1 0;
         min-width: 0;
+      }
+
+      // 上传触发器有 48px 的触控高度，另一个按钮对齐，避免同一排里一高一低
+      .media-add-button,
+      .media-pick-button {
+        width: 100%;
+        min-width: 0;
+        min-height: 48px;
         margin-inline-start: 0;
+      }
+
+      .media-pick-button {
+        flex: 1 1 0;
       }
     }
 

@@ -103,9 +103,32 @@ describe('DynamicEdit editor image upload integration', () => {
       mobileStyles.indexOf('.media-upload-field')
     )
 
-    expect(containerRule).toContain('flex-wrap: wrap')
+    // 同一排：不换行、不纵向堆叠，两个按钮各占一半
+    expect(containerRule).toContain('flex-wrap: nowrap')
     expect(containerRule).not.toContain('flex-direction: column')
+    expect(containerRule).toContain('flex: 1 1 0')
     expect(source).not.toContain('style="margin-left: 8px"')
     expect(source).toContain('class="media-pick-button"')
+  })
+
+  it('renders the attachment list outside the upload trigger', async () => {
+    const wrapper = await mountEditor()
+    wrapper.vm.fileList = [
+      { uid: '-1', name: 'cover.png', url: '/media/cover.png', type: 'image', status: 'done' }
+    ]
+    await flushPromises()
+
+    // 内置列表会把触发按钮和附件列表包成一块，两个按钮就无法同排
+    expect(readEditorView()).toContain(':show-upload-list="false"')
+
+    const container = wrapper.find('.media-upload-container')
+    expect(container.exists()).toBe(true)
+    expect(container.find('.media-attachment-list').exists()).toBe(false)
+    expect(container.findAll('button')).toHaveLength(2)
+
+    const list = wrapper.find('.media-attachment-list')
+    expect(list.exists()).toBe(true)
+    expect(list.text()).toContain('cover.png')
+    wrapper.unmount()
   })
 })
