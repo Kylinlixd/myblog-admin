@@ -33,82 +33,81 @@
             </template>
           </a-button>
         </div>
+
+        <div v-show="showAdvancedSearch" class="advanced-search-options">
+          <div class="filter-grid">
+            <label class="filter-field">
+              <span class="filter-label">分类</span>
+              <a-select
+                v-model:value="advancedOptions.category"
+                class="filter-control"
+                placeholder="选择分类"
+                allowClear
+              >
+                <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </a-select-option>
+              </a-select>
+            </label>
+
+            <label class="filter-field">
+              <span class="filter-label">标签</span>
+              <a-select
+                v-model:value="advancedOptions.tag"
+                class="filter-control"
+                placeholder="选择标签"
+                allowClear
+              >
+                <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
+                  {{ tag.name }}
+                </a-select-option>
+              </a-select>
+            </label>
+
+            <label class="filter-field">
+              <span class="filter-label">发布时间</span>
+              <a-select
+                v-model:value="advancedOptions.time"
+                class="filter-control"
+                placeholder="选择时间范围"
+                allowClear
+              >
+                <a-select-option value="week">最近一周</a-select-option>
+                <a-select-option value="month">最近一月</a-select-option>
+                <a-select-option value="quarter">最近三月</a-select-option>
+                <a-select-option value="year">最近一年</a-select-option>
+              </a-select>
+            </label>
+
+            <label class="filter-field">
+              <span class="filter-label">排序方式</span>
+              <a-select v-model:value="advancedOptions.sortBy" class="filter-control">
+                <a-select-option value="time_desc">最新发布</a-select-option>
+                <a-select-option value="time_asc">最早发布</a-select-option>
+                <a-select-option value="likes_desc">最多点赞</a-select-option>
+                <a-select-option value="comments_desc">最多评论</a-select-option>
+                <a-select-option value="views_desc">最多浏览</a-select-option>
+              </a-select>
+            </label>
+
+            <div class="filter-field filter-field--check">
+              <span class="filter-label" aria-hidden="true"></span>
+              <a-checkbox v-model:checked="advancedOptions.hasMedia">只显示包含多媒体</a-checkbox>
+            </div>
+          </div>
+
+          <div class="filter-footer">
+            <span v-if="filtersDirty" class="filter-dirty" role="status">
+              {{ keyword.trim() ? '筛选条件已更新，点「搜索」应用' : '可直接按条件筛选，点「搜索」开始' }}
+            </span>
+            <div class="filter-actions">
+              <a-button @click="resetAdvancedOptions">重置</a-button>
+              <a-button type="primary" :disabled="!canSearch" @click="handleSearch">搜索</a-button>
+            </div>
+          </div>
+        </div>
       </div>
       
-      <!-- 高级搜索选项：只改条件，由「搜索」按钮或回车统一提交 -->
-      <div v-show="showAdvancedSearch" class="advanced-search-options cinematic-card">
-        <div class="filter-grid">
-          <label class="filter-field">
-            <span class="filter-label">分类</span>
-            <a-select
-              v-model:value="advancedOptions.category"
-              class="filter-control"
-              placeholder="选择分类"
-              allowClear
-            >
-              <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
-                {{ category.name }}
-              </a-select-option>
-            </a-select>
-          </label>
-
-          <label class="filter-field">
-            <span class="filter-label">标签</span>
-            <a-select
-              v-model:value="advancedOptions.tag"
-              class="filter-control"
-              placeholder="选择标签"
-              allowClear
-            >
-              <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
-                {{ tag.name }}
-              </a-select-option>
-            </a-select>
-          </label>
-
-          <label class="filter-field">
-            <span class="filter-label">发布时间</span>
-            <a-select
-              v-model:value="advancedOptions.time"
-              class="filter-control"
-              placeholder="选择时间范围"
-              allowClear
-            >
-              <a-select-option value="week">最近一周</a-select-option>
-              <a-select-option value="month">最近一月</a-select-option>
-              <a-select-option value="quarter">最近三月</a-select-option>
-              <a-select-option value="year">最近一年</a-select-option>
-            </a-select>
-          </label>
-
-          <label class="filter-field">
-            <span class="filter-label">排序方式</span>
-            <a-select v-model:value="advancedOptions.sortBy" class="filter-control">
-              <a-select-option value="time_desc">最新发布</a-select-option>
-              <a-select-option value="time_asc">最早发布</a-select-option>
-              <a-select-option value="likes_desc">最多点赞</a-select-option>
-              <a-select-option value="comments_desc">最多评论</a-select-option>
-              <a-select-option value="views_desc">最多浏览</a-select-option>
-            </a-select>
-          </label>
-
-          <div class="filter-field filter-field--check">
-            <span class="filter-label" aria-hidden="true"></span>
-            <a-checkbox v-model:checked="advancedOptions.hasMedia">只显示包含多媒体</a-checkbox>
-          </div>
-        </div>
-
-        <div class="filter-footer">
-          <span v-if="filtersDirty" class="filter-dirty" role="status">
-            {{ keyword.trim() ? '筛选条件已更新，点「搜索」应用' : '可直接按条件筛选，点「搜索」开始' }}
-          </span>
-          <div class="filter-actions">
-            <a-button @click="resetAdvancedOptions">重置</a-button>
-            <a-button type="primary" :disabled="!canSearch" @click="handleSearch">搜索</a-button>
-          </div>
-        </div>
-      </div>
-
       <!-- 搜索历史 -->
       <div class="search-history" v-if="searchHistory.length > 0 && !searchPerformed">
         <div class="history-header">
@@ -443,13 +442,21 @@ const handleUpdateSearch = (event) => {
 // 按条件浏览：不带关键词时，从公共动态流按分类 / 标签取全量，再在本地筛选与分页
 const browseByFilters = async () => {
   const options = advancedOptions.value
+  // 分类 / 标签动态流返回的是 data.dynamics（不是 items/results），这里统一成 {count, results}
+  const normalizeFeed = (response) => {
+    const data = response?.data ?? response
+    const list = data?.dynamics
+    if (Array.isArray(list)) return { count: Number(data?.total) || list.length, results: list }
+    return normalizeCollectionResponse(response)
+  }
+
   const loadPage = async (page) => {
     const response = options.tag
       ? await getTagDynamics(options.tag, { page })
       : options.category
         ? await getCategoryDynamics(options.category, { page })
         : await getBlogDynamics({ page })
-    return normalizeCollectionResponse(response)
+    return normalizeFeed(response)
   }
 
   const { results } = await collectAllPages(loadPage)
@@ -1457,7 +1464,8 @@ watch(advancedOptions, () => {
   background: #fdf3ea;
   color: #8f3f18;
 }
-.advanced-search-options { max-width: 980px; margin: 0 auto 14px; padding: 20px clamp(16px, 2.4vw, 26px); border: 1px solid #ead8c7; border-radius: 5px 18px 5px 18px; background: rgb(255 250 242 / 82%); }
+/* 筛选区属于搜索卡片内部：不再是一张独立卡片，只用一条内部分隔线 */
+.advanced-search-options { grid-column: 1 / -1; margin: 2px 0 0; padding: 18px 2px 2px; border: 0; border-top: 1px solid #ead8c7; border-radius: 0; background: transparent; }
 
 /* 筛选面板：两列栅格 + 固定标签列，控件等宽对齐 */
 .filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 26px; }
