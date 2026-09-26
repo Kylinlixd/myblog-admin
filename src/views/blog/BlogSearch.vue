@@ -14,8 +14,8 @@
             enter-button
             size="large"
             :loading="loading"
-            @search="debouncedSearch"
-            @press-enter="debouncedSearch"
+            @search="handleSearch"
+            @press-enter="handleSearch"
             class="search-input"
           >
             <template #prefix>
@@ -24,10 +24,10 @@
           </a-input-search>
         </div>
         
-        <!-- 高级搜索选项 -->
+        <!-- 高级搜索开关：与输入框同排，不再单独占一行 -->
         <div class="search-options">
-          <a-button type="link" @click="toggleAdvancedSearch">
-            {{ showAdvancedSearch ? '收起' : '高级搜索' }}
+          <a-button type="text" :aria-expanded="showAdvancedSearch" @click="toggleAdvancedSearch">
+            {{ showAdvancedSearch ? '收起筛选' : '筛选' }}
             <template #icon>
               <component :is="showAdvancedSearch ? 'up-outlined' : 'down-outlined'" />
             </template>
@@ -35,102 +35,87 @@
         </div>
       </div>
       
-      <!-- 高级搜索选项 -->
+      <!-- 高级搜索选项：只改条件，由「搜索」按钮或回车统一提交 -->
       <div v-show="showAdvancedSearch" class="advanced-search-options cinematic-card">
-        <a-form layout="inline" :model="advancedOptions">
-          <!-- 内容类型筛选 -->
-          <a-form-item label="内容类型">
-            <a-radio-group v-model:value="advancedOptions.type" @change="debouncedSearch">
+        <div class="filter-grid">
+          <label class="filter-field">
+            <span class="filter-label">内容类型</span>
+            <a-radio-group v-model:value="advancedOptions.type" class="filter-control">
               <a-radio value="">全部</a-radio>
               <a-radio value="note">笔记</a-radio>
               <a-radio value="share">分享</a-radio>
             </a-radio-group>
-          </a-form-item>
-          
-          <!-- 分类筛选 -->
-          <a-form-item label="分类">
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">分类</span>
             <a-select
               v-model:value="advancedOptions.category"
+              class="filter-control"
               placeholder="选择分类"
-              style="width: 200px"
               allowClear
-              @change="debouncedSearch"
             >
-              <a-select-option
-                v-for="category in categories" 
-                :key="category.id" 
-                :value="category.id"
-              >
+              <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
                 {{ category.name }}
               </a-select-option>
             </a-select>
-          </a-form-item>
-          
-          <!-- 标签筛选 -->
-          <a-form-item label="标签">
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">标签</span>
             <a-select
               v-model:value="advancedOptions.tag"
+              class="filter-control"
               placeholder="选择标签"
               allowClear
-              @change="debouncedSearch"
-              style="width: 200px"
             >
-              <a-select-option
-                v-for="tag in tags" 
-                :key="tag.id" 
-                :value="tag.id"
-              >
+              <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
                 {{ tag.name }}
               </a-select-option>
             </a-select>
-          </a-form-item>
-          
-          <!-- 时间筛选 -->
-          <a-form-item label="发布时间">
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">发布时间</span>
             <a-select
               v-model:value="advancedOptions.time"
+              class="filter-control"
               placeholder="选择时间范围"
               allowClear
-              @change="debouncedSearch"
-              style="width: 200px"
             >
               <a-select-option value="week">最近一周</a-select-option>
               <a-select-option value="month">最近一月</a-select-option>
               <a-select-option value="quarter">最近三月</a-select-option>
               <a-select-option value="year">最近一年</a-select-option>
             </a-select>
-          </a-form-item>
-          
-          <!-- 排序方式 -->
-          <a-form-item label="排序方式">
-            <a-select
-              v-model:value="advancedOptions.sortBy"
-              placeholder="排序方式"
-              @change="debouncedSearch"
-              style="width: 200px"
-            >
+          </label>
+
+          <label class="filter-field">
+            <span class="filter-label">排序方式</span>
+            <a-select v-model:value="advancedOptions.sortBy" class="filter-control">
               <a-select-option value="time_desc">最新发布</a-select-option>
               <a-select-option value="time_asc">最早发布</a-select-option>
               <a-select-option value="likes_desc">最多点赞</a-select-option>
               <a-select-option value="comments_desc">最多评论</a-select-option>
               <a-select-option value="views_desc">最多浏览</a-select-option>
             </a-select>
-          </a-form-item>
-          
-          <!-- 媒体类型筛选 -->
-          <a-form-item>
-            <a-checkbox v-model:checked="advancedOptions.hasMedia" @change="debouncedSearch">
-              包含多媒体
-            </a-checkbox>
-          </a-form-item>
-          
-          <a-form-item>
-            <a-button type="primary" @click="debouncedSearch">搜索</a-button>
-            <a-button style="margin-left: 8px" @click="resetAdvancedOptions">重置</a-button>
-          </a-form-item>
-        </a-form>
+          </label>
+
+          <div class="filter-field filter-field--check">
+            <span class="filter-label" aria-hidden="true"></span>
+            <a-checkbox v-model:checked="advancedOptions.hasMedia">只显示包含多媒体</a-checkbox>
+          </div>
+        </div>
+
+        <div class="filter-footer">
+          <span v-if="filtersDirty" class="filter-dirty" role="status">筛选条件已更新，点「搜索」应用</span>
+          <div class="filter-actions">
+            <a-button @click="resetAdvancedOptions">重置</a-button>
+            <a-button type="primary" @click="handleSearch">搜索</a-button>
+          </div>
+        </div>
       </div>
-      
+
       <!-- 搜索历史 -->
       <div class="search-history" v-if="searchHistory.length > 0 && !searchPerformed">
         <div class="history-header">
@@ -170,20 +155,6 @@
         </div>
       </div>
       
-      <!-- 显示模式切换 -->
-      <div class="view-mode-toggle" v-if="searchPerformed && searchResults.length > 0">
-        <a-radio-group v-model:value="viewMode" button-style="solid">
-          <a-radio-button value="list">
-            <unordered-list-outlined />
-            列表
-          </a-radio-button>
-          <a-radio-button value="card">
-            <appstore-outlined />
-            卡片
-          </a-radio-button>
-        </a-radio-group>
-      </div>
-      
       <!-- 搜索建议 -->
       <div v-if="showSuggestions && suggestions.length > 0" class="search-suggestions">
         <ul class="suggestions-list">
@@ -207,7 +178,19 @@
           <span class="search-result-kicker">SEARCH INDEX · 搜索索引</span>
           <h2>与“<strong>{{ keyword }}</strong>”相关的内容</h2>
         </div>
-        <span class="result-count">{{ loading ? '检索中' : `找到 ${total} 条` }}</span>
+        <div class="result-heading-meta">
+          <span class="result-count">{{ loading ? '检索中' : `找到 ${total} 条` }}</span>
+          <a-radio-group v-if="searchResults.length > 0" v-model:value="viewMode" button-style="solid" size="small" class="view-mode-toggle">
+            <a-radio-button value="list">
+              <unordered-list-outlined />
+              列表
+            </a-radio-button>
+            <a-radio-button value="card">
+              <appstore-outlined />
+              卡片
+            </a-radio-button>
+          </a-radio-group>
+        </div>
       </div>
       <div v-if="loading" class="loading-state">
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" />
@@ -334,7 +317,7 @@ import {
 import { message, Empty, Skeleton, List } from 'ant-design-vue'
 import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
 import { normalizeCollectionResponse } from '@/api/collections'
-import { debounce, showError } from '@/utils/performance'
+import { showError } from '@/utils/performance'
 
 const route = useRoute()
 const router = useRouter()
@@ -359,6 +342,8 @@ const advancedOptions = ref({
   sortBy: 'time_desc',
   hasMedia: false
 })
+// 筛选条件是否已改动但还没提交：只更新提示，不自动发请求
+const filtersDirty = ref(false)
 
 // 视图模式
 const viewMode = ref('list')
@@ -509,6 +494,7 @@ const handleSearch = async () => {
     total.value = 0
   } finally {
     loading.value = false
+    filtersDirty.value = false
   }
 }
 
@@ -677,7 +663,10 @@ const getItemType = (item) => {
 }
 
 // 创建防抖函数
-const debouncedSearch = debounce(handleSearch, 300)
+// 只提示「条件已更新」，由用户显式点搜索；避免点一下单选框就整页转圈
+watch(advancedOptions, () => {
+  filtersDirty.value = true
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -906,11 +895,6 @@ const debouncedSearch = debounce(handleSearch, 300)
 .history-item:hover,
 .popular-item:hover {
   transform: translateY(-2px);
-}
-
-.view-mode-toggle {
-  margin: 1.5rem 0;
-  text-align: center;
 }
 
 .search-suggestions {
@@ -1361,31 +1345,45 @@ const debouncedSearch = debounce(handleSearch, 300)
   }
 }
 /* editorial search redesign */
-.blog-search-container { padding: clamp(42px, 7vw, 92px) 1rem 96px; }
-.search-hero { max-width: 980px; margin: 0 auto 30px; padding: 0 4px; text-align: left; }
-.search-hero h1 { max-width: 760px; margin: 0 0 16px; color: #253142; font-size: clamp(42px, 6vw, 76px); font-weight: 800; letter-spacing: -.065em; line-height: .95; text-wrap: balance; }
-.search-hero p { max-width: 560px; margin: 0; color: #697586; font-size: 15px; line-height: 1.7; }
-.search-box { max-width: 980px; margin: 0 auto 14px; gap: .65rem; }
-.search-input-wrapper { max-width: none; margin: 0; }
+.blog-search-container { padding: clamp(28px, 5vw, 64px) 1rem 88px; }
+.search-hero { max-width: 980px; margin: 0 auto 22px; padding: 0 4px; text-align: left; }
+.search-hero h1 { max-width: 720px; margin: 0 0 10px; color: #253142; font-size: clamp(30px, 4.2vw, 52px); font-weight: 800; letter-spacing: -.055em; line-height: 1; text-wrap: balance; }
+.search-hero p { max-width: 560px; margin: 0; color: #697586; font-size: 14px; line-height: 1.7; }
+/* 输入框与「筛选」开关同排：少一行高度，首屏就能看到结果 */
+.search-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; max-width: 980px; margin: 0 auto 12px; padding: 14px 16px; }
+.search-input-wrapper { max-width: none; margin: 0; min-width: 0; }
 .search-input :deep(.ant-input-affix-wrapper) { height: 58px; border: 1px solid #ead8c7; border-radius: 5px 16px 5px 16px; box-shadow: inset 0 1px rgb(255 255 255 / 70%), 0 14px 28px rgb(92 59 35 / 10%); }
 .search-input :deep(.ant-input-affix-wrapper:hover) { border-color: #c47747; box-shadow: 0 14px 34px rgb(92 59 35 / 15%); }
 .search-input :deep(.ant-input-affix-wrapper-focused) { border-color: #b85e2d; box-shadow: 0 0 0 3px rgb(184 94 45 / 14%); }
 .search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 58px; border-color: #b85e2d; border-radius: 0 15px 4px 0; background: #b85e2d; }
 .search-input :deep(.ant-btn:hover) { border-color: #a44e25; background: #a44e25; }
-.search-options { display: flex; justify-content: flex-end; }
-.search-options :deep(.ant-btn-link) { color: #a44e25; font-size: 12px; font-weight: 700; }
-.advanced-search-options { max-width: 980px; margin: 0 auto 14px; border: 1px solid #ead8c7; border-radius: 12px; background: rgb(255 250 242 / 82%); }
+.search-options { display: flex; flex: 0 0 auto; justify-content: flex-end; }
+.search-options :deep(.ant-btn) { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding-inline: 14px; border: 1px solid #ead8c7; border-radius: 10px; color: #a44e25; font-size: 13px; font-weight: 700; background: rgb(255 250 242 / 72%); }
+.search-options :deep(.ant-btn:hover) { border-color: #c47747; color: #8f3f18; background: #fff; }
+.advanced-search-options { max-width: 980px; margin: 0 auto 14px; padding: 20px clamp(16px, 2.4vw, 26px); border: 1px solid #ead8c7; border-radius: 5px 18px 5px 18px; background: rgb(255 250 242 / 82%); }
+
+/* 筛选面板：两列栅格 + 固定标签列，控件等宽对齐 */
+.filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 26px; }
+.filter-field { display: grid; grid-template-columns: 74px minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; }
+.filter-label { color: #5b6672; font-size: 12px; font-weight: 700; }
+.filter-control { width: 100%; min-width: 0; }
+.filter-field--check { cursor: pointer; }
+.filter-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #ead8c7; }
+.filter-dirty { color: #a44e25; font-size: 12px; font-weight: 700; }
+.filter-actions { display: flex; gap: 8px; margin-left: auto; }
 .search-results { max-width: 980px; margin: 24px auto 0; padding: clamp(20px, 4vw, 38px); border-radius: 5px 24px 5px 24px; background: rgb(255 250 242 / 78%); box-shadow: 0 20px 48px rgb(92 59 35 / 10%); }
 .search-result-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid #ead8c7; }
 .search-result-kicker { color: #b85e2d; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
 .search-result-heading h2 { margin: 8px 0 0; color: #253142; font-size: clamp(20px, 3vw, 30px); letter-spacing: -.04em; line-height: 1.1; }
 .search-result-heading h2 strong { color: #b85e2d; }
+.result-heading-meta { display: flex; flex: 0 0 auto; align-items: center; gap: 14px; }
 .result-count { flex: 0 0 auto; color: #7d695c; font-size: 12px; font-weight: 700; }
 .search-history, .popular-searches { max-width: 980px; margin: 18px auto 0; padding: 14px 18px; border-bottom: 1px solid #ead8c7; }
 .history-header h3, .popular-header h3 { margin: 0; color: #536174; font-size: 12px; font-weight: 800; letter-spacing: .05em; }
 .history-items, .popular-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .history-item, .popular-item { cursor: pointer; }
-.view-mode-toggle { display: flex; justify-content: flex-end; margin: 18px 0 4px; }
+.view-mode-toggle { display: inline-flex; margin: 0; }
+.view-mode-toggle :deep(.ant-radio-button-wrapper) { display: inline-flex; align-items: center; gap: 6px; height: 32px; font-size: 12px; line-height: 30px; }
 .no-results { min-height: 260px; padding: 48px 20px; color: #7d695c; }
 .no-results > svg { color: #c47747; font-size: 38px; }
 .no-results__title { color: #253142; font-size: 20px; }
@@ -1404,4 +1402,58 @@ const debouncedSearch = debounce(handleSearch, 300)
 .highlight { color: #a44e25; background: #f7e2cf; }
 @media (max-width: 768px) { .search-hero h1 { font-size: clamp(42px, 13vw, 64px); } .search-input :deep(.ant-input-affix-wrapper), .search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 48px; } .search-result-heading { align-items: flex-start; flex-direction: column; gap: 10px; } .search-results { margin-top: 16px; padding: 20px 16px; } }
 @media (prefers-reduced-motion: reduce) { .result-card, .list-view :deep(.ant-list-item), .search-input :deep(*) { transition: none !important; } }
+/*
+ * 响应式：必须放在 cinematic 覆盖之后，
+ * 否则同优先级的 .filter-grid 两列定义会把它盖掉（之前就踩了这个顺序坑）。
+ */
+@media (max-width: 768px) {
+  .search-box {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .search-options {
+    justify-content: stretch;
+  }
+
+  .search-options :deep(.ant-btn) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filter-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .filter-field {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+
+  .filter-field--check .filter-label {
+    display: none;
+  }
+
+  .filter-field--check {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .filter-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .filter-actions {
+    margin-left: 0;
+  }
+
+  .filter-actions :deep(.ant-btn) {
+    flex: 1 1 0;
+  }
+
+  .search-hero h1 {
+    font-size: clamp(28px, 8vw, 38px);
+  }
+}
 </style>
