@@ -40,7 +40,8 @@ jest.mock('@ant-design/icons-vue', () => {
     LoadingOutlined: Icon,
     QuestionCircleOutlined: Icon,
     CloudServerOutlined: Icon,
-    FileTextOutlined: Icon
+    FileTextOutlined: Icon,
+    PictureOutlined: Icon
   }
 })
 
@@ -54,6 +55,44 @@ const fileListResponse = {
     url: '/media/cover.png'
   }]
 }
+
+describe('file list preview fallback', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    getFileSummary.mockResolvedValue({ total: 0, totalBytes: 0 })
+  })
+
+  it('marks an image as unavailable after a load error and stops re-rendering a-image', async () => {
+    getFileList.mockResolvedValue(fileListResponse)
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    const record = wrapper.vm.fileList[0]
+    expect(wrapper.vm.unavailableImageIds.has(record.id)).toBe(false)
+
+    wrapper.vm.handleImageError({ target: { src: '' } }, record)
+    await flushPromises()
+
+    expect(wrapper.vm.unavailableImageIds.has(record.id)).toBe(true)
+    expect(wrapper.vm.isImageUnavailable(record)).toBe(true)
+    // 重复失败不会把集合撑大，也不会重复提示
+    wrapper.vm.handleImageError({ target: { src: '' } }, record)
+    expect(wrapper.vm.unavailableImageIds.size).toBe(1)
+    wrapper.unmount()
+  })
+
+  it('reports a service problem instead of blaming the file when the preview fails', async () => {
+    getFileList.mockResolvedValue(fileListResponse)
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.handlePreviewError(new Error('500'), wrapper.vm.fileList[0])
+
+    expect(message.error).toHaveBeenCalledWith(expect.stringContaining('文件服务暂时不可用'))
+    expect(message.error).not.toHaveBeenCalledWith(expect.stringContaining('请检查文件是否存在'))
+    wrapper.unmount()
+  })
+})
 
 const globalStubs = {
   PageHeader: true,

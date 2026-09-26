@@ -165,7 +165,12 @@
           <!-- 预览列 -->
           <template v-if="column.dataIndex === 'preview'">
             <template v-if="record.type === 'image'">
-              <div class="image-preview-container preview-frame--stable">
+              <!-- 加载失败过一次就不再挂 a-image：避免反复请求，也避免点开一个必然失败的预览弹窗 -->
+              <div v-if="isImageUnavailable(record)" class="image-preview-container preview-frame--stable is-unavailable" :title="unavailableImageHint">
+                <PictureOutlined />
+                <span>暂不可用</span>
+              </div>
+              <div v-else class="image-preview-container preview-frame--stable">
                 <a-image
                   :src="record.url"
                   :alt="`预览：${record.name}`"
@@ -177,7 +182,7 @@
                     mask: true,
                     onError: (e) => handlePreviewError(e, record)
                   }"
-                  @error="handleImageError"
+                  @error="(e) => handleImageError(e, record)"
                 >
                   <template #preview-mask>
                     <div class="preview-mask-text">预览</div>
@@ -342,7 +347,8 @@ import {
   LoadingOutlined,
   QuestionCircleOutlined,
   CloudServerOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  PictureOutlined
 } from '@ant-design/icons-vue'
 import { uploadFile, getFileList, getFileSummary, searchFiles, deleteFile, downloadFile } from '@/api/file'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
@@ -384,6 +390,20 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const previewTitle = ref('')
 const previewType = ref('')
+
+// 图片预览失败的文件：多为文件服务/存储接口异常，记下来避免反复请求与误导性提示
+const unavailableImageIds = ref(new Set())
+const unavailableImageHint = '文件服务暂时不可用，缩略图与预览稍后重试；文件本身仍在，可先下载查看'
+
+const isImageUnavailable = (record) => record?.id != null && unavailableImageIds.value.has(record.id)
+
+const markImageUnavailable = (record) => {
+  const id = record?.id
+  if (id == null || unavailableImageIds.value.has(id)) return
+  const next = new Set(unavailableImageIds.value)
+  next.add(id)
+  unavailableImageIds.value = next
+}
 const pdfPreviewVisible = ref(false)
 const pdfPreviewFile = ref(null)
 
@@ -773,7 +793,8 @@ const openTutorial = () => {
 // 处理预览错误
 const handlePreviewError = (e, record) => {
   console.error('预览加载失败:', e, record.id)
-  message.error('预览加载失败，请检查文件是否存在');
+  markImageUnavailable(record)
+  message.error(unavailableImageHint)
 }
 
 // 处理媒体文件错误
@@ -928,9 +949,13 @@ const handlePreviewClose = () => {
 onUnmounted(() => clearUploadStatusTimer())
 
 // 处理图片加载错误
-const handleImageError = (e) => {
-  // 设置默认图片
-  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNFNUU1RTUiLz48dGV4dCB4PSIzMCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
+const handleImageError = (e, record) => {
+  // 记录失败，下一次渲染直接换成占位状态，避免无谓的重复加载
+  markImageUnavailable(record)
+  // 当前这张图仍然给一个中性占位，避免出现浏览器裂图
+  if (e?.target) {
+    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiNFNUU1RTUiLz48dGV4dCB4PSIzMCIgeT0iMzAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
+  }
 }
 
 onMounted(() => {
@@ -1172,6 +1197,26 @@ onMounted(() => {
 }
 
 .preview-frame--stable { aspect-ratio: 1; }
+
+.image-preview-container.is-unavailable {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #8c8c8c;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  cursor: help;
+
+  .anticon {
+    font-size: 15px;
+  }
+}
 
 @media (max-width: 768px) {
   .storage-brief {
