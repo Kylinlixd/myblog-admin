@@ -1,16 +1,22 @@
 import { flushPromises, mount } from '@vue/test-utils'
 
 import FileList from '../FileList.vue'
-import { deleteFile, getFileList, searchFiles } from '@/api/file'
+import { deleteFile, getFileList, getFileSummary, searchFiles } from '@/api/file'
 import { message } from 'ant-design-vue'
 
 jest.mock('@/api/file', () => ({
   uploadFile: jest.fn(),
   getFileList: jest.fn(),
+  getFileSummary: jest.fn(),
   searchFiles: jest.fn(),
   deleteFile: jest.fn(),
   downloadFile: jest.fn()
 }))
+
+// 概况区数字来自后端聚合；默认返回空汇总，具体用例可按需覆盖。
+beforeEach(() => {
+  getFileSummary.mockResolvedValue({ total: 0, totalBytes: 0 })
+})
 
 jest.mock('ant-design-vue', () => ({
   message: {
@@ -92,6 +98,34 @@ describe('FileList mounted states, batch behavior, and previews', () => {
     getFileList.mockResolvedValue(fileResponse)
     searchFiles.mockResolvedValue(fileResponse)
     deleteFile.mockResolvedValue({})
+  })
+
+  it('shows the backend total for storage instead of summing the current page', async () => {
+    // 当页只有一条 1 MB 的文件，而后端汇总报告 12 条共 36 MB。
+    getFileList.mockResolvedValueOnce({
+      count: 12,
+      results: [{ id: 7, name: 'cover.png', type: 'image', size: 1048576, url: '/media/cover.png' }]
+    })
+    getFileSummary.mockResolvedValueOnce({ total: 12, totalBytes: 37748736 })
+
+    const wrapper = mount(FileList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.vm.total).toBe(12)
+    expect(wrapper.vm.totalBytes).toBe(37748736)
+    expect(wrapper.text()).toContain('已托管')
+    expect(wrapper.text()).not.toContain('可见容量')
+    // 概况区必须渲染后端汇总（约 36 MB），而不是当页那一条 1 MB。
+    const heading = wrapper.find('.storage-metrics').text()
+    expect(heading).toContain('36')
+    expect(heading).not.toContain('1.00 MB')
+
+    // 汇总必须跟随当前筛选条件，否则翻页或筛选后数字会与列表不一致。
+    wrapper.vm.searchForm.type = 'image'
+    await wrapper.vm.handleSearch()
+    await flushPromises()
+    expect(getFileSummary).toHaveBeenLastCalledWith({ q: '', type: 'image' })
+    wrapper.unmount()
   })
 
   it('renders an inline empty or error state with retry', async () => {

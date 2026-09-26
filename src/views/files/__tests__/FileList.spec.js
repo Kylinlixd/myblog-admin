@@ -1,16 +1,22 @@
 import { flushPromises, mount } from '@vue/test-utils'
 
 import FileList from '../FileList.vue'
-import { deleteFile, getFileList, uploadFile } from '@/api/file'
+import { deleteFile, getFileList, getFileSummary, uploadFile } from '@/api/file'
 import { message } from 'ant-design-vue'
 
 jest.mock('@/api/file', () => ({
   uploadFile: jest.fn(),
   getFileList: jest.fn(),
+  getFileSummary: jest.fn(),
   searchFiles: jest.fn(),
   deleteFile: jest.fn(),
   downloadFile: jest.fn()
 }))
+
+// 概况区数字来自后端聚合；默认返回空汇总，具体用例可按需覆盖。
+beforeEach(() => {
+  getFileSummary.mockResolvedValue({ total: 0, totalBytes: 0 })
+})
 
 jest.mock('ant-design-vue', () => ({
   message: {

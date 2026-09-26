@@ -31,8 +31,8 @@
           <dd>{{ total }}</dd>
         </div>
         <div>
-          <dt>可见容量</dt>
-          <dd>{{ formatFileSize(visibleBytes) }}</dd>
+          <dt>已托管</dt>
+          <dd>{{ formatFileSize(totalBytes) }}</dd>
         </div>
       </dl>
       <button
@@ -344,7 +344,7 @@ import {
   CloudServerOutlined,
   FileTextOutlined
 } from '@ant-design/icons-vue'
-import { uploadFile, getFileList, searchFiles, deleteFile, downloadFile } from '@/api/file'
+import { uploadFile, getFileList, getFileSummary, searchFiles, deleteFile, downloadFile } from '@/api/file'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
@@ -387,7 +387,8 @@ const previewType = ref('')
 const pdfPreviewVisible = ref(false)
 const pdfPreviewFile = ref(null)
 
-const visibleBytes = computed(() => fileList.value.reduce((sum, file) => sum + (Number(file.size) || 0), 0))
+// 容量类指标必须来自后端聚合：对当页数据求和只能得到「本页大小」。
+const totalBytes = ref(0)
 const backendSummary = computed(() => {
   const xionCount = fileList.value.filter((file) => file.storageBackend === 'xion').length
   if (xionCount > 0) {
@@ -552,6 +553,21 @@ const fetchFiles = async (allowPageReset = true) => {
     }
     fileList.value = response.results.map(normalizeFileForView)
     total.value = response.count
+
+    // 汇总只影响概况区的数字，失败时不能影响列表本身。
+    try {
+      const summary = await getFileSummary({
+        q: hasFilters ? searchForm.value.name : '',
+        type: searchForm.value.type
+      })
+      if (generation !== requestGeneration) return
+      total.value = summary.total
+      totalBytes.value = summary.totalBytes
+    } catch (summaryError) {
+      if (generation !== requestGeneration) return
+      console.warn('获取文件汇总异常:', summaryError)
+      totalBytes.value = 0
+    }
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('获取文件列表异常:', error)

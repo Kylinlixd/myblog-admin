@@ -84,6 +84,26 @@ export async function getFileList(params = {}) {
   return normalizeFileResponse(response)
 }
 
+/**
+ * 汇总当前筛选条件下的全部文件。
+ *
+ * 列表接口是分页的，对当页数据求和只能得到「本页大小」；容量类指标必须由
+ * 后端聚合，否则翻页前看到的数字是错的。
+ */
+export async function getFileSummary(params = {}) {
+  const response = await request.get('/api/upload/files/summary/', {
+    params: {
+      q: params.q || undefined,
+      type: params.type || undefined
+    }
+  })
+  const data = unwrapApiResponse(response) || {}
+  return {
+    total: Number(data.total) || 0,
+    totalBytes: Number(data.totalBytes) || 0
+  }
+}
+
 export async function searchFiles(params) {
   const response = await request.get('/api/upload/files/search/', {
     params: {
