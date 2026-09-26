@@ -51,3 +51,32 @@ describe('Blog search filter interaction', () => {
     expect(source).not.toMatch(/\.view-mode-toggle\s*\{[\s\S]{0,80}text-align: center/)
   })
 })
+
+describe('Blog search filter-only mode', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogSearch.vue'), 'utf8')
+
+  it('drops the content type filter because everything is a dynamic', () => {
+    expect(source).not.toContain('内容类型')
+    expect(source).not.toContain('advancedOptions.type')
+    expect(source).not.toContain('value="note"')
+    expect(source).not.toContain('value="share"')
+  })
+
+  it('allows searching by filters without a keyword', () => {
+    expect(source).toContain('const canSearch = computed')
+    expect(source).toMatch(/canSearch = computed\(\(\) => Boolean\(keyword\.value\.trim\(\)\) \|\| activeFilterCount\.value > 0\)/)
+    expect(source).toContain('const browseByFilters = async ()')
+    expect(source).toContain('collectAllPages(loadPage)')
+    expect(source).toContain('按筛选条件找到的内容')
+    expect(source).toContain(':disabled="!canSearch"')
+    // 没有关键词也没有条件时仍然要拦住
+    expect(source).toContain('请输入关键词，或至少选择一个筛选条件')
+  })
+
+  it('refines both keyword and filter results with the same rules', () => {
+    expect(source).toContain("import { normalizeSearchItem, paginate, refineItems } from './searchFilters'")
+    expect(source).toMatch(/refineItems\(\s*\(res\.data\.items \|\| \[\]\)\.map\(normalizeSearchItem\)/)
+    expect(source).toContain('const refined = await browseByFilters()')
+    expect(source).toContain('paginate(refined')
+  })
+})

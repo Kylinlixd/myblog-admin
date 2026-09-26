@@ -39,15 +39,6 @@
       <div v-show="showAdvancedSearch" class="advanced-search-options cinematic-card">
         <div class="filter-grid">
           <label class="filter-field">
-            <span class="filter-label">内容类型</span>
-            <a-radio-group v-model:value="advancedOptions.type" class="filter-control">
-              <a-radio value="">全部</a-radio>
-              <a-radio value="note">笔记</a-radio>
-              <a-radio value="share">分享</a-radio>
-            </a-radio-group>
-          </label>
-
-          <label class="filter-field">
             <span class="filter-label">分类</span>
             <a-select
               v-model:value="advancedOptions.category"
@@ -108,10 +99,12 @@
         </div>
 
         <div class="filter-footer">
-          <span v-if="filtersDirty" class="filter-dirty" role="status">筛选条件已更新，点「搜索」应用</span>
+          <span v-if="filtersDirty" class="filter-dirty" role="status">
+            {{ keyword.trim() ? '筛选条件已更新，点「搜索」应用' : '可直接按条件筛选，点「搜索」开始' }}
+          </span>
           <div class="filter-actions">
             <a-button @click="resetAdvancedOptions">重置</a-button>
-            <a-button type="primary" @click="handleSearch">搜索</a-button>
+            <a-button type="primary" :disabled="!canSearch" @click="handleSearch">搜索</a-button>
           </div>
         </div>
       </div>
@@ -176,7 +169,8 @@
       <div class="search-result-heading">
         <div>
           <span class="search-result-kicker">SEARCH INDEX · 搜索索引</span>
-          <h2>与“<strong>{{ keyword }}</strong>”相关的内容</h2>
+          <h2 v-if="keyword.trim()">与“<strong>{{ keyword }}</strong>”相关的内容</h2>
+          <h2 v-else>按筛选条件找到的内容</h2>
         </div>
         <div class="result-heading-meta">
           <span class="result-count">{{ loading ? '检索中' : `找到 ${total} 条` }}</span>
@@ -202,8 +196,8 @@
       <div v-else-if="!searchResults || searchResults.length === 0" class="no-results">
         <inbox-outlined />
         <strong class="no-results__title">没有找到匹配的线索</strong>
-        <p>换一个更具体的词，或减少筛选条件后再试一次。</p>
-        <a-button type="primary" @click="resetSearch">重新搜索</a-button>
+        <p>{{ keyword.trim() ? '换一个更具体的词，或减少筛选条件后再试一次。' : '当前筛选条件下还没有内容，试试放宽时间范围。' }}</p>
+        <a-button type="primary" @click="resetSearch">重新筛选</a-button>
       </div>
       
       <div v-else class="results-content">
@@ -315,8 +309,9 @@ import {
   TagOutlined
 } from '@ant-design/icons-vue'
 import { message, Empty, Skeleton, List } from 'ant-design-vue'
-import { getBlogDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
-import { normalizeCollectionResponse } from '@/api/collections'
+import { getBlogDynamics, getCategoryDynamics, getTagDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
+import { collectAllPages, normalizeCollectionResponse } from '@/api/collections'
+import { normalizeSearchItem, paginate, refineItems } from './searchFilters'
 import { showError } from '@/utils/performance'
 
 const route = useRoute()
@@ -335,7 +330,6 @@ const pageSize = ref(10)
 // 高级搜索
 const showAdvancedSearch = ref(false)
 const advancedOptions = ref({
-  type: '',
   category: undefined,
   tag: undefined,
   time: undefined,
@@ -344,6 +338,13 @@ const advancedOptions = ref({
 })
 // 筛选条件是否已改动但还没提交：只更新提示，不自动发请求
 const filtersDirty = ref(false)
+
+// 关键词和筛选条件至少有一个，才允许提交
+const activeFilterCount = computed(() => {
+  const options = advancedOptions.value
+  return [options.category, options.tag, options.time, options.hasMedia].filter(Boolean).length
+})
+const canSearch = computed(() => Boolean(keyword.value.trim()) || activeFilterCount.value > 0)
 
 // 视图模式
 const viewMode = ref('list')
@@ -439,52 +440,85 @@ const handleUpdateSearch = (event) => {
   }, 0)
 }
 
-// 处理搜索
+// 按条件浏览：不带关键词时，从公共动态流按分类 / 标签取全量，再在本地筛选与分页
+const browseByFilters = async () => {
+  const options = advancedOptions.value
+  const loadPage = async (page) => {
+    const response = options.tag
+      ? await getTagDynamics(options.tag, { page })
+      : options.category
+        ? await getCategoryDynamics(options.category, { page })
+        : await getBlogDynamics({ page })
+    return normalizeCollectionResponse(response)
+  }
+
+  const { results } = await collectAllPages(loadPage)
+  return refineItems(results.map(normalizeSearchItem), options)
+}
+
+// 处理搜索：有关键词走搜索接口，没有关键词时按条件筛选
 const handleSearch = async () => {
-  if (!keyword.value.trim()) {
-    message.warning('请输入搜索关键词')
+  const trimmed = keyword.value.trim()
+
+  if (!trimmed && activeFilterCount.value === 0) {
+    message.warning('请输入关键词，或至少选择一个筛选条件')
     return
   }
-  
+
   loading.value = true
   searched.value = true
   searchPerformed.value = true
-  
+
   try {
-    const params = {
-      keyword: keyword.value.trim(),
-      page: currentPage.value,
-      pageSize: pageSize.value,
-      ...advancedOptions.value
-    }
-    
-    const res = await searchBlog(params)
-    
-    // 检查响应格式
-    if (res && res.code === 200 && res.data) {
-      searchResults.value = res.data.items || []
-      total.value = res.data.total || 0
-      currentPage.value = res.data.page || 1
-      pageSize.value = res.data.pageSize || 10
-      
-      // 如果没有搜索结果，显示提示
-      if (searchResults.value.length === 0) {
+    if (trimmed) {
+      const params = {
+        keyword: trimmed,
+        page: currentPage.value,
+        pageSize: pageSize.value,
+        ...advancedOptions.value
+      }
+
+      const res = await searchBlog(params)
+
+      if (res && res.code === 200 && res.data) {
+        // 搜索接口不认分类 / 标签 / 时间等条件，这里按同一套口径再收敛一次
+        const refined = refineItems(
+          (res.data.items || []).map(normalizeSearchItem),
+          advancedOptions.value
+        )
+        const paged = paginate(refined, res.data.page || 1, res.data.pageSize || pageSize.value)
+        searchResults.value = paged.items
+        total.value = paged.total
+        currentPage.value = paged.page
+        pageSize.value = paged.pageSize
+
+        if (searchResults.value.length === 0) {
+          message.info('未找到相关结果，请尝试其他关键词')
+        }
+      } else {
+        console.error('[Search] 搜索结果格式错误:', res)
+        searchResults.value = []
+        total.value = 0
         message.info('未找到相关结果，请尝试其他关键词')
       }
-      
     } else {
-      console.error('[Search] 搜索结果格式错误:', res)
-      searchResults.value = []
-      total.value = 0
-      message.info('未找到相关结果，请尝试其他关键词')
+      const refined = await browseByFilters()
+      const paged = paginate(refined, currentPage.value, pageSize.value)
+      searchResults.value = paged.items
+      total.value = paged.total
+      currentPage.value = paged.page
+      pageSize.value = paged.pageSize
+
+      if (total.value === 0) {
+        message.info('当前筛选条件下还没有内容')
+      }
     }
-    
-    // 保存搜索历史
-    saveSearchHistory(keyword.value.trim())
-    
+
+    // 只在有关键词时记录搜索历史
+    if (trimmed) saveSearchHistory(trimmed)
+
   } catch (error) {
     console.error('[Search] 搜索失败:', error)
-    // 如果是网络错误，显示网络错误提示
     if (error.message === '网络连接失败') {
       showError('网络连接失败，请检查网络设置')
     } else {
@@ -603,14 +637,16 @@ const toggleAdvancedSearch = () => {
 // 重置高级搜索选项
 const resetAdvancedOptions = () => {
   advancedOptions.value = {
-    type: '',
     category: undefined,
     tag: undefined,
     time: undefined,
     sortBy: 'time_desc',
     hasMedia: false
   }
-  handleSearch()
+  filtersDirty.value = false
+  // 有关键词就按关键词重搜；纯条件筛选被清空后回到初始状态，不再硬发一次请求
+  if (keyword.value.trim()) handleSearch()
+  else resetSearch()
 }
 
 // 获取随机颜色
@@ -1349,17 +1385,78 @@ watch(advancedOptions, () => {
 .search-hero { max-width: 980px; margin: 0 auto 22px; padding: 0 4px; text-align: left; }
 .search-hero h1 { max-width: 720px; margin: 0 0 10px; color: #253142; font-size: clamp(30px, 4.2vw, 52px); font-weight: 800; letter-spacing: -.055em; line-height: 1; text-wrap: balance; }
 .search-hero p { max-width: 560px; margin: 0; color: #697586; font-size: 14px; line-height: 1.7; }
-/* 输入框与「筛选」开关同排：少一行高度，首屏就能看到结果 */
-.search-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; max-width: 980px; margin: 0 auto 12px; padding: 14px 16px; }
+/* 搜索框与「筛选」开关同排；两者同高、圆角同族，整体读成一条控件 */
+.search-box { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; max-width: 980px; margin: 0 auto 12px; padding: 12px; border-radius: 20px; }
 .search-input-wrapper { max-width: none; margin: 0; min-width: 0; }
-.search-input :deep(.ant-input-affix-wrapper) { height: 58px; border: 1px solid #ead8c7; border-radius: 5px 16px 5px 16px; box-shadow: inset 0 1px rgb(255 255 255 / 70%), 0 14px 28px rgb(92 59 35 / 10%); }
-.search-input :deep(.ant-input-affix-wrapper:hover) { border-color: #c47747; box-shadow: 0 14px 34px rgb(92 59 35 / 15%); }
-.search-input :deep(.ant-input-affix-wrapper-focused) { border-color: #b85e2d; box-shadow: 0 0 0 3px rgb(184 94 45 / 14%); }
-.search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 58px; border-color: #b85e2d; border-radius: 0 15px 4px 0; background: #b85e2d; }
-.search-input :deep(.ant-btn:hover) { border-color: #a44e25; background: #a44e25; }
+
+/* 输入框与提交按钮合成一个胶囊：去掉中间的分隔线，只在整组外沿描边 */
+.search-input :deep(.ant-input-affix-wrapper) {
+  height: 52px;
+  padding-inline-start: 18px;
+  border: 1px solid #ead8c7;
+  border-right: 0;
+  border-radius: 14px 0 0 14px;
+  background: #fffdfa;
+  box-shadow: none;
+}
+
+.search-input :deep(.ant-input-affix-wrapper:hover),
+.search-input :deep(.ant-input-affix-wrapper-focused) {
+  border-color: #d9b795;
+  box-shadow: none;
+}
+
+.search-input :deep(.ant-input) { background: transparent; font-size: 15px; }
+.search-input :deep(.search-icon) { color: #c09472; }
+
+.search-input :deep(.ant-btn),
+.search-input :deep(.ant-input-search-button) {
+  height: 52px;
+  padding-inline: 22px;
+  border: 1px solid #b85e2d;
+  border-radius: 0 14px 14px 0;
+  background: linear-gradient(180deg, #c26a37, #b0572a);
+  box-shadow: 0 10px 22px rgb(176 87 42 / 22%);
+}
+
+.search-input :deep(.ant-btn:hover),
+.search-input :deep(.ant-input-search-button:hover) {
+  border-color: #a44e25;
+  background: linear-gradient(180deg, #b85e2d, #a44e25);
+}
+
+/* 整组聚焦时给一圈柔和高亮，而不是只亮输入框 */
+.search-input-wrapper:focus-within :deep(.ant-input-affix-wrapper),
+.search-input-wrapper:focus-within :deep(.ant-input-search-button) {
+  border-color: #b85e2d;
+}
+
+.search-input-wrapper:focus-within :deep(.ant-input-affix-wrapper) {
+  box-shadow: inset 0 0 0 3px rgb(184 94 45 / 12%);
+}
+
 .search-options { display: flex; flex: 0 0 auto; justify-content: flex-end; }
-.search-options :deep(.ant-btn) { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding-inline: 14px; border: 1px solid #ead8c7; border-radius: 10px; color: #a44e25; font-size: 13px; font-weight: 700; background: rgb(255 250 242 / 72%); }
-.search-options :deep(.ant-btn:hover) { border-color: #c47747; color: #8f3f18; background: #fff; }
+
+.search-options :deep(.ant-btn) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 52px;
+  padding-inline: 20px;
+  border: 1px solid #ead8c7;
+  border-radius: 14px;
+  background: #fffdfa;
+  color: #a44e25;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.search-options :deep(.ant-btn:hover),
+.search-options :deep(.ant-btn[aria-expanded='true']) {
+  border-color: #c47747;
+  background: #fdf3ea;
+  color: #8f3f18;
+}
 .advanced-search-options { max-width: 980px; margin: 0 auto 14px; padding: 20px clamp(16px, 2.4vw, 26px); border: 1px solid #ead8c7; border-radius: 5px 18px 5px 18px; background: rgb(255 250 242 / 82%); }
 
 /* 筛选面板：两列栅格 + 固定标签列，控件等宽对齐 */
@@ -1419,6 +1516,7 @@ watch(advancedOptions, () => {
 
   .search-options :deep(.ant-btn) {
     width: 100%;
+    height: 46px;
     justify-content: center;
   }
 
