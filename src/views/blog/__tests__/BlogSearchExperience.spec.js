@@ -105,3 +105,14 @@ describe('Blog search data completeness', () => {
     expect(editSource).toMatch(/const response = keyword/)
   })
 })
+
+describe('Blog search excerpt readability', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogSearch.vue'), 'utf8')
+
+  it('strips markdown markers before rendering excerpts', () => {
+    // 后端 excerpt 是正文截断，带 # / ** 会直接显示成记号
+    expect(source).toContain('const plainExcerpt = (text) =>')
+    expect(source).toContain("highlightKeyword(plainExcerpt(item.excerpt))")
+    expect(source).not.toContain("highlightKeyword(item.excerpt)")
+  })
+})

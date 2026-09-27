@@ -218,7 +218,7 @@
                       <h3 class="result-title" v-html="highlightKeyword(item.title || item.name)"></h3>
                     </router-link>
                   </div>
-                  <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
+                  <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(plainExcerpt(item.excerpt))"></p>
                   <div class="result-meta">
                     <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
                     <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
@@ -247,7 +247,7 @@
               </div>
               <div class="card-content">
                 <h3 class="card-title" v-html="highlightKeyword(item.title || item.name)"></h3>
-                <p v-if="item.excerpt" class="card-excerpt" v-html="highlightKeyword(item.excerpt)"></p>
+                <p v-if="item.excerpt" class="card-excerpt" v-html="highlightKeyword(plainExcerpt(item.excerpt))"></p>
                 <div class="card-meta">
                   <span class="card-type">{{ getItemType(item) }}</span>
                   <span v-if="item.createdAt" class="card-date">{{ formatDate(item.createdAt) }}</span>
@@ -681,6 +681,12 @@ const getRandomColor = () => {
 }
 
 // 高亮关键词
+// 后端 excerpt 是正文截断，带 # / ** 之类的 markdown 记号，直接显示很难看
+const plainExcerpt = (text) => String(text ?? '')
+  .replace(/[#>*_`\[\]]/g, '')
+  .replace(/\s+/g, ' ')
+  .trim()
+
 const highlightKeyword = (text) => {
   const value = String(text ?? '')
   const escaped = value.replace(/[&<>"']/g, character => ({
