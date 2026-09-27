@@ -1,0 +1,130 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+# 两次 push 挨在一起时不并发部署：共用 /tmp 包名与 current 软链会互相踩
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Type check (non-blocking)
+        # 仓库里只有 2 个 <script setup lang="ts"> 文件（BlogSearch.vue、FluidCursor.vue），
+        # 历史遗留 82 处类型错误（45 + 16 集中在两个文件，其余为模板推断）。
+        # 现在改成强制门禁会挡住正常发布，所以先把数字打出来当基线，
+        # 等错误清完再去掉 continue-on-error。
+        continue-on-error: true
+        run: |
+          set +e
+          npm run typecheck 2>&1 | tee /tmp/typecheck.log
+          echo "::notice::typecheck 错误数 = $(grep -c 'error TS' /tmp/typecheck.log)"
+          exit 0
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+
+      - name: Package release
+        run: |
+          mkdir -p .release-package
+          cp -R dist/. .release-package/
+          cp ops/nginx/myblog-admin.conf .release-package/.myblog-admin-assets.conf
+          # 包名带上 commit：并行/重试时不会互相覆盖
+          tar -czf "release-${{ github.sha }}.tgz" -C .release-package .
+
+      - name: Upload release
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: "release-${{ github.sha }}.tgz"
+          target: "/tmp"
+
+      - name: Activate release
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -eu
+            release_id="${{ github.sha }}"
+            root=/var/www/myblog-admin
+            release_dir="$root/releases/${release_id}"
+            current_link="$root/current"
+            archive="/tmp/release-${release_id}.tgz"
+            snippet=/etc/nginx/snippets/myblog-admin-assets.conf
+            snippet_backup="/tmp/myblog-admin-assets.conf.${release_id}.bak"
+            site=/etc/nginx/sites-enabled/myblog-admin
+            site_backup="${site}.${release_id}.bak"
+
+            # 记录当前 release，reload 失败时用它回滚
+            previous="$(readlink -f "$current_link" 2>/dev/null || true)"
+            echo "current release before deploy: ${previous:-none}"
+
+            mkdir -p "$release_dir"
+            tar -xzf "$archive" -C "$release_dir"
+
+            # 先改 nginx 配置并校验；校验不过就还原，且不切 softlink
+            [ -f "$snippet" ] && cp -a "$snippet" "$snippet_backup"
+            install -d /etc/nginx/snippets
+            install -m 0644 "$release_dir/.myblog-admin-assets.conf" "$snippet"
+            if ! grep -qF 'include /etc/nginx/snippets/myblog-admin-assets.conf;' "$site"; then
+              cp -a "$site" "$site_backup"
+              sed -i '/    location \/ {/i\    include /etc/nginx/snippets/myblog-admin-assets.conf;' "$site"
+            fi
+
+            if ! nginx -t; then
+              echo "!! nginx 配置校验失败，还原配置并放弃本次发布"
+              [ -f "$snippet_backup" ] && install -m 0644 "$snippet_backup" "$snippet"
+              [ -f "$site_backup" ] && cp -a "$site_backup" "$site"
+              nginx -t || true
+              rm -f "$archive"
+              exit 1
+            fi
+
+            # 校验通过才切 symlink
+            ln -sfn "$release_dir" "$current_link"
+
+            if ! systemctl reload nginx; then
+              echo "!! nginx reload 失败，回滚到 ${previous:-上一个 release}"
+              if [ -n "$previous" ] && [ -d "$previous" ]; then
+                ln -sfn "$previous" "$current_link"
+              fi
+              systemctl reload nginx || true
+              rm -f "$archive"
+              exit 1
+            fi
+
+            rm -f "$archive"
+            rm -f "$snippet_backup" "$site_backup"
+
+            # 保留当前与上一个 release
+            find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+              | sort -nr \
+              | awk 'NR > 2 { sub(/^[^ ]+ /, ""); print }' \
+              | xargs -r rm -rf
+
+            echo "deployed ${release_id} (previous: ${previous:-none})"
