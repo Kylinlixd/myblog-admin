@@ -14,6 +14,10 @@ export function normalizeCollectionResponse(response) {
   if (Array.isArray(payload?.items)) {
     return { count: payload.count ?? payload.total ?? payload.items.length, results: payload.items }
   }
+  // 分类/标签动态流把列表放在 dynamics 里，漏了它就会静默变成空列表
+  if (Array.isArray(payload?.dynamics)) {
+    return { count: payload.count ?? payload.total ?? payload.dynamics.length, results: payload.dynamics }
+  }
 
   return { count: 0, results: [] }
 }

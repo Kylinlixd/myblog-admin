@@ -7,7 +7,10 @@ describe('collection response normalization', () => {
     [{ data: { count: 5, results: [{ id: 1 }] } }, 5],
     [{ data: { list: [{ id: 1 }], total: 6 } }, 6],
     [{ data: { total: 8, items: [{ id: 1 }] } }, 8],
-    [{ data: { count: 42, items: [{ id: 1 }] } }, 42]
+    [{ data: { count: 42, items: [{ id: 1 }] } }, 42],
+    // 分类 / 标签动态流把列表放在 dynamics 里：漏了它就会静默变成空列表
+    [{ data: { total: 7, dynamics: [{ id: 1 }] } }, 7],
+    [{ data: { dynamics: [{ id: 1 }] } }, 1]
   ])('normalizes supported backend shape', (response, count) => {
     expect(normalizeCollectionResponse(response)).toEqual({
       count,

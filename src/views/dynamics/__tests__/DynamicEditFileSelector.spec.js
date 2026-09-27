@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils'
 
 import DynamicEdit from '../DynamicEdit.vue'
-import { getFileList } from '@/api/file'
+import { getFileList, searchFiles } from '@/api/file'
 
 jest.mock('@/api/file', () => ({
   getFileList: jest.fn(),
@@ -70,6 +70,8 @@ describe('DynamicEdit file selector responses', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     getFileList.mockResolvedValue(normalizedFiles)
+    // 有关键词时选择器改走搜索接口，默认也给同样的返回结构
+    searchFiles.mockResolvedValue(normalizedFiles)
   })
 
   const mountEditor = () => mount(DynamicEdit, {
@@ -143,7 +145,9 @@ describe('DynamicEdit file selector responses', () => {
     await flushPromises()
     expect(wrapper.vm.fileListData).toEqual(normalizedFiles.results)
     expect(wrapper.vm.fileTotal).toBe(normalizedFiles.count)
-    expect(getFileList).toHaveBeenCalledTimes(3)
+    // 有关键词时必须走搜索接口：列表接口的 q 后端并不处理
+    expect(getFileList).toHaveBeenCalledTimes(1)
+    expect(searchFiles).toHaveBeenCalledTimes(2)
 
     wrapper.unmount()
   })
@@ -348,6 +352,7 @@ describe('DynamicEdit file selector responses', () => {
     await flushPromises()
     wrapper.vm.formRef = { validateFields: jest.fn().mockResolvedValue() }
     getFileList.mockResolvedValue({ count: 30, results: normalizedFiles.results })
+    searchFiles.mockResolvedValue({ count: 30, results: normalizedFiles.results })
 
     await wrapper.vm.showFileSelector()
     await flushPromises()
@@ -358,12 +363,15 @@ describe('DynamicEdit file selector responses', () => {
     expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }))
 
     await wrapper.vm.handleFileSearch('cover')
-    expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, keyword: 'cover' }))
+    await flushPromises()
+    expect(searchFiles).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, q: 'cover' }))
 
     wrapper.vm.handleFilePageChange(3)
     await flushPromises()
     await wrapper.vm.handleFileTypeChange('image')
-    expect(getFileList).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, type: 'image' }))
+    await flushPromises()
+    // 关键词仍在，所以筛选也走搜索接口，并且页码回到第 1 页
+    expect(searchFiles).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, q: 'cover', type: 'image' }))
     wrapper.unmount()
   })
 })

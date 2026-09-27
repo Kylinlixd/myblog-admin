@@ -263,6 +263,12 @@
   background: var(--blog-accent-strong) !important;
 }
 
+/* 深底浅字：当前页数字用白色，否则与 --blog-text-soft 叠加只有 1.27:1 对比度 */
+.cinematic-page .ant-pagination-item-active a,
+.cinematic-page .ant-pagination-item-active .ant-pagination-item-link {
+  color: #fff !important;
+}
+
 .cinematic-page a:focus-visible,
 .blog-shell button:focus-visible,
 .blog-shell input:focus-visible {

@@ -307,7 +307,7 @@ import {
   FolderOutlined,
   TagOutlined
 } from '@ant-design/icons-vue'
-import { message, Empty, Skeleton, List } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { getBlogDynamics, getCategoryDynamics, getTagDynamics, getBlogCategoryList, getBlogTagList, searchBlog } from '@/api/blog'
 import { collectAllPages, normalizeCollectionResponse } from '@/api/collections'
 import { normalizeSearchItem, paginate, refineItems } from './searchFilters'
@@ -478,35 +478,52 @@ const handleSearch = async () => {
 
   try {
     if (trimmed) {
-      const params = {
-        keyword: trimmed,
-        page: currentPage.value,
-        pageSize: pageSize.value,
-        ...advancedOptions.value
-      }
+      const options = advancedOptions.value
+      // 排序/筛选是前端做的：必须先取全量，否则"最多浏览"只排了服务端给的那 10 条
+      const needsFullSet = options.sortBy !== 'relevance' || activeFilterCount.value > 0
 
-      const res = await searchBlog(params)
+      if (needsFullSet) {
+        const all = await collectAllPages(async (page) => {
+          const response = await searchBlog({ keyword: trimmed, page, pageSize: 100 })
+          return normalizeCollectionResponse(response)
+        })
 
-      if (res && res.code === 200 && res.data) {
-        // 搜索接口不认分类 / 标签 / 时间等条件，这里按同一套口径再收敛一次
-        const refined = refineItems(
-          (res.data.items || []).map(normalizeSearchItem),
-          advancedOptions.value
-        )
-        const paged = paginate(refined, res.data.page || 1, res.data.pageSize || pageSize.value)
+        const refined = refineItems(all.results.map(normalizeSearchItem), options)
+        const paged = paginate(refined, currentPage.value, pageSize.value)
         searchResults.value = paged.items
         total.value = paged.total
         currentPage.value = paged.page
         pageSize.value = paged.pageSize
 
-        if (searchResults.value.length === 0) {
+        if (total.value === 0) {
           message.info('未找到相关结果，请尝试其他关键词')
         }
       } else {
-        console.error('[Search] 搜索结果格式错误:', res)
-        searchResults.value = []
-        total.value = 0
-        message.info('未找到相关结果，请尝试其他关键词')
+        const res = await searchBlog({
+          keyword: trimmed,
+          page: currentPage.value,
+          pageSize: pageSize.value,
+          ...options
+        })
+
+        if (res && res.code === 200 && res.data) {
+          // relevance 顺序由后端给出，这里不动顺序（refineItems 没有 relevance 排序器）
+          const refined = refineItems((res.data.items || []).map(normalizeSearchItem), options)
+          const paged = paginate(refined, res.data.page || 1, res.data.pageSize || pageSize.value)
+          searchResults.value = paged.items
+          total.value = paged.total
+          currentPage.value = paged.page
+          pageSize.value = paged.pageSize
+
+          if (searchResults.value.length === 0) {
+            message.info('未找到相关结果，请尝试其他关键词')
+          }
+        } else {
+          console.error('[Search] 搜索结果格式错误:', res)
+          searchResults.value = []
+          total.value = 0
+          message.info('未找到相关结果，请尝试其他关键词')
+        }
       }
     } else {
       const refined = await browseByFilters()
@@ -558,12 +575,13 @@ onMounted(async () => {
   // 加载分类和标签
   try {
     const [categoryRes, tagRes] = await Promise.all([
-      getBlogCategoryList(),
-      getBlogTagList()
+      collectAllPages((page) => getBlogCategoryList({ page }).then(normalizeCollectionResponse)),
+      collectAllPages((page) => getBlogTagList({ page }).then(normalizeCollectionResponse))
     ])
     
-    categories.value = normalizeCollectionResponse(categoryRes).results
-    tags.value = normalizeCollectionResponse(tagRes).results
+    // 标签接口是分页的（73 个标签每页只给 10 个），必须逐页取全再进下拉
+    categories.value = categoryRes.results
+    tags.value = tagRes.results
     
   } catch (error) {
     console.error('[Search] 加载分类和标签失败:', error)
@@ -1349,10 +1367,6 @@ watch(advancedOptions, () => {
 
   .search-input-wrapper {
     max-width: 100%;
-  }
-
-  .search-input :deep(.ant-input-affix-wrapper) {
-    height: 40px;
   }
 
   .search-input :deep(.ant-input) {

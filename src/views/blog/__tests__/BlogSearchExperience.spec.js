@@ -80,3 +80,28 @@ describe('Blog search filter-only mode', () => {
     expect(source).toContain('paginate(refined')
   })
 })
+
+describe('Blog search data completeness', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogSearch.vue'), 'utf8')
+
+  it('loads every tag page instead of only the first ten', () => {
+    // 标签接口分页（73 个标签每页 10 个），只取第一页会让下拉缺 90% 的标签
+    expect(source).toMatch(/collectAllPages\(\(page\) => getBlogTagList\(\{ page \}\)/)
+    expect(source).toMatch(/collectAllPages\(\(page\) => getBlogCategoryList\(\{ page \}\)/)
+    expect(source).not.toContain('tags.value = normalizeCollectionResponse(tagRes).results')
+  })
+
+  it('fetches the whole result set before sorting or filtering by hand', () => {
+    expect(source).toContain("const needsFullSet = options.sortBy !== 'relevance' || activeFilterCount.value > 0")
+    expect(source).toMatch(/refineItems\(all\.results\.map\(normalizeSearchItem\)/)
+  })
+
+  it('does not rely on the ignored list-endpoint keyword parameter', () => {
+    const editSource = fs.readFileSync(
+      path.join(process.cwd(), 'src/views/dynamics/DynamicEdit.vue'),
+      'utf8'
+    )
+    expect(editSource).toContain('await searchFiles(')
+    expect(editSource).toMatch(/const response = keyword/)
+  })
+})

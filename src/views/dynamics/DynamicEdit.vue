@@ -313,7 +313,7 @@ import { uploadFile, checkFileSize } from '../../utils/upload'
 import { getCategoryList, createCategory } from '../../api/category'
 import { collectAllPages } from '../../api/collections'
 import { getTagList, createTag } from '../../api/tag'
-import { getFileList } from '../../api/file'
+import { getFileList, searchFiles } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { buildApiUrl, stripApiBaseUrl } from '@/utils/apiBaseUrl'
 import { clearEditorDraft, loadEditorDraft, saveEditorDraft } from './editorDraft'
@@ -957,14 +957,23 @@ const loadFileLibrary = async ({ resetPage = false } = {}) => {
   fileListLoading.value = true
 
   try {
-    const params = {
-      page: fileCurrentPage.value,
-      pageSize: filePageSize.value,
-      keyword: fileSearchKeyword.value,
-      type: fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
-    }
+    const keyword = fileSearchKeyword.value.trim()
+    const type = fileTypeFilter.value === 'all' ? undefined : fileTypeFilter.value
+    // 文件列表接口不处理 q（后端只认 type），搜索必须走 /upload/files/search/
+    const response = keyword
+      ? await searchFiles({
+        q: keyword,
+        type,
+        page: fileCurrentPage.value,
+        pageSize: filePageSize.value
+      })
+      : await getFileList({
+        page: fileCurrentPage.value,
+        pageSize: filePageSize.value,
+        type
+      })
 
-    applyFileListResponse(await getFileList(params))
+    applyFileListResponse(response)
   } catch (error) {
     console.error('获取文件列表失败:', error)
     message.error('获取文件列表失败')

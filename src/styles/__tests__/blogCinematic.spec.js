@@ -45,3 +45,17 @@ describe('cinematic blog theme', () => {
     expect(styles).toContain('animation: none')
   })
 })
+
+describe('blog pagination contrast', () => {
+  const source = fs.readFileSync(
+    path.join(process.cwd(), 'src/styles/blog-cinematic.scss'),
+    'utf8'
+  )
+
+  it('keeps the active page number readable on the dark accent background', () => {
+    // 深底 #a64e23 上必须用白字：沿用 --blog-text-soft 只有 1.27:1
+    expect(source).toMatch(
+      /\.ant-pagination-item-active a[\s\S]{0,120}color:\s*#fff\s*!important/
+    )
+  })
+})
