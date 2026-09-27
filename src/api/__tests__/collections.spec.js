@@ -87,3 +87,20 @@ describe('collectAllPages', () => {
     expect(loadPage).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('blog taxonomy pagination contract', () => {
+  // 行为断言：page 必须真的进到请求参数里；
+  // 只断言源码字符串曾放过这个 bug（helper 忽略参数 → 每页都请求第一页）
+  it('passes the page parameter through to the request', async () => {
+    const request = require('@/utils/request').default
+    const getSpy = jest.spyOn(request, 'get').mockResolvedValue({ code: 200, data: { count: 73, results: [] } })
+
+    const { getBlogTagList, getBlogCategoryList } = require('../blog')
+    await getBlogTagList({ page: 3 })
+    await getBlogCategoryList({ page: 2 })
+
+    expect(getSpy).toHaveBeenCalledWith('/api/blog/tags/', { params: { page: 3 } })
+    expect(getSpy).toHaveBeenCalledWith('/api/blog/categories/', { params: { page: 2 } })
+    getSpy.mockRestore()
+  })
+})

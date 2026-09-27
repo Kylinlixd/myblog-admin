@@ -28,8 +28,9 @@ function getPublicBlog(path, params) {
   return cachedRequest(`GET:${url}?${query}`, () => request.get(url, params ? { params } : undefined))
 }
 
-export const getBlogCategoryList = () =>
-  getPublicBlog('categories')
+// 分类/标签接口是分页的（标签 73 个每页 10 个）：必须能带 page，否则只能拿到第一页
+export const getBlogCategoryList = (params) =>
+  getPublicBlog('categories', params)
 
 export const getBlogDynamics = (params) =>
   request.get(createBlogApiUrl('dynamics'), { params })
@@ -55,8 +56,8 @@ export const getCategoryDynamics = (categoryId, params) =>
 export const getTagDynamics = (tagId, params) =>
   request.get(createBlogApiUrl(`tags/${tagId}/dynamics`), { params })
 
-export const getBlogTagList = () =>
-  getPublicBlog('tags')
+export const getBlogTagList = (params) =>
+  getPublicBlog('tags', params)
 
 export const increaseDynamicView = (id) =>
   request.put(createBlogApiUrl(`dynamics/${id}/view`))
