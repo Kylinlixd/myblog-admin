@@ -100,6 +100,21 @@ describe('CategoryList mounted states and taxonomy actions', () => {
     wrapper.unmount()
   })
 
+  it('clears the cross-page selection when the page changes', async () => {
+    getCategoryList.mockResolvedValue({ count: 30, results: [{ id: 1, name: 'A', useCount: 0, sort: 0, status: 'active' }] })
+    const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    wrapper.vm.onSelectChange([1])
+    await flushPromises()
+    expect(wrapper.vm.selectedRowKeys).toEqual([1])
+
+    // 翻到第 2 页：不能把上一页的选中项带到下一页
+    wrapper.vm.pagination.onChange(2, 10)
+    await flushPromises()
+    expect(wrapper.vm.selectedRowKeys).toEqual([])
+  })
+
   it('creates, edits, and deletes a category through normalized APIs', async () => {
     const wrapper = mount(CategoryList, { global: { stubs: globalStubs } })
     await flushPromises()

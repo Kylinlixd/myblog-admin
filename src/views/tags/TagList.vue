@@ -281,6 +281,8 @@ const pagination = reactive({
     const sizeChanged = nextPageSize !== pagination.pageSize
     pagination.pageSize = nextPageSize
     pagination.current = sizeChanged ? 1 : page
+    // 翻页/改每页条数后清空选择：否则会保留上一页的选中项，工具栏显示跨页已选
+    selectedRowKeys.value = []
     fetchTags()
   }
 })

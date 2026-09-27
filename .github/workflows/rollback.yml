@@ -1,0 +1,47 @@
+name: Rollback frontend
+
+# 手动回滚：把 current 软链指回指定 release（留空则回退到上一个），然后 reload nginx
+on:
+  workflow_dispatch:
+    inputs:
+      release_id:
+        description: '要回退到的 commit（留空=上一个 release）'
+        required: false
+        default: ''
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Switch current release
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -eu
+            root=/var/www/myblog-admin
+            current_link="$root/current"
+            requested="${{ github.event.inputs.release_id }}"
+            current="$(readlink -f "$current_link" 2>/dev/null || true)"
+            echo "current: ${current:-none}"
+
+            if [ -n "$requested" ]; then
+              target="$root/releases/$requested"
+            else
+              # 按修改时间取当前 release 之外最新的一个
+              target="$(find "$root/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+                | sort -nr | awk '{ sub(/^[^ ]+ /, ""); print }' \
+                | grep -v "^${current}$" | head -1)"
+            fi
+
+            if [ -z "${target:-}" ] || [ ! -d "$target" ]; then
+              echo "!! 找不到可回滚的 release（requested=${requested:-auto} target=${target:-none}）"
+              exit 1
+            fi
+
+            ln -sfn "$target" "$current_link"
+            nginx -t
+            systemctl reload nginx
+            echo "rolled back to: $target"

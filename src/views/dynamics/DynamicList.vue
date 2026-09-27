@@ -487,6 +487,8 @@ const paginationConfig = computed(() => ({
     const sizeChanged = nextPageSize !== pageSize.value
     pageSize.value = nextPageSize
     currentPage.value = sizeChanged ? 1 : page
+    // 翻页/改每页条数后清空选择：避免跨页选中残留
+    selectedRowKeys.value = []
     fetchDynamics()
   }
 }))
