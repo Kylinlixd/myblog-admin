@@ -292,6 +292,18 @@
           </a-popconfirm>
         </div>
       </article>
+
+      <!-- 窄屏表格是隐藏的，分页器挂在表格上等于不存在：这里补一个，否则手机上只能看到第一页 -->
+      <a-pagination
+        class="file-mobile-pagination"
+        :current="currentPage"
+        :page-size="pageSize"
+        :total="total"
+        :show-size-changer="false"
+        simple
+        :show-total="(count) => `共 ${count} 条`"
+        @change="handleFileMobilePageChange"
+      />
     </section>
 
     <!-- 媒体预览对话框 -->
@@ -523,6 +535,12 @@ const paginationConfig = computed(() => ({
     currentPage.value = 1
   }
 }))
+
+// 移动端分页：只改页码再重新取数（每页条数沿用桌面端设置）
+const handleFileMobilePageChange = (page) => {
+  currentPage.value = page
+  fetchFiles()
+}
 
 const normalizeFileForView = (item) => {
   const url = buildApiUrl(item.url)
@@ -1154,6 +1172,12 @@ onMounted(() => {
 }
 
 .file-mobile-grid { display: none; }
+
+.file-mobile-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
 
 .media-preview-container {
   display: flex;

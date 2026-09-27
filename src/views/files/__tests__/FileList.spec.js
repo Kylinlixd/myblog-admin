@@ -1,3 +1,6 @@
+import fs from 'node:fs'
+import path from 'node:path'
+
 import { flushPromises, mount } from '@vue/test-utils'
 
 import FileList from '../FileList.vue'
@@ -252,5 +255,16 @@ describe('FileList upload handling', () => {
     expect(wrapper.vm.uploadStage).toBe('success')
     expect(wrapper.vm.uploadingName).toBe('')
     wrapper.unmount()
+  })
+})
+
+describe('file list mobile pagination', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src/views/files/FileList.vue'), 'utf8')
+
+  it('renders a pager for the mobile grid instead of hiding the table only', () => {
+    // 窄屏把表格 display:none 掉，分页器原本挂在表格上 → 手机上永远只能看第一页
+    expect(source).toContain('file-mobile-pagination')
+    expect(source).toMatch(/file-mobile-grid[\s\S]*?file-mobile-pagination[\s\S]*?<\/section>/)
+    expect(source).toContain('handleFileMobilePageChange')
   })
 })
