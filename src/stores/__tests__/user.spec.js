@@ -48,6 +48,24 @@ describe('user store session', () => {
     expect(store.isLoggedIn).toBe(false)
   })
 
+  it('reports credential failures (400/401) from login as a plain false', async () => {
+    const loginRequest = require('@/api/auth').login
+    loginRequest.mockRejectedValueOnce({ status: 400 })
+    const store = useUserStore()
+
+    await expect(store.login('kylin', 'wrong-password')).resolves.toBe(false)
+    expect(store.isLoggedIn).toBe(false)
+  })
+
+  it('rethrows non-credential login failures so the page can show the real reason', async () => {
+    const loginRequest = require('@/api/auth').login
+    loginRequest.mockRejectedValueOnce(Object.assign(new Error('网络连接失败，请稍后重试'), { status: 0 }))
+    const store = useUserStore()
+
+    await expect(store.login('kylin', 'any-password')).rejects.toThrow('网络连接失败')
+    expect(store.isLoggedIn).toBe(false)
+  })
+
   it('keeps the cached session when initialization fails temporarily', async () => {
     localStorage.setItem('blog.accessToken', 'access-value')
     getUserInfoRequest.mockRejectedValueOnce({ status: 500 })

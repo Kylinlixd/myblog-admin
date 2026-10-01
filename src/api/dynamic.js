@@ -1,6 +1,7 @@
 import request from '@/utils/request'
 import { normalizeCollectionResponse } from './collections'
 import { unwrapApiResponse } from './response'
+import { clearRequestCache } from '@/services/http/publicRequestCache'
 
 export function buildDynamicParams(params = {}) {
   const search = new URLSearchParams()
@@ -40,6 +41,11 @@ function validateDynamicPayload(payload) {
   }
 }
 
+// 公开页的「最新 / 热门」有 30s 缓存：写操作后清掉，避免管理端改完前台还是旧数据
+function invalidatePublicCache() {
+  clearRequestCache()
+}
+
 export const getDynamicList = async (params) => {
   const response = await request.get('/api/dynamics/', { params: buildDynamicParams(params) })
   return normalizeCollectionResponse(response)
@@ -48,17 +54,24 @@ export const getDynamicList = async (params) => {
 export const getDynamicDetail = async (id) =>
   unwrapApiResponse(await request.get(`/api/dynamics/${id}/`), '动态请求失败')
 
-export const deleteDynamic = (id) =>
-  request.delete(`/api/dynamics/${id}/`)
+export const deleteDynamic = async (id) => {
+  const result = await unwrapApiResponse(await request.delete(`/api/dynamics/${id}/`), '删除动态失败')
+  invalidatePublicCache()
+  return result
+}
 
 export async function createDynamic(data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  return unwrapApiResponse(await request.post('/api/dynamics/', payload), '动态请求失败')
+  const result = await unwrapApiResponse(await request.post('/api/dynamics/', payload), '动态请求失败')
+  invalidatePublicCache()
+  return result
 }
 
 export async function updateDynamic(id, data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  return unwrapApiResponse(await request.put(`/api/dynamics/${id}/`, payload), '动态请求失败')
+  const result = await unwrapApiResponse(await request.put(`/api/dynamics/${id}/`, payload), '动态请求失败')
+  invalidatePublicCache()
+  return result
 }

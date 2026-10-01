@@ -22,8 +22,14 @@
           <slot name="reply-editor" v-bind="slotProps" />
         </template>
       </CommentThread>
-      <button v-if="comment.reply_count > comment.replies_preview.length" class="comment-more" type="button" @click="$emit('more', comment)">
-        查看更多回复（{{ comment.reply_count - comment.replies_preview.length }}）
+      <button
+        v-if="comment.reply_count > comment.replies_preview.length"
+        class="comment-more"
+        type="button"
+        :disabled="loadingMore"
+        @click="$emit('more', comment)"
+      >
+        {{ loadingMore ? '回复加载中...' : `查看更多回复（${comment.reply_count - comment.replies_preview.length}）` }}
       </button>
     </div>
   </article>
@@ -36,7 +42,8 @@ import dayjs from 'dayjs'
 defineOptions({ name: 'CommentThread' })
 defineProps({
   comment: { type: Object, required: true },
-  depth: { type: Number, default: 0 }
+  depth: { type: Number, default: 0 },
+  loadingMore: { type: Boolean, default: false }
 })
 defineEmits(['reply', 'more'])
 const formatDate = (value) => dayjs(value).format('YYYY-MM-DD HH:mm')

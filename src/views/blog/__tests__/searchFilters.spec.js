@@ -69,6 +69,31 @@ describe('blog search local filters', () => {
     expect(refineItems(items, {}).map((item) => item.id)).toEqual([1, 2, 3])
   })
 
+  it('narrows keyword results to the selected category', () => {
+    const articleInCategory = makeItem({ id: 1, type: 'dynamic', category: { id: 4, name: '前端' } })
+    const articleInOtherCategory = makeItem({ id: 2, type: 'dynamic', category: { id: 5, name: '后端' } })
+    const articleWithoutCategory = makeItem({ id: 3, type: 'dynamic' })
+    const tagEntry = makeItem({ id: 4, type: 'tag', name: 'Vue' })
+    const categoryEntry = makeItem({ id: 5, type: 'category', name: '前端' })
+
+    const items = [articleInCategory, articleInOtherCategory, articleWithoutCategory, tagEntry, categoryEntry]
+    expect(refineItems(items, { category: 4 }).map((item) => item.id)).toEqual([1])
+    // 字符串 / 数字 id 两种口径都能匹配上
+    expect(refineItems(items, { category: '4' }).map((item) => item.id)).toEqual([1])
+    // 未选分类时伪条目照常保留
+    expect(refineItems(items, {})).toHaveLength(5)
+  })
+
+  it('narrows keyword results to items carrying the selected tag', () => {
+    const tagged = makeItem({ id: 1, type: 'dynamic', tags: [{ id: 9, name: 'Git' }] })
+    const untagged = makeItem({ id: 2, type: 'dynamic', tags: [{ id: 10, name: 'Vue' }] })
+    const tagEntry = makeItem({ id: 3, type: 'tag', name: 'Git' })
+
+    expect(refineItems([tagged, untagged, tagEntry], { tag: 9 }).map((item) => item.id)).toEqual([1])
+    expect(refineItems([tagged, untagged, tagEntry], { tag: '10' }).map((item) => item.id)).toEqual([2])
+    expect(refineItems([tagged, untagged, tagEntry], { tag: undefined })).toHaveLength(3)
+  })
+
   it('paginates the refined list and clamps the page', () => {
     const items = Array.from({ length: 25 }, (_, index) => makeItem({ id: index + 1 }))
 

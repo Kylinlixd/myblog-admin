@@ -228,9 +228,9 @@ const getComments = async (allowPageReset = true) => {
     
     // 检查是否是认证错误
     if (error.message && (
-      error.message.includes('登录已过期') || 
+      error.message.includes('登录已过期') ||
       error.message.includes('未登录') ||
-      error.response?.status === 401
+      error.status === 401
     )) {
       message.error('登录已过期，请重新登录');
     } else {

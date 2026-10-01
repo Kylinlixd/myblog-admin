@@ -499,11 +499,12 @@ const handleSearch = async () => {
           message.info('未找到相关结果，请尝试其他关键词')
         }
       } else {
+        // 后端只认 keyword/page/pageSize/sortBy：category/tag/time/hasMedia 由 refineItems 本地处理，不要塞进 query
         const res = await searchBlog({
           keyword: trimmed,
           page: currentPage.value,
           pageSize: pageSize.value,
-          ...options
+          sortBy: options.sortBy
         })
 
         if (res && res.code === 200 && res.data) {
@@ -543,7 +544,7 @@ const handleSearch = async () => {
 
   } catch (error) {
     console.error('[Search] 搜索失败:', error)
-    if (error.message === '网络连接失败') {
+    if (error?.code === 'NETWORK_ERROR' || error?.status === 0) {
       showError('网络连接失败，请检查网络设置')
     } else {
       showError('未找到相关结果，请尝试其他关键词')

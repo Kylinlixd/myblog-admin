@@ -68,9 +68,12 @@ export const useUserStore = defineStore('user', {
         await this.getUserInfo()
         this.initialized = true
         return true
-      } catch {
+      } catch (error) {
         this.clearUserData()
-        return false
+        // 400/401 属于凭证错误，由登录页展示「用户名或密码错误」；
+        // 网络、超时、5xx 等继续向上抛，避免被误报成密码错误
+        if (error?.status === 400 || error?.status === 401) return false
+        throw error
       }
     },
 

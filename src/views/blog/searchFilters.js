@@ -1,9 +1,9 @@
 /**
  * 搜索页的本地筛选 / 排序 / 分页。
  *
- * 后端 `/api/blog/search` 只认 `keyword` 与 `sortBy`（`category`、`tag`、`time`、`hasMedia` 都不参与查询），
- * 公共动态流也只提供「全部 / 分类 / 标签」三种入口。所以「不带关键词、只按条件筛」这一档，
- * 由前端在取回的结果集上完成时间范围、多媒体、排序与分页。
+ * 后端 `/api/blog/search` 只认 `keyword`、`sortBy`、`includeTags`、`includeCategories`，
+ * `category`、`tag`、`time`、`hasMedia` 都不参与查询。所以关键词命中后的
+ * 分类 / 标签 / 时间范围 / 多媒体筛选，由前端在结果集上完成。
  */
 
 export const TIME_RANGE_DAYS = {
@@ -24,6 +24,18 @@ export const itemCreatedAt = (item) => {
 export const itemHasMedia = (item) => {
   const media = item?.mediaUrls || item?.media_urls || item?.files
   return Array.isArray(media) ? media.length > 0 : Boolean(media)
+}
+
+const matchesCategory = (item, categoryId) => {
+  if (!categoryId) return true
+  // 选了分类就只保留该分类下的文章，tag/category 类型的结果条目一并排除
+  return item?.type === 'dynamic' && String(item?.category?.id) === String(categoryId)
+}
+
+const matchesTag = (item, tagId) => {
+  if (!tagId) return true
+  // 选了标签就只保留带该标签的文章，tag/category 类型的结果条目一并排除
+  return item?.type === 'dynamic' && (item?.tags || []).some((tag) => String(tag?.id) === String(tagId))
 }
 
 export const matchesTimeRange = (item, range, now = Date.now()) => {
@@ -52,9 +64,13 @@ export function sortItems(items, sortBy) {
 }
 
 /** 按条件过滤 + 排序：关键词模式与条件模式共用同一套口径 */
-export function refineItems(items, { time, hasMedia, sortBy } = {}) {
+export function refineItems(items, { time, hasMedia, category, tag, sortBy } = {}) {
   const filtered = (items || []).filter(
-    (item) => matchesTimeRange(item, time) && matchesMedia(item, hasMedia)
+    (item) =>
+      matchesTimeRange(item, time) &&
+      matchesMedia(item, hasMedia) &&
+      matchesCategory(item, category) &&
+      matchesTag(item, tag)
   )
   return sortItems(filtered, sortBy)
 }

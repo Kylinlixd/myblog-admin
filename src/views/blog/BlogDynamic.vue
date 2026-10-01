@@ -420,16 +420,7 @@ const handleLike = async (item) => {
     }
   } catch (error) {
     console.error('点赞失败:', error)
-    const payload = error.response?.data || {}
-    const duplicateLike = payload.data?.already_liked
-      || (error.response?.status === 400 && /已经点过赞|已点赞/.test(payload.message || ''))
-    if (duplicateLike) {
-      item.liked = payload.data?.liked ?? true
-      if (payload.data?.like_count != null) item.likes = payload.data.like_count
-      message.info('你已点赞，无需重复操作')
-      return
-    }
-    message.error(error.response?.data?.message || '点赞失败')
+    message.error(error.message || '点赞失败')
   } finally {
     item.isLiking = false
   }

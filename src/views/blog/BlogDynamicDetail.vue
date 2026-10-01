@@ -117,7 +117,9 @@
                   v-for="comment in commentList"
                   :key="comment.id"
                   :comment="comment"
+                  :loading-more="loadingMoreReplies.includes(comment.id)"
                   @reply="startReply"
+                  @more="loadMoreReplies"
                 >
                   <template #reply-editor="{ comment: target }">
                     <div v-if="replyingTo?.id === target.id" class="reply-editor reply-editor--inline">
@@ -490,7 +492,7 @@ const submitComment = async (payload = {}) => {
       message.error('请检查评论内容')
     } else {
       console.error('评论失败:', error)
-      message.error(error.message || error.response?.data?.message || '评论失败，请稍后重试')
+      message.error(error.message || '评论失败，请稍后重试')
     }
   } finally {
     isSubmittingComment.value = false
@@ -512,6 +514,34 @@ const submitReply = async () => {
 const handleCommentPageChange = async (page) => {
   commentPage.value = page
   await fetchComments()
+}
+
+// 「查看更多回复」：thread 模式只预览 3 条，拉一次全量平铺列表按 root_id 归位
+const loadingMoreReplies = ref([])
+
+const loadMoreReplies = async (rootComment) => {
+  const dynamicId = dynamic.value?.id
+  if (!dynamicId || !rootComment?.id) return
+  if (loadingMoreReplies.value.includes(rootComment.id)) return
+
+  loadingMoreReplies.value = [...loadingMoreReplies.value, rootComment.id]
+  try {
+    const result = await getDynamicComments(dynamicId, { page: 1, pageSize: 50 })
+    if (result?.code === 200 && result.data) {
+      const replies = (result.data.list || [])
+        .filter((item) => String(item.root_id) === String(rootComment.id))
+        .map(hydrateCurrentUserAvatar)
+      const target = commentList.value.find((item) => String(item.id) === String(rootComment.id))
+      if (target) target.replies_preview = replies
+    } else {
+      message.error(result?.message || '回复加载失败')
+    }
+  } catch (error) {
+    console.error('回复加载失败:', error)
+    message.error('回复加载失败')
+  } finally {
+    loadingMoreReplies.value = loadingMoreReplies.value.filter((id) => String(id) !== String(rootComment.id))
+  }
 }
 
 const isNotFoundError = (error) => {

@@ -6,21 +6,26 @@
       <p class="page-subtitle">按主题沉淀与实践，持续更新内容脉络。</p>
       <p v-if="category?.description" class="page-desc">{{ category.description }}</p>
       <div class="category-meta">
-        <span>{{ dynamics.length }} 篇文章</span>
+        <span>{{ total }} 篇文章</span>
         <span>持续更新</span>
       </div>
     </div>
-    
+
     <div class="dynamics-list">
       <div v-if="loading" class="loading-state">
         <a-spin />
         <p>加载中...</p>
       </div>
-      
+
+      <div v-else-if="notFound" class="empty-state">
+        <p>该分类不存在或已被删除</p>
+        <router-link class="load-more-btn" to="/blog">返回首页</router-link>
+      </div>
+
       <div v-else-if="dynamics.length === 0" class="empty-state">
         <p>该分类下暂无文章</p>
       </div>
-      
+
       <div v-else class="dynamics-grid">
         <div v-for="dynamic in dynamics" :key="dynamic.id" class="dynamic-card cinematic-card">
           <router-link :to="`/blog/dynamics/${dynamic.id}`" class="dynamic-link">
@@ -35,50 +40,82 @@
           </router-link>
         </div>
       </div>
+
+      <div v-if="!loading && hasMore" class="load-more-wrap">
+        <button class="load-more-btn" type="button" :disabled="loadingMore" @click="loadMore">
+          {{ loadingMore ? '加载中...' : '加载更多' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getCategoryDynamics } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 import dayjs from 'dayjs'
+
+const PAGE_SIZE = 12
 
 const route = useRoute()
 const appStore = useAppStore()
 const category = ref(null)
 const dynamics = ref([])
 const loading = ref(true)
+const loadingMore = ref(false)
+const total = ref(0)
+const page = ref(1)
+const notFound = ref(false)
+
+const hasMore = computed(() => dynamics.value.length < total.value)
 
 const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD')
 }
 
-const fetchCategoryDynamics = async () => {
+const fetchCategoryDynamics = async ({ append = false } = {}) => {
+  const requestPage = append ? page.value + 1 : 1
+
   try {
-    loading.value = true
-    appStore.startLoading('加载分类文章...')
-    
-    const categoryId = route.params.id
-    const response = await getCategoryDynamics(categoryId)
-    
-    if (response.code === 200) {
-      category.value = response.data.category
-      dynamics.value = response.data.dynamics
+    if (append) {
+      loadingMore.value = true
     } else {
-      console.error('获取分类文章失败:', response.message)
+      loading.value = true
+      appStore.startLoading('加载分类文章...')
+    }
+
+    const categoryId = route.params.id
+    const response = await getCategoryDynamics(categoryId, { page: requestPage, pageSize: PAGE_SIZE })
+
+    if (response?.code === 200 && response.data) {
+      category.value = response.data.category
+      total.value = Number(response.data.total) || 0
+      const list = Array.isArray(response.data.dynamics) ? response.data.dynamics : []
+      dynamics.value = append ? [...dynamics.value, ...list] : list
+      page.value = requestPage
+    } else if (response?.code === 404) {
+      notFound.value = true
+    } else {
+      console.error('获取分类文章失败:', response?.message)
       appStore.setLoadingError('获取分类文章失败，请刷新重试')
     }
   } catch (error) {
     console.error('获取分类文章失败:', error)
-    appStore.setLoadingError('获取分类文章失败，请刷新重试')
+    if (error?.status === 404 || error?.code === 404) {
+      notFound.value = true
+    } else {
+      appStore.setLoadingError('获取分类文章失败，请刷新重试')
+    }
   } finally {
     loading.value = false
-    appStore.endLoading()
+    loadingMore.value = false
+    if (!append) appStore.endLoading()
   }
 }
+
+const loadMore = () => fetchCategoryDynamics({ append: true })
 
 onMounted(() => {
   fetchCategoryDynamics()
@@ -168,6 +205,34 @@ onMounted(() => {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.load-more-btn {
+  display: inline-block;
+  padding: 10px 32px;
+  border: 1px solid var(--blog-line, #e5e7eb);
+  border-radius: 999px;
+  background: #fff;
+  color: #4b5563;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.load-more-btn:hover:not(:disabled) {
+  color: #a64e23;
+  border-color: #a64e23;
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .dynamics-grid {

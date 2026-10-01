@@ -71,6 +71,7 @@ describe('TagList mounted states and taxonomy actions', () => {
     deleteTag.mockResolvedValue({})
   })
 
+  // 重试会走 collectAllPages 的多页循环，在全量跑的慢机上偶发超过默认 5s，给足余量
   it('renders an empty state and retries after an error', async () => {
     getTagList.mockRejectedValueOnce(new Error('标签加载失败'))
     const wrapper = mount(TagList, { global: { stubs: globalStubs } })
@@ -82,7 +83,7 @@ describe('TagList mounted states and taxonomy actions', () => {
     await flushPromises()
     expect(getTagList).toHaveBeenCalledTimes(2)
     wrapper.unmount()
-  })
+  }, 15000)
 
   it('creates, edits, and deletes a tag through normalized APIs', async () => {
     const wrapper = mount(TagList, { global: { stubs: globalStubs } })

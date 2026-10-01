@@ -178,7 +178,7 @@ const fetchDynamicDetail = async () => {
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
-    message.error('获取动态详情失败: ' + (error.response?.data?.message || error.message || '未知错误'))
+    message.error('获取动态详情失败: ' + (error.message || '未知错误'))
   }
 }
 
