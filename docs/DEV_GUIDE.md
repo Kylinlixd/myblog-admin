@@ -41,8 +41,18 @@ src/
 - 业务代码统一导入 `@/utils/request` 或 `@/services/http/client`，不要创建新的 Axios 实例。
 - Access/Refresh Token 只能通过 `services/http/tokenStorage.js` 读写。
 - 401 时请求层只执行一次并发刷新；刷新失败会清理会话并触发 `auth:expired`。
-- 错误统一为 `{ status, code, message, details }`，页面直接展示 `message`。
+- 错误统一为 `{ status, code, message, fieldErrors }`，页面直接展示 `message`；网络错误 `code === 'NETWORK_ERROR'`。不要读取 `error.response`（拦截器抛出的 ApiError 上没有这个字段）。
 - 公开 API 统一由 `api/blog.js` 生成 `/api/blog/.../` 路径，不提供静默模拟数据。
+
+### 前后端契约要点（2026-10 联合审查后沉淀）
+
+完整的形状表见 [API_REFERENCE](./API_REFERENCE.md)；改动请求/解析逻辑前先读一遍。核心规则：
+
+1. **分页解析不要手写**：后端并存 `{total,items}`、`{list,total,page,pageSize}`、DRF `{count,results}`、裸数组四种形状，统一走 `api/collections.js` 的 `normalizeCollectionResponse` / `collectAllPages`。
+2. **写操作必须过 `unwrapApiResponse`**：后端存在 `HTTP 200 + code != 200` 的业务失败（如分类删除），只看 HTTP 状态码会把失败当成功；`api/comment.js`、`api/dynamic.js` 是参照实现。
+3. **管理端写操作后调用 `clearRequestCache()`**：公开页的「最新/热门/分类」有 30 秒缓存（`services/http/publicRequestCache.js`），不清会导致"改完公开页还是旧数据"。
+4. **字段命名现状是 snake/camel 混用**（详见 API_REFERENCE 的字段命名现状一节）：优先复用 `searchFilters.js`、`api/file.js` 里已有的归一函数；给某接口新增消费字段时，先到后端 serializer 确认实际命名，再决定是否加 fallback。
+5. **登录失败归因**：`stores/user.js` 只把 400/401 折叠成 `false`（凭证错误），其余异常向上抛；登录页不要把网络故障渲染成"用户名或密码错误"。
 
 ## 4. 页面与样式约定
 

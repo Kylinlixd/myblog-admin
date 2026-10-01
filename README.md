@@ -63,8 +63,18 @@ npm run check        # Jest 单测 + Vite 生产构建
 - [前端接口约定](docs/API_REFERENCE.md)
 - [部署指南](docs/DEPLOY.md)
 - [交付记录](docs/DELIVERY_2026-07-27.md)
+- [前后端契约审查与修复记录](docs/implementation/2026-10-01-contract-review-fixes.md)
 
 后端仓库：[Kylinlixd/blog_li](https://github.com/Kylinlixd/blog_li)
+
+## 前后端契约速览
+
+- 响应统一为 `{code, message, data}` 信封，但分页形状按模块分四种（`{total,items}` / `{list,total,…}` / DRF `{count,results}` / 裸数组），解析一律走 `src/api/collections.js`，不要手写解包。
+- 字段命名 snake/camel 混用是历史现状：Category/Tag/评论为 camel，User/Stats/文件/日志为 snake，公开文章列表双写。新增消费字段前先查后端 serializer。
+- 公开页「最新/热门/分类」有 30 秒缓存；管理端写操作成功后会调用 `clearRequestCache()` 失效它。
+- 搜索接口只接受 `keyword/page/pageSize/sortBy/includeTags/includeCategories`，分类/标签/时间/多媒体筛选由 `views/blog/searchFilters.js` 本地完成。
+
+详见 [开发指南 · 前后端契约要点](docs/DEV_GUIDE.md)。
 
 ## License
 
