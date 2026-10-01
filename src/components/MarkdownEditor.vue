@@ -1,25 +1,5 @@
 <template>
-  <div class="markdown-editor-wrapper" :class="mobilePaneClass">
-    <!--
-      手机上如果沿用左右分栏，两块各只剩三百多像素：预览看不清、正文也难写。
-      窄屏改成「编辑 / 预览」二选一，每个视图独占整个高度。
-    -->
-    <div v-if="isMobile" class="markdown-editor-panes">
-      <a-radio-group v-model:value="mobilePane" button-style="solid" size="small">
-        <a-radio-button value="edit">
-          <edit-outlined />
-          编辑
-        </a-radio-button>
-        <a-radio-button value="preview">
-          <eye-outlined />
-          预览
-        </a-radio-button>
-      </a-radio-group>
-      <span class="markdown-editor-panes__hint">
-        {{ mobilePane === 'edit' ? '正在编辑正文' : '预览渲染结果' }}
-      </span>
-    </div>
-
+  <div class="markdown-editor-wrapper">
     <md-editor
       ref="editorRef"
       v-model="content"
@@ -28,7 +8,6 @@
       :code-theme="codeTheme"
       :language="language"
       :height="height"
-      :preview="!isMobile || mobilePane === 'preview'"
       :on-upload-img="handleUploadImg"
       @onSave="handleSave"
       @onChange="handleChange"
@@ -37,9 +16,8 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { MdEditor } from 'md-editor-v3'
-import { EditOutlined, EyeOutlined } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import 'md-editor-v3/lib/style.css'
 
@@ -78,41 +56,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'onSave', 'on-image-uploaded'])
 
 const content = ref(props.modelValue)
-
-// 窄屏用「编辑/预览」切换代替分栏（matchMedia 在 jsdom 里可能不存在，需兜底）
-const MOBILE_QUERY = '(max-width: 768px)'
-const isMobile = ref(false)
-const mobilePane = ref('edit')
-let mediaQueryList = null
-
-const syncViewport = (event) => {
-  isMobile.value = Boolean(event?.matches)
-}
-
-onMounted(() => {
-  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
-  mediaQueryList = window.matchMedia(MOBILE_QUERY)
-  isMobile.value = mediaQueryList.matches
-  if (typeof mediaQueryList.addEventListener === 'function') {
-    mediaQueryList.addEventListener('change', syncViewport)
-  }
-})
-
-onBeforeUnmount(() => {
-  if (mediaQueryList && typeof mediaQueryList.removeEventListener === 'function') {
-    mediaQueryList.removeEventListener('change', syncViewport)
-  }
-})
-
-/**
- * 窄屏一次只显示一个视图。
- * md-editor 的 previewOnly 实测不会隐藏编辑区，所以用类名 + CSS 兜住，
- * 保证「预览」页签下确实只剩预览。
- */
-const mobilePaneClass = computed(() => {
-  if (!isMobile.value) return ''
-  return mobilePane.value === 'preview' ? 'is-mobile-preview' : 'is-mobile-edit'
-})
 
 // 监听外部值变化
 watch(() => props.modelValue, (newValue) => {
@@ -198,52 +141,58 @@ defineExpose({
  * （input-wrapper 是 style="width: 50%"，拖拽条是 style="display: initial"），
  * 所以这里必须用 !important 才能覆盖。
  */
-.markdown-editor-panes {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.markdown-editor-panes__hint {
-  color: #8c8c8c;
-  font-size: 12px;
-}
-
 @media (max-width: 768px) {
+  /*
+   * 手机上编辑在上、实时预览在下。
+   * 关键点：整块高度交给内容决定（height: auto），编辑区给一个够用的固定高度，
+   * 预览用自然高度随页面滚动 —— 否则两栏各分到固定容器的一半，
+   * 预览会被压成三百多像素的一条，看着像"没生效"。
+   */
   .markdown-editor-wrapper :deep(.md-editor) {
-    height: min(760px, 80vh) !important;
+    height: auto !important;
+    overflow: visible;
   }
 
-  /* 窄屏一次只显示一个视图：分栏与横向拖拽条都不需要了 */
-  .markdown-editor-wrapper :deep(.md-editor-resize-operate) {
-    display: none !important;
-  }
-
-  .markdown-editor-wrapper.is-mobile-edit :deep(.md-editor-preview-wrapper) {
-    display: none !important;
-  }
-
-  .markdown-editor-wrapper.is-mobile-preview :deep(.md-editor-input-wrapper) {
-    display: none !important;
-  }
-
-  /* md-editor 把分栏宽度写在行内样式上，必须 !important 才能占满 */
-  .markdown-editor-wrapper.is-mobile-edit :deep(.md-editor-input-wrapper),
-  .markdown-editor-wrapper.is-mobile-preview :deep(.md-editor-preview-wrapper) {
+  .markdown-editor-wrapper :deep(.md-editor-content),
+  .markdown-editor-wrapper :deep(.md-editor-content-wrapper) {
+    display: flex;
+    flex-direction: column;
+    /* md-editor 把它设成 width: 0px，让两个面板的宽度决定分栏；
+       改成上下排之后必须还原为占满，否则两个面板宽度都会是 0（看不见） */
     width: 100% !important;
-    flex: 1 1 auto;
+    height: auto !important;
+    overflow: visible;
+  }
+
+  .markdown-editor-wrapper :deep(.md-editor-input-wrapper) {
+    width: 100% !important;
+    height: 46vh;
+    min-height: 240px;
     min-width: 0;
   }
 
-  /* 预览里的图/表不再横向溢出被裁掉 */
+  .markdown-editor-wrapper :deep(.md-editor-preview-wrapper) {
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0;
+    overflow: visible;
+    border-top: 1px solid var(--border-color);
+  }
+
+  /* md-editor 默认给预览加了 overflow: hidden，会让长内容被裁掉 */
+  .markdown-editor-wrapper :deep(.md-editor-preview) {
+    overflow: visible;
+    height: auto;
+  }
+
   .markdown-editor-wrapper :deep(.md-editor-preview) img,
   .markdown-editor-wrapper :deep(.md-editor-preview) table {
     max-width: 100%;
   }
 
-  .markdown-editor-wrapper :deep(.md-editor-preview) {
-    overflow-x: auto;
+  /* 上下排布时横向拖拽条没有意义 */
+  .markdown-editor-wrapper :deep(.md-editor-resize-operate) {
+    display: none !important;
   }
 }
 </style>

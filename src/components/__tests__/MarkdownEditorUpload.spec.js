@@ -70,50 +70,17 @@ describe('MarkdownEditor image upload', () => {
     expect(source).toContain("emit('on-image-uploaded'")
   })
 
-  it('switches between editor and preview on narrow screens instead of splitting', () => {
+  it('stacks the live preview under the editor on narrow screens', () => {
     const source = readEditor()
 
-    // 手机上不再用左右分栏：那会让两块各只剩三百多像素
-    expect(source).toContain('markdown-editor-panes')
-    expect(source).toContain(':preview="!isMobile || mobilePane === \'preview\'"')
-    // previewOnly 实测不生效，改用类名 + CSS 保证单栏
-    expect(source).toContain(':class="mobilePaneClass"')
-    expect(source).toContain('is-mobile-preview')
-    expect(source).toMatch(/\.is-mobile-preview :deep\(\.md-editor-input-wrapper\) \{[\s\S]*?display: none/)
-    expect(source).not.toMatch(/@media \(max-width: 768px\)[\s\S]*?flex-direction: column/)
-  })
-
-  it('starts on the editor pane and switches to a single preview pane (narrow screen)', async () => {
-    const originalMatchMedia = window.matchMedia
-    window.matchMedia = jest.fn().mockReturnValue({
-      matches: true,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
-    })
-
-    const wrapper = mount(MarkdownEditor, {
-      global: {
-        stubs: {
-          'a-radio-group': { template: '<div><slot /></div>' },
-          'a-radio-button': { template: '<div><slot /></div>' }
-        }
-      }
-    })
-    await flushPromises()
-
-    // 默认是编辑态：预览关闭
-    expect(wrapper.vm.isMobile).toBe(true)
-    expect(wrapper.vm.mobilePane).toBe('edit')
-    expect(wrapper.findComponent({ name: 'MdEditor' }).props('preview')).toBe(false)
-    // 单栏靠类名 + CSS 保证（md-editor 的 previewOnly 实测不生效）
-    expect(wrapper.vm.mobilePaneClass).toBe('is-mobile-edit')
-
-    wrapper.vm.mobilePane = 'preview'
-    await flushPromises()
-    expect(wrapper.findComponent({ name: 'MdEditor' }).props('preview')).toBe(true)
-    expect(wrapper.vm.mobilePaneClass).toBe('is-mobile-preview')
-
-    wrapper.unmount()
-    window.matchMedia = originalMatchMedia
+    // 手机上编辑在上、实时预览在下
+    expect(source).toMatch(/@media \(max-width: 768px\)[\s\S]*?\.md-editor-content[\s\S]*?flex-direction: column/)
+    expect(source).toMatch(/\.md-editor-input-wrapper\) \{[\s\S]*?height: 46vh/)
+    // 整块高度交给内容、预览用自然高度，否则预览会被压成三百多像素的一条
+    expect(source).toMatch(/\.md-editor\) \{[\s\S]*?height: auto !important/)
+    expect(source).toMatch(/\.md-editor-preview-wrapper\) \{[\s\S]*?height: auto !important/)
+    // md-editor 默认给预览加了 overflow: hidden，长内容会被裁掉
+    expect(source).toMatch(/\.md-editor-preview\) \{[\s\S]*?overflow: visible/)
+    expect(source).not.toContain('markdown-editor-panes')
   })
 })
