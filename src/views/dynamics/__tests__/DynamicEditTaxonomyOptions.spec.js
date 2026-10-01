@@ -168,4 +168,21 @@ describe('DynamicEdit taxonomy options', () => {
     expect(wrapper.vm.taxonomyName).toBe('新标签')
     wrapper.unmount()
   })
+
+  it('writes resolved tag objects into the preview payload instead of bare ids', async () => {
+    const wrapper = await mountEditor()
+
+    wrapper.vm.form.content = '预览正文'
+    wrapper.vm.form.tags = [2, 99]
+    wrapper.vm.tags = [...wrapper.vm.tags, { id: 99, name: '手工输入的标签' }]
+    wrapper.vm.handlePreview()
+    await flushPromises()
+
+    const payload = JSON.parse(localStorage.getItem('dynamicPreview'))
+    expect(payload.tags).toEqual([
+      { id: 2, name: '标签2' },
+      { id: 99, name: '手工输入的标签' }
+    ])
+    wrapper.unmount()
+  })
 })

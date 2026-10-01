@@ -763,8 +763,13 @@ const handlePreview = () => {
   }
   
   // 创建临时对象用于预览
+  // form.tags 存的是标签 id，而预览页直接渲染 tag.name，这里先换回 {id, name} 对象
+  const previewTags = (form.value.tags || [])
+    .map(id => tags.value.find(tag => tag?.id === id))
+    .filter(Boolean)
   const previewData = {
     ...form.value,
+    tags: previewTags,
     id: route.params.id || 'draft',
     createdAt: new Date().toISOString()
   }

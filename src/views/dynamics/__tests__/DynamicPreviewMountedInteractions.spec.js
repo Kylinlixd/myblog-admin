@@ -102,6 +102,28 @@ describe('DynamicPreview mounted interactions', () => {
     routeParams.id = '42'
   })
 
+  it('renders tag names for a draft preview payload', async () => {
+    routeParams.id = 'draft'
+    localStorage.setItem('dynamicPreview', JSON.stringify({
+      id: 'draft',
+      type: 'text',
+      content: 'Draft preview',
+      mediaUrls: [],
+      status: 'draft',
+      categoryId: 9,
+      tags: [{ id: 1, name: '随笔' }, { id: 2, name: '代码' }],
+      createdAt: '2026-08-08T09:10:11Z'
+    }))
+
+    const wrapper = mount(DynamicPreview, { global: { stubs: globalStubs } })
+    await flushPromises()
+
+    expect(wrapper.find('.tags').text()).toContain('随笔')
+    expect(wrapper.find('.tags').text()).toContain('代码')
+    wrapper.unmount()
+    routeParams.id = '42'
+  })
+
   it('isolates an unavailable media item from the rest of the preview', () => {
     const source = require('node:fs').readFileSync(
       require('node:path').join(process.cwd(), 'src/views/dynamics/DynamicPreview.vue'),
