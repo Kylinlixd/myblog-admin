@@ -8,7 +8,7 @@ import {
 } from '../searchFilters'
 
 const DAY = 24 * 60 * 60 * 1000
-const now = Date.UTC(2026, 8, 24)
+const now = Date.now()  // 跟随真实当前时间，避免用例随时间过期
 
 const makeItem = (overrides = {}) => ({
   id: 1,
