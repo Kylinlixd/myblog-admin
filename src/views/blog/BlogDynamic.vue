@@ -261,7 +261,7 @@ const fetchComments = async (item) => {
       pageSize: item.commentPageSize || 10
     })
     if (result?.code === 200 && result.data) {
-      const list = Array.isArray(result.data) ? result.data : (result.data.items ?? result.data.list || [])
+      const list = Array.isArray(result.data) ? result.data : (result.data.items ?? (result.data.list || []))
       item.commentList = list.map(hydrateCurrentUserAvatar)
       item.commentTotal = Array.isArray(result.data) ? list.length : (result.data.total || 0)
       item.commentPageSize = result.data.pageSize || item.commentPageSize || 10
