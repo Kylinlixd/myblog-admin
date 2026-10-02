@@ -19,9 +19,12 @@
 
 前端统一通过 `api/collections.js` 的 `normalizeCollectionResponse` / `collectAllPages` 兼容以上形状；新代码不要在视图里手写第四种解包分支。
 
-## 字段命名现状
+## 字段命名
 
-后端当前 snake 与 camel 混用：Category/Tag/评论返回 camel（`createdAt`、`useCount`），User/Stats/访问日志/文件返回 snake（`created_at`、`view_count`），公开文章列表同时输出 `created_at` 与 `createdAt`。前端在 `api/file.js`、`views/blog/searchFilters.js` 等处做归一；新增页面优先复用这些归一函数，不要散落新的 fallback。
+响应字段已统一 snake_case（`created_at`、`dynamic_count`、`media_urls`、`use_count` 已移除）。
+写接口仍接受既有的 camelCase 请求体（`mediaUrls`、`categoryId`、`fileIds`、`tags`）。
+过渡期前端消费点保留了 camel 兜底（`??` 双读），稳定后可逐步拆除；
+新增页面直接按 snake 编写，不要新增 camel fallback。
 
 ## 搜索契约
 
@@ -62,7 +65,8 @@
 
 读取文章详情不会隐式增加阅读量；前端仅通过显式 `PUT /api/blog/dynamics/{id}/view/` 上报一次阅读。公开评论列表只展示审核通过的评论。
 
-sitemap / RSS 当前前后端均未实现（`/sitemap.xml` 等路径由 nginx 兜底成 SPA HTML），属于待迭代项。
+SEO 三件套已上线：`/sitemap.xml`（15 分钟缓存）、`/feed.xml`（RSS 2.0）、`/robots.txt`，
+由 Django 提供、nginx 精确转发（`ops/nginx/myblog-admin.conf`）；域名取后端 `PUBLIC_SITE_URL`。
 
 ## 管理端
 

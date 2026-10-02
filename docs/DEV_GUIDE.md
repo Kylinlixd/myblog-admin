@@ -48,10 +48,10 @@ src/
 
 完整的形状表见 [API_REFERENCE](./API_REFERENCE.md)；改动请求/解析逻辑前先读一遍。核心规则：
 
-1. **分页解析不要手写**：后端并存 `{total,items}`、`{list,total,page,pageSize}`、DRF `{count,results}`、裸数组四种形状，统一走 `api/collections.js` 的 `normalizeCollectionResponse` / `collectAllPages`。
+1. **分页解析不要手写**：分页响应已统一为 `{total, items}` 信封（timeline/hot/recent 等小集合为裸数组），统一走 `api/collections.js` 的 `normalizeCollectionResponse` / `collectAllPages`。
 2. **写操作必须过 `unwrapApiResponse`**：后端存在 `HTTP 200 + code != 200` 的业务失败（如分类删除），只看 HTTP 状态码会把失败当成功；`api/comment.js`、`api/dynamic.js` 是参照实现。
 3. **管理端写操作后调用 `clearRequestCache()`**：公开页的「最新/热门/分类」有 30 秒缓存（`services/http/publicRequestCache.js`），不清会导致"改完公开页还是旧数据"。
-4. **字段命名现状是 snake/camel 混用**（详见 API_REFERENCE 的字段命名现状一节）：优先复用 `searchFilters.js`、`api/file.js` 里已有的归一函数；给某接口新增消费字段时，先到后端 serializer 确认实际命名，再决定是否加 fallback。
+4. **响应字段统一 snake_case**（详见 API_REFERENCE）：过渡期部分消费点保留 camel 双读（`??`），新代码直接按 snake 编写，不要新增 camel fallback。
 5. **登录失败归因**：`stores/user.js` 只把 400/401 折叠成 `false`（凭证错误），其余异常向上抛；登录页不要把网络故障渲染成"用户名或密码错误"。
 
 ## 4. 页面与样式约定

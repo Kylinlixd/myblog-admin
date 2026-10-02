@@ -22,17 +22,22 @@
 
 新增/更新测试：`user.spec.js`（登录错误归因 ×2）、`searchFilters.spec.js`（分类/标签筛选 ×2）。提交前全量 `test:ci` + `build` 通过。
 
-## 已记录、待后端排期（不改动 `blog_li`）
+## 后端契约统一（2026-10-02 已完成，blog_li@01345e0，已同步生产）
 
-以下项需要后端仓库改动或规范决策，本轮**未动**，避免制造"生产与仓库再漂移"：
+用户拍板：字段统一 snake_case、分页统一 `{total,items}` 信封、SEO 三件套全做、提交+同步生产+重启。`cc11a6e` + `2f1f150` 落地：
 
-1. **P2-1 SEO**：`/sitemap.xml`、`/rss.xml` 目前被 nginx 兜底成 SPA HTML（比 404 更糟）。需后端实现 sitemap/RSS 视图 + nginx 精确转发，并补 robots.txt。
-2. **P2-2 分页治理**：四种分页形状、`pageSize`/`page_size` 双轨统一；`collectAllPages`（25 页/250 条上限）可改为直接 `pageSize=100`。
-3. **P2-3 命名治理**：snake/camel 统一（建议响应层统一 camelCase），移除 `created_at`+`createdAt` 双写、`useCount` 与 `dynamicCount` 冗余。
-4. **P2-4 错误信封**：404/400 补齐 `data:null`；`message` 保证字符串（login 校验失败当前是 errors dict）；分类/标签"有动态不能删除"改用真实 HTTP 状态码；文件删除 403 的裸 `{"detail"}` 入信封；507/413 的 `code` 字符串枚举规范化。
-5. **P2-6 部署卫生**：生产侧 7 个 `admin.py` 未入库、6 个 `.bak` 文件散落、仓库 tests.py 有未部署改动；建议对齐前端"发布 = 仓库 commit"的纪律。
-6. **P3 清扫**：`DynamicListView` 死代码、`CommentViewSet` 公开分支、`searchType` 未使用参数、`/api/users/*` 重复路由、`DynamicUpdateSerializer` snake-only 路径。
-7. **前端遗留**：路由 `meta.permissions: ['comment:view']` 无守卫实现（`router/index.js`），在明确权限值语义前保持现状未动。
+1. **P2-2 分页治理 ✅**：StandardPagination/FilePagination/CommentPagination/AccessLogPagination 统一输出 `{total, items}`；公开分类从裸数组改为 `{total, items}`；分类/标签动态流 `dynamics` 键改 `items`；公开评论 `list` 键改 `items`（thread 保留 commentTotal）；`page_size` 参数统一为 `pageSize`。例外：timeline/hot/recent/access-log-rules 保持裸数组，profiles 保持 `{list,…}`。
+2. **P2-3 命名治理 ✅**：响应字段全部 snake_case——去掉 `createdAt` 双写、`useCount` 冗余（直接移除）、`mediaUrls/mediaCount/media_urls` 归一、`totalBytes→total_bytes`、评论 `createTime→created_at`。写接口仍接受 camel 请求体。
+3. **P2-4 错误信封 ✅**：login/register 校验失败 message 拼为字符串；分类/标签"下有动态"删除改回真实 HTTP 400；404/400/403 补齐 `data:null`；文件删除 403 裸 `detail` 入信封；logout 补 `data:null`。507/413 的语义化字符串 code 保留（前端透传）。
+4. **P2-1 SEO ✅**：新增 `blog/seo_views.py`——`/sitemap.xml`（15 分钟缓存）、`/feed.xml`（RSS 2.0）、`/robots.txt`；域名取 `PUBLIC_SITE_URL` 环境变量；nginx 三条路径精确转发（前端仓库 snippet 同步更新）。
+5. **性能**：公开列表 queryset 改用预注解 Prefetch（category/tags 的 `dynamic_count`），消除每行 COUNT（审查发现的查询数回归一并修复）。
+6. **P2-6 部署卫生 ✅**：7 个 `admin.py`、`dashboard/models.py`、`templates/` 收编入库；生产 `.bak`/`._*` 文件清理；上线方式=仓库 commit → rsync 变更文件到 `/opt/blog_li` → 重启 `blog-li.service` → 健康探测。
+
+**遗留（未处理）**：
+- dashboard 每日发布时区用例 `test_daily_publishing_uses_local_calendar_day` 在本次改动**之前**就失败（基线已验证），疑似本地时区环境问题，需单独排查。
+- P3 清扫：`DynamicListView` 死代码、`CommentViewSet` 公开分支、`searchType` 未使用参数、`/api/users/*` 重复路由、`DynamicUpdateSerializer` snake-only 路径。
+- 前端：路由 `meta.permissions: ['comment:view']` 无守卫实现；`collectAllPages` 可改传 `pageSize=100`（后端已支持）。
+- 本机（2GB 内存 VPS）不要跑 `vite build`——已安装用户级 Node 22（/opt/node22）也扛不住，构建一律走 CI。
 
 ## 验证口径
 
