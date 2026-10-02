@@ -115,9 +115,9 @@ describe('TagList mounted states and taxonomy actions', () => {
 
     expect(wrapper.vm.columns.find((column) => column.dataIndex === 'name').width).toBe(180)
     expect(wrapper.vm.columns.find((column) => column.dataIndex === 'description').width).toBe(280)
-    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'useCount').sorter({ useCount: 1 }, { useCount: 2 })).toBeLessThan(0)
-    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'createdAt').sorter).toEqual(expect.any(Function))
-    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'updatedAt').sorter).toEqual(expect.any(Function))
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'use_count').sorter({ use_count: 1 }, { use_count: 2 })).toBeLessThan(0)
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'created_at').sorter).toEqual(expect.any(Function))
+    expect(wrapper.vm.columns.find((column) => column.dataIndex === 'updated_at').sorter).toEqual(expect.any(Function))
     wrapper.unmount()
   })
 

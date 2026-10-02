@@ -76,7 +76,7 @@ export async function getFileList(params = {}) {
   const response = await request.get('/api/upload/files/', {
     params: {
       page: params.page || 1,
-      page_size: params.pageSize || 10,
+      pageSize: params.pageSize || 10,
       q: params.keyword || undefined,
       type: params.type || undefined
     }
@@ -100,7 +100,7 @@ export async function getFileSummary(params = {}) {
   const data = unwrapApiResponse(response) || {}
   return {
     total: Number(data.total) || 0,
-    totalBytes: Number(data.totalBytes) || 0
+    totalBytes: Number(data.total_bytes ?? data.totalBytes) || 0
   }
 }
 
@@ -112,7 +112,7 @@ export async function searchFiles(params) {
       category: params.category,
       tags: params.tags?.length ? JSON.stringify(params.tags) : undefined,
       page: params.page || 1,
-      page_size: params.pageSize || 10
+      pageSize: params.pageSize || 10
     }
   })
   return normalizeFileResponse(response)

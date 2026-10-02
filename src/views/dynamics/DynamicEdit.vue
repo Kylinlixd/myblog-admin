@@ -616,8 +616,9 @@ const fetchDynamicDetail = async () => {
     if (data) {
       // 处理 mediaUrls，确保是数组且包含前缀
       let mediaItems = []
-      if (data.mediaUrls) {
-        mediaItems = Array.isArray(data.mediaUrls) ? data.mediaUrls : [data.mediaUrls]
+      const rawMediaUrls = data.mediaUrls ?? data.media_urls
+      if (rawMediaUrls) {
+        mediaItems = Array.isArray(rawMediaUrls) ? rawMediaUrls : [rawMediaUrls]
       }
       const mediaUrls = mediaItems.map(item => {
         const url = typeof item === 'string' ? item : item?.url || item?.file_url

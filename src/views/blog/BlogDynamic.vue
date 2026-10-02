@@ -122,7 +122,7 @@
                         <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
                       </div>
                     </div>
-                    <span class="time">{{ formatDate(comment.createTime) }}</span>
+                    <span class="time">{{ formatDate(comment.created_at || comment.createTime) }}</span>
                   </div>
                   <div class="comment-content">{{ comment.content }}</div>
                 </div>
@@ -215,7 +215,7 @@ const mediaItems = (dynamic) => {
     }
   }).filter((item) => item.url)
 }
-const mediaCount = (dynamic) => Number(dynamic?.mediaCount ?? mediaItems(dynamic).length)
+const mediaCount = (dynamic) => Number(dynamic?.media_count ?? dynamic?.mediaCount ?? mediaItems(dynamic).length)
 const previewMediaItems = (dynamic) => mediaItems(dynamic).slice(0, 1)
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
@@ -261,7 +261,7 @@ const fetchComments = async (item) => {
       pageSize: item.commentPageSize || 10
     })
     if (result?.code === 200 && result.data) {
-      const list = Array.isArray(result.data) ? result.data : (result.data.list || [])
+      const list = Array.isArray(result.data) ? result.data : (result.data.items ?? result.data.list || [])
       item.commentList = list.map(hydrateCurrentUserAvatar)
       item.commentTotal = Array.isArray(result.data) ? list.length : (result.data.total || 0)
       item.commentPageSize = result.data.pageSize || item.commentPageSize || 10

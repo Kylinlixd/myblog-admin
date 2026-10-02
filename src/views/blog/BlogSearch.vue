@@ -445,7 +445,7 @@ const browseByFilters = async () => {
   // 分类 / 标签动态流返回的是 data.dynamics（不是 items/results），这里统一成 {count, results}
   const normalizeFeed = (response) => {
     const data = response?.data ?? response
-    const list = data?.dynamics
+    const list = data?.dynamics ?? data?.items
     if (Array.isArray(list)) return { count: Number(data?.total) || list.length, results: list }
     return normalizeCollectionResponse(response)
   }

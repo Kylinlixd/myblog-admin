@@ -229,25 +229,25 @@ const columns = [
   },
   {
     title: '使用次数',
-    dataIndex: 'useCount',
-    key: 'useCount',
+    dataIndex: 'use_count',
+    key: 'use_count',
     width: 100,
     align: 'center',
-    sorter: (a, b) => Number(a.useCount || 0) - Number(b.useCount || 0),
+    sorter: (a, b) => Number(a.use_count || 0) - Number(b.use_count || 0),
   },
   {
     title: '创建时间',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
+    dataIndex: 'created_at',
+    key: 'created_at',
     width: 160,
-    sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
   },
   {
     title: '更新时间',
-    dataIndex: 'updatedAt',
-    key: 'updatedAt',
+    dataIndex: 'updated_at',
+    key: 'updated_at',
     width: 160,
-    sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
+    sorter: (a, b) => new Date(a.updated_at) - new Date(b.updated_at),
   },
   {
     title: '操作',
@@ -351,7 +351,9 @@ const formatDate = (dateString) => {
 const normalizeTag = (item) => ({
   ...item,
   status: item.status || 'inactive',
-  useCount: Number(item.useCount ?? item.dynamicCount ?? 0) || 0
+  useCount: Number(item.use_count ?? item.useCount ?? item.dynamic_count ?? item.dynamicCount ?? 0) || 0,
+  created_at: item.created_at ?? item.createdAt,
+  updated_at: item.updated_at ?? item.updatedAt
 })
 
 // 获取标签列表

@@ -36,7 +36,7 @@ describe('file API normalization', () => {
     expect(request.get).toHaveBeenCalledWith('/api/upload/files/', {
       params: {
         page: 1,
-        page_size: 10,
+        pageSize: 10,
         q: undefined,
         type: undefined
       }

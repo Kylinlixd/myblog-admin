@@ -92,7 +92,7 @@ const fetchCategoryDynamics = async ({ append = false } = {}) => {
     if (response?.code === 200 && response.data) {
       category.value = response.data.category
       total.value = Number(response.data.total) || 0
-      const list = Array.isArray(response.data.dynamics) ? response.data.dynamics : []
+      const list = response.data.items ?? response.data.dynamics ?? []
       dynamics.value = append ? [...dynamics.value, ...list] : list
       page.value = requestPage
     } else if (response?.code === 404) {

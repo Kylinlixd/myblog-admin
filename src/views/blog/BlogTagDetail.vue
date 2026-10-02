@@ -110,7 +110,8 @@ const pageSize = ref(12)
 const unavailableMediaUrls = ref(new Set())
 
 const coverUrl = (dynamic) => {
-  const mediaItems = Array.isArray(dynamic.mediaUrls) ? dynamic.mediaUrls : [dynamic.mediaUrls]
+  const mediaSource = dynamic.mediaUrls ?? dynamic.media_urls
+  const mediaItems = Array.isArray(mediaSource) ? mediaSource : (mediaSource ? [mediaSource] : [])
   const media = mediaItems.find((item) => {
     const type = typeof item === 'object' ? item?.type || item?.file_type : dynamic.type
     return type === 'image'
@@ -147,7 +148,7 @@ const fetchTagDynamics = async () => {
       tag.value = response.data.tag || null
       
       // 设置文章列表
-      dynamics.value = response.data.dynamics || []
+      dynamics.value = response.data.items ?? response.data.dynamics ?? []
       
       // 设置总数
       total.value = response.data.total || 0

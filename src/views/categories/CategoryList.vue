@@ -229,8 +229,8 @@ const columns = [
   },
   {
     title: '创建时间',
-    dataIndex: 'createdAt',
-    key: 'createdAt',
+    dataIndex: 'created_at',
+    key: 'created_at',
     width: 180,
   },
   {

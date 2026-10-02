@@ -14,7 +14,7 @@
           <div class="category-content">
             <span class="category-index">0{{ index + 1 }}</span>
             <h2 class="category-name">{{ category.name }}</h2>
-            <span class="category-count">{{ category.dynamicCount ?? category.count ?? 0 }} 篇文章</span>
+            <span class="category-count">{{ category.dynamic_count ?? category.dynamicCount ?? category.count ?? 0 }} 篇文章</span>
             <p class="category-desc">{{ category.description || '记录实践、判断与下一步。' }}</p>
           </div>
         </router-link>
@@ -35,7 +35,9 @@ async function fetchCategories() {
   try {
     appStore.startLoading('加载分类数据...')
     const response = await getBlogCategoryList()
-    if (response?.code === 200) categories.value = response.data.map((category) => ({ ...category, count: category.count || 0 }))
+    if (response?.code === 200) { const list = Array.isArray(response.data) ? response.data : (response.data?.items ?? [])
+      categories.value = list.map((category) => ({ ...category, count: category.dynamic_count ?? category.dynamicCount ?? category.count ?? 0 }))
+    }
     else appStore.setLoadingError('获取分类数据失败，请刷新重试')
     appStore.endLoading()
   } catch (error) {

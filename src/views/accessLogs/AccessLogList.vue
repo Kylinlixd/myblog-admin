@@ -370,7 +370,7 @@ async function loadBlockedLogs() {
     const response = await getAccessLogList({ page: page.value, pageSize: pageSize.value, securityGroup: 'blocked', window: '7d' })
     if (requestId !== blockedRequestId.value) return
     const data = response?.data || response || {}
-    blockedLogs.value = data.list || data.results || []
+    blockedLogs.value = data.items ?? data.list ?? data.results ?? []
     blockedTotal.value = data.total ?? data.count ?? blockedLogs.value.length
     total.value = blockedTotal.value
   } catch (error) {

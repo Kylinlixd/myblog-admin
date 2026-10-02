@@ -11,7 +11,7 @@
       </div>
       <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
       <span v-if="comment.reply_to_nickname" class="reply-target">回复 @{{ comment.reply_to_nickname }}</span>
-      <span class="time">{{ formatDate(comment.createTime) }}</span>
+      <span class="time">{{ formatDate(comment.created_at || comment.createTime) }}</span>
     </div>
     <div class="comment-content">{{ comment.content }}</div>
     <button class="comment-reply" type="button" @click="$emit('reply', comment)">回复</button>

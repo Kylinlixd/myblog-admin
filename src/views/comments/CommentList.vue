@@ -87,7 +87,7 @@
       </template>
 
       <template #createTime="{ row }">
-        {{ formatDate(row.createTime) }}
+        {{ formatDate(row.created_at || row.createTime) }}
       </template>
 
       <template #actions="{ row }">

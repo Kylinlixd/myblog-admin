@@ -421,7 +421,7 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
     if (String(route.params.id) !== String(dynamicId)) return
 
     if (result && result.code === 200 && result.data) {
-      commentList.value = (result.data.list || []).map(hydrateCurrentUserAvatar)
+      commentList.value = (result.data.items ?? result.data.list || []).map(hydrateCurrentUserAvatar)
       commentTotal.value = result.data.commentTotal ?? result.data.total ?? 0
       commentPageSize.value = result.data.pageSize || 10
     } else {
@@ -528,7 +528,7 @@ const loadMoreReplies = async (rootComment) => {
   try {
     const result = await getDynamicComments(dynamicId, { page: 1, pageSize: 50 })
     if (result?.code === 200 && result.data) {
-      const replies = (result.data.list || [])
+      const replies = (result.data.items ?? result.data.list || [])
         .filter((item) => String(item.root_id) === String(rootComment.id))
         .map(hydrateCurrentUserAvatar)
       const target = commentList.value.find((item) => String(item.id) === String(rootComment.id))
