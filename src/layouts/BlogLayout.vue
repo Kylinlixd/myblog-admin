@@ -9,7 +9,7 @@
       <div class="site-header-panel app-container header-inner">
         <router-link class="brand" to="/blog" aria-label="时不语之间首页">
           <span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span>
-          <span><strong>时不语之间</strong><small>COFFEE &amp; CODE</small></span>
+          <span><strong>时不语之间</strong><small>Silent Time</small></span>
         </router-link>
 
         <nav class="desktop-nav" aria-label="主导航">
@@ -90,10 +90,10 @@ const query = ref('')
 const mobileOpen = ref(false)
 const year = new Date().getFullYear()
 const navigation = [
-  { label: '首页', to: '/blog' },
-  { label: '动态', to: '/blog/blogdynamic' },
-  { label: '归档', to: '/blog/categories' },
-  { label: '关于', to: '/blog/about' }
+  { label: '此间', to: '/blog' },
+  { label: '书遇', to: '/blog/blogdynamic' },
+  { label: '拾光', to: '/blog/categories' },
+  { label: '自叙', to: '/blog/about' }
 ]
 
 function search() {
