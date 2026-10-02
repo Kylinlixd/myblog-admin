@@ -30,7 +30,7 @@ const routes = [
     component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
     meta: { 
       requiresAuth: false,
-      title: '首页'
+      title: '此间'
     },
     children: [
       {
@@ -38,7 +38,7 @@ const routes = [
         name: 'BlogHome',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogHome.vue'),
         meta: { 
-          title: '首页',
+          title: '此间',
           keepAlive: true,
           requiresAuth: false
         }
@@ -48,7 +48,7 @@ const routes = [
         name: 'BlogDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamic.vue'),
         meta: { 
-          title: '博客动态',
+          title: '书遇',
           keepAlive: true,
           requiresAuth: false
         }
@@ -58,7 +58,7 @@ const routes = [
         name: 'BlogCategories',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategories.vue'),
         meta: { 
-          title: '文章归类',
+          title: '拾光',
           keepAlive: true,
           requiresAuth: false
         }
@@ -88,7 +88,7 @@ const routes = [
         name: 'BlogAbout',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogAbout.vue'),
         meta: { 
-          title: '关于我',
+          title: '自叙',
           keepAlive: true,
           requiresAuth: false
         }
@@ -296,7 +296,7 @@ router.afterEach((to) => {
   const appStore = useAppStore()
   appStore.endNavigation()
   sessionStorage.removeItem('vite-chunk-recovery')
-  document.title = to.meta.title ? `${to.meta.title}｜时不语之间` : '首页｜时不语之间'
+  document.title = to.meta.title ? `${to.meta.title}｜时不语之间` : '此间｜时不语之间'
 })
 
 // 添加路由错误处理

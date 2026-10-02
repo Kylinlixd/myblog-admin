@@ -72,7 +72,7 @@
     <footer class="site-footer">
       <div class="app-container footer-inner">
         <span>© {{ year }} 时不语之间。保持好奇，持续构建。</span>
-        <div><router-link to="/blog/about">关于</router-link><router-link to="/blog/categories">归档</router-link></div>
+        <div><router-link to="/blog/about">自叙</router-link><router-link to="/blog/categories">拾光</router-link></div>
       </div>
     </footer>
     <a-back-top :visibility-height="400" />
