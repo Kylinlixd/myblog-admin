@@ -2,7 +2,7 @@
   <div class="home-page">
     <section ref="heroSection" class="home-hero" aria-labelledby="home-title" @pointerenter="activateFluidCursor">
       <div class="hero-fluid-wash" aria-hidden="true" />
-      <FluidCursor v-if="fluidCursorVisible" class="home-fluid-cursor" :sim-resolution="64" :dye-resolution="480" :capture-resolution="256" :density-dissipation="4.8" :velocity-dissipation="2.8" :pressure-iterations="10" :splat-radius=".12" :splat-force="2800" :shading="false" :color-update-speed="7" />
+      <FluidCursor v-if="fluidCursorVisible" class="home-fluid-cursor" :sim-resolution="64" :dye-resolution="480" :capture-resolution="256" :density-dissipation="4.8" :velocity-dissipation="2.8" :pressure-iterations="10" :splat-radius=".16" :splat-force="2800" :shading="false" :color-update-speed="7" />
       <div class="hero-inner app-container">
         <div class="hero-copy">
           <h1 id="home-title" :class="['hero-title', `hero-title--${titlePhase}`]" aria-label="探索技术，无限可能，开发、构建、应用">
@@ -191,6 +191,7 @@ onBeforeUnmount(() => {
 .home-hero { position: relative; display: flex; width: 100%; max-width: none; min-height: calc(100dvh - var(--header-height)); align-items: center; justify-content: center; overflow: hidden; isolation: isolate; padding-block: 80px 72px; background: #f5efe5; }
 .hero-fluid-wash { position: absolute; z-index: 0; inset: 0; pointer-events: none; background: radial-gradient(ellipse 78% 86% at 74% 48%, rgb(229 188 144 / 24%), transparent 68%), radial-gradient(ellipse 72% 72% at 25% 62%, rgb(255 251 239 / 42%), transparent 74%), linear-gradient(118deg, #f5efe5 0%, #f7f0e6 48%, #eee4d5 100%); }
 .hero-fluid-wash::after { position: absolute; inset: -18%; background: radial-gradient(ellipse 40% 28% at 68% 38%, rgb(255 220 169 / 14%), transparent 74%), radial-gradient(ellipse 34% 38% at 77% 72%, rgb(184 210 191 / 12%), transparent 76%); content: ''; filter: blur(54px); animation: hero-fluid-breathe 18s ease-in-out infinite alternate; }
+.home-fluid-cursor { -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent 98%); mask-image: linear-gradient(to bottom, #000 72%, transparent 98%); }
 
 .hero-inner { position: relative; z-index: 3; display: flex; width: 100%; max-width: 1120px; align-items: center; justify-content: center; }
 .hero-copy { position: relative; z-index: 1; display: flex; max-width: 1120px; flex-direction: column; align-items: center; padding: 24px; }
