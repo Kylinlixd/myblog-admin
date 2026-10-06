@@ -1370,7 +1370,7 @@ onBeforeUnmount(() => disposeFluidCursor());
 </script>
 
 <template>
-  <div ref="containerRef" class="fluid-cursor-root">
+  <div ref="containerRef" :class="props.class" class="fluid-cursor-root">
     <canvas id="fluid" ref="canvasRef" class="fluid-cursor-canvas" />
   </div>
 </template>

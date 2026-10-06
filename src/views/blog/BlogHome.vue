@@ -2,7 +2,7 @@
   <div class="home-page">
     <section ref="heroSection" class="home-hero" aria-labelledby="home-title" @pointerenter="activateFluidCursor">
       <div class="hero-fluid-wash" aria-hidden="true" />
-      <FluidCursor v-if="fluidCursorVisible" class="home-fluid-cursor" :sim-resolution="64" :dye-resolution="480" :capture-resolution="256" :density-dissipation="4.8" :velocity-dissipation="2.8" :pressure-iterations="10" :splat-radius=".16" :splat-force="2800" :shading="false" :color-update-speed="7" />
+      <FluidCursor v-if="fluidCursorVisible" class="home-fluid-cursor" :sim-resolution="64" :dye-resolution="480" :capture-resolution="256" :density-dissipation="4.8" :velocity-dissipation="2.8" :pressure-iterations="10" :splat-radius=".25" :splat-force="2800" :shading="false" :color-update-speed="7" />
       <div class="hero-inner app-container">
         <div class="hero-copy">
           <h1 id="home-title" :class="['hero-title', `hero-title--${titlePhase}`]" aria-label="探索技术，无限可能，开发、构建、应用">
