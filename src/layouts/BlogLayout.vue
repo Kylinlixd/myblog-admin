@@ -113,7 +113,7 @@ function isNavigationActive(item) {
 
 <style scoped>
 .blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; overflow-x: hidden; background: var(--blog-bg); color: var(--blog-text); isolation: isolate; }
-.blog-shell--home { --content-width: 1120px; --header-height: 76px; }
+.blog-shell--home { --header-height: 76px; }
 .blog-shell--home .site-header { position: fixed; top: 0; right: 0; left: 0; height: auto; padding-top: 14px; }
 .blog-shell--home .site-main { padding-top: var(--header-height); }
 .blog-shell--home .site-header-panel { background: #fffaf2; backdrop-filter: none; box-shadow: 0 4px 18px rgb(89 61 34 / 5%); }
