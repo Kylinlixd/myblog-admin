@@ -8,6 +8,7 @@
 #app {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  /* clip 而不是 hidden：hidden 会把 #app 变成滚动容器，让内部 position: sticky（导航、表格表头）失效 */
+  overflow-x: clip;
   min-height: 100vh;
 }

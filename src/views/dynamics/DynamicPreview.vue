@@ -74,6 +74,7 @@ import { EditOutlined, CloseOutlined } from '@ant-design/icons-vue'
 import DOMPurify from 'dompurify'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
+import { enhanceBlogTables } from '@/utils/blogTables'
 
 const route = useRoute()
 const router = useRouter()
@@ -240,6 +241,7 @@ onMounted(async () => {
 
 onUpdated(() => {
   bindCodeBlockInteractions(previewContentRef.value)
+  enhanceBlogTables(previewContentRef.value)
 })
 </script>
 
@@ -391,6 +393,74 @@ onUpdated(() => {
 
         :deep(tbody tr:last-child td) {
           border-bottom: 0;
+        }
+
+        :deep(.blog-table-wrap) {
+          position: relative;
+        }
+
+        :deep(.blog-table-copy) {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          z-index: 3;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 10px;
+          border: 1px solid rgb(255 255 255 / 30%);
+          border-radius: 7px;
+          background: rgb(23 38 61 / 88%);
+          color: #f8fafc;
+          font-size: 12px;
+          line-height: 1;
+          white-space: nowrap;
+          cursor: pointer;
+          opacity: 0;
+          transform: translateY(-2px);
+          transition: opacity .18s ease, transform .18s ease, background .18s ease;
+        }
+
+        :deep(.blog-table-copy .blog-table-copy-icon) {
+          width: 13px;
+          height: 13px;
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 2;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+
+        :deep(.blog-table-wrap:hover .blog-table-copy),
+        :deep(.blog-table-copy:focus-visible),
+        :deep(.blog-table-copy.is-copied) {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        :deep(.blog-table-copy:hover) {
+          background: #2a7180;
+        }
+
+        :deep(.blog-table-copy-feedback) {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          z-index: 4;
+          padding: 5px 10px;
+          border-radius: 7px;
+          background: #2a7180;
+          color: #fff;
+          font-size: 12px;
+          line-height: 1;
+          white-space: nowrap;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity .18s ease;
+        }
+
+        :deep(.blog-table-copy-feedback.is-visible) {
+          opacity: 1;
         }
 
         :deep(a) {

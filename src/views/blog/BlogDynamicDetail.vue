@@ -187,6 +187,7 @@ import CommentThread from '@/components/blog/CommentThread.vue'
 import CommentComposer from '@/components/blog/CommentComposer.vue'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
+import { enhanceBlogTables } from '@/utils/blogTables'
 import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
@@ -335,12 +336,14 @@ const syncArticleNavigation = async () => {
   // geometry after the article DOM was hydrated, leaving the first item
   // highlighted while the reader had already moved further down.
   bindCodeBlockInteractions(articleBodyRef.value)
+  enhanceBlogTables(articleBodyRef.value)
 }
 
 // The article body is rendered only after the loading branch is removed. Bind
 // again after that Vue update so controls are attached to the final v-html DOM.
 onUpdated(() => {
   bindCodeBlockInteractions(articleBodyRef.value)
+  enhanceBlogTables(articleBodyRef.value)
   if (tocItems.value.length) requestAnimationFrame(updateTocPosition)
 })
 
@@ -945,6 +948,82 @@ onBeforeUnmount(() => {
 
 :deep(.markdown-body table tbody tr:last-child td) {
   border-bottom: 0;
+}
+
+/* 表格悬浮复制（与代码块复制同一套交互语言） */
+:deep(.blog-table-wrap) {
+  position: relative;
+}
+
+:deep(.blog-table-copy) {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 7px;
+  background: rgb(23 38 61 / 88%);
+  color: #fffdf8;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity .18s ease, transform .18s ease, background .18s ease;
+}
+
+:deep(.blog-table-copy .blog-table-copy-icon) {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+:deep(.blog-table-wrap:hover .blog-table-copy),
+:deep(.blog-table-copy:focus-visible),
+:deep(.blog-table-copy.is-copied) {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+:deep(.blog-table-copy:hover) {
+  background: rgb(42 113 128 / 94%);
+}
+
+:deep(.blog-table-copy-feedback) {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  padding: 5px 10px;
+  border-radius: 7px;
+  background: #2a7180;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease;
+}
+
+:deep(.blog-table-copy-feedback.is-visible) {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  :deep(.blog-table-copy) {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 :deep(.markdown-body ul),
@@ -1688,7 +1767,31 @@ onBeforeUnmount(() => {
       background: #fbf3e8;
       color: #596779;
     }
-    .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; border-color: #d8cbaf; box-shadow: 0 1px 3px rgb(88 65 37 / 8%), 0 8px 22px rgb(88 65 37 / 13%); }
+    .article-main-column :deep(.markdown-body table) { border-color: #d8cbaf; box-shadow: 0 1px 3px rgb(88 65 37 / 8%), 0 8px 22px rgb(88 65 37 / 13%); }
+    .article-main-column :deep(.markdown-body table th) {
+      background: var(--article-ink);
+      color: #fffdf8;
+    }
+    /* 桌面端：普通表格布局 + 可见溢出，sticky 表头才能吸附在视口上（overflow 滚动容器会让 sticky 失效） */
+    @media (min-width: 901px) {
+      .article-main-column :deep(.markdown-body table) {
+        display: table;
+        overflow: visible;
+      }
+      .article-main-column :deep(.markdown-body table thead th) {
+        position: sticky;
+        /* 顶部有吸起的悬浮导航（14px + 62px 高），吸附位避开它 */
+        top: 88px;
+        z-index: 2;
+      }
+      .article-main-column :deep(.markdown-body table thead th:first-child) { border-top-left-radius: 11px; }
+      .article-main-column :deep(.markdown-body table thead th:last-child) { border-top-right-radius: 11px; }
+      .article-main-column :deep(.markdown-body table tbody tr:last-child td:first-child) { border-bottom-left-radius: 11px; }
+      .article-main-column :deep(.markdown-body table tbody tr:last-child td:last-child) { border-bottom-right-radius: 11px; }
+    }
+    @media (max-width: 900px) {
+      .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; }
+    }
     .article-main-column :deep(.markdown-body table th) {
       background: var(--article-ink);
       color: #fffdf8;
