@@ -357,10 +357,11 @@ onUpdated(() => {
           margin: 1.5em 0;
           border-collapse: separate;
           border-spacing: 0;
-          border: 1px solid #e6eaf0;
+          border: 1px solid #d9dfe9;
           border-radius: 12px;
           overflow: hidden;
           background: #fff;
+          box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 6px 18px rgba(15, 23, 42, 0.08);
           font-size: 0.95em;
         }
 
@@ -378,10 +379,11 @@ onUpdated(() => {
           font-weight: 600;
           letter-spacing: 0.02em;
           white-space: nowrap;
+          border-bottom: 2px solid #4f46e5;
         }
 
         :deep(tbody tr:nth-child(even)) {
-          background: #f8fafc;
+          background: #f4f6fa;
         }
 
         :deep(tbody tr:last-child td) {
