@@ -894,28 +894,52 @@ onBeforeUnmount(() => {
 
 :deep(.markdown-body table) {
   width: 100%;
-  margin: 1.5rem 0;
+  margin: 1.75rem 0;
   border-collapse: separate;
   border-spacing: 0;
-  border-radius: 8px;
+  border: 1px solid #e6eaf0;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+  font-size: 0.95em;
 }
 
 :deep(.markdown-body table th),
 :deep(.markdown-body table td) {
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
+  padding: 0.8rem 1.1rem;
+  border: 0;
+  border-bottom: 1px solid #eef1f5;
+  text-align: left;
+  vertical-align: top;
 }
 
 :deep(.markdown-body table th) {
-  background-color: #f8fafc;
+  background-color: #1e293b;
+  color: #f8fafc;
   font-weight: 600;
-  color: #1e293b;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-:deep(.markdown-body table tr:nth-child(even)) {
+:deep(.markdown-body table thead tr) {
+  background-color: #1e293b;
+}
+
+:deep(.markdown-body table tbody tr:nth-child(even)) {
   background-color: #f8fafc;
+}
+
+:deep(.markdown-body table tbody tr) {
+  transition: background-color 0.15s ease;
+}
+
+:deep(.markdown-body table tbody tr:hover) {
+  background-color: #eef2f7;
+}
+
+:deep(.markdown-body table tbody tr:last-child td) {
+  border-bottom: 0;
 }
 
 :deep(.markdown-body ul),
@@ -1659,7 +1683,17 @@ onBeforeUnmount(() => {
       background: #fbf3e8;
       color: #596779;
     }
-    .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; }
+    .article-main-column :deep(.markdown-body table) { display: block; overflow-x: auto; border-color: var(--article-line); box-shadow: 0 2px 12px rgb(88 65 37 / 7%); }
+    .article-main-column :deep(.markdown-body table th) {
+      background: var(--article-ink);
+      color: #fffdf8;
+    }
+    .article-main-column :deep(.markdown-body table td) {
+      border-bottom-color: #efe9dc;
+      color: #26364d;
+    }
+    .article-main-column :deep(.markdown-body table tbody tr:nth-child(even)) { background-color: #faf6ee; }
+    .article-main-column :deep(.markdown-body table tbody tr:hover) { background-color: #f5eee1; }
     .article-main-column :deep(.markdown-body img) { display: block; margin-inline: auto; }
 
     @keyframes article-enter {

@@ -351,7 +351,43 @@ onUpdated(() => {
           max-width: 100%;
           height: auto;
         }
-        
+
+        :deep(table) {
+          width: 100%;
+          margin: 1.5em 0;
+          border-collapse: separate;
+          border-spacing: 0;
+          border: 1px solid #e6eaf0;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #fff;
+          font-size: 0.95em;
+        }
+
+        :deep(th), :deep(td) {
+          padding: 0.8rem 1.1rem;
+          border: 0;
+          border-bottom: 1px solid #eef1f5;
+          text-align: left;
+          vertical-align: top;
+        }
+
+        :deep(th) {
+          background: #1e293b;
+          color: #f8fafc;
+          font-weight: 600;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+        }
+
+        :deep(tbody tr:nth-child(even)) {
+          background: #f8fafc;
+        }
+
+        :deep(tbody tr:last-child td) {
+          border-bottom: 0;
+        }
+
         :deep(a) {
           color: #1890ff;
           text-decoration: none;
