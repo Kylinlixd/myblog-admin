@@ -373,6 +373,10 @@ onUpdated(() => {
           vertical-align: top;
         }
 
+        :deep(th:not(:first-child)), :deep(td:not(:first-child)) {
+          border-left: 1px solid #e8ecf2;
+        }
+
         :deep(th) {
           background: #1e293b;
           color: #f8fafc;

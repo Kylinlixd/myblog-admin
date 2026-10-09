@@ -914,6 +914,11 @@ onBeforeUnmount(() => {
   vertical-align: top;
 }
 
+:deep(.markdown-body table th:not(:first-child)),
+:deep(.markdown-body table td:not(:first-child)) {
+  border-left: 1px solid #e8ecf2;
+}
+
 :deep(.markdown-body table th) {
   background-color: #1e293b;
   color: #f8fafc;
@@ -1691,8 +1696,12 @@ onBeforeUnmount(() => {
       border-bottom: 2px solid #d98b38;
     }
     .article-main-column :deep(.markdown-body table td) {
-      border-bottom-color: #ece2cd;
+      border-bottom-color: #e6d9bd;
       color: #26364d;
+    }
+    .article-main-column :deep(.markdown-body table th:not(:first-child)),
+    .article-main-column :deep(.markdown-body table td:not(:first-child)) {
+      border-left: 1px solid #eee2c8;
     }
     .article-main-column :deep(.markdown-body table tbody tr:nth-child(even)) { background-color: #f6efe0; }
     .article-main-column :deep(.markdown-body table tbody tr:hover) { background-color: #f0e6d0; }
