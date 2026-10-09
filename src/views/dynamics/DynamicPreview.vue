@@ -374,7 +374,7 @@ onUpdated(() => {
         }
 
         :deep(th:not(:first-child)), :deep(td:not(:first-child)) {
-          border-left: 1px solid #e8ecf2;
+          border-left: 1px solid #dde3ec;
         }
 
         :deep(th) {
@@ -383,7 +383,6 @@ onUpdated(() => {
           font-weight: 600;
           letter-spacing: 0.02em;
           white-space: nowrap;
-          border-bottom: 2px solid #4f46e5;
         }
 
         :deep(tbody tr:nth-child(even)) {

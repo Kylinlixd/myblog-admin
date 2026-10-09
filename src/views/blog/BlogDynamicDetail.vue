@@ -916,7 +916,7 @@ onBeforeUnmount(() => {
 
 :deep(.markdown-body table th:not(:first-child)),
 :deep(.markdown-body table td:not(:first-child)) {
-  border-left: 1px solid #e8ecf2;
+  border-left: 1px solid #dde3ec;
 }
 
 :deep(.markdown-body table th) {
@@ -925,7 +925,6 @@ onBeforeUnmount(() => {
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
-  border-bottom: 2px solid #4f46e5;
 }
 
 :deep(.markdown-body table thead tr) {
@@ -1693,15 +1692,16 @@ onBeforeUnmount(() => {
     .article-main-column :deep(.markdown-body table th) {
       background: var(--article-ink);
       color: #fffdf8;
-      border-bottom: 2px solid #d98b38;
     }
     .article-main-column :deep(.markdown-body table td) {
       border-bottom-color: #e6d9bd;
       color: #26364d;
     }
-    .article-main-column :deep(.markdown-body table th:not(:first-child)),
+    .article-main-column :deep(.markdown-body table th:not(:first-child)) {
+      border-left-color: rgb(255 253 248 / 22%);
+    }
     .article-main-column :deep(.markdown-body table td:not(:first-child)) {
-      border-left: 1px solid #eee2c8;
+      border-left: 1px solid #e0d0ae;
     }
     .article-main-column :deep(.markdown-body table tbody tr:nth-child(even)) { background-color: #f6efe0; }
     .article-main-column :deep(.markdown-body table tbody tr:hover) { background-color: #f0e6d0; }
