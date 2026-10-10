@@ -432,10 +432,14 @@ onUpdated(() => {
         }
 
         :deep(.blog-table-wrap:hover .blog-table-copy),
-        :deep(.blog-table-copy:focus-visible),
-        :deep(.blog-table-copy.is-copied) {
+        :deep(.blog-table-copy:focus-visible) {
           opacity: 1;
           transform: translateY(0);
+        }
+
+        :deep(.blog-table-copy.is-copied),
+        :deep(.blog-table-wrap:hover .blog-table-copy.is-copied) {
+          opacity: 0;
         }
 
         :deep(.blog-table-copy:hover) {

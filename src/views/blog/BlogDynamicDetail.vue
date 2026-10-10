@@ -988,10 +988,16 @@ onBeforeUnmount(() => {
 }
 
 :deep(.blog-table-wrap:hover .blog-table-copy),
-:deep(.blog-table-copy:focus-visible),
-:deep(.blog-table-copy.is-copied) {
+:deep(.blog-table-copy:focus-visible) {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* 复制成功后按钮隐藏，只留"已复制"反馈，避免两者叠在同一个位置；
+   需要盖过 :hover 展示规则（点击后鼠标必然悬停在表格上） */
+:deep(.blog-table-copy.is-copied),
+:deep(.blog-table-wrap:hover .blog-table-copy.is-copied) {
+  opacity: 0;
 }
 
 :deep(.blog-table-copy:hover) {
@@ -1019,10 +1025,11 @@ onBeforeUnmount(() => {
   opacity: 1;
 }
 
-@media (hover: none) {
-  :deep(.blog-table-copy) {
-    opacity: 1;
-    transform: none;
+/* 触屏设备与窄屏没有 hover 语境，且表格处于横向滚动状态：不显示复制入口 */
+@media (hover: none), (max-width: 900px) {
+  :deep(.blog-table-copy),
+  :deep(.blog-table-copy-feedback) {
+    display: none;
   }
 }
 
