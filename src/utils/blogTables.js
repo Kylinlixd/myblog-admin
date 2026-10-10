@@ -27,10 +27,15 @@ const copyText = async (rawText) => {
   textarea.remove()
 }
 
+const COPY_FEEDBACK_MS = 2500
+
 const setCopyState = (button, text) => {
-  const feedback = button.parentElement?.querySelector('.blog-table-copy-feedback')
+  const wrapper = button.closest('.blog-table-wrap')
+  const feedback = wrapper?.querySelector('.blog-table-copy-feedback')
   const copied = text === '已复制'
   button.classList.toggle('is-copied', copied)
+  // 标记打在 wrapper 上：复制成功期间按钮无条件隐藏（含 hover/focus），只留反馈胶囊
+  wrapper?.classList.toggle('is-copied', copied)
   button.setAttribute('aria-label', text)
   button.setAttribute('title', text)
   if (feedback) {
@@ -41,9 +46,10 @@ const setCopyState = (button, text) => {
     window.setTimeout(() => {
       feedback?.classList.remove('is-visible')
       button.classList.remove('is-copied')
+      wrapper?.classList.remove('is-copied')
       button.setAttribute('aria-label', '复制表格')
       button.setAttribute('title', '复制表格')
-    }, 1400)
+    }, COPY_FEEDBACK_MS)
   }
 }
 

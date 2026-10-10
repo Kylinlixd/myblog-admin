@@ -993,11 +993,10 @@ onBeforeUnmount(() => {
   transform: translateY(0);
 }
 
-/* 复制成功后按钮隐藏，只留"已复制"反馈，避免两者叠在同一个位置；
-   需要盖过 :hover 展示规则（点击后鼠标必然悬停在表格上） */
-:deep(.blog-table-copy.is-copied),
-:deep(.blog-table-wrap:hover .blog-table-copy.is-copied) {
-  opacity: 0;
+/* 复制成功期间（wrapper 标记）按钮无条件隐藏——优先级高于任何 hover/focus 规则，只留"已复制"反馈 */
+:deep(.blog-table-wrap.is-copied .blog-table-copy) {
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 :deep(.blog-table-copy:hover) {

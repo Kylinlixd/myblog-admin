@@ -437,9 +437,9 @@ onUpdated(() => {
           transform: translateY(0);
         }
 
-        :deep(.blog-table-copy.is-copied),
-        :deep(.blog-table-wrap:hover .blog-table-copy.is-copied) {
-          opacity: 0;
+        :deep(.blog-table-wrap.is-copied .blog-table-copy) {
+          opacity: 0 !important;
+          pointer-events: none;
         }
 
         :deep(.blog-table-copy:hover) {
