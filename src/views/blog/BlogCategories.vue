@@ -5,7 +5,7 @@
       <h1 class="page-title">把零散问题，整理成可继续探索的路径。</h1>
       <div class="archive-aside">
         <p class="page-desc">按主题进入内容脉络，每个分类都是一段正在生长的技术记录。</p>
-        <div class="archive-meta"><span>{{ categories.length }} 个主题</span><span>持续更新中</span></div>
+        <div class="archive-meta"><span>{{ categories.length }} 个主题</span><span>{{ collections.length }} 个系列</span><span>持续更新中</span></div>
       </div>
     </header>
     <section v-if="collections.length" class="collections-section" aria-label="文章合集">
