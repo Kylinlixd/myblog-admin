@@ -3,6 +3,9 @@ name: Deploy
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
 
 # 两次 push 挨在一起时不并发部署：共用 /tmp 包名与 current 软链会互相踩
 concurrency:
