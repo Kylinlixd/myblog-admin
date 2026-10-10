@@ -59,6 +59,12 @@ export const getTagDynamics = (tagId, params) =>
 export const getBlogTagList = (params) =>
   getPublicBlog('tags', params)
 
+export const getBlogCollections = () =>
+  getPublicBlog('collections')
+
+export const getBlogCollectionDetail = (id) =>
+  request.get(createBlogApiUrl(`collections/${id}`))
+
 export const increaseDynamicView = (id) =>
   request.put(createBlogApiUrl(`dynamics/${id}/view`))
 

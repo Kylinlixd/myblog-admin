@@ -8,6 +8,22 @@
         <div class="archive-meta"><span>{{ categories.length }} 个主题</span><span>持续更新中</span></div>
       </div>
     </header>
+    <section v-if="collections.length" class="collections-section" aria-label="文章合集">
+      <div class="collections-head">
+        <h2 class="collections-title">合集 · Series</h2>
+        <span class="collections-sub">成体系的连续更新，适合按顺序从头读到尾。</span>
+      </div>
+      <div class="collections-grid">
+        <router-link v-for="collection in collections" :key="collection.id" :to="`/blog/collections/${collection.id}`" class="collection-card">
+          <img v-if="collection.cover" :src="collection.cover" :alt="collection.title" class="collection-cover" loading="lazy" />
+          <div class="collection-body">
+            <h3 class="collection-title">{{ collection.title }}</h3>
+            <p class="collection-desc">{{ collection.description || '按系列持续更新的完整阅读路径。' }}</p>
+            <span class="collection-count">{{ collection.itemCount }} 篇 · 持续更新中</span>
+          </div>
+        </router-link>
+      </div>
+    </section>
     <section class="categories-grid" aria-label="文章分类">
       <article v-for="(category, index) in categories" :key="category.id" class="category-card cinematic-card">
         <router-link :to="`/blog/categories/${category.id}`" class="category-link">
@@ -25,11 +41,21 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getBlogCategoryList } from '@/api/blog'
+import { getBlogCategoryList, getBlogCollections } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()
 const categories = ref([])
+const collections = ref([])
+
+async function fetchCollections() {
+  try {
+    const response = await getBlogCollections()
+    if (response?.code === 200) collections.value = Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    console.error('获取合集数据失败:', error)
+  }
+}
 
 async function fetchCategories() {
   try {
@@ -46,7 +72,7 @@ async function fetchCategories() {
   }
 }
 
-onMounted(fetchCategories)
+onMounted(() => { fetchCategories(); fetchCollections() })
 </script>
 
 <style scoped>
@@ -169,4 +195,17 @@ onMounted(fetchCategories)
   .page-header.cinematic-hero.archive-hero .page-desc { font-size: 14px; }
   .page-header.cinematic-hero.archive-hero .archive-meta { gap: 8px; }
 }
+
+.collections-section { margin-bottom: clamp(36px, 5vw, 60px); }
+.collections-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+.collections-title { margin: 0; color: #253142; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+.collections-sub { color: #8d857a; font-size: 13px; }
+.collections-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 16px; }
+.collection-card { display: block; overflow: hidden; border-radius: 4px 20px 4px 20px; background: rgb(255 250 242 / 90%); box-shadow: 0 14px 34px rgb(92 59 35 / 10%); transition: transform .3s ease, box-shadow .3s ease; }
+.collection-card:hover { transform: translateY(-6px); box-shadow: 0 22px 44px rgb(92 59 35 / 16%); }
+.collection-cover { display: block; width: 100%; aspect-ratio: 900 / 420; object-fit: cover; }
+.collection-body { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 20px; }
+.collection-title { margin: 0; color: #253142; font-size: 17px; font-weight: 750; }
+.collection-desc { display: -webkit-box; margin: 0; overflow: hidden; color: #7d695c; font-size: 13px; line-height: 1.6; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.collection-count { color: #b85e2d; font-size: 12px; font-weight: 700; }
 </style>

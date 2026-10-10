@@ -64,6 +64,16 @@ const routes = [
         }
       },
       {
+        path: 'collections/:id',
+        name: 'BlogCollectionDetail',
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCollectionDetail.vue'),
+        meta: {
+          title: '合集',
+          keepAlive: false,
+          requiresAuth: false
+        }
+      },
+      {
         path: 'categories/:id/',
         name: 'BlogCategoryDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategoryDetail.vue'),
