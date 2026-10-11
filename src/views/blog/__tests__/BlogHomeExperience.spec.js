@@ -121,8 +121,9 @@ describe('focused warm technology blog homepage', () => {
   })
 
   it('uses a dedicated readable favicon instead of shrinking the detailed brand mark', () => {
-    expect(indexSource).toContain('favicon-coffee-v2.svg')
-    expect(indexSource).toContain('type="image/svg+xml"')
+    expect(indexSource).toContain('/favicon.ico')
+    expect(indexSource).toContain('apple-touch-icon')
+    expect(indexSource).not.toContain('favicon-coffee-v2.svg')
     expect(indexSource).not.toContain('logo-coffee-code.png" />')
   })
 })
