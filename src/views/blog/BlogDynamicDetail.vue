@@ -1784,11 +1784,10 @@ onBeforeUnmount(() => {
         display: table;
         overflow: visible;
       }
+      /* 表头不吸顶：吸附时它会悬在表格行之间、和悬浮导航叠在一起，
+         看起来像两层标题；让它随表格正常滚走更干净 */
       .article-main-column :deep(.markdown-body table thead th) {
-        position: sticky;
-        /* 顶部有吸起的悬浮导航（14px + 62px 高），吸附位避开它 */
-        top: 88px;
-        z-index: 2;
+        position: static;
       }
       .article-main-column :deep(.markdown-body table thead th:first-child) { border-top-left-radius: 11px; }
       .article-main-column :deep(.markdown-body table thead th:last-child) { border-top-right-radius: 11px; }
