@@ -40,6 +40,9 @@ server {
 
     location /media/ {
         alias /srv/blog_li/media/;
+        # 配图会被重新生成但文件名不变：缓存必须短（现网设的是 1h），
+        # 否则读者浏览器会拿着旧的强缓存一直看旧图，改了页面上却"没变"。
+        expires 1h;
     }
 
     location / {
