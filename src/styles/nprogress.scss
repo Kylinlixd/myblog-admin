@@ -8,7 +8,7 @@
   .bar {
     background: var(--primary-color);
     position: fixed;
-    z-index: 10000;
+    z-index: var(--z-above-all, 10000);
     top: 0;
     left: 0;
     width: 100%;

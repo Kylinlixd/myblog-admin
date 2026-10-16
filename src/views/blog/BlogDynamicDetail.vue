@@ -11,7 +11,11 @@
     </div>
     
     <div v-else class="article-reading-shell">
-      <div class="reading-progress" aria-hidden="true"><span :style="{ width: `${readingProgress}%` }"></span></div>
+      <!-- 进度条必须传送到 body：它要压在悬浮导航的遮罩带之上，而 .site-main 是
+           z-index: --z-content 的层叠上下文，留在里面再怎么写 z-index 也翻不过导航。 -->
+      <Teleport to="body">
+        <div class="reading-progress" aria-hidden="true"><span :style="{ width: `${readingProgress}%` }"></span></div>
+      </Teleport>
       <header class="article-header">
         <h1 class="dynamic-title">{{ dynamic.title }}</h1>
         <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
@@ -377,19 +381,19 @@ const updateTocPosition = () => {
   if (!card || !side) return
   const cardTop = card.getBoundingClientRect().top
   const sideHeight = side.getBoundingClientRect().height || 0
-  const minTop = 96
+  const minTop = getReadingOffset()
   const maxTop = Math.max(minTop, window.innerHeight - sideHeight - 24)
   tocTop.value = Math.round(Math.min(maxTop, Math.max(minTop, cardTop)))
 }
 
+const READING_OFFSET_FALLBACK = 96
+
 const getReadingOffset = () => {
-  const header = document.querySelector('.site-header-panel')
-  // The site header scrolls with the document, so its viewport `bottom`
-  // becomes negative after the first scroll. Use the stable rendered height
-  // instead; otherwise every heading appears below a negative reading line
-  // and the TOC falls back to its first item forever.
-  const headerHeight = header?.getBoundingClientRect?.().height || header?.offsetHeight || 0
-  return headerHeight + 28
+  // 阅读线的唯一定义在 CSS 的 --reading-offset（导航药丸高度 + 余量），
+  // 原生锚点用的 scroll-margin-top 也读它。这里优先取运行时值，取不到就用兜底常量。
+  const shell = document.querySelector('.article-reading-shell')
+  const declared = shell ? Number.parseFloat(getComputedStyle(shell).getPropertyValue('--reading-offset')) : Number.NaN
+  return Number.isFinite(declared) && declared > 0 ? declared : READING_OFFSET_FALLBACK
 }
 
 const scrollToHeading = (id) => {
@@ -1333,6 +1337,10 @@ onBeforeUnmount(() => {
       --article-line: #e9e3d8;
       --article-main-width: 840px;
       --article-shell-width: 1120px;
+      /* 阅读线：导航药丸（--header-height 76px）再加一点余量。
+         CSS 的 scroll-margin-top 与脚本里的 getReadingOffset() 都读这一个值，
+         免得改导航高度时两边各写一套、漏掉一处。 */
+      --reading-offset: 96px;
       width: min(var(--article-shell-width), calc(100% - 32px));
       margin: 0 auto;
       padding: 0 0 72px;
@@ -1340,10 +1348,11 @@ onBeforeUnmount(() => {
       position: relative;
     }
 
+    /* 传送到 body 的进度条：压住导航遮罩带（--z-progress 120 > --z-header 100） */
     .reading-progress {
       position: fixed;
       inset: 0 0 auto;
-      z-index: 30;
+      z-index: var(--z-progress);
       height: 3px;
       background: rgb(226 232 240 / 40%);
     }
@@ -1636,8 +1645,9 @@ onBeforeUnmount(() => {
 
     .article-side-column {
       position: fixed;
-      z-index: 12;
-      top: 96px;
+      /* 固定的目录导轨：在正文之上但在导航之下（--z-sticky 20 < --z-header 100） */
+      z-index: var(--z-sticky);
+      top: var(--reading-offset);
       right: max(16px, calc((100vw - var(--article-shell-width)) / 2));
       width: 220px;
       max-height: calc(100vh - 120px);
@@ -1749,7 +1759,8 @@ onBeforeUnmount(() => {
     .article-main-column :deep(.markdown-body h2),
     .article-main-column :deep(.markdown-body h3),
     .article-main-column :deep(.markdown-body h4) {
-      scroll-margin-top: 28px;
+      /* 与 --reading-offset 同源：原生锚点跳转后标题不能被悬浮导航压住 */
+      scroll-margin-top: var(--reading-offset);
       padding-left: 0;
       border: 0;
       color: var(--article-ink);

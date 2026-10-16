@@ -58,7 +58,7 @@ const cachedViews = computed(() =>
   position: fixed;
   right: 24px;
   bottom: max(24px, env(safe-area-inset-bottom));
-  z-index: 2000;
+  z-index: var(--z-overlay, 1000);
   display: grid;
   width: min(320px, calc(100vw - 32px));
   min-height: 68px;

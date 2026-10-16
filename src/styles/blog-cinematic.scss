@@ -1,3 +1,19 @@
+/*
+ * 层叠刻度：全站只有这一套 z-index 语义，新写的规则请复用这些变量。
+ * 规矩一句话：正文里的东西一律 <= --z-sticky，不许跟悬浮导航（--z-header）抢层。
+ * 背景里的氛围层用 --z-atmosphere；固定的阅读进度条贴在导航之上（--z-progress）；
+ * 弹层/抽屉用 --z-overlay；nprogress 这类"必须压住一切"的用 --z-above-all。
+ */
+:root {
+  --z-atmosphere: -1;
+  --z-content: 1;
+  --z-sticky: 20;
+  --z-header: 100;
+  --z-progress: 120;
+  --z-overlay: 1000;
+  --z-above-all: 10000;
+}
+
 .blog-shell {
   --blog-bg: #f4efe5;
   --blog-paper: #fffaf2;
@@ -20,7 +36,7 @@
 
 .blog-atmosphere {
   position: fixed;
-  z-index: -1;
+  z-index: var(--z-atmosphere);
   inset: 0;
   overflow: hidden;
   background:
@@ -88,7 +104,7 @@
 .cinematic-page.tag-detail,
 .cinematic-page.dynamic-detail {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-content);
 }
 
 .cinematic-hero {

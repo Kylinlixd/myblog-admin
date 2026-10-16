@@ -112,14 +112,22 @@ function isNavigationActive(item) {
 </script>
 
 <style scoped>
-.blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; /* clip 而不是 hidden：保持横向裁切的同时不产生滚动容器，sticky（导航、表格表头）才能生效 */ overflow-x: clip; background: var(--blog-bg); color: var(--blog-text); isolation: isolate; }
+.blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; /* clip 而不是 hidden：保持横向裁切的同时不产生滚动容器，sticky（导航、表格表头）才能生效 */ overflow-x: clip; background: var(--blog-bg); color: var(--blog-text); isolation: isolate; /* 悬浮导航的几何：药丸 top 偏移与整体高度；首页 hero 的 min-height 也用 --header-height，两边必须同源 */ --header-top: 14px; --header-height: 76px; }
 .blog-shell--home { --header-height: 76px; }
-.blog-shell--home .site-header { position: fixed; top: 0; right: 0; left: 0; height: auto; padding-top: 14px; }
 .blog-shell--home .site-main { padding-top: var(--header-height); }
-.blog-shell--home .site-header-panel { background: #fffaf2; backdrop-filter: none; box-shadow: 0 4px 18px rgb(89 61 34 / 5%); }
 .blog-shell--home .site-footer { background: #eee8dd; backdrop-filter: none; content-visibility: auto; contain-intrinsic-size: auto 112px; }
-.site-header { position: sticky; z-index: 100; top: 14px; height: 0; }
-.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 15%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 82%); box-shadow: 0 18px 50px rgb(89 61 34 / 12%); backdrop-filter: blur(22px); }
+.site-header { position: sticky; z-index: var(--z-header); top: var(--header-top); height: 0; }
+/*
+ * 导航遮罩带。
+ * 药丸是 82% 不透明的磨砂玻璃、可见高度只有 62px，横向还被 .app-container 收窄：
+ * 正文向上滚时既会从药丸后面"透"出来，也会从药丸上方 14px 与左右两侧的留白"绕过"，
+ * 看起来就像标题卡片/表格浮在导航上层。这里在导航这一层铺一条自顶向下渐隐的带子
+ * （顶部近实底 → 底部完全透明），正文滑到带子下沿就"化掉"。
+ * 带子颜色取 .blog-atmosphere 的顶部同色，而氛围层本身是 fixed 的，所以两者永远接得上。
+ * z-index: -1 让带子待在药丸之下，但仍在 header 的层叠上下文里（不会掉到正文下面）。
+ */
+.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + 26px); background: linear-gradient(180deg, rgb(248 243 233 / 97%) 0%, rgb(248 243 233 / 95%) 56%, rgb(248 243 233 / 70%) 80%, rgb(248 243 233 / 0%) 100%); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%); content: ''; pointer-events: none; }
+.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 15%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 96%); box-shadow: 0 18px 50px rgb(89 61 34 / 12%); backdrop-filter: blur(22px); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
 .brand-mark { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
@@ -147,8 +155,10 @@ function isNavigationActive(item) {
 .menu-button { display: none; width: 44px; height: 44px; border: 1px solid var(--blog-line); border-radius: 12px; background: var(--blog-paper); color: var(--blog-text); }
 .mobile-nav { display: none; margin-top: 8px; padding: 12px; border: 1px solid var(--blog-line); border-radius: 18px; background: rgb(255 250 242 / 96%); box-shadow: 0 24px 60px rgb(89 61 34 / 18%); }
 .mobile-admin-link { display: none; }
-.site-main { position: relative; z-index: 1; flex: 1; padding-top: 62px; }
-.site-footer { position: relative; z-index: 1; border-top: 1px solid var(--blog-line); background: rgb(239 229 212 / 78%); color: var(--blog-text-muted); backdrop-filter: blur(18px); }
+/* 内容整体住在 --z-content 这一层：里面的固定元素（右侧目录、阅读进度条）再怎么写
+   z-index 也翻不过 --z-header，这就是「正文永远不会盖住导航」的结构保证。 */
+.site-main { position: relative; z-index: var(--z-content); flex: 1; padding-top: var(--header-height); }
+.site-footer { position: relative; z-index: var(--z-content); border-top: 1px solid var(--blog-line); background: rgb(239 229 212 / 78%); color: var(--blog-text-muted); backdrop-filter: blur(18px); }
 .footer-inner { display: flex; min-height: 112px; align-items: center; justify-content: space-between; gap: 20px; font-size: 12px; }
 .footer-inner div { display: flex; gap: 20px; }
 .footer-inner a:hover { color: var(--blog-accent-strong); }
@@ -156,6 +166,6 @@ function isNavigationActive(item) {
 .page-enter-from { opacity: 0; transform: translateY(5px); }
 .page-leave-to { opacity: 0; }
 @media (max-width: 960px) { .site-header-panel { grid-template-columns: minmax(150px, 1fr) auto; } .desktop-nav, .admin-link { display: none; } .menu-button, .mobile-nav { display: flex; } .mobile-nav { flex-direction: column; gap: 4px; } .mobile-admin-link { display: flex; min-height: 44px; align-items: center; justify-content: center; margin-top: 5px; background: var(--blog-text); color: #fffaf2 !important; font-weight: 750; } }
-@media (max-width: 620px) { .site-header { top: 8px; } .blog-shell--home { --header-height: 66px; } .blog-shell--home .site-header { padding-top: 8px; } .site-header-panel { width: calc(100% - 20px); min-height: 58px; gap: 7px; padding-inline: 10px; } .brand { flex: 0 0 auto; } .brand-mark { width: 38px; height: 38px; } .header-actions { min-width: 0; flex: 1 1 auto; gap: 6px; } .quick-search { flex: 1 1 auto; width: auto; min-width: 0; max-width: none; height: 40px; padding: 0 11px; } .quick-search input { width: 100%; min-width: 0; font-size: 13px; } .menu-button { flex: 0 0 40px; width: 40px; height: 40px; } .brand small { display: none; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
+@media (max-width: 620px) { .blog-shell { --header-top: 8px; --header-height: 66px; } .site-header-panel { width: calc(100% - 20px); min-height: 58px; gap: 7px; padding-inline: 10px; } .brand { flex: 0 0 auto; } .brand-mark { width: 38px; height: 38px; } .header-actions { min-width: 0; flex: 1 1 auto; gap: 6px; } .quick-search { flex: 1 1 auto; width: auto; min-width: 0; max-width: none; height: 40px; padding: 0 11px; } .quick-search input { width: 100%; min-width: 0; font-size: 13px; } .menu-button { flex: 0 0 40px; width: 40px; height: 40px; } .brand small { display: none; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
 @media (max-width: 390px) { .brand > span:last-child { display: none; } .site-header-panel { grid-template-columns: auto minmax(0, 1fr); } .quick-search { height: 36px; padding-inline: 10px; } .quick-search-button { flex-basis: 16px; width: 16px; height: 16px; } .quick-search input { font-size: 12px; } }
 </style>

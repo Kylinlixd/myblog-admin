@@ -43,9 +43,12 @@ describe('focused warm technology blog homepage', () => {
     expect(source).toContain('background: #f5efe5;')
     expect(source).toContain('.home-hero { position: relative; display: flex; width: 100%;')
     expect(source).toContain('justify-content: center')
-    expect(layoutSource).toContain('.blog-shell--home .site-header')
+    // 首页与内页共用同一套悬浮导航（sticky + 遮罩带）：hero 靠 --header-height 让位，
+    // 不再有首页专用的 position: fixed 药丸，所以这里断言统一机制而不是旧的 fixed 分支。
+    expect(layoutSource).toContain('.site-header { position: sticky;')
+    expect(layoutSource).toContain('.site-header::before')
+    expect(layoutSource).toContain('.blog-shell--home { --header-height: 76px; }')
     expect(layoutSource).toContain('.blog-shell--home .site-main')
-    expect(layoutSource).toContain('position: fixed')
     expect(source).not.toContain('hero-particle-canvas')
     expect(source).not.toContain('hero-atmosphere')
     expect(source).not.toContain('hero-light-sheet')
