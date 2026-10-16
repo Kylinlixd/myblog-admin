@@ -48,3 +48,38 @@ describe('BlogLayout navigation active state', () => {
     expect(source).toContain('.admin-link:hover')
   })
 })
+
+describe('悬浮导航的阅读线与遮罩带', () => {
+  const readLayout = () =>
+    fs.readFileSync(path.join(process.cwd(), 'src/layouts/BlogLayout.vue'), 'utf8')
+  const readFile = (rel) => fs.readFileSync(path.join(process.cwd(), rel), 'utf8')
+
+  it('defines one reading line on the shell and derives it from the header height', () => {
+    const source = readLayout()
+
+    expect(source).toContain('--reading-offset: calc(var(--header-height) + 20px);')
+    // 导航几何必须同源，否则阅读线会跟着漂
+    expect(source).toContain('--header-top: 14px; --header-height: 76px;')
+  })
+
+  it('keeps a veil band above the content so scrolled text cannot show through the glass nav', () => {
+    const source = readLayout()
+
+    expect(source).toContain('.site-header::before')
+    expect(source).toContain('z-index: var(--z-header)')
+    expect(source).toContain('z-index: var(--z-content)')
+    // 药丸不再是 82% 的玻璃：那正是正文"透"出来的原因
+    expect(source).not.toContain('background: rgb(255 250 242 / 82%)')
+  })
+
+  it('pins every sticky column below the reading line instead of a small hand-written top', () => {
+    const timeline = readFile('src/views/blog/BlogDynamic.vue')
+    const detail = readFile('src/views/blog/BlogDynamicDetail.vue')
+
+    // 书遇的时间轴曾经写 top: 28px，滚动后被导航与遮罩带压住
+    expect(timeline).toContain('top: var(--reading-offset, 96px);')
+    expect(timeline).not.toContain('top: 28px;')
+    expect(detail).toContain('top: var(--reading-offset, 96px);')
+    expect(detail).toContain('scroll-margin-top: var(--reading-offset, 96px);')
+  })
+})

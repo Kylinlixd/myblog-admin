@@ -528,8 +528,10 @@ onActivated(() => {
 
 .dynamic-timeline {
   position: sticky;
-  top: 28px;
-  max-height: calc(100vh - 56px);
+  /* 吸顶在阅读线以下（--reading-offset = 药丸底 + 20px = 96px）：
+     原来写 top: 28px，滚动时整块时间轴会顶到悬浮导航与遮罩带底下，顶部几项被压住点不到。 */
+  top: var(--reading-offset, 96px);
+  max-height: calc(100vh - var(--reading-offset, 96px) - 24px);
   overflow: auto;
   padding: 12px 22px 12px 0;
   border-right: 1px solid rgb(148 163 184 / 22%);

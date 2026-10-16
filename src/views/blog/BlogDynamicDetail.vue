@@ -1337,10 +1337,8 @@ onBeforeUnmount(() => {
       --article-line: #e9e3d8;
       --article-main-width: 840px;
       --article-shell-width: 1120px;
-      /* 阅读线：导航药丸（--header-height 76px）再加一点余量。
-         CSS 的 scroll-margin-top 与脚本里的 getReadingOffset() 都读这一个值，
-         免得改导航高度时两边各写一套、漏掉一处。 */
-      --reading-offset: 96px;
+      /* --reading-offset 由 .blog-shell 统一定义（--header-height + 20px = 96px），
+         这里只继承它：原生锚点的 scroll-margin-top 与脚本 getReadingOffset() 同源。 */
       width: min(var(--article-shell-width), calc(100% - 32px));
       margin: 0 auto;
       padding: 0 0 72px;
@@ -1645,9 +1643,10 @@ onBeforeUnmount(() => {
 
     .article-side-column {
       position: fixed;
-      /* 固定的目录导轨：在正文之上但在导航之下（--z-sticky 20 < --z-header 100） */
+      /* 固定的目录导轨：在正文之上但在导航之下（--z-sticky 20 < --z-header 100）；
+         --reading-offset 从 .blog-shell 继承，兜底 96px 只在本页被单独渲染时命中 */
       z-index: var(--z-sticky);
-      top: var(--reading-offset);
+      top: var(--reading-offset, 96px);
       right: max(16px, calc((100vw - var(--article-shell-width)) / 2));
       width: 220px;
       max-height: calc(100vh - 120px);
@@ -1760,7 +1759,7 @@ onBeforeUnmount(() => {
     .article-main-column :deep(.markdown-body h3),
     .article-main-column :deep(.markdown-body h4) {
       /* 与 --reading-offset 同源：原生锚点跳转后标题不能被悬浮导航压住 */
-      scroll-margin-top: var(--reading-offset);
+      scroll-margin-top: var(--reading-offset, 96px);
       padding-left: 0;
       border: 0;
       color: var(--article-ink);

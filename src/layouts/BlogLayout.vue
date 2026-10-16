@@ -112,7 +112,9 @@ function isNavigationActive(item) {
 </script>
 
 <style scoped>
-.blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; /* clip 而不是 hidden：保持横向裁切的同时不产生滚动容器，sticky（导航、表格表头）才能生效 */ overflow-x: clip; background: var(--blog-bg); color: var(--blog-text); isolation: isolate; /* 悬浮导航的几何：药丸 top 偏移与整体高度；首页 hero 的 min-height 也用 --header-height，两边必须同源 */ --header-top: 14px; --header-height: 76px; }
+.blog-shell { position: relative; display: flex; min-height: 100vh; flex-direction: column; /* clip 而不是 hidden：保持横向裁切的同时不产生滚动容器，sticky（导航、表格表头）才能生效 */ overflow-x: clip; background: var(--blog-bg); color: var(--blog-text); isolation: isolate; /* 悬浮导航的几何：药丸 top 偏移与整体高度；首页 hero 的 min-height 也用 --header-height，两边必须同源 */ --header-top: 14px; --header-height: 76px; /* 阅读线：药丸底边（top + height = 76px）再加 20px 余量 = 96px。
+   页面上所有吸顶/固定元素（文章目录、阅读进度条锚点、书遇的时间轴）都读它，
+   免得各页各写一个 top，撞上悬浮导航就被压住。 */ --reading-offset: calc(var(--header-height) + 20px); }
 .blog-shell--home { --header-height: 76px; }
 .blog-shell--home .site-main { padding-top: var(--header-height); }
 .blog-shell--home .site-footer { background: #eee8dd; backdrop-filter: none; content-visibility: auto; contain-intrinsic-size: auto 112px; }
