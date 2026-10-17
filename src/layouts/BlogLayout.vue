@@ -120,16 +120,14 @@ function isNavigationActive(item) {
 .blog-shell--home .site-footer { background: #eee8dd; backdrop-filter: none; content-visibility: auto; contain-intrinsic-size: auto 112px; }
 .site-header { position: sticky; z-index: var(--z-header); top: var(--header-top); height: 0; }
 /*
- * 导航遮罩带：实底只盖到药丸下沿，再往下渐隐，而不是一堵硬切的墙。
- * 悬浮药丸只有 62px 高、离顶 14px，横向还被 .app-container 收窄；正文向上滚时会从
- * 药丸上方 14px 与左右两侧留白"绕过"，看起来像正文穿过了导航栏。所以这里在导航这
- * 一层铺一条**通栏**带子：从视口顶到药丸底边保持不透明，把绕过的正文干净挡住；下沿
- * 再多伸 30px 渐隐到透明，融进 .blog-atmosphere，这样就不会出现"上面死白、下面突然
- * 冒出氛围光"的硬分界。带子顶部叠一层与氛围层同源的水暖色光、颜色取氛围层顶部同色，
- * 两者永远接得上。z-index: -1 让带子待在药丸之下，但仍在 header 的层叠上下文里。
+ * 导航遮罩带：不用不透明颜料"涂墙"，改用 backdrop-filter 把滚上来的正文糊掉。
+ * 模糊只与像素有关、和背景色无关——任何内容滚过来都只是变柔和，不用去匹配正文颜色。
+ * 通栏带子从视口顶铺到药丸下沿（--header-height = top 偏移 + 药丸高）保持满效，再往下
+ * 用 mask 连续衰减 80px，整段没有任何一条贯通的直线（渐变终点线/阴影线/描边线都没有）。
+ * 暖色只做一层 ≤50% 的薄纱定暖调；z-index: -1 让带子待在药丸之下，仍在 header 层叠上下文里。
  */
-.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + var(--header-top) + 30px); background: radial-gradient(circle at 14% -18%, rgb(229 155 89 / 18%), transparent 44%), linear-gradient(180deg, #f8f3e9 0%, #f8f3e9 calc(var(--header-height) + var(--header-top) - 2px), rgb(248 243 233 / 0%) 100%); content: ''; pointer-events: none; }
-.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 10%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 86%); box-shadow: 0 1px 0 rgb(255 255 255 / 55%) inset, 0 10px 26px rgb(89 61 34 / 9%); backdrop-filter: blur(18px) saturate(1.08); }
+.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + 80px); background: rgb(248 243 233 / 20%); backdrop-filter: blur(24px); -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 var(--header-height), transparent calc(var(--header-height) + 80px)); mask-image: linear-gradient(to bottom, #000 0, #000 var(--header-height), transparent calc(var(--header-height) + 80px)); content: ''; pointer-events: none; }
+.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(255 255 255 / 18%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 74%); box-shadow: 0 1px 0 rgb(255 255 255 / 55%) inset, 0 0 0 1px rgb(255 255 255 / 5%), 0 16px 36px rgb(89 61 34 / 9%); -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 10px), transparent 100%); mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 10px), transparent 100%); backdrop-filter: blur(16px) saturate(1.08); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
 .brand-mark { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }

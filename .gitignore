@@ -25,3 +25,6 @@ output/playwright/
 *.sln
 *.sw?
 .npm-cache/
+
+# 本地验收工具（脚本 + 截图，不进仓库）
+.navmock/
