@@ -120,16 +120,17 @@ function isNavigationActive(item) {
 .blog-shell--home .site-footer { background: #eee8dd; backdrop-filter: none; content-visibility: auto; contain-intrinsic-size: auto 112px; }
 .site-header { position: sticky; z-index: var(--z-header); top: var(--header-top); height: 0; }
 /*
- * 导航遮罩带。
- * 药丸是 82% 不透明的磨砂玻璃、可见高度只有 62px，横向还被 .app-container 收窄：
- * 正文向上滚时既会从药丸后面"透"出来，也会从药丸上方 14px 与左右两侧的留白"绕过"，
- * 看起来就像标题卡片/表格浮在导航上层。这里在导航这一层铺一条自顶向下渐隐的带子
- * （顶部近实底 → 底部完全透明），正文滑到带子下沿就"化掉"。
- * 带子颜色取 .blog-atmosphere 的顶部同色，而氛围层本身是 fixed 的，所以两者永远接得上。
+ * 导航遮罩带（实底，不再渐隐）。
+ * 悬浮药丸只有 62px 高、离顶 14px，横向还被 .app-container 收窄；若只靠半透明玻璃，
+ * 正文向上滚时会从药丸后面"透"出来、也从上方 14px 与左右两侧留白"绕过"，看起来像
+ * 正文穿过了导航栏。所以这里在导航这一层铺一条**通栏实底**的带子，垂直正好盖住
+ * 药丸的完整跨度（从视口顶 -header-top 到药丸底边 = top + height），正文滚到带子下沿
+ * 就被干净地挡住，而不是"渐隐到某处突然断"。
+ * 带子颜色取 .blog-atmosphere 的顶部同色，而氛围层本身是 fixed 的，两者永远接得上。
  * z-index: -1 让带子待在药丸之下，但仍在 header 的层叠上下文里（不会掉到正文下面）。
  */
-.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + 26px); background: linear-gradient(180deg, rgb(248 243 233 / 97%) 0%, rgb(248 243 233 / 95%) 56%, rgb(248 243 233 / 70%) 80%, rgb(248 243 233 / 0%) 100%); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%); mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%); content: ''; pointer-events: none; }
-.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 15%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 96%); box-shadow: 0 18px 50px rgb(89 61 34 / 12%); backdrop-filter: blur(22px); }
+.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + var(--header-top)); background: #f8f3e9; content: ''; pointer-events: none; }
+.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 18%); border-radius: 20px; padding: 0 12px 0 18px; background: #fffaf2; box-shadow: 0 18px 50px rgb(89 61 34 / 12%); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
 .brand-mark { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
