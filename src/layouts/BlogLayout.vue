@@ -120,17 +120,16 @@ function isNavigationActive(item) {
 .blog-shell--home .site-footer { background: #eee8dd; backdrop-filter: none; content-visibility: auto; contain-intrinsic-size: auto 112px; }
 .site-header { position: sticky; z-index: var(--z-header); top: var(--header-top); height: 0; }
 /*
- * 导航遮罩带（实底，不再渐隐）。
- * 悬浮药丸只有 62px 高、离顶 14px，横向还被 .app-container 收窄；若只靠半透明玻璃，
- * 正文向上滚时会从药丸后面"透"出来、也从上方 14px 与左右两侧留白"绕过"，看起来像
- * 正文穿过了导航栏。所以这里在导航这一层铺一条**通栏实底**的带子，垂直正好盖住
- * 药丸的完整跨度（从视口顶 -header-top 到药丸底边 = top + height），正文滚到带子下沿
- * 就被干净地挡住，而不是"渐隐到某处突然断"。
- * 带子颜色取 .blog-atmosphere 的顶部同色，而氛围层本身是 fixed 的，两者永远接得上。
- * z-index: -1 让带子待在药丸之下，但仍在 header 的层叠上下文里（不会掉到正文下面）。
+ * 导航遮罩带：实底只盖到药丸下沿，再往下渐隐，而不是一堵硬切的墙。
+ * 悬浮药丸只有 62px 高、离顶 14px，横向还被 .app-container 收窄；正文向上滚时会从
+ * 药丸上方 14px 与左右两侧留白"绕过"，看起来像正文穿过了导航栏。所以这里在导航这
+ * 一层铺一条**通栏**带子：从视口顶到药丸底边保持不透明，把绕过的正文干净挡住；下沿
+ * 再多伸 30px 渐隐到透明，融进 .blog-atmosphere，这样就不会出现"上面死白、下面突然
+ * 冒出氛围光"的硬分界。带子顶部叠一层与氛围层同源的水暖色光、颜色取氛围层顶部同色，
+ * 两者永远接得上。z-index: -1 让带子待在药丸之下，但仍在 header 的层叠上下文里。
  */
-.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + var(--header-top)); background: #f8f3e9; content: ''; pointer-events: none; }
-.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 18%); border-radius: 20px; padding: 0 12px 0 18px; background: #fffaf2; box-shadow: 0 18px 50px rgb(89 61 34 / 12%); }
+.site-header::before { position: absolute; z-index: -1; top: calc(-1 * var(--header-top)); right: 0; left: 0; height: calc(var(--header-height) + var(--header-top) + 30px); background: radial-gradient(circle at 14% -18%, rgb(229 155 89 / 18%), transparent 44%), linear-gradient(180deg, #f8f3e9 0%, #f8f3e9 calc(var(--header-height) + var(--header-top) - 2px), rgb(248 243 233 / 0%) 100%); content: ''; pointer-events: none; }
+.site-header-panel { display: grid; min-height: 62px; grid-template-columns: minmax(180px, 1fr) auto minmax(240px, 1fr); align-items: center; gap: 24px; border: 1px solid rgb(108 82 54 / 10%); border-radius: 20px; padding: 0 12px 0 18px; background: rgb(255 250 242 / 86%); box-shadow: 0 1px 0 rgb(255 255 255 / 55%) inset, 0 10px 26px rgb(89 61 34 / 9%); backdrop-filter: blur(18px) saturate(1.08); }
 .brand { display: flex; width: max-content; align-items: center; gap: 10px; }
 .brand-mark { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; }
 .brand-mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
