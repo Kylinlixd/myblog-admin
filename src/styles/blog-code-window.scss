@@ -1,4 +1,7 @@
 :is(.markdown-body, .markdown-content) pre.blog-code-window {
+  --blog-code-font-size: 15.3px;
+  --blog-code-line-height: 1.75;
+  position: relative;
   overflow: hidden;
   margin: 1.8em 0;
   padding: 0;
@@ -18,6 +21,25 @@
   background: #f8f7f5;
   color: #6f6d69;
   font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.blog-code-window .blog-code-action-label { display: none; }
+
+.blog-code-window .blog-code-swipe-hint {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #efece7;
+  color: #8a837a;
+  font: 600 10px/1.2 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  white-space: nowrap;
+  animation: blog-code-hint-in .25s ease both;
+}
+
+@keyframes blog-code-hint-in {
+  from { opacity: 0; transform: translateX(4px); }
+  to { opacity: 1; transform: none; }
 }
 
 .blog-code-window .blog-code-dots {
@@ -285,11 +307,15 @@
 }
 
 .blog-code-window .blog-code-lines {
+  position: sticky;
+  left: 0;
+  z-index: 1;
   flex: 0 0 48px;
   padding: 28px 12px 28px 0;
   border-right: 1px solid #eeeae5;
+  background: #fffefa;
   color: #b6b0a8;
-  font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--blog-code-font-size)/var(--blog-code-line-height) ui-monospace, SFMono-Regular, Menlo, monospace;
   text-align: right;
   user-select: none;
   white-space: pre;
@@ -309,8 +335,63 @@
   border-radius: 0;
   background: transparent;
   color: #34383b;
-  font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--blog-code-font-size)/var(--blog-code-line-height) ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+.blog-code-window .blog-code-body {
+  position: relative;
+}
+
+.blog-code-window.has-h-scroll.is-h-start:not(.is-h-end) .blog-code-body {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 26px), transparent);
+}
+
+.blog-code-window.has-h-scroll.is-h-end:not(.is-h-start) .blog-code-body {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 26px);
+  mask-image: linear-gradient(to right, transparent, #000 26px);
+}
+
+.blog-code-window.has-h-scroll:not(.is-h-start):not(.is-h-end) .blog-code-body {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 26px, #000 calc(100% - 26px), transparent);
+}
+
+.blog-code-window .blog-code-more {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 44px;
+  margin-top: -26px;
+  padding: 26px 12px 0;
+  border: 0;
+  background: linear-gradient(to bottom, rgb(255 254 250 / 0%), #fffefa 58%);
+  color: #9a5a33;
+  cursor: pointer;
+  font: 600 13px/1.2 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  gap: 4px;
+}
+
+.blog-code-window .blog-code-more span {
+  color: #a8a199;
+  font-weight: 500;
+}
+
+.blog-code-window .blog-code-more:hover,
+.blog-code-window .blog-code-more:focus-visible {
+  color: #7c3f1c;
+  outline: none;
+}
+
+.blog-code-window.is-clipped:not(.is-collapsed) .blog-code-body {
+  max-height: 300px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.blog-code-window.is-collapsed .blog-code-more { display: none; }
 
 .blog-code-window.is-collapsed .blog-code-body {
   max-height: 0;
@@ -319,6 +400,44 @@
 }
 
 @media (max-width: 640px) {
+  :is(.markdown-body, .markdown-content) pre.blog-code-window {
+    --blog-code-font-size: 13.5px;
+    --blog-code-line-height: 1.7;
+    margin: 1.8em -20px;
+    border-radius: 14px;
+  }
+
+  .blog-code-window .blog-code-dots { display: none; }
+
+  .blog-code-window .blog-code-actions { margin-left: auto; }
+
+  .blog-code-window .blog-code-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 56px;
+    padding: 0 8px;
+    gap: 0;
+  }
+
+  .blog-code-window .blog-code-action > svg { display: none; }
+
+  .blog-code-window .blog-code-action-label {
+    display: inline;
+    font: 600 12px/1 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .blog-code-window .blog-code-collapse { font-size: 12px; }
+
+  .blog-code-window .blog-code-body {
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .blog-code-window .blog-code-lines { display: none; }
+
   .blog-code-window .blog-code-header {
     min-height: 46px;
     padding: 0 12px;
@@ -331,12 +450,9 @@
     height: 44px;
   }
 
-  .blog-code-window .blog-code-lines {
-    flex-basis: 40px;
-    padding: 22px 9px 22px 0;
-  }
+  .blog-code-window .blog-code-content code { padding: 18px 16px; }
 
-  .blog-code-window .blog-code-content code { padding: 22px 16px; }
+  .blog-code-window .blog-code-copy-feedback { display: none; }
 
   .blog-code-window .blog-code-run { align-self: stretch; justify-content: center; margin: 10px 12px; }
 

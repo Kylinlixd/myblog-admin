@@ -64,7 +64,7 @@ test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
   expect(source).toContain(':deep(.markdown-body .blog-code-window .blog-code-content code)')
   expect(source).toContain('padding: 28px 24px;')
   expect(source).toContain(':deep(.markdown-body .blog-code-window .blog-code-lines)')
-  expect(source).toContain('font: 15.3px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;')
+  expect(source).toContain('font: var(--blog-code-font-size, 15.3px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;')
   expect(listSource).toContain('createMarkdownRenderer')
   expect(listSource).toContain('bindCodeBlockInteractions')
   expect(previewSource).toContain('createMarkdownRenderer')
@@ -72,7 +72,7 @@ test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
   expect(previewSource).toContain(':deep(.blog-code-window .blog-code-content code)')
   expect(previewSource).toContain('padding: 28px 24px;')
   expect(previewSource).toContain(':deep(.blog-code-window .blog-code-lines)')
-  expect(previewSource).toContain('font: 15.3px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;')
+  expect(previewSource).toContain('font: var(--blog-code-font-size, 15.3px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;')
 })
 
 test('文章详情包含移动端和 reduced motion 规则', () => {
@@ -81,7 +81,7 @@ test('文章详情包含移动端和 reduced motion 规则', () => {
 })
 
 test('文章详情按媒体项渲染可播放媒体源', () => {
-  expect(source).toContain("import { attachmentKind, attachmentLabel, normalizeMediaItems } from '@/utils/blogMedia'")
+  expect(source).toContain("import { attachmentKind, attachmentLabel, mediaKey, normalizeMediaItems } from '@/utils/blogMedia'")
   expect(source).toContain("item.type === 'video'")
   expect(source).toContain('<video')
   expect(source).toContain('controls')

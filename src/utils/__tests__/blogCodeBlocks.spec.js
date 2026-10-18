@@ -82,6 +82,36 @@ describe('enhanceCodeBlocks', () => {
     expect(root.querySelector('.blog-code-copy-feedback')).toHaveClass('is-visible')
   })
 
+  it('adds text controls and clips long code on compact viewports', async () => {
+    const originalMatchMedia = window.matchMedia
+    window.matchMedia = jest.fn().mockReturnValue({ matches: true })
+    try {
+      const root = document.createElement('div')
+      const lines = Array.from({ length: 22 }, (_, index) => `const value${index} = ${index}`).join('\n')
+      root.innerHTML = createMarkdownRenderer().render('```js\n' + lines + '\n```')
+      const writeText = jest.fn().mockResolvedValue(undefined)
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
+
+      bindCodeBlockInteractions(root)
+      const pre = root.querySelector('pre')
+      const copyButton = pre.querySelector('[data-blog-code-action="copy"]')
+      expect(pre).toHaveClass('is-clipped')
+      expect(copyButton.textContent).toContain('复制')
+      expect(pre.querySelector('[data-blog-code-action="collapse"]').textContent).toContain('折叠')
+      expect(pre.querySelector('.blog-code-more').textContent).toContain('22 行')
+
+      pre.querySelector('.blog-code-more').click()
+      expect(pre).not.toHaveClass('is-clipped')
+      expect(pre.querySelector('.blog-code-more')).toBeNull()
+
+      await copyButton.click()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(copyButton.textContent).toContain('已复制')
+    } finally {
+      window.matchMedia = originalMatchMedia
+    }
+  })
+
   it('runs js fences in a sandbox and reveals the console output panel', () => {
     const root = document.createElement('div')
     root.innerHTML = createMarkdownRenderer().render('```js\nconsole.log("ok")\n```')

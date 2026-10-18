@@ -219,7 +219,7 @@ import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 import { enhanceBlogTables } from '@/utils/blogTables'
 import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
-import { attachmentKind, attachmentLabel, normalizeMediaItems } from '@/utils/blogMedia'
+import { attachmentKind, attachmentLabel, mediaKey, normalizeMediaItems } from '@/utils/blogMedia'
 import ArticleImageLightbox from '@/components/blog/ArticleImageLightbox.vue'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
@@ -273,8 +273,8 @@ const readingOrigin = computed(() => (isLightContext.value
 const contentContainsMedia = (url) => {
   const content = dynamic.value?.content || ''
   if (!content || !url) return false
-  const path = url.replace(/^https?:\/\/[^/]+/, '')
-  return content.includes(url) || content.includes(path)
+  // 正文里写的是 /x.svg，media_urls 可能带 ?v=6，按去查询串的路径比较才不会把同一张图渲染两次
+  return content.includes(url) || content.includes(mediaKey(url))
 }
 
 const dynamicMediaItems = computed(() => normalizeMediaItems(dynamic.value))
@@ -353,13 +353,21 @@ const collectArticleImages = (clicked) => {
     .filter(isViewableImage)
     .filter((image) => image.naturalWidth === 0 || image.naturalWidth >= 120)
   if (!nodes.length) return null
-  return {
-    images: nodes.map((image) => ({
-      src: image.currentSrc || image.src,
-      alt: image.alt || ''
-    })),
-    index: Math.max(0, nodes.indexOf(clicked))
+
+  // 同一张图可能同时来自正文和媒体列表（地址差一个 ?v=），只保留第一次出现
+  const images = []
+  const seen = new Set()
+  let index = 0
+  for (const image of nodes) {
+    const src = image.currentSrc || image.src
+    const key = mediaKey(src)
+    if (seen.has(key)) continue
+    if (image === clicked) index = images.length
+    seen.add(key)
+    images.push({ src, alt: image.alt || '' })
   }
+  if (!images.length) return null
+  return { images, index }
 }
 
 const openArticleImage = (clicked) => {
@@ -1086,11 +1094,11 @@ onBeforeUnmount(() => {
 :deep(.markdown-body .blog-code-window .blog-code-content code) {
   background: transparent;
   padding: 28px 24px;
-  font: 15.3px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--blog-code-font-size, 15.3px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :deep(.markdown-body .blog-code-window .blog-code-lines) {
-  font: 15.3px/1.75 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--blog-code-font-size, 15.3px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :deep(.markdown-body pre:not(.blog-code-window)) {

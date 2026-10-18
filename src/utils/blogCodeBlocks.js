@@ -8,10 +8,29 @@ const getLanguage = (pre, code) => {
 const collapseIconMarkup = '<svg class="blog-code-collapse-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"></path></svg>'
 const runIconMarkup = '<svg class="blog-code-run-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m8 5 11 7-11 7z"></path></svg>'
 
+const isCompactViewport = () => (
+  typeof window !== 'undefined'
+  && typeof window.matchMedia === 'function'
+  && window.matchMedia('(max-width: 640px)').matches
+)
+
+const ensureActionLabel = (button, text) => {
+  if (!button) return null
+  let label = button.querySelector('.blog-code-action-label')
+  if (!label) {
+    label = document.createElement('span')
+    label.className = 'blog-code-action-label'
+    button.appendChild(label)
+  }
+  label.textContent = text
+  return label
+}
+
 const setCopyState = (button, text) => {
   const feedback = button.parentElement?.querySelector('.blog-code-copy-feedback')
   const copied = text === '已复制'
   button.classList.toggle('is-copied', copied)
+  ensureActionLabel(button, text)
   button.setAttribute('aria-label', text)
   button.setAttribute('title', text)
   if (feedback) {
@@ -25,6 +44,7 @@ const setCopyState = (button, text) => {
       const defaultLabel = button.dataset.copyLabel || '复制代码'
       button.setAttribute('aria-label', defaultLabel)
       button.setAttribute('title', defaultLabel)
+      ensureActionLabel(button, '复制')
     }, 1400)
   }
 }
@@ -147,6 +167,62 @@ const runCodeBlock = (pre, language, rawCode) => {
   if (language === 'html') runHtml(pre, rawCode)
 }
 
+const countCodeLines = (rawCode = '') => {
+  const trimmed = String(rawCode).replace(/\n+$/, '')
+  return trimmed ? trimmed.split('\n').length : 0
+}
+
+const clipLongCode = (pre, rawCode) => {
+  const body = pre.querySelector('.blog-code-body')
+  if (!body || pre.querySelector('.blog-code-more')) return
+  const lineCount = countCodeLines(rawCode)
+  pre.classList.add('is-clipped')
+  const more = document.createElement('button')
+  more.type = 'button'
+  more.className = 'blog-code-more'
+  more.innerHTML = `展开全部 <span>${lineCount} 行</span>`
+  more.addEventListener('click', () => {
+    pre.classList.remove('is-clipped')
+    more.remove()
+  })
+  body.after(more)
+}
+
+const setupHorizontalScroll = (pre, compact) => {
+  const body = pre.querySelector('.blog-code-body')
+  if (!body) return
+
+  const removeHint = () => {
+    pre.querySelector('.blog-code-swipe-hint')?.remove()
+  }
+  const update = () => {
+    const overflow = body.scrollWidth - body.clientWidth > 2
+    const atStart = body.scrollLeft <= 2
+    const atEnd = !overflow || body.scrollLeft + body.clientWidth >= body.scrollWidth - 2
+    pre.classList.toggle('has-h-scroll', overflow)
+    pre.classList.toggle('is-h-start', atStart)
+    pre.classList.toggle('is-h-end', atEnd)
+  }
+
+  update()
+  body.addEventListener('scroll', () => {
+    removeHint()
+    update()
+  }, { passive: true })
+
+  if (compact && body.scrollWidth - body.clientWidth > 40) {
+    const header = pre.querySelector('.blog-code-header')
+    const actions = header?.querySelector('.blog-code-actions')
+    if (header && actions && !pre.querySelector('.blog-code-swipe-hint')) {
+      const hint = document.createElement('span')
+      hint.className = 'blog-code-swipe-hint'
+      hint.textContent = '左右滑动'
+      header.insertBefore(hint, actions)
+      window.setTimeout(removeHint, 6000)
+    }
+  }
+}
+
 /**
  * Bind controls emitted by the Markdown Mac-window renderer. The data marker
  * makes the operation safe to repeat after Vue updates or keep-alive restores.
@@ -166,12 +242,19 @@ export function bindCodeBlockInteractions(root) {
       copyButton.dataset.copyLabel = copyButton.getAttribute('aria-label') || '复制代码'
     }
 
+    const compact = isCompactViewport()
+    if (compact) {
+      ensureActionLabel(collapseButton, '折叠')
+      ensureActionLabel(copyButton, '复制')
+    }
+
     collapseButton?.addEventListener('click', () => {
       const collapsed = pre.classList.toggle('is-collapsed')
       const runFooter = pre.querySelector('.blog-code-run-footer')
       runFooter?.classList.toggle('is-collapsed', collapsed)
       collapseButton.setAttribute('aria-expanded', String(!collapsed))
       collapseButton.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}${language}代码`)
+      ensureActionLabel(collapseButton, collapsed ? '展开' : '折叠')
       collapseButton.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
     })
 
@@ -196,6 +279,11 @@ export function bindCodeBlockInteractions(root) {
       previewToggle.setAttribute('title', `${collapsed ? '展开' : '折叠'}预览`)
       previewToggle.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
     })
+
+    if (compact && countCodeLines(rawCode) > 16) {
+      clipLongCode(pre, rawCode)
+    }
+    setupHorizontalScroll(pre, compact)
 
     pre.dataset.blogCodeBound = 'true'
     return pre

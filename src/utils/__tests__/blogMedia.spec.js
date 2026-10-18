@@ -6,6 +6,7 @@ import {
   guessMediaType,
   imageMediaItems,
   isInlineMedia,
+  mediaKey,
   normalizeMediaItems,
   previewMediaItem
 } from '../blogMedia'
@@ -35,6 +36,23 @@ describe('blogMedia', () => {
       mediaUrls: [{ url: 'https://cdn.example.com/a.jpg', type: 'image' }]
     })
     expect(item.type).toBe('image')
+  })
+
+  it('同一资源的不同写法归一为同一个 key', () => {
+    expect(mediaKey('/media/a.svg?v=6')).toBe('/media/a.svg')
+    expect(mediaKey('https://leexd.top/media/a.svg?v=6#x')).toBe('/media/a.svg')
+    expect(mediaKey('')).toBe('')
+  })
+
+  it('同一资源的 image 与 text 条目只保留第一次出现的 image', () => {
+    const items = normalizeMediaItems({
+      mediaUrls: [
+        { url: '/media/cover.svg', type: 'image', name: 'cover.svg' },
+        { url: '/media/cover.svg?v=6', type: 'text' }
+      ]
+    })
+    expect(items).toHaveLength(1)
+    expect(items[0].type).toBe('image')
   })
 
   it('保留名称、大小、海报，并去掉重复地址', () => {

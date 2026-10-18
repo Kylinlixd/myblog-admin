@@ -8,6 +8,16 @@ const IMAGE_EXTENSION = /\.(avif|bmp|gif|jpe?g|png|svg|webp)(?:$|[?#])/i
 const VIDEO_EXTENSION = /\.(m4v|mov|mp4|ogv|webm)(?:$|[?#])/i
 const AUDIO_EXTENSION = /\.(aac|flac|m4a|mp3|oga|ogg|wav)(?:$|[?#])/i
 
+/**
+ * 同一个资源可能以 `/x.svg`、`/x.svg?v=6`、绝对地址等不同写法出现。
+ * 用去掉协议、查询串和哈希后的路径做身份，避免同一张图被算成两张/两个附件。
+ */
+export const mediaKey = (url = '') => {
+  const value = String(url || '').trim()
+  if (!value) return ''
+  return value.split('#')[0].split('?')[0].replace(/^https?:\/\/[^/]+/i, '')
+}
+
 export const guessMediaType = (url = '') => {
   const value = String(url)
   if (IMAGE_EXTENSION.test(value)) return 'image'
@@ -29,8 +39,9 @@ export const normalizeMediaItems = (dynamic) => {
     .map((item) => {
       const rawUrl = typeof item === 'string' ? item : item?.url || item?.file_url || ''
       const url = buildApiUrl(rawUrl)
-      if (!url || seen.has(url)) return null
-      seen.add(url)
+      const key = mediaKey(url)
+      if (!url || seen.has(key)) return null
+      seen.add(key)
 
       const poster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url || ''
       const declaredType = typeof item === 'object'
