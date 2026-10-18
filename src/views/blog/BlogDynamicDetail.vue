@@ -38,7 +38,11 @@
       </div>
 
       <div class="article-layout" :class="{ 'article-layout--without-toc': !tocItems.length }">
-        <main class="article-main-column article-content-card cinematic-card">
+        <main
+          class="article-main-column article-content-card cinematic-card"
+          @click="handleArticleImageClick"
+          @keydown="handleArticleImageKeydown"
+        >
           <div v-if="topMediaItems.length" class="dynamic-media">
             <template v-for="item in topMediaItems" :key="item.url">
               <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
@@ -49,26 +53,32 @@
           </div>
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderedArticleContent"></div>
 
-          <section v-if="attachmentItems.length" class="dynamic-attachments" aria-label="附件下载">
-            <div class="dynamic-attachments__heading">
-              <span>附件下载</span>
-              <small>{{ attachmentItems.length }} 个文件</small>
-            </div>
-            <div class="dynamic-attachments__list">
-              <a
-                v-for="item in attachmentItems"
-                :key="item.url"
-                class="dynamic-attachment"
-                :href="item.url"
-                target="_blank"
-                rel="noopener"
-                @click.prevent="openMedia(item)"
-              >
-                <download-outlined />
-                <span>{{ item.name || '下载附件' }}</span>
-                <small v-if="item.size">{{ formatFileSize(item.size) }}</small>
-              </a>
-            </div>
+          <section v-if="attachmentItems.length" class="dynamic-attachments" aria-labelledby="article-attachments-title">
+            <h2 id="article-attachments-title" class="dynamic-attachments__title">
+              附件
+              <span>{{ attachmentItems.length }}</span>
+            </h2>
+            <ul class="dynamic-attachments__list">
+              <li v-for="item in attachmentItems" :key="item.url" class="dynamic-attachment">
+                <span class="dynamic-attachment__icon" aria-hidden="true">
+                  <component :is="attachmentIcon(item)" />
+                </span>
+                <span class="dynamic-attachment__body">
+                  <span class="dynamic-attachment__name" :title="attachmentLabel(item)">{{ attachmentLabel(item) }}</span>
+                  <small class="dynamic-attachment__meta">{{ attachmentMeta(item) }}</small>
+                </span>
+                <a
+                  class="dynamic-attachment__action"
+                  :href="item.url"
+                  target="_blank"
+                  rel="noopener"
+                  :aria-label="`${attachmentAction(item)}${attachmentLabel(item)}`"
+                  @click.prevent="openMedia(item)"
+                >
+                  {{ attachmentAction(item) }}
+                </a>
+              </li>
+            </ul>
           </section>
 
           <div class="dynamic-footer">
@@ -163,19 +173,34 @@
         </aside>
       </div>
 
+      <ArticleImageLightbox
+        :open="imageViewer.open"
+        :images="imageViewer.images"
+        :start-index="imageViewer.index"
+        @close="imageViewer.open = false"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, nextTick, onMounted, onBeforeUnmount, onUpdated, watch } from 'vue'
+import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, onUpdated, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
-import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
-import { DownloadOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue'
+import {
+  FileExcelOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FilePptOutlined,
+  FileTextOutlined,
+  FileWordOutlined,
+  FileZipOutlined,
+  LeftOutlined,
+  RightOutlined
+} from '@ant-design/icons-vue'
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
 import css from 'highlight.js/lib/languages/css'
@@ -194,6 +219,8 @@ import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 import { enhanceBlogTables } from '@/utils/blogTables'
 import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
+import { attachmentKind, attachmentLabel, normalizeMediaItems } from '@/utils/blogMedia'
+import ArticleImageLightbox from '@/components/blog/ArticleImageLightbox.vue'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
   ([language, definition]) => hljs.registerLanguage(language, definition)
@@ -250,23 +277,7 @@ const contentContainsMedia = (url) => {
   return content.includes(url) || content.includes(path)
 }
 
-const dynamicMediaItems = computed(() => {
-  const media = dynamic.value?.mediaUrls ?? dynamic.value?.media_urls ?? dynamic.value?.files ?? []
-  const items = Array.isArray(media) ? media : [media]
-  return items.map((item) => {
-    const url = buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || '')
-    const poster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url || ''
-    return {
-      url,
-      posterUrl: poster ? buildApiUrl(poster) : '',
-      name: typeof item === 'object' ? item?.name || '' : '',
-      type: typeof item === 'object'
-        ? item?.type || item?.file_type || dynamic.value?.type || 'other'
-        : dynamic.value?.type || 'other',
-      size: typeof item === 'object' ? item?.size || item?.file_size || 0 : 0
-    }
-  }).filter(item => item.url)
-})
+const dynamicMediaItems = computed(() => normalizeMediaItems(dynamic.value))
 const visibleDynamicMediaItems = computed(() => dynamicMediaItems.value.filter(
   (item) => item.type !== 'image' || !contentContainsMedia(item.url)
 ))
@@ -286,6 +297,32 @@ const formatFileSize = (size) => {
   if (value < 1024 * 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(1)} MB`
   return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
+
+const ATTACHMENT_ICONS = {
+  pdf: FilePdfOutlined,
+  word: FileWordOutlined,
+  excel: FileExcelOutlined,
+  slide: FilePptOutlined,
+  archive: FileZipOutlined,
+  code: FileTextOutlined,
+  file: FileOutlined
+}
+const ATTACHMENT_LABELS = {
+  pdf: 'PDF',
+  word: 'Word',
+  excel: 'Excel',
+  slide: '幻灯片',
+  archive: '压缩包',
+  code: '文本',
+  file: '文件'
+}
+const attachmentIcon = (item) => ATTACHMENT_ICONS[attachmentKind(item.url)] || FileOutlined
+const attachmentMeta = (item) => {
+  const kind = attachmentKind(item.url)
+  return [ATTACHMENT_LABELS[kind] || '文件', formatFileSize(item.size)].filter(Boolean).join(' · ')
+}
+// PDF 与文本类在浏览器里看比下载更顺手，压缩包等二进制文件则直接下载。
+const attachmentAction = (item) => (['pdf', 'code'].includes(attachmentKind(item.url)) ? '打开' : '下载')
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 const openMedia = async (item) => {
@@ -304,9 +341,70 @@ const openMedia = async (item) => {
   }
 }
 const loading = ref(true)
+
+// 正文图片查看器：只收集文章卡片里的真实内容图，排除评论、附件和装饰图。
+const IMAGE_VIEWER_EXCLUDES = '.comment-section, .article-adjacent, .dynamic-attachments, .article-header'
+const isViewableImage = (image) => image && !image.closest(IMAGE_VIEWER_EXCLUDES)
+
+const collectArticleImages = (clicked) => {
+  const root = clicked.closest('.article-main-column')
+  if (!root) return null
+  const nodes = [...root.querySelectorAll('.dynamic-media img, .dynamic-body img')]
+    .filter(isViewableImage)
+    .filter((image) => image.naturalWidth === 0 || image.naturalWidth >= 120)
+  if (!nodes.length) return null
+  return {
+    images: nodes.map((image) => ({
+      src: image.currentSrc || image.src,
+      alt: image.alt || ''
+    })),
+    index: Math.max(0, nodes.indexOf(clicked))
+  }
+}
+
+const openArticleImage = (clicked) => {
+  const payload = collectArticleImages(clicked)
+  if (!payload) return
+  imageViewer.images = payload.images
+  imageViewer.index = payload.index
+  imageViewer.open = true
+}
+
+const IMAGE_LINK = /\.(avif|bmp|gif|jpe?g|png|svg|webp)(?:$|[?#])/i
+const handleArticleImageClick = (event) => {
+  const image = event.target.closest('img')
+  if (!image || !isViewableImage(image)) return
+  const anchor = image.closest('a')
+  const href = anchor?.getAttribute('href') || ''
+  // 图片是链接且指向别的页面时，尊重原链接；指向图片本身（常见于“点开看原图”）才接管。
+  if (href && !IMAGE_LINK.test(href) && href !== image.getAttribute('src')) return
+  event.preventDefault()
+  openArticleImage(image)
+}
+
+const handleArticleImageKeydown = (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  const image = event.target.closest('img')
+  if (!image || image.tabIndex < 0 || !isViewableImage(image)) return
+  event.preventDefault()
+  openArticleImage(image)
+}
+
+const decorateArticleImages = () => {
+  const root = document.querySelector('.article-main-column')
+  if (!root) return
+  root.querySelectorAll('.dynamic-media img, .dynamic-body img').forEach((image) => {
+    if (!isViewableImage(image)) return
+    image.tabIndex = 0
+    image.setAttribute('role', 'button')
+    image.setAttribute('aria-label', `查看大图${image.alt ? `：${image.alt}` : ''}`)
+  })
+}
+
 const detailErrorKind = ref('')
 let detailRequestSequence = 0
 const articleBodyRef = ref(null)
+const imageViewer = reactive({ open: false, images: [], index: 0 })
 const tocItems = ref([])
 const tocOpen = ref(false)
 const activeTocId = ref('')
@@ -350,6 +448,7 @@ const syncArticleNavigation = async () => {
   // highlighted while the reader had already moved further down.
   bindCodeBlockInteractions(articleBodyRef.value)
   enhanceBlogTables(articleBodyRef.value)
+  decorateArticleImages()
 }
 
 // The article body is rendered only after the loading branch is removed. Bind
@@ -357,6 +456,7 @@ const syncArticleNavigation = async () => {
 onUpdated(() => {
   bindCodeBlockInteractions(articleBodyRef.value)
   enhanceBlogTables(articleBodyRef.value)
+  decorateArticleImages()
   if (tocItems.value.length) requestAnimationFrame(updateTocPosition)
 })
 
@@ -366,6 +466,7 @@ const hydrateLazyMedia = async () => {
     image.loading = 'lazy'
     image.decoding = 'async'
   })
+  decorateArticleImages()
 }
 
 const updateReadingProgress = () => {
@@ -628,7 +729,10 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
 }
 
 watch(() => route.params.id, (nextId, previousId) => {
-  if (nextId && nextId !== previousId) fetchDynamicDetail(nextId)
+  if (nextId && nextId !== previousId) {
+    imageViewer.open = false
+    fetchDynamicDetail(nextId)
+  }
 })
 onMounted(() => {
   resetArticleScrollPosition()
@@ -763,6 +867,129 @@ onBeforeUnmount(() => {
   border-top: 1px solid #eee;
   padding-top: 1.5rem;
   margin-top: 2rem;
+}
+
+/* 附件区：正文之后、标签之前。图片/音视频不算附件，这里只放可下载的文件。 */
+.dynamic-attachments {
+  margin: 30px 0 6px;
+  padding: 18px;
+  border: 1px solid var(--article-line, var(--blog-line, #e9e3d8));
+  border-radius: 16px;
+  background: rgb(255 253 248 / 72%);
+}
+
+.dynamic-attachments__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: var(--article-ink, var(--blog-text, #17263d));
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.dynamic-attachments__title span {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(200 111 55 / 10%);
+  color: var(--blog-accent, #c86f37);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dynamic-attachments__list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dynamic-attachment {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--article-line, var(--blog-line, #e9e3d8));
+  border-radius: 12px;
+  background: var(--article-paper, var(--blog-paper, #fffaf2));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dynamic-attachment:hover {
+  border-color: rgb(200 111 55 / 38%);
+  box-shadow: 0 10px 24px rgb(88 65 37 / 8%);
+  transform: translateY(-1px);
+}
+
+.dynamic-attachment__icon {
+  display: grid;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 10px;
+  background: rgb(200 111 55 / 9%);
+  color: var(--blog-accent, #c86f37);
+  font-size: 17px;
+}
+
+.dynamic-attachment__body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dynamic-attachment__name {
+  overflow: hidden;
+  color: var(--article-ink, var(--blog-text, #17263d));
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dynamic-attachment__meta {
+  color: var(--article-muted, var(--blog-text-muted, #7a746a));
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.dynamic-attachment__action {
+  flex: none;
+  margin-left: 8px;
+  padding: 6px 13px;
+  border: 1px solid rgb(200 111 55 / 32%);
+  border-radius: 999px;
+  color: var(--blog-accent-strong, #a64e23);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.dynamic-attachment__action:hover,
+.dynamic-attachment__action:focus-visible {
+  border-color: var(--blog-accent, #c86f37);
+  background: var(--blog-accent, #c86f37);
+  color: #fffaf2;
+  outline: none;
+}
+
+.dynamic-body img,
+.dynamic-media__image {
+  cursor: zoom-in;
+}
+
+.dynamic-body img:focus-visible,
+.dynamic-media__image:focus-visible {
+  outline: 2px solid var(--blog-accent, #c86f37);
+  outline-offset: 3px;
 }
 
 .dynamic-tags {
@@ -1523,74 +1750,6 @@ onBeforeUnmount(() => {
       border-radius: 0;
       background: transparent;
       box-shadow: none;
-    }
-
-    .dynamic-attachments {
-      width: 100%;
-      margin: 22px 0 0;
-      padding: 18px;
-      border: 1px dashed var(--article-line);
-      border-radius: 18px;
-      background: rgb(255 253 248 / 76%);
-    }
-
-    .dynamic-attachments__heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-      color: var(--article-ink);
-      font-size: 14px;
-      font-weight: 750;
-    }
-
-    .dynamic-attachments__heading small {
-      color: var(--article-muted);
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    .dynamic-attachments__list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .dynamic-attachment {
-      display: flex;
-      min-width: 0;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      border: 1px solid var(--article-line);
-      border-radius: 12px;
-      background: var(--article-paper);
-      color: var(--article-ink);
-      text-decoration: none;
-      transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-    }
-
-    .dynamic-attachment:hover,
-    .dynamic-attachment:focus-visible {
-      border-color: #d98b38;
-      box-shadow: 0 12px 28px rgb(88 65 37 / 11%);
-      transform: translateY(-1px);
-    }
-
-    .dynamic-attachment > span {
-      min-width: 0;
-      overflow: hidden;
-      font-size: 14px;
-      font-weight: 600;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .dynamic-attachment small {
-      margin-left: auto;
-      color: var(--article-muted);
-      font-size: 11px;
-      white-space: nowrap;
     }
 
     .article-main-column .dynamic-footer {

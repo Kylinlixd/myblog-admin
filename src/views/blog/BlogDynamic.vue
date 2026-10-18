@@ -69,15 +69,12 @@
               </router-link>
             </div>
 
-            <div v-if="mediaCount(item)" class="dynamic-media-list">
-              <template v-for="media in previewMediaItems(item)" :key="media.url">
-                <div v-if="isMediaUnavailable(media.url)" class="media-unavailable">该媒体已不可用</div>
-                <img v-else-if="media.type === 'image'" :src="media.url" :alt="media.name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(media.url)" />
-                <audio v-else-if="media.type === 'audio'" controls preload="none" :src="media.url" @error="markMediaUnavailable(media.url)">您的浏览器不支持音频播放</audio>
-                <video v-else-if="media.type === 'video'" controls preload="none" :src="media.url" :poster="media.posterUrl || undefined" playsinline @error="markMediaUnavailable(media.url)">您的浏览器不支持视频播放</video>
-                <a v-else :href="media.url" target="_blank" rel="noopener" @click.prevent="openMedia(media)">下载附件{{ media.name ? `：${media.name}` : '' }}</a>
-              </template>
-              <router-link v-if="mediaCount(item) > 1" :to="`/blog/dynamics/${item.id}`">查看全部 {{ mediaCount(item) }} 个附件</router-link>
+            <div v-if="previewMedia(item)" class="dynamic-media-list">
+              <div v-if="isMediaUnavailable(previewMedia(item).url)" class="media-unavailable">该媒体已不可用</div>
+              <div v-else-if="previewMedia(item).type === 'image'" class="dynamic-media-frame">
+                <img :src="previewMedia(item).url" :alt="previewMedia(item).name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(previewMedia(item).url)" />
+              </div>
+              <video v-else controls preload="none" :src="previewMedia(item).url" :poster="previewMedia(item).posterUrl || undefined" playsinline @error="markMediaUnavailable(previewMedia(item).url)">您的浏览器不支持视频播放</video>
             </div>
           </div>
 
@@ -163,7 +160,7 @@
 import { ref, onMounted, onActivated, onUpdated } from 'vue'
 import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
-import { buildApiUrl } from '@/utils/apiBaseUrl'
+import { previewMediaItem } from '@/utils/blogMedia'
 import { 
   getBlogDynamics, 
   getBlogDynamicTimeline,
@@ -203,37 +200,10 @@ const hydrateCurrentUserAvatar = (comment) => {
   return names.includes(comment.nickname) ? { ...comment, avatar: userStore.avatar } : comment
 }
 
-const mediaItems = (dynamic) => {
-  const media = dynamic.mediaUrls ?? dynamic.media_urls ?? dynamic.files ?? []
-  return (Array.isArray(media) ? media : [media]).map((item) => {
-    const poster = typeof item === 'string' ? '' : item?.posterUrl || item?.poster_url || ''
-    return {
-      url: buildApiUrl(typeof item === 'string' ? item : item?.url || item?.file_url || ''),
-      type: typeof item === 'string' ? dynamic.type : item?.type || item?.file_type || dynamic.type,
-      name: typeof item === 'object' ? item?.name || '' : '',
-      posterUrl: poster ? buildApiUrl(poster) : ''
-    }
-  }).filter((item) => item.url)
-}
-const mediaCount = (dynamic) => Number(dynamic?.media_count ?? dynamic?.mediaCount ?? mediaItems(dynamic).length)
-const previewMediaItems = (dynamic) => mediaItems(dynamic).slice(0, 1)
+// 列表卡片只承载“封面”：优先图片，其次视频；音频和文件不在列表里露出。
+const previewMedia = (dynamic) => previewMediaItem(dynamic)
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
-const openMedia = async (item) => {
-  const popup = window.open('', '_blank')
-  if (!popup) return window.location.assign(item.url)
-  if (new URL(item.url, window.location.href).origin !== window.location.origin) return popup.location.assign(item.url)
-  try {
-    const response = await fetch(item.url, { method: 'HEAD' })
-    if (response.ok) return popup.location.assign(item.url)
-    popup.close()
-    if (response.status === 404) markMediaUnavailable(item.url)
-    else message.error('媒体加载失败，请稍后重试')
-  } catch {
-    popup.close()
-    message.error('媒体加载失败，请稍后重试')
-  }
-}
 
 // 渲染Markdown内容
 const renderMarkdown = (content) => {
@@ -796,6 +766,13 @@ onActivated(() => {
   width: 100%;
   max-height: 420px;
   object-fit: contain;
+}
+
+.dynamic-media-frame {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border-radius: 14px;
 }
 
 .media-unavailable {

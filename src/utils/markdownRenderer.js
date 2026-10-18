@@ -53,5 +53,15 @@ export function createMarkdownRenderer(options = {}) {
   })
 
   macCodeWindowPlugin(md, options)
+
+  // 正文图片统一懒加载；点击放大由详情页的图片查看器接管。
+  const defaultImageRule = md.renderer.rules.image
+  md.renderer.rules.image = (tokens, index, opts, env, self) => {
+    const token = tokens[index]
+    token.attrSet('loading', 'lazy')
+    token.attrSet('decoding', 'async')
+    return defaultImageRule(tokens, index, opts, env, self)
+  }
+
   return md
 }

@@ -81,7 +81,7 @@ test('文章详情包含移动端和 reduced motion 规则', () => {
 })
 
 test('文章详情按媒体项渲染可播放媒体源', () => {
-  expect(source).toContain("import { buildApiUrl } from '@/utils/apiBaseUrl'")
+  expect(source).toContain("import { attachmentKind, attachmentLabel, normalizeMediaItems } from '@/utils/blogMedia'")
   expect(source).toContain("item.type === 'video'")
   expect(source).toContain('<video')
   expect(source).toContain('controls')
@@ -129,4 +129,10 @@ test('压缩包等文件附件放在正文后的下载区', () => {
   expect(source).toContain('attachmentItems')
   expect(source).toContain('formatFileSize')
   expect(source).not.toContain('v-else class="dynamic-media__file"')
+})
+
+test('正文图片的链接语义：指向图片才接管预览', () => {
+  expect(source).toContain("const IMAGE_LINK = /\\.(avif|bmp|gif|jpe?g|png|svg|webp)(?:$|[?#])/i")
+  expect(source).toContain("href !== image.getAttribute('src')")
+  expect(source).toContain('openArticleImage(image)')
 })
