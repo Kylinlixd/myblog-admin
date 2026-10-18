@@ -20,6 +20,9 @@
         @pointerup="handlePointerUp"
         @pointercancel="handlePointerUp"
         @wheel.prevent="handleWheel"
+        @gesturestart.prevent="handleGestureStart"
+        @gesturechange.prevent="handleGestureChange"
+        @gestureend.prevent="handleGestureEnd"
       >
         <img
           ref="imageRef"
@@ -140,9 +143,37 @@ const pointFromEvent = (event) => {
 }
 
 const handleWheel = (event) => {
-  const factor = Math.exp(-event.deltaY * 0.0015)
+  const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? window.innerHeight : 1
+  // 触控板双指捏合带 ctrlKey，单次 delta 很小，灵敏度要比鼠标滚轮高一个量级
+  const rate = event.ctrlKey ? 0.012 : 0.0016
+  const factor = clamp(Math.exp(-event.deltaY * unit * rate), 0.8, 1.25)
   zoomBy(factor, pointFromEvent(event))
 }
+
+let gestureBase = null
+
+// Safari 的触控板捏合走 gesture 事件（Chrome 走 ctrlKey + wheel），两条路径都要接管
+const handleGestureStart = (event) => {
+  gestureBase = { scale: scale.value, offset: { ...offset }, x: event.clientX, y: event.clientY }
+}
+
+const handleGestureChange = (event) => {
+  if (!gestureBase) return
+  const nextScale = clampScale(gestureBase.scale * (event.scale || 1))
+  if (nextScale === gestureBase.scale) return
+  const ratio = nextScale / gestureBase.scale
+  const point = pointFromEvent(event)
+  const nextOffset = {
+    x: point.x - (point.x - gestureBase.offset.x) * ratio,
+    y: point.y - (point.y - gestureBase.offset.y) * ratio
+  }
+  scale.value = nextScale
+  const clamped = clampOffset(nextOffset, { ...geometry(), scale: nextScale })
+  offset.x = clamped.x
+  offset.y = clamped.y
+}
+
+const handleGestureEnd = () => { gestureBase = null }
 
 const handleDoubleClick = (event) => {
   if (scale.value > 1.05) {
@@ -470,7 +501,8 @@ onBeforeUnmount(() => {
   height: auto;
   border-radius: 10px;
   box-shadow: 0 30px 90px rgb(0 0 0 / 48%), 0 0 0 1px rgb(255 250 242 / 12%);
-  animation: lightbox-pop 0.22s cubic-bezier(0.22, 0.7, 0.25, 1) both;
+  /* 不要加 fill-mode: both，动画结束后会一直锁死 transform，缩放就“点了没反应” */
+  animation: lightbox-pop 0.22s cubic-bezier(0.22, 0.7, 0.25, 1);
   transform-origin: center center;
   transition: transform 0.16s ease-out;
   -webkit-user-drag: none;
