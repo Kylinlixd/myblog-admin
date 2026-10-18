@@ -19,7 +19,7 @@
         <router-link
           v-for="(item, index) in collection.items"
           :key="item.id"
-          :to="`/blog/dynamics/${item.id}`"
+          :to="{ path: `/blog/dynamics/${item.id}`, query: { from: 'light' } }"
           class="catalog-row"
         >
           <span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span>
@@ -58,8 +58,10 @@ async function fetchCollection() {
   try {
     appStore.startLoading('加载合集数据...')
     const response = await getBlogCollectionDetail(route.params.id)
-    if (response?.code === 200) collection.value = response.data
-    else appStore.setLoadingError('获取合集数据失败，请刷新重试')
+    if (response?.code === 200) {
+      collection.value = response.data
+      document.title = `${collection.value.title}｜拾光｜时不语之间`
+    } else appStore.setLoadingError('获取合集数据失败，请刷新重试')
     appStore.endLoading()
   } catch (error) {
     console.error('获取合集数据失败:', error)

@@ -1,6 +1,7 @@
 <template>
   <div class="category-detail-container cinematic-page">
     <div class="page-header cinematic-hero">
+      <router-link class="category-back" to="/blog/categories">← 返回拾光</router-link>
       <span class="category-kicker">THEME ARCHIVE · 主题归档</span>
       <h1 class="page-title">{{ category?.name || '加载中...' }}</h1>
       <p class="page-subtitle">按主题沉淀与实践，持续更新内容脉络。</p>
@@ -28,7 +29,7 @@
 
       <div v-else class="dynamics-grid">
         <div v-for="dynamic in dynamics" :key="dynamic.id" class="dynamic-card cinematic-card">
-          <router-link :to="`/blog/dynamics/${dynamic.id}`" class="dynamic-link">
+          <router-link :to="{ path: `/blog/dynamics/${dynamic.id}`, query: { from: 'light' } }" class="dynamic-link">
             <div class="dynamic-content">
               <h3 class="dynamic-title">{{ dynamic.title }}</h3>
               <p class="dynamic-summary">{{ dynamic.summary }}</p>
@@ -91,6 +92,7 @@ const fetchCategoryDynamics = async ({ append = false } = {}) => {
 
     if (response?.code === 200 && response.data) {
       category.value = response.data.category
+      if (category.value?.name) document.title = `${category.value.name}｜拾光｜时不语之间`
       total.value = Number(response.data.total) || 0
       const list = response.data.items ?? response.data.dynamics ?? []
       dynamics.value = append ? [...dynamics.value, ...list] : list
@@ -147,6 +149,8 @@ onMounted(() => {
   margin: 0 auto 14px;
 }
 
+.category-back { align-self: center; margin-bottom: 14px; color: #7d695c; font-size: 13px; font-weight: 600; text-decoration: none; transition: color .2s ease; }
+.category-back:hover { color: #c86f37; }
 .category-kicker {
   display: block;
   margin-bottom: 14px;

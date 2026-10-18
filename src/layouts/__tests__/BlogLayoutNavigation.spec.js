@@ -5,13 +5,36 @@ describe('BlogLayout navigation active state', () => {
   const readLayout = () =>
     fs.readFileSync(path.join(process.cwd(), 'src/layouts/BlogLayout.vue'), 'utf8')
 
-  it('does not let the home link stay active on every blog route', () => {
+  it('marks the section that owns the current route', () => {
     const source = readLayout()
 
+    expect(source).toContain('resolveBlogNav')
+    expect(source).toContain('activeNav')
     expect(source).toContain('isNavigationActive(item)')
-    expect(source).toContain("item.to === '/blog'")
-    expect(source).toContain("currentPath === '/blog' || currentPath === '/blog/'")
+    expect(source).toContain(":aria-current=\"isNavigationActive(item) ? 'page' : undefined\"")
     expect(source).not.toContain('a.router-link-active')
+  })
+
+  it('shows the search page through the search box instead of a section tab', () => {
+    const source = readLayout()
+
+    expect(source).toContain("'quick-search--active': isSearchPage")
+    expect(source).toContain('route.query.keyword')
+    expect(source).toContain('.quick-search:focus-within, .quick-search--active')
+  })
+
+  it('keeps 拾光 as the reading context for articles opened from it', () => {
+    const detail = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'), 'utf8')
+    const collection = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogCollectionDetail.vue'), 'utf8')
+    const category = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogCategoryDetail.vue'), 'utf8')
+    const tag = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogTagDetail.vue'), 'utf8')
+
+    expect(detail).toContain("route.query.from === 'light'")
+    expect(detail).toContain('query: contextQuery')
+    expect(detail).toContain('← 返回拾光')
+    expect(collection).toContain("query: { from: 'light' }")
+    expect(category).toContain("query: { from: 'light' }")
+    expect(tag).toContain('route.query.from === \'light\'')
   })
 
   it('keeps search and admin access available on mobile', () => {

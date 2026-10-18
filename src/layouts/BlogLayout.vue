@@ -20,13 +20,14 @@
             active-class=""
             exact-active-class=""
             :class="{ 'nav-link--active': isNavigationActive(item) }"
+            :aria-current="isNavigationActive(item) ? 'page' : undefined"
           >
             {{ item.label }}
           </router-link>
         </nav>
 
         <div class="header-actions">
-          <form class="quick-search" role="search" @submit.prevent="search">
+          <form class="quick-search" :class="{ 'quick-search--active': isSearchPage }" role="search" @submit.prevent="search">
             <button class="quick-search-button" type="submit" aria-label="提交搜索">
               <search-outlined />
             </button>
@@ -53,6 +54,7 @@
           active-class=""
           exact-active-class=""
           :class="{ 'nav-link--active': isNavigationActive(item) }"
+          :aria-current="isNavigationActive(item) ? 'page' : undefined"
           @click="mobileOpen = false"
         >
           {{ item.label }}
@@ -80,9 +82,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { resolveBlogNav } from '@/utils/blogNav'
 
 const router = useRouter()
 const route = useRoute()
@@ -90,11 +93,13 @@ const query = ref('')
 const mobileOpen = ref(false)
 const year = new Date().getFullYear()
 const navigation = [
-  { label: '此间', to: '/blog' },
-  { label: '书遇', to: '/blog/blogdynamic' },
-  { label: '拾光', to: '/blog/categories' },
-  { label: '自叙', to: '/blog/about' }
+  { key: 'home', label: '此间', to: '/blog' },
+  { key: 'book', label: '书遇', to: '/blog/blogdynamic' },
+  { key: 'light', label: '拾光', to: '/blog/categories' },
+  { key: 'about', label: '自叙', to: '/blog/about' }
 ]
+const activeNav = computed(() => resolveBlogNav(route))
+const isSearchPage = computed(() => route.name === 'BlogSearch')
 
 function search() {
   if (!query.value) return
@@ -103,12 +108,14 @@ function search() {
 }
 
 function isNavigationActive(item) {
-  const currentPath = route.path
-  if (item.to === '/blog') {
-    return currentPath === '/blog' || currentPath === '/blog/'
-  }
-  return currentPath === item.to || currentPath.startsWith(`${item.to}/`)
+  return activeNav.value === item.key
 }
+
+// 进入搜索结果页时把关键词回填到导航搜索框，离开后保留用户最后一次输入。
+watch(() => route.query.keyword, (keyword) => {
+  if (!isSearchPage.value) return
+  query.value = typeof keyword === 'string' ? keyword : ''
+}, { immediate: true })
 </script>
 
 <style scoped>
@@ -144,7 +151,7 @@ function isNavigationActive(item) {
 .header-actions { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: 9px; }
 .quick-search { display: flex; min-width: 0; width: 188px; height: 40px; align-items: center; gap: 8px; padding: 0 12px; border: 1px solid var(--blog-line); border-radius: 999px; background: rgb(255 253 248 / 84%); color: var(--blog-text-muted); transition: border-color .28s ease, box-shadow .28s ease; }
 .quick-search:hover { border-color: rgb(108 82 54 / 28%); }
-.quick-search:focus-within { border-color: var(--blog-accent); box-shadow: 0 0 0 3px rgb(200 111 55 / 12%); }
+.quick-search:focus-within, .quick-search--active { border-color: var(--blog-accent); box-shadow: 0 0 0 3px rgb(200 111 55 / 12%); }
 .quick-search-button { display: grid; flex: 0 0 20px; width: 20px; height: 20px; place-items: center; border: 0; padding: 0; background: transparent; color: inherit; cursor: pointer; }
 .quick-search-button:hover { color: var(--blog-accent); }
 .quick-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--blog-text); }

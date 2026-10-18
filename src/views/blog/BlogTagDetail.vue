@@ -24,7 +24,7 @@
     <div v-else-if="dynamics && dynamics.length > 0" class="dynamics-list">
       <a-row :gutter="[24, 24]">
         <a-col :xs="24" :md="12" :lg="8" v-for="dynamic in dynamics" :key="dynamic.id">
-          <router-link :to="`/blog/dynamics/${dynamic.id}`" class="dynamic-card-link">
+          <router-link :to="{ path: `/blog/dynamics/${dynamic.id}`, query: fromQuery }" class="dynamic-card-link">
             <a-card hoverable class="dynamic-card cinematic-card">
               <!-- 文章图片 -->
               <img 
@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { getTagDynamics } from '@/api/blog'
@@ -108,6 +108,8 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(12)
 const unavailableMediaUrls = ref(new Set())
+// 从拾光文章点进来的标签页保留来源，标签下的文章也继续停在拾光。
+const fromQuery = computed(() => (route.query.from === 'light' ? { from: 'light' } : {}))
 
 const coverUrl = (dynamic) => {
   const mediaSource = dynamic.mediaUrls ?? dynamic.media_urls
@@ -155,7 +157,7 @@ const fetchTagDynamics = async () => {
       
       // 设置页面标题
       if (tag.value) {
-        document.title = `${tag.value.name}｜时不语之间`
+        document.title = `${tag.value.name}｜${route.query.from === 'light' ? '拾光' : '书遇'}｜时不语之间`
       }
     } else {
       message.error('获取标签详情失败')

@@ -17,6 +17,7 @@
         <div class="reading-progress" aria-hidden="true"><span :style="{ width: `${readingProgress}%` }"></span></div>
       </Teleport>
       <header class="article-header">
+        <router-link class="article-origin" :to="readingOrigin.to">{{ readingOrigin.label }}</router-link>
         <h1 class="dynamic-title">{{ dynamic.title }}</h1>
         <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
         <div class="dynamic-meta">
@@ -76,7 +77,7 @@
               <router-link 
                 v-for="tag in dynamic.tags" 
                 :key="tag.id"
-                :to="`/blog/tags/${tag.id}`"
+                :to="{ path: `/blog/tags/${tag.id}`, query: contextQuery }"
                 class="tag-item"
               >
                 {{ tag.name }}
@@ -86,7 +87,7 @@
           <nav v-if="adjacent.prev || adjacent.next" class="article-adjacent" aria-label="文章导航">
             <router-link
               v-if="adjacent.prev"
-              :to="`/blog/dynamics/${adjacent.prev.id}`"
+              :to="{ path: `/blog/dynamics/${adjacent.prev.id}`, query: contextQuery }"
               class="article-adjacent__item article-adjacent__item--prev"
             >
               <span class="article-adjacent__direction"><left-outlined /> 上一篇</span>
@@ -96,7 +97,7 @@
             <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
             <router-link
               v-if="adjacent.next"
-              :to="`/blog/dynamics/${adjacent.next.id}`"
+              :to="{ path: `/blog/dynamics/${adjacent.next.id}`, query: contextQuery }"
               class="article-adjacent__item article-adjacent__item--next"
             >
               <span class="article-adjacent__direction">下一篇 <right-outlined /></span>
@@ -233,6 +234,14 @@ const dynamic = ref(null)
 const renderedArticleContent = computed(() => renderMarkdown(dynamic.value?.content || ''))
 const unavailableMediaUrls = ref(new Set())
 const adjacent = ref({ prev: null, next: null })
+
+// 从拾光（分类/合集）进来的文章带 ?from=light：导航继续停在拾光，
+// 标签页与上/下一篇也透传来源，返回入口指向拾光；否则按内容归属回书遇。
+const isLightContext = computed(() => route.query.from === 'light')
+const contextQuery = computed(() => (isLightContext.value ? { from: 'light' } : {}))
+const readingOrigin = computed(() => (isLightContext.value
+  ? { to: '/blog/categories', label: '← 返回拾光' }
+  : { to: '/blog/blogdynamic', label: '← 返回书遇' }))
 
 const contentContainsMedia = (url) => {
   const content = dynamic.value?.content || ''
@@ -588,6 +597,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     }
 
     dynamic.value = response.data
+    document.title = `${dynamic.value.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
     const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
     readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
     await syncArticleNavigation()
@@ -1375,6 +1385,19 @@ onBeforeUnmount(() => {
       box-shadow: 0 26px 70px rgb(88 65 37 / 12%);
       animation: article-enter .6s ease both;
     }
+
+    .article-origin {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--article-muted, #64748b);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color .2s ease;
+    }
+
+    .article-origin:hover { color: var(--blog-accent); }
 
     .article-header .dynamic-title {
       margin: 18px 0 16px;
