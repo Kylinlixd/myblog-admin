@@ -150,7 +150,8 @@ describe('DynamicEdit normalized API responses', () => {
       mediaUrls: ['/media/cover.png'],
       fileIds: [7],
       categoryId: 3,
-      tags: [5]
+      tags: [5],
+      collectionIds: []
     })
     expect(wrapper.vm.fileList[0]).toMatchObject({
       name: 'cover.png',

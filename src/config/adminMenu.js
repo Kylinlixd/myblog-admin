@@ -27,6 +27,15 @@ export const adminMenu = [
     groupLabel: '内容'
   },
   {
+    key: 'collections',
+    label: '合集管理',
+    description: '系列合集与章节顺序',
+    path: '/dashboard/collections',
+    icon: 'collections',
+    group: 'content',
+    groupLabel: '内容'
+  },
+  {
     key: 'tags',
     label: '标签管理',
     description: '主题标签与检索',

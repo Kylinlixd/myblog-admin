@@ -1,3 +1,5 @@
+import request from '@/utils/request'
+import { clearRequestCache } from '@/services/http/publicRequestCache'
 import { unwrapApiResponse } from './response'
 
 export function normalizeCollectionResponse(response) {
@@ -58,4 +60,50 @@ export async function collectAllPages(loadPage, { maxPages = 25 } = {}) {
   }
 
   return { count: results.length, results }
+}
+
+/* ---------- 后台合集管理：读接口 + 写接口 ---------- */
+
+export async function getAdminCollectionList(params) {
+  const response = await request.get('/api/collections/', { params })
+  return normalizeCollectionResponse(response)
+}
+
+export async function getAdminCollectionDetail(id) {
+  return unwrapApiResponse(await request.get(`/api/collections/${id}/`), '合集加载失败')
+}
+
+export async function getCollectionOptions() {
+  return unwrapApiResponse(await request.get('/api/collections/options/'), '合集选项加载失败')
+}
+
+export async function createCollection(data) {
+  const result = await unwrapApiResponse(await request.post('/api/collections/', data), '合集创建失败')
+  clearRequestCache()
+  return result
+}
+
+export async function updateCollection(id, data) {
+  const result = await unwrapApiResponse(await request.put(`/api/collections/${id}/`, data), '合集更新失败')
+  clearRequestCache()
+  return result
+}
+
+export async function deleteCollection(id) {
+  const result = await unwrapApiResponse(await request.delete(`/api/collections/${id}/`), '合集删除失败')
+  clearRequestCache()
+  return result
+}
+
+export async function getCollectionItems(id) {
+  return unwrapApiResponse(await request.get(`/api/collections/${id}/items/`), '合集文章加载失败')
+}
+
+export async function saveCollectionItems(id, items) {
+  const result = await unwrapApiResponse(
+    await request.put(`/api/collections/${id}/items/`, { items }),
+    '章节顺序保存失败'
+  )
+  clearRequestCache()
+  return result
 }

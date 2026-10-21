@@ -78,7 +78,7 @@
 <script setup>
 import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
+import { BookOutlined, CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import { adminMenu } from '@/config/adminMenu'
 import { useUserStore } from '@/stores/user'
@@ -96,7 +96,7 @@ const serviceHealth = useServiceHealth()
 const collapsed = ref(localStorage.getItem('admin.sidebarCollapsed') === 'true')
 const isMobile = ref(window.innerWidth < 992)
 const mobileOpen = ref(false)
-const iconMap = { dashboard: DashboardOutlined, content: ReadOutlined, category: FolderOutlined, tags: TagsOutlined, comments: CommentOutlined, files: FileOutlined, logs: HistoryOutlined }
+const iconMap = { dashboard: DashboardOutlined, content: ReadOutlined, category: FolderOutlined, collections: BookOutlined, tags: TagsOutlined, comments: CommentOutlined, files: FileOutlined, logs: HistoryOutlined }
 const selectedKey = computed(() => [...adminMenu].sort((a, b) => b.path.length - a.path.length).find((item) => route.path === item.path || route.path.startsWith(`${item.path}/`))?.key || 'dashboard')
 const userRoleLabel = computed(() => ({ admin: '站点管理员', editor: '内容编辑', moderator: '内容审核员', author: '内容作者' }[userStore.userInfo?.role] || '内容管理成员'))
 const groupedMenu = computed(() => adminMenu.reduce((groups, item) => {

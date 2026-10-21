@@ -67,6 +67,22 @@
           </div>
         </a-form-item>
 
+        <a-form-item class="editor-settings-field editor-tile" label="合集" name="collectionIds">
+          <div class="taxonomy-control">
+            <a-select
+              v-model:value="form.collectionIds"
+              mode="multiple"
+              show-search
+              option-filter-prop="label"
+              placeholder="选填，可加入多个合集"
+              :loading="collectionsLoading"
+              :options="collectionSelectOptions"
+            />
+            <a class="taxonomy-add" href="/dashboard/collections" target="_blank" rel="noopener">+ 管理</a>
+          </div>
+          <template #extra>合集只决定阅读顺序，不影响文章本身的分类与标签。</template>
+        </a-form-item>
+
         <a-form-item class="editor-settings-field editor-tile" label="状态" name="status">
           <a-radio-group v-model:value="form.status">
             <a-radio value="draft">草稿</a-radio>
@@ -311,7 +327,7 @@ import {
 import { getDynamicDetail, createDynamic, updateDynamic } from '../../api/dynamic'
 import { uploadFile, checkFileSize } from '../../utils/upload'
 import { getCategoryList, createCategory } from '../../api/category'
-import { collectAllPages } from '../../api/collections'
+import { collectAllPages, getCollectionOptions } from '../../api/collections'
 import { getTagList, createTag } from '../../api/tag'
 import { getFileList, searchFiles } from '../../api/file'
 import MarkdownEditor from '@/components/MarkdownEditor.vue'
@@ -322,6 +338,14 @@ import { buildMediaReferences, filterUnreferencedFiles } from './mediaReference'
 const route = useRoute()
 const router = useRouter()
 const formRef = ref(null)
+const collectionsLoading = ref(false)
+const collectionOptions = ref([])
+const collectionSelectOptions = computed(() =>
+  collectionOptions.value.map((item) => ({
+    value: item.id,
+    label: item.series ? `${item.title} · ${item.series}` : item.title
+  }))
+)
 const markdownEditorRef = ref(null)  // 添加编辑器引用
 
 // 判断是否为编辑模式
@@ -341,7 +365,8 @@ const form = ref({
   fileIds: [],
   status: 'draft',
   categoryId: undefined,
-  tags: []
+  tags: [],
+  collectionIds: []
 })
 
 watch(form, () => {
@@ -634,7 +659,8 @@ const fetchDynamicDetail = async () => {
         mediaUrls: mediaUrls,
         fileIds: mediaItems.map(item => typeof item === 'object' ? item?.id : null).filter(Boolean),
         categoryId: data.category?.id,
-        tags: Array.isArray(data.tags) ? data.tags.map(tag => tag.id) : []
+        tags: Array.isArray(data.tags) ? data.tags.map(tag => tag.id) : [],
+        collectionIds: Array.isArray(data.collections) ? data.collections.map(item => item.id) : []
       }
       mergeTags(Array.isArray(data.tags) ? data.tags : [])
       
@@ -724,7 +750,8 @@ const handleSave = async () => {
       mediaUrls: processedMediaUrls,
       fileIds: form.value.fileIds || [],
       categoryId: form.value.categoryId,
-      tags: form.value.tags
+      tags: form.value.tags,
+      collectionIds: form.value.collectionIds || []
     };
     
     // 根据是否编辑模式选择API
@@ -1154,7 +1181,19 @@ function guardUnsavedChanges(event) {
   event.returnValue = ''
 }
 
+async function fetchCollections() {
+  collectionsLoading.value = true
+  try {
+    collectionOptions.value = (await getCollectionOptions()) || []
+  } catch (error) {
+    message.error(error?.message || '合集选项加载失败')
+  } finally {
+    collectionsLoading.value = false
+  }
+}
+
 onMounted(async () => {
+  fetchCollections()
   await Promise.all([fetchDynamicDetail(), fetchCategories(), fetchTags()])
   restoreLocalDraft()
   window.addEventListener('beforeunload', guardUnsavedChanges)

@@ -198,6 +198,34 @@ const routes = [
         }
       },
       {
+        path: 'collections',
+        name: 'Collections',
+        component: () => import(/* webpackPrefetch: true */ '../views/collections/CollectionList.vue'),
+        meta: {
+          title: '合集管理',
+          icon: 'collection',
+          keepAlive: true
+        }
+      },
+      {
+        path: 'collections/create',
+        name: 'CreateCollection',
+        component: () => import(/* webpackPrefetch: true */ '../views/collections/CollectionEdit.vue'),
+        meta: {
+          title: '新建合集',
+          icon: 'collection'
+        }
+      },
+      {
+        path: 'collections/edit/:id',
+        name: 'EditCollection',
+        component: () => import(/* webpackPrefetch: true */ '../views/collections/CollectionEdit.vue'),
+        meta: {
+          title: '编辑合集',
+          icon: 'collection'
+        }
+      },
+      {
         path: 'tags',
         name: 'Tags',
         component: () => import(/* webpackPrefetch: true */ '../views/tags/TagList.vue'),

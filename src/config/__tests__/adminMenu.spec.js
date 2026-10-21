@@ -6,6 +6,7 @@ describe('adminMenu', () => {
       '/dashboard',
       '/dashboard/dynamics',
       '/dashboard/category',
+      '/dashboard/collections',
       '/dashboard/tags',
       '/dashboard/comments',
       '/dashboard/files',
@@ -17,6 +18,7 @@ describe('adminMenu', () => {
   it('groups menu items with descriptions for the refreshed admin shell', () => {
     expect(adminMenu.map((item) => item.group)).toEqual([
       'overview',
+      'content',
       'content',
       'content',
       'content',
