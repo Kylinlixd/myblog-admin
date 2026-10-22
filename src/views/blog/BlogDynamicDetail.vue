@@ -28,6 +28,32 @@
         </div>
       </header>
 
+      <div v-if="seriesNav" class="article-series">
+        <router-link class="article-series__title" :to="`/blog/collections/${seriesNav.id}`">
+          <span class="article-series__eyebrow">系列</span>
+          <strong>{{ seriesNav.title }}</strong>
+          <span class="article-series__position">第 {{ seriesNav.index }} / {{ seriesNav.total }} 篇</span>
+        </router-link>
+        <nav v-if="seriesNav.prev || seriesNav.next" class="article-series__pager" aria-label="系列内文章导航">
+          <router-link
+            v-if="seriesNav.prev"
+            class="article-series__link"
+            :to="{ path: `/blog/dynamics/${seriesNav.prev.id}`, query: contextQuery }"
+          >
+            <span class="article-series__direction">← 系列上一篇</span>
+            <span class="article-series__name">{{ seriesNav.prev.title }}</span>
+          </router-link>
+          <router-link
+            v-if="seriesNav.next"
+            class="article-series__link article-series__link--next"
+            :to="{ path: `/blog/dynamics/${seriesNav.next.id}`, query: contextQuery }"
+          >
+            <span class="article-series__direction">系列下一篇 →</span>
+            <span class="article-series__name">{{ seriesNav.next.title }}</span>
+          </router-link>
+        </nav>
+      </div>
+
       <div v-if="tocItems.length" class="mobile-toc-panel">
         <button class="mobile-toc-trigger" type="button" :aria-expanded="tocOpen" aria-controls="mobile-article-toc" @click="tocOpen = !tocOpen">
           <span>目录</span><span>{{ tocOpen ? '收起' : `${tocItems.length} 个章节` }}</span>
@@ -186,7 +212,7 @@
 <script setup>
 import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, onUpdated, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getBlogDynamicDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
+import { getBlogDynamicDetail, getBlogCollectionDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
@@ -261,6 +287,7 @@ const dynamic = ref(null)
 const renderedArticleContent = computed(() => renderMarkdown(dynamic.value?.content || ''))
 const unavailableMediaUrls = ref(new Set())
 const adjacent = ref({ prev: null, next: null })
+const seriesNav = ref(null)
 
 // 从拾光（分类/合集）进来的文章带 ?from=light：导航继续停在拾光，
 // 标签页与上/下一篇也透传来源，返回入口指向拾光；否则按内容归属回书遇。
@@ -559,6 +586,29 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
   }
 }
 
+const fetchSeriesContext = async (requestedId) => {
+  const collections = dynamic.value?.collections || []
+  if (!collections.length) { seriesNav.value = null; return }
+  try {
+    const result = await getBlogCollectionDetail(collections[0].id)
+    if (String(route.params.id) !== String(requestedId)) return
+    if (result?.code !== 200 || !result.data) { seriesNav.value = null; return }
+    const items = result.data.items || []
+    const index = items.findIndex((item) => String(item.id) === String(requestedId))
+    if (index < 0) { seriesNav.value = null; return }
+    seriesNav.value = {
+      id: result.data.id,
+      title: result.data.title || collections[0].title,
+      index: index + 1,
+      total: items.length,
+      prev: items[index - 1] || null,
+      next: items[index + 1] || null
+    }
+  } catch {
+    if (String(route.params.id) === String(requestedId)) seriesNav.value = null
+  }
+}
+
 const fetchAdjacent = async (requestedId) => {
   try {
     const result = await getAdjacentDynamics(requestedId)
@@ -685,6 +735,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
   commentTotal.value = 0
   commentPage.value = 1
   adjacent.value = { prev: null, next: null }
+  seriesNav.value = null
 
   try {
     loading.value = true
@@ -710,6 +761,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
     readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
     await syncArticleNavigation()
+    void fetchSeriesContext(dynamicId)
     await hydrateLazyMedia()
     if (requestSequence !== detailRequestSequence) return
 
@@ -739,6 +791,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
 watch(() => route.params.id, (nextId, previousId) => {
   if (nextId && nextId !== previousId) {
     imageViewer.open = false
+    seriesNav.value = null
     fetchDynamicDetail(nextId)
   }
 })
@@ -1667,6 +1720,95 @@ onBeforeUnmount(() => {
       background: rgb(255 255 255 / 62%);
     }
 
+    .article-series {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px 22px;
+      width: var(--article-main-width);
+      max-width: 100%;
+      margin: -10px auto 26px;
+      padding: 14px 18px;
+      border: 1px solid var(--article-line);
+      border-radius: 18px;
+      background: rgb(255 253 248 / 66%);
+      box-shadow: 0 12px 32px rgb(88 65 37 / 6%);
+      backdrop-filter: blur(10px);
+    }
+
+    .article-series__title {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      color: var(--article-ink);
+      text-decoration: none;
+    }
+
+    .article-series__eyebrow {
+      color: var(--blog-accent);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .article-series__title strong {
+      font-size: 14px;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .article-series__title:hover strong { color: var(--blog-accent); }
+
+    .article-series__position {
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgb(42 113 128 / 9%);
+      color: #3f6970;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .article-series__pager {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 20px;
+      min-width: 0;
+    }
+
+    .article-series__link {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 250px;
+      color: var(--article-muted, #64748b);
+      text-decoration: none;
+    }
+
+    .article-series__link--next { text-align: right; }
+
+    .article-series__direction {
+      color: var(--blog-accent);
+      font-size: 10px;
+      font-weight: 650;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+
+    .article-series__name {
+      overflow: hidden;
+      font-size: 12px;
+      line-height: 1.45;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .article-series__link:hover .article-series__name { color: var(--article-ink); }
+
     .article-layout {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
@@ -2053,6 +2195,21 @@ onBeforeUnmount(() => {
       .article-header { margin: 24px auto 20px; padding: 25px 20px; border-radius: 20px; }
       .article-header .dynamic-title { font-size: clamp(1.65rem, 8.6vw, 2.6rem); letter-spacing: -.045em; }
       .article-header .dynamic-meta span { padding: 6px 9px; }
+      .article-series {
+        width: 100%;
+        margin: 0 auto 20px;
+        padding: 13px 15px;
+        border-radius: 16px;
+      }
+      .article-series__pager {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 8px;
+      }
+      .article-series__link { max-width: 100%; }
+      .article-series__link--next { margin-left: 0; text-align: left; }
+      .article-series__name { white-space: normal; }
       .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
       .article-adjacent { grid-template-columns: minmax(0, 1fr); }
       .article-adjacent__item--next { align-items: flex-start; text-align: left; }
