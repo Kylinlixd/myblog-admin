@@ -63,5 +63,21 @@ export function createMarkdownRenderer(options = {}) {
     return defaultImageRule(tokens, index, opts, env, self)
   }
 
+  // 独立成段的图片标记为 blog-image-block，详情页据此与代码窗口对齐到同一宽度。
+  const defaultParagraphOpenRule = md.renderer.rules.paragraph_open
+  md.renderer.rules.paragraph_open = (tokens, index, opts, env, self) => {
+    const token = tokens[index]
+    const inline = tokens[index + 1]
+    const close = tokens[index + 2]
+    const isImageOnly = inline?.type === 'inline'
+      && inline.children?.length === 1
+      && inline.children[0].type === 'image'
+      && close?.type === 'paragraph_close'
+    if (isImageOnly) token.attrJoin('class', 'blog-image-block')
+    return defaultParagraphOpenRule
+      ? defaultParagraphOpenRule(tokens, index, opts, env, self)
+      : self.renderToken(tokens, index, opts)
+  }
+
   return md
 }

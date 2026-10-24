@@ -1101,7 +1101,8 @@ onBeforeUnmount(() => {
    的 padding 保持一致）：代码可视宽度多约 124px，长行更少横向滚动；
    只放开顶层块，列表/引用里的代码块不参与，避免顶破容器 */
 :deep(.markdown-body > .blog-code-window),
-:deep(.markdown-body > .blog-table-wrap) {
+:deep(.markdown-body > .blog-table-wrap),
+:deep(.markdown-body > .blog-image-block) {
   margin-inline: calc(-1 * clamp(28px, 5vw, 62px));
 }
 
@@ -1203,6 +1204,17 @@ onBeforeUnmount(() => {
   margin: 1.5rem auto;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 顶层独立图片与代码窗口同宽：铺满撑出后的容器，不再做竖版限高 */
+:deep(.markdown-body > .blog-image-block) {
+  margin-block: 1.5rem;
+}
+
+:deep(.markdown-body > .blog-image-block > img) {
+  width: 100%;
+  max-height: none;
+  margin: 0;
 }
 
 :deep(.markdown-body table) {
@@ -2151,7 +2163,8 @@ onBeforeUnmount(() => {
       .article-series__name { white-space: normal; }
       .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
       :deep(.markdown-body > .blog-code-window),
-      :deep(.markdown-body > .blog-table-wrap) { margin-inline: -20px; }
+      :deep(.markdown-body > .blog-table-wrap),
+      :deep(.markdown-body > .blog-image-block) { margin-inline: -20px; }
       .article-adjacent { grid-template-columns: minmax(0, 1fr); }
       .article-adjacent__item--next { align-items: flex-start; text-align: left; }
       .article-adjacent__item--next .article-adjacent__direction { justify-content: flex-start; }
