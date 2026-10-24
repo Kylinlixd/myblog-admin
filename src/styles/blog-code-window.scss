@@ -1,5 +1,6 @@
 :is(.markdown-body, .markdown-content) pre.blog-code-window {
-  --blog-code-font-size: 15.3px;
+  /* 13.5px：桌面端正文列约 636px 可视代码宽 ≈ 78 字符，长行少横向滚动 */
+  --blog-code-font-size: 13.5px;
   --blog-code-line-height: 1.75;
   position: relative;
   overflow: hidden;

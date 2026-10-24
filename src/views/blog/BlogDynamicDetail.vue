@@ -1097,6 +1097,14 @@ onBeforeUnmount(() => {
   z-index: 2;
 }
 
+/* 代码窗口与表格横向撑出阅读内边距（负 margin 与 .article-main-column .dynamic-body
+   的 padding 保持一致）：代码可视宽度多约 124px，长行更少横向滚动；
+   只放开顶层块，列表/引用里的代码块不参与，避免顶破容器 */
+:deep(.markdown-body > .blog-code-window),
+:deep(.markdown-body > .blog-table-wrap) {
+  margin-inline: calc(-1 * clamp(28px, 5vw, 62px));
+}
+
 :deep(.markdown-body h1),
 :deep(.markdown-body h2),
 :deep(.markdown-body h3),
@@ -1147,18 +1155,18 @@ onBeforeUnmount(() => {
 :deep(.markdown-body .blog-code-window .blog-code-content code) {
   background: transparent;
   padding: 28px 24px;
-  font: var(--blog-code-font-size, 15.3px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--blog-code-font-size, 13.5px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :deep(.markdown-body .blog-code-window .blog-code-lines) {
-  font: var(--blog-code-font-size, 15.3px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: var(--blog-code-font-size, 13.5px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :deep(.markdown-body pre:not(.blog-code-window)) {
   margin: 1.5rem 0;
   padding: 1.5rem;
   overflow: auto;
-  font-size: 85%;
+  font-size: 75%;
   line-height: 1.45;
   background-color: #1e293b;
   border-radius: 12px;
@@ -1252,86 +1260,13 @@ onBeforeUnmount(() => {
   border-bottom: 0;
 }
 
-/* 表格悬浮复制（与代码块复制同一套交互语言） */
+/* 表格横向滚动容器：宽表格在卡片内滚动，不再溢出卡片 */
 :deep(.blog-table-wrap) {
   position: relative;
 }
 
-:deep(.blog-table-copy) {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border: 1px solid rgb(255 255 255 / 30%);
-  border-radius: 7px;
-  background: rgb(23 38 61 / 88%);
-  color: #fffdf8;
-  font-size: 12px;
-  line-height: 1;
-  white-space: nowrap;
-  cursor: pointer;
-  opacity: 0;
-  transform: translateY(-2px);
-  transition: opacity .18s ease, transform .18s ease, background .18s ease;
-}
-
-:deep(.blog-table-copy .blog-table-copy-icon) {
-  width: 13px;
-  height: 13px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-:deep(.blog-table-wrap:hover .blog-table-copy),
-:deep(.blog-table-copy:focus-visible) {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* 复制成功期间（wrapper 标记）按钮无条件隐藏——优先级高于任何 hover/focus 规则，只留"已复制"反馈 */
-:deep(.blog-table-wrap.is-copied .blog-table-copy) {
-  opacity: 0 !important;
-  pointer-events: none;
-}
-
-:deep(.blog-table-copy:hover) {
-  background: rgb(42 113 128 / 94%);
-}
-
-:deep(.blog-table-copy-feedback) {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 4;
-  padding: 5px 10px;
-  border-radius: 7px;
-  background: #2a7180;
-  color: #fff;
-  font-size: 12px;
-  line-height: 1;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .18s ease;
-}
-
-:deep(.blog-table-copy-feedback.is-visible) {
-  opacity: 1;
-}
-
-/* 触屏设备与窄屏没有 hover 语境，且表格处于横向滚动状态：不显示复制入口 */
-@media (hover: none), (max-width: 900px) {
-  :deep(.blog-table-copy),
-  :deep(.blog-table-copy-feedback) {
-    display: none;
-  }
+:deep(.blog-table-scroll) {
+  overflow-x: auto;
 }
 
 :deep(.markdown-body ul),
@@ -1728,7 +1663,9 @@ onBeforeUnmount(() => {
       gap: 12px 22px;
       width: var(--article-main-width);
       max-width: 100%;
-      margin: -10px auto 26px;
+      /* 与 article-header / article-content-card 同一列对齐：
+         auto 居中会让右侧"系列下一篇"压进固定目录导轨 */
+      margin: -10px 0 26px;
       padding: 14px 18px;
       border: 1px solid var(--article-line);
       border-radius: 18px;
@@ -1992,6 +1929,8 @@ onBeforeUnmount(() => {
 
       .article-header { margin-inline: auto; }
 
+      .article-series { margin-inline: auto; }
+
       .article-side-column {
         display: none;
       }
@@ -2211,6 +2150,8 @@ onBeforeUnmount(() => {
       .article-series__link--next { margin-left: 0; text-align: left; }
       .article-series__name { white-space: normal; }
       .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
+      :deep(.markdown-body > .blog-code-window),
+      :deep(.markdown-body > .blog-table-wrap) { margin-inline: -20px; }
       .article-adjacent { grid-template-columns: minmax(0, 1fr); }
       .article-adjacent__item--next { align-items: flex-start; text-align: left; }
       .article-adjacent__item--next .article-adjacent__direction { justify-content: flex-start; }
