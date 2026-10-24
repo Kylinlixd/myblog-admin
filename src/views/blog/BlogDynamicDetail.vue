@@ -1097,14 +1097,8 @@ onBeforeUnmount(() => {
   z-index: 2;
 }
 
-/* 代码窗口与表格横向撑出阅读内边距（负 margin 与 .article-main-column .dynamic-body
-   的 padding 保持一致）：代码可视宽度多约 124px，长行更少横向滚动；
-   只放开顶层块，列表/引用里的代码块不参与，避免顶破容器 */
-:deep(.markdown-body > .blog-code-window),
-:deep(.markdown-body > .blog-table-wrap),
-:deep(.markdown-body > .blog-image-block) {
-  margin-inline: calc(-1 * clamp(28px, 5vw, 62px));
-}
+/* 阅读区水平内边距为 0：正文、图片、代码窗口、表格统一撑满同一宽度，
+   卡片自身的 52px 内边距负责留白 */
 
 :deep(.markdown-body h1),
 :deep(.markdown-body h2),
@@ -1844,7 +1838,8 @@ onBeforeUnmount(() => {
     .article-main-column .dynamic-body {
       width: 100%;
       margin: 0;
-      padding: clamp(28px, 5vw, 62px);
+      /* 水平内边距为 0：正文与代码窗口、表格、图片同宽对齐 */
+      padding: clamp(28px, 5vw, 62px) 0;
       border: 0;
       border-radius: 0;
       background: transparent;
@@ -2161,10 +2156,7 @@ onBeforeUnmount(() => {
       .article-series__link { max-width: 100%; }
       .article-series__link--next { margin-left: 0; text-align: left; }
       .article-series__name { white-space: normal; }
-      .article-main-column .dynamic-body { padding: 25px 20px; border-radius: 16px; }
-      :deep(.markdown-body > .blog-code-window),
-      :deep(.markdown-body > .blog-table-wrap),
-      :deep(.markdown-body > .blog-image-block) { margin-inline: -20px; }
+      .article-main-column .dynamic-body { padding: 25px 0; border-radius: 16px; }
       .article-adjacent { grid-template-columns: minmax(0, 1fr); }
       .article-adjacent__item--next { align-items: flex-start; text-align: left; }
       .article-adjacent__item--next .article-adjacent__direction { justify-content: flex-start; }

@@ -404,7 +404,8 @@
   :is(.markdown-body, .markdown-content) pre.blog-code-window {
     --blog-code-font-size: 13.5px;
     --blog-code-line-height: 1.7;
-    margin: 1.8em -20px;
+    /* 阅读区水平内边距已归零，代码窗口与正文同宽，不再做移动端出血 */
+    margin: 1.8em 0;
     border-radius: 14px;
   }
 
