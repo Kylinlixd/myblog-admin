@@ -26,7 +26,7 @@
 
       <div class="profile-card">
         <div class="avatar-wrap">
-          <img src="/about-avatar.jpg" alt="时不语之间的头像" />
+          <img src="/about-avatar.svg" alt="时不语之间的头像" />
           <span class="online-dot" aria-label="保持创作中"></span>
         </div>
         <div>

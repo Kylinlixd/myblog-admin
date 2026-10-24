@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="时不语之间的头像">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6efdf"/>
+      <stop offset="1" stop-color="#e9dcc2"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33313d"/>
+      <stop offset="1" stop-color="#26242e"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b3742"/>
+      <stop offset="1" stop-color="#2b2831"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="240" height="240" fill="url(#bg)"/>
+  <circle cx="204" cy="36" r="52" fill="#fff" opacity="0.18"/>
+  <circle cx="30" cy="212" r="60" fill="#d9c9a6" opacity="0.25"/>
+
+  <!-- torso -->
+  <path d="M28 240 C28 197 66 178 120 178 C174 178 212 197 212 240 Z" fill="url(#shirt)"/>
+  <!-- crew neck -->
+  <path d="M100 180 C104 192 112 198 120 198 C128 198 136 192 140 180 C133 177 127 176 120 176 C113 176 107 177 100 180 Z" fill="#1d1b23"/>
+  <!-- tiny terminal badge on chest -->
+  <rect x="150" y="212" width="26" height="18" rx="5" fill="#f0e7d4" opacity="0.9"/>
+  <text x="163" y="225" font-family="Menlo, Consolas, monospace" font-size="11" font-weight="700" fill="#b4551f" text-anchor="middle">&gt;_</text>
+
+  <!-- neck -->
+  <path d="M103 142 h34 v26 c0 10 -8 16 -17 16 s-17 -6 -17 -16 Z" fill="#e8b489"/>
+
+  <!-- ears -->
+  <circle cx="80" cy="112" r="10" fill="#efc094"/>
+  <circle cx="160" cy="112" r="10" fill="#efc094"/>
+  <path d="M77 110 q3 4 6 3" stroke="#d69a6b" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M163 110 q-3 4 -6 3" stroke="#d69a6b" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+  <!-- face -->
+  <path d="M84 98 C84 62 100 50 120 50 C140 50 156 62 156 98 C156 128 144 154 120 154 C96 154 84 128 84 98 Z" fill="#f3c9a0"/>
+
+  <!-- hair: short, slightly mature hairline -->
+  <path d="M82 102 C78 58 98 42 120 42 C142 42 162 58 158 102 C154 86 150 76 146 66 C134 74 106 76 96 68 C90 80 86 92 82 102 Z" fill="url(#hair)"/>
+  <!-- grey at temples -->
+  <path d="M84 96 C85 86 87 78 90 70 C93 74 93 84 91 94 Z" fill="#a39a87" opacity="0.85"/>
+  <path d="M156 96 C155 86 153 78 150 70 C147 74 147 84 149 94 Z" fill="#a39a87" opacity="0.85"/>
+
+  <!-- brows -->
+  <path d="M92 92 Q103 86 115 91" stroke="#3a3540" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <path d="M125 91 Q137 86 148 92" stroke="#3a3540" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+
+  <!-- trimmed beard around jaw -->
+  <path d="M85 106 C86 136 98 156 120 156 C142 156 154 136 155 106 C152 134 141 146 120 146 C99 146 88 134 85 106 Z" fill="#3a3540"/>
+  <path d="M108 138 C112 143 128 143 132 138 C130 146 126 149 120 149 C114 149 110 146 108 138 Z" fill="#3a3540"/>
+  <!-- grey streak in beard -->
+  <path d="M92 120 C94 132 99 142 106 148" stroke="#a39a87" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- mouth -->
+  <path d="M111 141 Q120 146 129 141" stroke="#a86b4d" stroke-width="3" fill="none" stroke-linecap="round"/>
+
+  <!-- nose -->
+  <path d="M120 112 L117 128 Q120 132 125 129" stroke="#d9a276" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- glasses -->
+  <rect x="90" y="97" width="27" height="21" rx="7" fill="#ffffff" opacity="0.14" stroke="#23212b" stroke-width="3.5"/>
+  <rect x="123" y="97" width="27" height="21" rx="7" fill="#ffffff" opacity="0.14" stroke="#23212b" stroke-width="3.5"/>
+  <path d="M117 105 Q120 102 123 105" stroke="#23212b" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M90 104 L81 108" stroke="#23212b" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M150 104 L159 108" stroke="#23212b" stroke-width="3.5" stroke-linecap="round"/>
+  <!-- lens highlight -->
+  <path d="M94 101 Q97 99 100 99.5" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.55"/>
+  <path d="M127 101 Q130 99 133 99.5" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- eyes -->
+  <circle cx="103.5" cy="108" r="3.2" fill="#2c2a33"/>
+  <circle cx="136.5" cy="108" r="3.2" fill="#2c2a33"/>
+</svg>
