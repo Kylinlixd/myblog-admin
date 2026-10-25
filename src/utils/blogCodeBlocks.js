@@ -66,33 +66,11 @@ const copyCode = async (rawCode) => {
   textarea.remove()
 }
 
-const createJavascriptSrcdoc = (rawCode, messageId) => {
-  const source = JSON.stringify(rawCode).replace(/</g, '\\u003c')
-  const id = JSON.stringify(messageId)
-  return `<!doctype html><meta charset="utf-8"><script>\nconst source=${source};\nconst id=${id};\nconst send=(type,args)=>parent.postMessage({source:'blog-code-runner',id,type,args},'*');\nconst stringify=(value)=>{try{return typeof value==='string'?value:JSON.stringify(value)}catch{return String(value)}};\nconsole.log=(...args)=>send('log',args.map(stringify));\nconsole.warn=(...args)=>send('warn',args.map(stringify));\nconsole.error=(...args)=>send('error',args.map(stringify));\nwindow.onerror=(message)=>send('error',[String(message)]);\ntry{new Function(source)()}catch(error){send('error',[error?.stack||String(error)])}\n<\/script>`
-}
-
-const createHtmlPreviewSrcdoc = (rawCode, messageId) => {
-  const id = JSON.stringify(messageId)
-  const resizeScript = `<script>
-(() => {
-  const id = ${id}
-  let lastHeight = 0
-  const reportHeight = () => {
-    const height = Math.max(document.documentElement.scrollHeight, document.body?.scrollHeight || 0)
-    if (height === lastHeight) return
-    lastHeight = height
-    parent.postMessage({ source: 'blog-code-preview', id, height }, '*')
-  }
-  window.addEventListener('load', reportHeight)
-  window.setTimeout(reportHeight, 0)
-  if (typeof ResizeObserver === 'function') {
-    new ResizeObserver(reportHeight).observe(document.documentElement)
-  }
-})()
-<\/script>`
-  return `${rawCode}\n${resizeScript}`
-}
+// 试运行 / HTML 预览共用一个同源运行页：站点主 CSP 是 script-src 'self'，
+// 会继承进 srcdoc 文档并拦截其内联脚本（浏览器实测确认），因此示例代码
+// 必须通过 postMessage 交给这个专用页面执行，而不是内联在 srcdoc 里。
+// 运行页自身拒绝顶层打开，且始终以 sandbox（opaque origin）嵌入。
+const RUNNER_URL = '/blog-code-runner.html'
 
 const runJavascript = (pre, rawCode) => {
   const panel = pre.querySelector('[data-blog-code-run-output]')
@@ -107,10 +85,13 @@ const runJavascript = (pre, rawCode) => {
   frame.className = 'blog-code-runner-frame'
   frame.setAttribute('sandbox', 'allow-scripts')
   frame.setAttribute('aria-hidden', 'true')
-  frame.srcdoc = createJavascriptSrcdoc(rawCode, messageId)
+  frame.src = RUNNER_URL
+  frame.addEventListener('load', () => {
+    frame.contentWindow?.postMessage({ kind: 'blog-code-run', id: messageId, source: rawCode }, '*')
+  }, { once: true })
 
   const onMessage = (event) => {
-    // Sandboxed srcdoc documents may expose an opaque WindowProxy in some
+    // Sandboxed documents may expose an opaque WindowProxy in some
     // browsers, so authenticate by the private message id as well as the
     // runner marker instead of relying on strict source identity.
     if (event.data?.source !== 'blog-code-runner' || event.data.id !== messageId) return
@@ -157,7 +138,10 @@ const runHtml = (pre, rawCode) => {
     window.removeEventListener('message', onMessage)
     frame.remove()
   }
-  frame.srcdoc = createHtmlPreviewSrcdoc(rawCode, messageId)
+  frame.src = RUNNER_URL
+  frame.addEventListener('load', () => {
+    frame.contentWindow?.postMessage({ kind: 'blog-code-preview', id: messageId, html: rawCode }, '*')
+  }, { once: true })
   target.appendChild(frame)
   panel.hidden = false
 }

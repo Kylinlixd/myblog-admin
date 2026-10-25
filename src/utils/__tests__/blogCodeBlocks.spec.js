@@ -122,7 +122,8 @@ describe('enhanceCodeBlocks', () => {
 
     expect(pre.querySelector('[data-blog-code-run-output]')).not.toHaveAttribute('hidden')
     expect(pre.querySelector('iframe')).toHaveAttribute('sandbox', 'allow-scripts')
-    expect(pre.querySelector('iframe').srcdoc).toContain('console.log')
+    // 代码通过 postMessage 交给同源运行页执行（主 CSP 会拦截 srcdoc 内联脚本）
+    expect(pre.querySelector('iframe').src).toContain('blog-code-runner.html')
   })
 
   it('renders html fences into a sandbox preview iframe', () => {
@@ -136,7 +137,7 @@ describe('enhanceCodeBlocks', () => {
 
     expect(pre.querySelector('[data-blog-code-run-preview]')).not.toHaveAttribute('hidden')
     expect(frame).toHaveAttribute('sandbox', 'allow-scripts')
-    expect(frame.srcdoc).toContain('<h1>Hello</h1>')
+    expect(frame.src).toContain('blog-code-runner.html')
     expect(frame).toHaveClass('blog-code-run-preview-frame--expanded')
 
     const panel = pre.querySelector('[data-blog-code-run-preview]')

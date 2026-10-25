@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex">
+  <title>博客代码运行器</title>
+</head>
+<body>
+<script>
+(function () {
+  // 本页面只允许被本站文章页以 sandbox iframe（opaque origin）嵌入：
+  // 顶层打开时不监听任何消息、不执行任何提交的代码，读不到站点
+  // Cookie 与存储；nginx 对该路径单独放宽 CSP（见 ops/nginx snippet）。
+  if (window.parent === window) {
+    document.body.textContent = '该页面仅用于站内代码块试运行，请勿直接打开。'
+    return
+  }
+
+  const stringify = (value) => {
+    try { return typeof value === 'string' ? value : JSON.stringify(value) } catch (error) { return String(value) }
+  }
+
+  const runJavascript = (id, source) => {
+    const send = (type, args) => parent.postMessage({ source: 'blog-code-runner', id, type, args }, '*')
+    const original = { log: console.log, warn: console.warn, error: console.error }
+    console.log = (...args) => send('log', args.map(stringify))
+    console.warn = (...args) => send('warn', args.map(stringify))
+    console.error = (...args) => send('error', args.map(stringify))
+    window.onerror = (message) => send('error', [String(message)])
+    try {
+      new Function(source)()
+    } catch (error) {
+      send('error', [(error && error.stack) || String(error)])
+    } finally {
+      console.log = original.log
+      console.warn = original.warn
+      console.error = original.error
+      window.onerror = null
+    }
+  }
+
+  const renderHtmlPreview = (id, html) => {
+    document.body.replaceChildren()
+    const frame = document.createElement('iframe')
+    frame.setAttribute('sandbox', 'allow-scripts')
+    frame.style.cssText = 'width:100%;border:0;display:block;background:#fff;'
+    // 用户 HTML + 高度上报脚本一起放进嵌套 srcdoc；本页 CSP 允许内联脚本，
+    // 嵌套文档继承本页 CSP，所以示例里的脚本可以照常执行。
+    const resizeScript = '<scr' + 'ipt>(function(){var id=' + JSON.stringify(id) + ';' +
+      'var last=-1;var report=function(){var h=Math.max(document.documentElement.scrollHeight,document.body?document.body.scrollHeight:0);' +
+      'if(h!==last){last=h;parent.postMessage({source:"blog-code-preview",id:id,height:h},"*")}};' +
+      'window.addEventListener("load",report);setTimeout(report,0);' +
+      'if(typeof ResizeObserver==="function"){new ResizeObserver(report).observe(document.documentElement)}})()<\/scr' + 'ipt>'
+    frame.srcdoc = String(html) + '\n' + resizeScript
+    document.body.appendChild(frame)
+  }
+
+  window.addEventListener('message', (event) => {
+    const data = event.data
+    if (!data || typeof data !== 'object') return
+    // 预览内层 frame 上报的高度：原样转发给顶层文章页
+    if (data.source === 'blog-code-preview') {
+      parent.postMessage(data, '*')
+      return
+    }
+    if (!data.kind) return
+    if (data.kind === 'blog-code-run' && typeof data.source === 'string') {
+      runJavascript(String(data.id), data.source)
+    }
+    if (data.kind === 'blog-code-preview' && typeof data.html === 'string') {
+      renderHtmlPreview(String(data.id), data.html)
+    }
+  })
+})()
+</script>
+</body>
+</html>
