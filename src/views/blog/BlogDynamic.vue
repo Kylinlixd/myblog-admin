@@ -62,8 +62,10 @@
 
           <!-- 动态内容 -->
           <div class="dynamic-content">
-            <div v-if="item.content" class="markdown-content" v-html="renderMarkdown(item.content)"></div>
-            <div v-if="item.content && item.content.length > 200" class="read-more">
+            <!-- 卡片摘要统一走纯文本口径（与搜索/标签页一致）：
+                 直接截断 markdown 再渲染会把未闭合的代码围栏/链接切成畸形排版 -->
+            <div v-if="item.content" class="markdown-content">{{ cardExcerpt(item.content) }}</div>
+            <div v-if="hasLongerContent(item.content)" class="read-more">
               <router-link :to="`/blog/dynamics/${item.id}`">
                 阅读全文
               </router-link>
@@ -108,7 +110,11 @@
               <h3>评论 ({{ item.commentTotal ?? item.comments ?? 0 }})</h3>
             </div>
             <div class="comment-list">
-              <div v-if="item.commentList?.length">
+              <div v-if="item.commentError" class="no-comments" role="alert">
+                {{ item.commentError }}
+                <button type="button" class="comment-retry" @click="fetchComments(item)">重试</button>
+              </div>
+              <div v-else-if="item.commentList?.length">
                 <div v-for="comment in item.commentList" :key="comment.id" class="comment-item">
                   <div class="comment-user">
                     <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
@@ -158,27 +164,23 @@
 
 <script setup>
 import { ref, onMounted, onActivated, onUpdated } from 'vue'
-import DOMPurify from 'dompurify'
 import { message } from 'ant-design-vue'
 import { previewMediaItem } from '@/utils/blogMedia'
-import { 
-  getBlogDynamics, 
+import {
+  getBlogDynamics,
   getBlogDynamicTimeline,
   likeDynamic,
   getDynamicComments
 } from '../../api/blog'
-import { 
-  LikeOutlined, 
+import {
+  LikeOutlined,
   MessageOutlined,
   EyeOutlined
 } from '@ant-design/icons-vue'
 import { useUserStore } from '@/stores/user'
 import UserAvatar from '@/components/common/UserAvatar.vue'
-import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
-
-// 创建Markdown渲染器
-const md = createMarkdownRenderer()
+import { excerptFromMarkdown } from '@/utils/seoMeta'
 
 // 状态
 const loading = ref(false)
@@ -205,15 +207,10 @@ const previewMedia = (dynamic) => previewMediaItem(dynamic)
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 
-// 渲染Markdown内容
-const renderMarkdown = (content) => {
-  if (!content) return ''
-  // 移除HTML标签
-  const plainText = content.replace(/<[^>]+>/g, '')
-  // 截取前200个字符
-  const truncatedText = plainText.length > 200 ? plainText.slice(0, 200) + '...' : plainText
-  return DOMPurify.sanitize(md.render(truncatedText))
-}
+// 列表卡片摘要：与搜索/标签页同一套纯文本口径（去 markdown/HTML 记号后截断）
+const cardExcerpt = (content) => excerptFromMarkdown(content, 200)
+// 「阅读全文」按纯文本长度判断，与展示口径一致
+const hasLongerContent = (content) => excerptFromMarkdown(content, 100000).length > 200
 
 // 格式化日期
 const formatDate = (dateString) => {
@@ -236,11 +233,14 @@ const fetchComments = async (item) => {
       item.commentTotal = Array.isArray(result.data) ? list.length : (result.data.total || 0)
       item.commentPageSize = result.data.pageSize || item.commentPageSize || 10
       item.commentsLoaded = true
+      item.commentError = ''
     }
   } catch (error) {
     console.error('获取动态评论失败:', error)
     item.commentList = []
     item.commentTotal = 0
+    // 失败要有可区分的提示，不能让评论区伪装成「暂无评论」
+    item.commentError = error?.message || '评论加载失败，请稍后重试'
   } finally {
     item.isLoadingComments = false
   }
@@ -870,6 +870,8 @@ onActivated(() => {
 .comment-user .time { margin-left: auto; color: #94a3b8; font-size: 12px; }
 .comment-content { color: var(--blog-comment-text); line-height: 1.75; overflow-wrap: anywhere; }
 .no-comments { padding: 20px 0; color: #94a3b8; text-align: center; }
+.comment-retry { margin-left: 10px; padding: 0; border: 0; background: transparent; color: #2a7180; cursor: pointer; font-size: inherit; }
+.comment-retry:hover { text-decoration: underline; }
 .comment-pagination { margin-top: 20px; text-align: center; }
 
 @media (max-width: 900px) {

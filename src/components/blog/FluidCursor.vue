@@ -101,7 +101,15 @@ onMounted(() => {
   };
 
   // Get WebGL context (WebGL1 or WebGL2)
-  const { gl, ext } = getWebGLContext(canvas);
+  // WebGL 不可用（老设备/被禁用）时静默降级：这只是装饰效果，
+  // 不能让它抛到全局 errorHandler 弹「页面运行异常」
+  let context: ReturnType<typeof getWebGLContext> | null = null;
+  try {
+    context = getWebGLContext(canvas);
+  } catch {
+    return;
+  }
+  const { gl, ext } = context;
   if (!gl || !ext) return;
 
   // If no linear filtering, reduce resolution

@@ -21,16 +21,28 @@ server {
     root /srv/myblog-admin/dist;
     index index.html;
 
+    # 安全响应头（server 级）。注意 nginx 的 add_header 继承规则：
+    # location 里只要出现任意 add_header，就不再继承 server 级的，
+    # 因此 /assets/ 这类自带 add_header 的 location 需要自行重复。
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
     location /assets/ {
         try_files $uri =404;
         expires 30d;
         add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
     }
 
     location /api/ {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
         proxy_set_header X-Forwarded-Proto $scheme;
+        # $proxy_add_x_forwarded_for 会把客户端自报的链保留在最前、真实 IP 追加在最后；
+        # 后端只信任最后一跳。若想彻底丢弃客户端自报链，可改为：
+        # proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 

@@ -30,7 +30,8 @@ describe('Blog search filter interaction', () => {
   it('submits only through the explicit search actions', () => {
     expect(source).toContain('@click="handleSearch"')
     expect(source).toContain('@search="handleSearch"')
-    expect(source).toContain('@press-enter="handleSearch"')
+    // a-input-search 的 press-enter 透传会被内部 handler 覆盖，属无效绑定，不写
+    expect(source).not.toContain('@press-enter')
   })
 
   it('marks the filter panel dirty until a search runs', () => {
@@ -75,9 +76,10 @@ describe('Blog search filter-only mode', () => {
 
   it('refines both keyword and filter results with the same rules', () => {
     expect(source).toContain("import { normalizeSearchItem, paginate, refineItems } from './searchFilters'")
-    expect(source).toMatch(/refineItems\(\s*\(res\.data\.items \|\| \[\]\)\.map\(normalizeSearchItem\)/)
-    expect(source).toContain('const refined = await browseByFilters()')
-    expect(source).toContain('paginate(refined')
+    // 关键词与筛选两条路径都先归一成全量集合，再用同一套 refineItems 规则过滤
+    expect(source).toMatch(/refineItems\(all\.results\.map\(normalizeSearchItem\), options\)/)
+    expect(source).toContain('return browseByFilters()')
+    expect(source).toContain('paginate(fullResultSet.value')
   })
 })
 
@@ -92,8 +94,18 @@ describe('Blog search data completeness', () => {
   })
 
   it('fetches the whole result set before sorting or filtering by hand', () => {
-    expect(source).toContain("const needsFullSet = options.sortBy !== 'relevance' || activeFilterCount.value > 0")
+    // 全量取回后本地排序/筛选；翻页与重复搜索复用缓存，不再重新拉取
+    expect(source).toContain('const fetchRefinedResultSet = async () =>')
+    expect(source).toMatch(/searchBlog\(\{ keyword: trimmed, page, pageSize: 100 \}\)/)
     expect(source).toMatch(/refineItems\(all\.results\.map\(normalizeSearchItem\)/)
+    expect(source).toContain('fullResultSet.value = refined')
+    expect(source).not.toContain('needsFullSet')
+  })
+
+  it('discards stale responses and disables re-entry while searching', () => {
+    // 快速连点/改条件时旧响应不得覆盖新状态；搜索按钮在请求期间禁用
+    expect(source).toContain('searchSequence')
+    expect(source).toContain(':loading="loading"')
   })
 
   it('does not rely on the ignored list-endpoint keyword parameter', () => {

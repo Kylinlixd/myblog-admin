@@ -66,7 +66,11 @@
     <main class="site-main">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
-          <component :is="Component" :key="$route.fullPath" />
+          <!-- keep-alive 按 fullPath key 分实例缓存：参数页（文章 A/B）互不串数据，
+               max 限制内存；keepAlive 名单来自路由 meta（App.vue 同口径） -->
+          <keep-alive :include="cachedBlogViews" :max="12">
+            <component :is="Component" :key="$route.fullPath" />
+          </keep-alive>
         </transition>
       </router-view>
     </main>
@@ -92,6 +96,15 @@ const route = useRoute()
 const query = ref('')
 const mobileOpen = ref(false)
 const year = new Date().getFullYear()
+
+// 与 App.vue 的 cachedViews 同口径：路由 meta.keepAlive 标记的页面，
+// 组件名 = 文件名（SFC 自动推断），与路由 name 一致
+const cachedBlogViews = computed(() =>
+  router
+    .getRoutes()
+    .filter((item) => item.meta?.keepAlive && item.name)
+    .map((item) => item.name)
+)
 const navigation = [
   { key: 'home', label: '此间', to: '/blog' },
   { key: 'book', label: '书遇', to: '/blog/blogdynamic' },

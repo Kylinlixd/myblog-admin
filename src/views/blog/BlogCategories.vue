@@ -28,7 +28,7 @@
       <article v-for="(category, index) in categories" :key="category.id" class="category-card cinematic-card">
         <router-link :to="`/blog/categories/${category.id}`" class="category-link">
           <div class="category-content">
-            <span class="category-index">0{{ index + 1 }}</span>
+            <span class="category-index">{{ String(index + 1).padStart(2, '0') }}</span>
             <h2 class="category-name">{{ category.name }}</h2>
             <span class="category-count">{{ category.dynamic_count ?? category.dynamicCount ?? category.count ?? 0 }} 篇文章</span>
             <p class="category-desc">{{ category.description || '记录实践、判断与下一步。' }}</p>

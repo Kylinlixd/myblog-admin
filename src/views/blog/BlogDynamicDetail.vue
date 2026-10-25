@@ -242,10 +242,13 @@ import DOMPurify from 'dompurify'
 import CommentThread from '@/components/blog/CommentThread.vue'
 import CommentComposer from '@/components/blog/CommentComposer.vue'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
-import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
+import { bindCodeBlockInteractions, disposeCodeBlockInteractions } from '@/utils/blogCodeBlocks'
+import { applyArticleSeoMeta, excerptFromMarkdown } from '@/utils/seoMeta'
+import { collectAllPages, normalizeCollectionResponse } from '@/api/collections'
 import { enhanceBlogTables } from '@/utils/blogTables'
 import { collectArticleHeadings, getActiveHeadingId } from '@/utils/articleNavigation'
 import { attachmentKind, attachmentLabel, mediaKey, normalizeMediaItems } from '@/utils/blogMedia'
+import { readCommentIdentity } from '@/utils/commentIdentity'
 import ArticleImageLightbox from '@/components/blog/ArticleImageLightbox.vue'
 
 Object.entries({ bash, css, javascript, json, python, sql, typescript, xml }).forEach(
@@ -463,7 +466,8 @@ const replyingTo = ref(null)
 const replyContent = ref('')
 
 const formatDate = (date) => {
-  return dayjs(date).format('YYYY-MM-DD HH:mm')
+  // 字段缺失时不要落到 dayjs(undefined)（会被渲染成当前时间）
+  return date ? dayjs(date).format('YYYY-MM-DD HH:mm') : ''
 }
 
 const syncArticleNavigation = async () => {
@@ -487,10 +491,17 @@ const syncArticleNavigation = async () => {
 }
 
 // The article body is rendered only after the loading branch is removed. Bind
-// again after that Vue update so controls are attached to the final v-html DOM.
+// once per article after that Vue update so controls attach to the final
+// v-html DOM. 滚动进度等状态更新同样会触发 update：绑定类操作按文章 id
+// 做一次性标记，避免每帧全量 querySelectorAll。
 onUpdated(() => {
-  bindCodeBlockInteractions(articleBodyRef.value)
-  enhanceBlogTables(articleBodyRef.value)
+  const body = articleBodyRef.value
+  const articleId = dynamic.value?.id
+  if (!body || articleId == null) return
+  if (body.dataset.blogEnhanced === String(articleId)) return
+  body.dataset.blogEnhanced = String(articleId)
+  bindCodeBlockInteractions(body)
+  enhanceBlogTables(body)
   decorateArticleImages()
   if (tocItems.value.length) requestAnimationFrame(updateTocPosition)
 })
@@ -557,20 +568,22 @@ const resetArticleScrollPosition = () => {
   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
 }
 
-// 获取评论列表
+// 获取评论列表（序号守卫：快速切换文章/翻页时丢弃过期响应）
+let commentRequestSequence = 0
 const fetchComments = async (requestedId = dynamic.value?.id) => {
   const dynamicId = requestedId
   if (!dynamicId) return
-  
+  const sequence = ++commentRequestSequence
+
   try {
     const result = await getDynamicComments(dynamicId, {
       page: commentPage.value,
       pageSize: commentPageSize.value,
       thread: 1
     })
-    
-    
-    if (String(route.params.id) !== String(dynamicId)) return
+
+
+    if (sequence !== commentRequestSequence || String(route.params.id) !== String(dynamicId)) return
 
     if (result && result.code === 200 && result.data) {
       commentList.value = (result.data.items ?? (result.data.list || [])).map(hydrateCurrentUserAvatar)
@@ -581,6 +594,7 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
       message.error('获取评论列表失败')
     }
   } catch (error) {
+    if (sequence !== commentRequestSequence) return
     console.error('获取评论失败:', error)
     message.error('获取评论失败')
   }
@@ -682,7 +696,15 @@ const cancelReply = () => { replyingTo.value = null; replyContent.value = '' }
 const submitReply = async () => {
   const content = replyContent.value.trim()
   if (!replyingTo.value || !content || isSubmittingComment.value) return
-  await submitComment({ content, nickname: nickname.value, email: email.value, website: website.value })
+  // 内联回复没有自己的身份表单：用评论器记忆在 localStorage 的身份，
+  // 没有就留空走匿名（后端同样接受）
+  const identity = readCommentIdentity()
+  await submitComment({
+    content,
+    nickname: identity.nickname || '',
+    email: identity.email || '',
+    website: identity.website || ''
+  })
 }
 
 // 评论分页
@@ -691,7 +713,8 @@ const handleCommentPageChange = async (page) => {
   await fetchComments()
 }
 
-// 「查看更多回复」：thread 模式只预览 3 条，拉一次全量平铺列表按 root_id 归位
+// 「查看更多回复」：thread 模式只预览 3 条，逐页拉全量平铺列表按 root_id 归位。
+// 固定 pageSize 的单次请求会在评论超过一页时静默丢失回复，这里必须取全。
 const loadingMoreReplies = ref([])
 
 const loadMoreReplies = async (rootComment) => {
@@ -701,17 +724,19 @@ const loadMoreReplies = async (rootComment) => {
 
   loadingMoreReplies.value = [...loadingMoreReplies.value, rootComment.id]
   try {
-    const result = await getDynamicComments(dynamicId, { page: 1, pageSize: 50 })
-    if (result?.code === 200 && result.data) {
-      const replies = (result.data.items ?? (result.data.list || []))
-        .filter((item) => String(item.root_id) === String(rootComment.id))
-        .map(hydrateCurrentUserAvatar)
-      const target = commentList.value.find((item) => String(item.id) === String(rootComment.id))
-      if (target) target.replies_preview = replies
-    } else {
-      message.error(result?.message || '回复加载失败')
-    }
+    const { results } = await collectAllPages(
+      (page) => getDynamicComments(dynamicId, { page, pageSize: 100 }).then(normalizeCollectionResponse),
+      { maxPages: 50 }
+    )
+    if (String(route.params.id) !== String(dynamicId)) return
+    const replies = results
+      .filter((item) => String(item.root_id) === String(rootComment.id))
+      .map(hydrateCurrentUserAvatar)
+    const target = commentList.value.find((item) => String(item.id) === String(rootComment.id))
+    if (target) target.replies_preview = replies
+    else message.error('回复加载失败')
   } catch (error) {
+    if (String(route.params.id) !== String(dynamicId)) return
     console.error('回复加载失败:', error)
     message.error('回复加载失败')
   } finally {
@@ -758,6 +783,12 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
 
     dynamic.value = response.data
     document.title = `${dynamic.value.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
+    applyArticleSeoMeta({
+      title: dynamic.value.title,
+      description: excerptFromMarkdown(dynamic.value.content),
+      path: `/blog/dynamics/${dynamicId}`,
+      publishedAt: dynamic.value.created_at
+    })
     const textLength = String(dynamic.value.content || '').replace(/\s+/g, '').length
     readingMinutes.value = Math.max(1, Math.ceil(textLength / 450))
     await syncArticleNavigation()
@@ -808,6 +839,8 @@ onBeforeUnmount(() => {
   stopHeadingObserver = () => {}
   window.removeEventListener('scroll', updateReadingProgress)
   window.removeEventListener('resize', updateReadingProgress)
+  // 试运行/预览挂在 window 上的监听器与 iframe 必须随页面卸载释放
+  disposeCodeBlockInteractions(articleBodyRef.value)
 })
 </script>
 

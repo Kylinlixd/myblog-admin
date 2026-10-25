@@ -224,6 +224,21 @@ const setupHorizontalScroll = (pre, compact) => {
 }
 
 /**
+ * Unbind per-article code block resources: removes the window message
+ * listeners and preview iframes created by 试运行 / HTML 预览, which are
+ * stored on the <pre> element and otherwise survive page navigation.
+ */
+export function disposeCodeBlockInteractions(root) {
+  if (!root?.querySelectorAll) return
+  root.querySelectorAll('pre[data-blog-code-window="true"]').forEach((pre) => {
+    pre._blogCodeRunCleanup?.()
+    pre._blogCodePreviewCleanup?.()
+    delete pre._blogCodeRunCleanup
+    delete pre._blogCodePreviewCleanup
+  })
+}
+
+/**
  * Bind controls emitted by the Markdown Mac-window renderer. The data marker
  * makes the operation safe to repeat after Vue updates or keep-alive restores.
  */

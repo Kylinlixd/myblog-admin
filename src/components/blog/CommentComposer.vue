@@ -26,7 +26,8 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
+import { readCommentIdentity, saveCommentIdentity } from '@/utils/commentIdentity'
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -37,10 +38,15 @@ const emit = defineEmits(['submit'])
 const form = reactive({ nickname: '', email: '', website: '', content: '' })
 const errorMessage = ref('')
 
+onMounted(() => {
+  // 回填上次的身份信息，回访者不必重复输入
+  const identity = readCommentIdentity()
+  form.nickname = identity.nickname || ''
+  form.email = identity.email || ''
+  form.website = identity.website || ''
+})
+
 watch(() => props.resetKey, () => {
-  form.nickname = ''
-  form.email = ''
-  form.website = ''
   form.content = ''
   errorMessage.value = ''
 })
@@ -52,6 +58,7 @@ const handleSubmit = () => {
     return
   }
   errorMessage.value = ''
+  saveCommentIdentity(form)
   emit('submit', { ...form, content })
 }
 </script>

@@ -65,7 +65,7 @@ test('文章详情代码块与 Mac 窗口增强器保持一致', () => {
   expect(source).toContain('padding: 28px 24px;')
   expect(source).toContain(':deep(.markdown-body .blog-code-window .blog-code-lines)')
   expect(source).toContain('font: var(--blog-code-font-size, 13.5px)/var(--blog-code-line-height, 1.75) ui-monospace, SFMono-Regular, Menlo, monospace;')
-  expect(listSource).toContain('createMarkdownRenderer')
+  expect(listSource).toContain('excerptFromMarkdown')
   expect(listSource).toContain('bindCodeBlockInteractions')
   expect(previewSource).toContain('createMarkdownRenderer')
   expect(previewSource).toContain('bindCodeBlockInteractions')

@@ -9,7 +9,8 @@
             <span class="hero-title__lead">{{ typedLead }}</span>
             <span class="hero-title__accent">{{ typedAccent }}</span>
           </h1>
-          <div class="hero-title-loop" :class="`hero-title-loop--${trailPhase}`" aria-live="polite" aria-label="动态关键词">
+          <!-- 打字机逐字符变化，标 aria-live 只会让读屏软件逐字母播报 -->
+          <div class="hero-title-loop" :class="`hero-title-loop--${trailPhase}`" aria-label="动态关键词">
             <span class="hero-title-loop__word">{{ typedTrail }}<i v-if="['typing', 'deleting'].includes(trailPhase)" class="hero-title-loop__cursor" aria-hidden="true">_</i></span>
           </div>
         </div>

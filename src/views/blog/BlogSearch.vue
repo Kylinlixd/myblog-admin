@@ -8,6 +8,7 @@
       <!-- 搜索框 -->
       <div class="search-box cinematic-card">
         <div class="search-input-wrapper">
+          <!-- 回车由 a-input-search 内部转成 @search，press-enter 绑定会被覆盖、属无效绑定 -->
           <a-input-search
             v-model:value="keyword"
             placeholder="搜索文章、标签或关键词..."
@@ -15,7 +16,6 @@
             size="large"
             :loading="loading"
             @search="handleSearch"
-            @press-enter="handleSearch"
             class="search-input"
           >
             <template #prefix>
@@ -29,7 +29,7 @@
           <a-button type="text" :aria-expanded="showAdvancedSearch" @click="toggleAdvancedSearch">
             {{ showAdvancedSearch ? '收起筛选' : '筛选' }}
             <template #icon>
-              <component :is="showAdvancedSearch ? 'up-outlined' : 'down-outlined'" />
+              <component :is="showAdvancedSearch ? UpOutlined : DownOutlined" />
             </template>
           </a-button>
         </div>
@@ -102,7 +102,7 @@
             </span>
             <div class="filter-actions">
               <a-button @click="resetAdvancedOptions">重置</a-button>
-              <a-button type="primary" :disabled="!canSearch" @click="handleSearch">搜索</a-button>
+              <a-button type="primary" :disabled="!canSearch" :loading="loading" @click="handleSearch">搜索</a-button>
             </div>
           </div>
         </div>
@@ -115,10 +115,10 @@
           <a-button type="link" @click="clearSearchHistory">清空</a-button>
         </div>
         <div class="history-items">
-          <a-tag 
-            v-for="(item, index) in searchHistory" 
+          <a-tag
+            v-for="(item, index) in searchHistory"
             :key="index"
-            :color="getRandomColor()"
+            :color="tagColor({ id: index })"
             @click="useHistoryItem(item)"
             class="history-item"
             closable
@@ -147,20 +147,7 @@
         </div>
       </div>
       
-      <!-- 搜索建议 -->
-      <div v-if="showSuggestions && suggestions.length > 0" class="search-suggestions">
-        <ul class="suggestions-list">
-          <li 
-            v-for="(suggestion, index) in suggestions" 
-            :key="index" 
-            class="suggestion-item"
-            @click="useSuggestion(suggestion)"
-          >
-            <search-outlined />
-            <span v-html="highlightKeyword(suggestion.title)"></span>
-          </li>
-        </ul>
-      </div>
+      <!-- 搜索建议：原占位块已删除（suggestions 从未被置真，属死代码） -->
     </div>
     
     <!-- 搜索结果 -->
@@ -227,7 +214,7 @@
                     </span>
                     <span v-if="item.tags && item.tags.length" class="result-tags">
                       <tag-outlined /> 
-                      <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
+                      <a-tag v-for="tag in item.tags" :key="tag.id" :color="tagColor(tag)">
                         {{ tag.name }}
                       </a-tag>
                     </span>
@@ -257,7 +244,7 @@
                   </span>
                   <span v-if="item.tags && item.tags.length" class="card-tags">
                     <tag-outlined /> 
-                    <a-tag v-for="tag in item.tags" :key="tag.id" :color="getRandomColor()">
+                    <a-tag v-for="tag in item.tags" :key="tag.id" :color="tagColor(tag)">
                       {{ tag.name }}
                     </a-tag>
                   </span>
@@ -278,7 +265,6 @@
             :pageSizeOptions="['10', '20', '50', '100']"
             :showTotal="(total) => `共 ${total} 条`"
             @change="handlePageChange"
-            @showSizeChange="handleSizeChange"
           />
         </div>
       </div>
@@ -287,21 +273,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { 
-  SearchOutlined, 
-  CloseCircleOutlined, 
-  EyeOutlined, 
-  LikeOutlined, 
-  CommentOutlined, 
-  CloseOutlined, 
-  UnorderedListOutlined, 
-  AppstoreOutlined, 
-  ShareAltOutlined, 
-  BookOutlined, 
-  WarningOutlined, 
-  DownOutlined, 
+import {
+  SearchOutlined,
+  UnorderedListOutlined,
+  AppstoreOutlined,
+  DownOutlined,
   UpOutlined,
   InboxOutlined,
   FolderOutlined,
@@ -312,6 +290,11 @@ import { getBlogDynamics, getCategoryDynamics, getTagDynamics, getBlogCategoryLi
 import { collectAllPages, normalizeCollectionResponse } from '@/api/collections'
 import { normalizeSearchItem, paginate, refineItems } from './searchFilters'
 import { showError } from '@/utils/performance'
+import { excerptFromMarkdown } from '@/utils/seoMeta'
+
+// 后端 excerpt 是正文截断，可能带未闭合的 markdown 记号：
+// 与列表/标签页同一套纯文本口径清洗
+const plainExcerpt = (text) => excerptFromMarkdown(text, 400)
 
 const route = useRoute()
 const router = useRouter()
@@ -364,15 +347,6 @@ const popularSearches = ref([
   'Python'
 ])
 
-// 搜索建议
-const showSuggestions = ref(false)
-const suggestions = ref([])
-
-// 计算过滤后的结果
-const filteredResults = computed(() => {
-  return searchResults.value
-})
-
 // 格式化日期
 const formatDate = (date) => {
   if (!date) return ''
@@ -392,51 +366,16 @@ const resetSearch = () => {
   currentPage.value = 1
   searched.value = false
   searchPerformed.value = false
-  showSuggestions.value = false
-  suggestions.value = []
 }
 
-// 处理分页变化
-const handlePageChange = (page) => {
-  currentPage.value = page
+// 处理分页变化：antd 在改每页条数时会同时 emit change(page, pageSize)，
+// 因此 size 变化也走这里（原来 @showSizeChange 会导致同一操作连发两次搜索）
+const handlePageChange = (page, size) => {
+  const nextSize = Number(size) || pageSize.value
+  const sizeChanged = nextSize !== pageSize.value
+  pageSize.value = nextSize
+  currentPage.value = sizeChanged ? 1 : page
   handleSearch()
-}
-
-// 处理每页数量变化
-const handleSizeChange = (current, size) => {
-  // 从"10/页"格式中提取数字
-  const sizeNumber = parseInt(size)
-  pageSize.value = sizeNumber
-  currentPage.value = 1
-  handleSearch()
-}
-
-// 使用搜索建议
-const useSuggestion = (suggestion) => {
-  keyword.value = suggestion.title
-  handleSearch()
-}
-
-// 处理来自布局搜索框的搜索请求
-const handleUpdateSearch = (event) => {
-  // 更新搜索参数
-  keyword.value = event.detail.keyword
-  
-  // 更新高级搜索选项
-  // 要特别注意，这里我们只将event.detail中的字段更新到advancedOptions.value中存在的相应属性
-  if (event.detail.type !== undefined) {
-    advancedOptions.value.type = event.detail.type
-  }
-  
-  if (event.detail.sortBy !== undefined) {
-    advancedOptions.value.sortBy = event.detail.sortBy
-  }
-  
-  // 执行搜索
-  // 延迟一下，确保参数更新完成
-  setTimeout(() => {
-    handleSearch()
-  }, 0)
 }
 
 // 按条件浏览：不带关键词时，从公共动态流按分类 / 标签取全量，再在本地筛选与分页
@@ -463,6 +402,32 @@ const browseByFilters = async () => {
   return refineItems(results.map(normalizeSearchItem), options)
 }
 
+// 请求序号：快速改条件/连点搜索时丢弃过期响应，避免旧结果覆盖新状态
+let searchSequence = 0
+// 全量结果缓存：排序/筛选都在本地做，翻页或重复搜索不需要重新拉取
+const fullResultSet = ref(null)
+const resultSetKey = ref('')
+
+const currentResultSetKey = () => JSON.stringify({
+  keyword: keyword.value.trim(),
+  ...advancedOptions.value
+})
+
+const fetchRefinedResultSet = async () => {
+  const options = advancedOptions.value
+  const trimmed = keyword.value.trim()
+
+  if (trimmed) {
+    // 排序/筛选是前端做的：必须先取全量，否则"最多浏览"只排了服务端给的那 10 条
+    const all = await collectAllPages(async (page) => {
+      const response = await searchBlog({ keyword: trimmed, page, pageSize: 100 })
+      return normalizeCollectionResponse(response)
+    })
+    return refineItems(all.results.map(normalizeSearchItem), options)
+  }
+  return browseByFilters()
+}
+
 // 处理搜索：有关键词走搜索接口，没有关键词时按条件筛选
 const handleSearch = async () => {
   const trimmed = keyword.value.trim()
@@ -472,88 +437,46 @@ const handleSearch = async () => {
     return
   }
 
+  const sequence = ++searchSequence
   loading.value = true
   searched.value = true
   searchPerformed.value = true
 
   try {
-    if (trimmed) {
-      const options = advancedOptions.value
-      // 排序/筛选是前端做的：必须先取全量，否则"最多浏览"只排了服务端给的那 10 条
-      const needsFullSet = options.sortBy !== 'relevance' || activeFilterCount.value > 0
-
-      if (needsFullSet) {
-        const all = await collectAllPages(async (page) => {
-          const response = await searchBlog({ keyword: trimmed, page, pageSize: 100 })
-          return normalizeCollectionResponse(response)
-        })
-
-        const refined = refineItems(all.results.map(normalizeSearchItem), options)
-        const paged = paginate(refined, currentPage.value, pageSize.value)
-        searchResults.value = paged.items
-        total.value = paged.total
-        currentPage.value = paged.page
-        pageSize.value = paged.pageSize
-
-        if (total.value === 0) {
-          message.info('未找到相关结果，请尝试其他关键词')
-        }
-      } else {
-        // 后端只认 keyword/page/pageSize/sortBy：category/tag/time/hasMedia 由 refineItems 本地处理，不要塞进 query
-        const res = await searchBlog({
-          keyword: trimmed,
-          page: currentPage.value,
-          pageSize: pageSize.value,
-          sortBy: options.sortBy
-        })
-
-        if (res && res.code === 200 && res.data) {
-          // relevance 顺序由后端给出，这里不动顺序（refineItems 没有 relevance 排序器）
-          const refined = refineItems((res.data.items || []).map(normalizeSearchItem), options)
-          const paged = paginate(refined, res.data.page || 1, res.data.pageSize || pageSize.value)
-          searchResults.value = paged.items
-          total.value = paged.total
-          currentPage.value = paged.page
-          pageSize.value = paged.pageSize
-
-          if (searchResults.value.length === 0) {
-            message.info('未找到相关结果，请尝试其他关键词')
-          }
-        } else {
-          console.error('[Search] 搜索结果格式错误:', res)
-          searchResults.value = []
-          total.value = 0
-          message.info('未找到相关结果，请尝试其他关键词')
-        }
-      }
-    } else {
-      const refined = await browseByFilters()
-      const paged = paginate(refined, currentPage.value, pageSize.value)
-      searchResults.value = paged.items
-      total.value = paged.total
-      currentPage.value = paged.page
-      pageSize.value = paged.pageSize
-
-      if (total.value === 0) {
-        message.info('当前筛选条件下还没有内容')
-      }
+    const key = currentResultSetKey()
+    if (key !== resultSetKey.value || fullResultSet.value === null) {
+      const refined = await fetchRefinedResultSet()
+      if (sequence !== searchSequence) return
+      fullResultSet.value = refined
+      resultSetKey.value = key
     }
 
-    // 只在有关键词时记录搜索历史
     if (trimmed) saveSearchHistory(trimmed)
 
+    const paged = paginate(fullResultSet.value, currentPage.value, pageSize.value)
+    searchResults.value = paged.items
+    total.value = paged.total
+    currentPage.value = paged.page
+    pageSize.value = paged.pageSize
+
+    if (total.value === 0) {
+      message.info(trimmed ? '未找到相关结果，请尝试其他关键词' : '当前筛选条件下还没有内容')
+    }
   } catch (error) {
+    if (sequence !== searchSequence) return
     console.error('[Search] 搜索失败:', error)
     if (error?.code === 'NETWORK_ERROR' || error?.status === 0) {
       showError('网络连接失败，请检查网络设置')
     } else {
-      showError('未找到相关结果，请尝试其他关键词')
+      showError('搜索失败，请稍后重试')
     }
     searchResults.value = []
     total.value = 0
   } finally {
-    loading.value = false
-    filtersDirty.value = false
+    if (sequence === searchSequence) {
+      loading.value = false
+      filtersDirty.value = false
+    }
   }
 }
 
@@ -565,14 +488,8 @@ watch(() => route.query, (newQuery) => {
   }
 }, { immediate: true })
 
-// 初始化数据
+// 初始化数据（route.query 的初始搜索由上方 watch immediate 覆盖，这里不再重复发起）
 onMounted(async () => {
-  // 从路由参数获取搜索关键词
-  if (route.query.keyword) {
-    keyword.value = route.query.keyword
-    await handleSearch()
-  }
-  
   // 加载分类和标签
   try {
     const [categoryRes, tagRes] = await Promise.all([
@@ -593,14 +510,6 @@ onMounted(async () => {
   
   // 加载搜索历史
   loadSearchHistory()
-  
-  // 添加事件监听器，响应顶部搜索框的请求
-  window.addEventListener('update-search', handleUpdateSearch)
-})
-
-// 组件卸载前移除事件监听器
-onBeforeUnmount(() => {
-  window.removeEventListener('update-search', handleUpdateSearch)
 })
 
 // 加载搜索历史
@@ -675,19 +584,14 @@ const resetAdvancedOptions = () => {
   else resetSearch()
 }
 
-// 获取随机颜色
-const getRandomColor = () => {
+// 标签颜色：按 id 稳定取色，重渲染不换色（随机色在每次 patch 都会闪变）
+const tagColor = (tag) => {
   const colors = ['blue', 'green', 'red', 'orange', 'purple', 'cyan']
-  return colors[Math.floor(Math.random() * colors.length)]
+  const seed = Number(tag?.id ?? 0)
+  return colors[Math.abs(Number.isFinite(seed) ? seed : 0) % colors.length]
 }
 
 // 高亮关键词
-// 后端 excerpt 是正文截断，带 # / ** 之类的 markdown 记号，直接显示很难看
-const plainExcerpt = (text) => String(text ?? '')
-  .replace(/[#>*_`\[\]]/g, '')
-  .replace(/\s+/g, ' ')
-  .trim()
-
 const highlightKeyword = (text) => {
   const value = String(text ?? '')
   const escaped = value.replace(/[&<>"']/g, character => ({
@@ -963,37 +867,6 @@ watch(advancedOptions, () => {
 .history-item:hover,
 .popular-item:hover {
   transform: translateY(-2px);
-}
-
-.search-suggestions {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: var(--z-overlay, 1000);
-  margin-top: 0.5rem;
-}
-
-.suggestions-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.suggestion-item {
-  padding: 0.8rem 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s ease;
-}
-
-.suggestion-item:hover {
-  background-color: #f5f5f5;
 }
 
 .search-results {

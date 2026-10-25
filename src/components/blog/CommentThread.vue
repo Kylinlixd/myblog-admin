@@ -9,7 +9,7 @@
           <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
         </div>
       </div>
-      <a v-if="comment.website" class="comment-website" :href="comment.website" target="_blank" rel="noopener noreferrer">主页</a>
+      <a v-if="safeWebsiteHref" class="comment-website" :href="safeWebsiteHref" target="_blank" rel="noopener noreferrer">主页</a>
       <span v-if="comment.reply_to_nickname" class="reply-target">回复 @{{ comment.reply_to_nickname }}</span>
       <span class="time">{{ formatDate(comment.created_at || comment.createTime) }}</span>
     </div>
@@ -36,17 +36,26 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import dayjs from 'dayjs'
 
 defineOptions({ name: 'CommentThread' })
-defineProps({
+const props = defineProps({
   comment: { type: Object, required: true },
   depth: { type: Number, default: 0 },
   loadingMore: { type: Boolean, default: false }
 })
 defineEmits(['reply', 'more'])
-const formatDate = (value) => dayjs(value).format('YYYY-MM-DD HH:mm')
+// 字段缺失时不要落到 dayjs(undefined)（会被渲染成当前时间）
+const formatDate = (value) => (value ? dayjs(value).format('YYYY-MM-DD HH:mm') : '')
+
+// 网址直接渲染成链接，只放行 http(s)，防止 javascript:/data: 注入
+// （历史数据可能先于后端校验入库，渲染层兜底）
+const safeWebsiteHref = computed(() => {
+  const site = String(props.comment?.website || '').trim()
+  return /^https?:\/\//i.test(site) ? site : ''
+})
 </script>
 
 <style scoped>

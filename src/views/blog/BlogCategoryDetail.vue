@@ -23,6 +23,12 @@
         <router-link class="load-more-btn" to="/blog">返回首页</router-link>
       </div>
 
+      <div v-else-if="loadError" class="empty-state" role="alert">
+        <p>获取分类文章失败</p>
+        <p class="empty-state__desc">{{ loadError }}</p>
+        <button class="load-more-btn" type="button" @click="fetchCategoryDynamics">重试</button>
+      </div>
+
       <div v-else-if="dynamics.length === 0" class="empty-state">
         <p>该分类下暂无文章</p>
       </div>
@@ -69,6 +75,7 @@ const loadingMore = ref(false)
 const total = ref(0)
 const page = ref(1)
 const notFound = ref(false)
+const loadError = ref('')
 
 const hasMore = computed(() => dynamics.value.length < total.value)
 
@@ -78,6 +85,7 @@ const formatDate = (date) => {
 
 const fetchCategoryDynamics = async ({ append = false } = {}) => {
   const requestPage = append ? page.value + 1 : 1
+  loadError.value = ''
 
   try {
     if (append) {
@@ -101,14 +109,14 @@ const fetchCategoryDynamics = async ({ append = false } = {}) => {
       notFound.value = true
     } else {
       console.error('获取分类文章失败:', response?.message)
-      appStore.setLoadingError('获取分类文章失败，请刷新重试')
+      loadError.value = response?.message || '服务暂时不可用，请稍后重试'
     }
   } catch (error) {
     console.error('获取分类文章失败:', error)
     if (error?.status === 404 || error?.code === 404) {
       notFound.value = true
     } else {
-      appStore.setLoadingError('获取分类文章失败，请刷新重试')
+      loadError.value = error?.message || '网络异常，请稍后重试'
     }
   } finally {
     loading.value = false
@@ -209,6 +217,12 @@ onMounted(() => {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.empty-state__desc {
+  margin: 6px 0 16px;
+  color: #9c938a;
+  font-size: 13px;
 }
 
 .load-more-wrap {

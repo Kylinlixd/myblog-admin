@@ -20,6 +20,16 @@
       <p>加载中...</p>
     </div>
 
+    <!-- 加载失败 -->
+    <div v-else-if="loadError" class="empty-container" role="alert">
+      <a-empty description="获取标签内容失败" />
+      <p class="error-detail">{{ loadError }}</p>
+      <a-button type="primary" @click="fetchTagDynamics">重试</a-button>
+      <router-link to="/blog">
+        <a-button>返回首页</a-button>
+      </router-link>
+    </div>
+
     <!-- 标签下的文章列表 -->
     <div v-else-if="dynamics && dynamics.length > 0" class="dynamics-list">
       <a-row :gutter="[24, 24]">
@@ -70,7 +80,6 @@
           :pageSize="pageSize"
           @change="handlePageChange"
           showSizeChanger
-          @showSizeChange="handleSizeChange"
           :pageSizeOptions="['6', '12', '24', '48']"
           :showTotal="total => `共 ${total} 篇文章`"
         />
@@ -88,13 +97,14 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { getTagDynamics } from '@/api/blog'
 import { TagOutlined, EyeOutlined, HeartOutlined, FileTextOutlined } from '@ant-design/icons-vue'
 import { useAppStore } from '@/stores/app'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
+import { excerptFromMarkdown } from '@/utils/seoMeta'
 
 const route = useRoute()
 const router = useRouter()
@@ -102,6 +112,7 @@ const appStore = useAppStore()
 
 // 状态变量
 const loading = ref(true)
+const loadError = ref('')
 const tag = ref(null)
 const dynamics = ref([])
 const total = ref(0)
@@ -125,6 +136,9 @@ const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 
 // 获取标签详情和文章列表
+// 快速切换标签时丢弃过期响应，避免旧标签内容覆盖新标签
+let tagRequestSequence = 0
+
 const fetchTagDynamics = async () => {
   if (!route.params.id) {
     message.error('未找到标签ID')
@@ -133,49 +147,56 @@ const fetchTagDynamics = async () => {
   }
 
   const tagId = route.params.id
-  
+  const sequence = ++tagRequestSequence
+  loadError.value = ''
+
   try {
     loading.value = true
     appStore.startLoading('加载标签内容...')
-    
+
     const params = {
       page: currentPage.value,
       pageSize: pageSize.value
     }
-    
+
     const response = await getTagDynamics(tagId, params)
-    
+
+    if (sequence !== tagRequestSequence || String(route.params.id) !== String(tagId)) return
+
     if (response && response.code === 200 && response.data) {
       // 设置标签信息
       tag.value = response.data.tag || null
-      
+
       // 设置文章列表
       dynamics.value = response.data.items ?? response.data.dynamics ?? []
-      
+
       // 设置总数
       total.value = response.data.total || 0
-      
+
       // 设置页面标题
       if (tag.value) {
         document.title = `${tag.value.name}｜${route.query.from === 'light' ? '拾光' : '书遇'}｜时不语之间`
       }
     } else {
-      message.error('获取标签详情失败')
+      loadError.value = response?.message || '服务暂时不可用，请稍后重试'
       dynamics.value = []
       total.value = 0
     }
   } catch (error) {
+    if (sequence !== tagRequestSequence) return
     console.error('获取标签详情失败:', error)
-    message.error('获取标签详情失败，请刷新重试')
+    loadError.value = error?.message || '网络异常，请稍后重试'
     dynamics.value = []
     total.value = 0
   } finally {
-    loading.value = false
-    appStore.endLoading()
+    if (sequence === tagRequestSequence) {
+      loading.value = false
+      appStore.endLoading()
+    }
   }
 }
 
-// 监听路由参数变化
+// 监听路由参数变化（immediate 覆盖首次进入，不再在 onMounted 重复请求）
 watch(() => route.params.id, (newId, oldId) => {
   if (newId && newId !== oldId) {
     currentPage.value = 1 // 重置页码
@@ -183,19 +204,16 @@ watch(() => route.params.id, (newId, oldId) => {
   }
 }, { immediate: true })
 
-// 处理分页变化
-const handlePageChange = (page) => {
-  currentPage.value = page
+// 处理分页变化：antd 在改每页条数时也会 emit change(page, pageSize)，
+// 统一走这里，避免原来 @showSizeChange 连发两次请求
+const handlePageChange = (page, size) => {
+  const nextSize = Number(size) || pageSize.value
+  const sizeChanged = nextSize !== pageSize.value
+  pageSize.value = nextSize
+  if (sizeChanged) currentPage.value = 1
   fetchTagDynamics()
   // 滚动到顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
-// 处理每页数量变化
-const handleSizeChange = (current, size) => {
-  pageSize.value = size
-  currentPage.value = 1
-  fetchTagDynamics()
 }
 
 // 格式化日期
@@ -205,23 +223,8 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
-// 获取内容摘要
-const getExcerpt = (content, maxLength = 100) => {
-  if (!content) return ''
-  
-  // 移除HTML标签
-  const plainText = content.replace(/<[^>]+>/g, '')
-  
-  // 截取指定长度
-  return plainText.length > maxLength
-    ? plainText.substring(0, maxLength) + '...'
-    : plainText
-}
-
-// 组件挂载时加载数据
-onMounted(() => {
-  fetchTagDynamics()
-})
+// 获取内容摘要：与搜索页/列表页同一套纯文本口径
+const getExcerpt = (content, maxLength = 100) => excerptFromMarkdown(content, maxLength)
 </script>
 
 <style scoped>
@@ -288,6 +291,12 @@ onMounted(() => {
 
 .empty-container {
   gap: 20px;
+}
+
+.error-detail {
+  margin: 0;
+  color: #9c938a;
+  font-size: 13px;
 }
 
 .dynamics-list {

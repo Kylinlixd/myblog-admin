@@ -1,6 +1,14 @@
 <template>
   <main class="collection-detail cinematic-page">
-    <div v-if="collection" class="detail-inner">
+    <div v-if="loadError" class="detail-error" role="alert">
+      <p class="detail-error__title">获取合集数据失败</p>
+      <p class="detail-error__desc">{{ loadError }}</p>
+      <div class="detail-error__actions">
+        <a-button type="primary" :loading="retrying" @click="fetchCollection">重试</a-button>
+        <router-link to="/blog/categories" class="back-link">← 返回拾光</router-link>
+      </div>
+    </div>
+    <div v-else-if="collection" class="detail-inner">
       <header class="detail-hero">
         <img v-if="collection.cover" :src="collection.cover" :alt="collection.title" class="detail-cover" />
         <div class="detail-head">
@@ -48,6 +56,8 @@ import { useAppStore } from '@/stores/app'
 const route = useRoute()
 const appStore = useAppStore()
 const collection = ref(null)
+const loadError = ref('')
+const retrying = ref(false)
 
 function formatDate(value) {
   if (!value) return ''
@@ -55,17 +65,21 @@ function formatDate(value) {
 }
 
 async function fetchCollection() {
+  loadError.value = ''
+  retrying.value = true
   try {
     appStore.startLoading('加载合集数据...')
     const response = await getBlogCollectionDetail(route.params.id)
-    if (response?.code === 200) {
+    if (response?.code === 200 && response.data) {
       collection.value = response.data
       document.title = `${collection.value.title}｜拾光｜时不语之间`
-    } else appStore.setLoadingError('获取合集数据失败，请刷新重试')
-    appStore.endLoading()
+    } else loadError.value = response?.message || '该合集不存在或已被删除'
   } catch (error) {
     console.error('获取合集数据失败:', error)
-    appStore.setLoadingError('获取合集数据失败，请刷新重试')
+    loadError.value = error?.message || '网络异常，请稍后重试'
+  } finally {
+    appStore.endLoading()
+    retrying.value = false
   }
 }
 
@@ -90,6 +104,10 @@ onMounted(fetchCollection)
 .row-meta { color: #8d857a; font-size: 12px; }
 .row-arrow { flex: 0 0 auto; color: #b85e2d; font-size: 16px; }
 .catalog-empty { padding: 28px; border: 1px dashed #ead8c7; border-radius: 14px; color: #8d857a; font-size: 14px; text-align: center; }
+.detail-error { padding: clamp(40px, 8vw, 90px) 24px; border: 1px dashed #ead8c7; border-radius: 16px; background: rgb(255 250 242 / 85%); text-align: center; }
+.detail-error__title { margin: 0 0 8px; color: #253142; font-size: 20px; font-weight: 750; }
+.detail-error__desc { margin: 0 0 22px; color: #8d857a; font-size: 14px; }
+.detail-error__actions { display: flex; justify-content: center; align-items: center; gap: 18px; }
 .detail-footer { margin-top: 30px; }
 .back-link { color: #8d857a; font-size: 13px; text-decoration: none; }
 .back-link:hover { color: #c86f37; }
