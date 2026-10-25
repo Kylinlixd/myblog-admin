@@ -25,13 +25,12 @@
       </div>
 
       <div class="profile-card">
-        <div class="avatar-wrap">
-          <img src="/about-avatar.svg" alt="时不语之间的头像" />
-          <span class="online-dot" aria-label="保持创作中"></span>
-        </div>
-        <div>
-          <strong>时不语之间</strong>
-          <p>Full-stack developer</p>
+        <div class="profile-head">
+          <div class="profile-headline">
+            <strong>时不语之间</strong>
+            <p>Full-stack developer</p>
+          </div>
+          <p class="profile-status"><span class="pulse-dot" aria-hidden="true"></span>保持创作中</p>
         </div>
         <dl class="profile-facts">
           <div><dt>当前关注</dt><dd>可靠的 Web 产品</dd></div>
@@ -202,21 +201,81 @@ const stack = [
 
 .profile-card {
   position: relative;
-  padding: 28px;
+  padding: 30px 30px 12px;
   border: 1px solid var(--blog-line);
   border-radius: 20px;
   background: var(--blog-surface);
   box-shadow: 0 8px 24px rgb(92 65 37 / 6%);
+  overflow: hidden;
 }
 
-.avatar-wrap { position: relative; width: 80px; height: 80px; margin-bottom: 18px; }
-.avatar-wrap img { width: 100%; height: 100%; border-radius: 24px; object-fit: cover; }
-.online-dot { position: absolute; right: -3px; bottom: 7px; width: 17px; height: 17px; border: 4px solid white; border-radius: 50%; background: #22c55e; }
-.profile-card strong { color: var(--color-text); font-size: 25px; }
-.profile-card > div:nth-child(3) p, .profile-card > div:nth-child(2) p { margin: 5px 0 0; color: var(--color-text-muted); }
+.profile-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: linear-gradient(to right, var(--blog-accent, #c86f37), rgb(200 111 55 / 0%));
+}
+
+.profile-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.profile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 6px 13px;
+  border: 1px solid var(--blog-line);
+  border-radius: 999px;
+  background: rgb(34 197 94 / 8%);
+  color: #3f7a52;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgb(34 197 94 / 45%);
+  animation: profile-pulse 2.2s ease-out infinite;
+}
+
+@keyframes profile-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(34 197 94 / 45%); }
+  70% { box-shadow: 0 0 0 9px rgb(34 197 94 / 0%); }
+  100% { box-shadow: 0 0 0 0 rgb(34 197 94 / 0%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot { animation: none; }
+}
+
+.profile-headline strong {
+  display: block;
+  color: var(--color-text);
+  font-size: 28px;
+  letter-spacing: -0.01em;
+}
+
+.profile-headline p {
+  margin: 7px 0 0;
+  color: var(--color-text-muted);
+  font-size: 15px;
+}
+
 .profile-card dl { display: grid; gap: 0; margin: 28px 0 0; }
-.profile-card dl div { display: flex; justify-content: space-between; gap: 20px; padding: 15px 0; border-top: 1px solid var(--color-border); }
-.profile-card dt { color: var(--color-text-muted); }
+.profile-card dl div { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding: 16px 0 17px; border-top: 1px solid var(--color-border); }
+.profile-card dt { color: var(--color-text-muted); font-size: 13px; letter-spacing: 0.08em; }
 .profile-card dd { position: relative; z-index: 1; min-width: 0; margin: 0; color: #243041; font-weight: 680; overflow-wrap: anywhere; text-align: right; }
 
 .about-body { width: min(calc(100% - 40px), 1120px); padding-bottom: 0; }
