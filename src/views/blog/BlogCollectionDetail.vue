@@ -17,15 +17,34 @@
           <p class="detail-desc">{{ collection.description || '按系列持续更新的完整阅读路径。' }}</p>
           <div class="detail-meta">
             <span>{{ collection.itemCount }} 篇</span>
-            <span>按发布顺序排列</span>
+            <span>{{ sortMode === 'oldest' ? '从最早一期开始' : '从最新一期开始' }}</span>
             <span>持续更新中</span>
           </div>
         </div>
       </header>
 
       <section class="catalog" aria-label="合集目录">
+        <div class="catalog-toolbar">
+          <span class="catalog-label">目录 · Catalog</span>
+          <div class="sort-toggle" role="group" aria-label="合集排序方式">
+            <button
+              type="button"
+              class="sort-option"
+              :class="{ 'sort-option--active': sortMode === 'oldest' }"
+              :aria-pressed="sortMode === 'oldest'"
+              @click="sortMode = 'oldest'"
+            >从最早看起</button>
+            <button
+              type="button"
+              class="sort-option"
+              :class="{ 'sort-option--active': sortMode === 'latest' }"
+              :aria-pressed="sortMode === 'latest'"
+              @click="sortMode = 'latest'"
+            >从最新看起</button>
+          </div>
+        </div>
         <router-link
-          v-for="(item, index) in collection.items"
+          v-for="(item, index) in sortedItems"
           :key="item.id"
           :to="{ path: `/blog/dynamics/${item.id}`, query: { from: 'light' } }"
           class="catalog-row"
@@ -48,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getBlogCollectionDetail } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
@@ -58,6 +77,19 @@ const appStore = useAppStore()
 const collection = ref(null)
 const loadError = ref('')
 const retrying = ref(false)
+// 默认保持合集原有语义：按发布顺序从最早一期看起；可切换为最新优先
+const sortMode = ref('oldest')
+
+const sortedItems = computed(() => {
+  const items = collection.value?.items ?? []
+  if (sortMode.value !== 'latest') return items
+  return [...items].sort((a, b) => publishTime(b) - publishTime(a) || (b.sort ?? 0) - (a.sort ?? 0))
+})
+
+function publishTime(item) {
+  const time = Date.parse(item.createdAt)
+  return Number.isNaN(time) ? 0 : time
+}
 
 function formatDate(value) {
   if (!value) return ''
@@ -69,7 +101,7 @@ async function fetchCollection() {
   retrying.value = true
   try {
     appStore.startLoading('加载合集数据...')
-    const response = await getBlogCollectionDetail(route.params.id)
+    const response = await getBlogCollectionDetail(route.params.id, { order: sortMode.value })
     if (response?.code === 200 && response.data) {
       collection.value = response.data
       document.title = `${collection.value.title}｜拾光｜时不语之间`
@@ -96,6 +128,14 @@ onMounted(fetchCollection)
 .detail-meta { display: flex; flex-wrap: wrap; gap: 10px; }
 .detail-meta span { padding: 7px 11px; border: 1px solid #ead8c7; border-radius: 999px; background: rgb(255 250 242 / 72%); color: #7d695c; font-size: 12px; }
 .catalog { display: flex; flex-direction: column; gap: 10px; }
+.catalog-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 4px; }
+.catalog-label { color: #b85e2d; font-size: 11px; font-weight: 800; letter-spacing: .18em; }
+.sort-toggle { display: flex; gap: 8px; }
+.sort-option { padding: 7px 14px; border: 1px solid #ead8c7; border-radius: 999px; background: rgb(255 250 242 / 72%); color: #7d695c; font-size: 12px; font-weight: 650; cursor: pointer; transition: border-color .2s ease, background .2s ease, color .2s ease; }
+.sort-option:hover { border-color: #c86f37; color: #b85e2d; }
+.sort-option:focus-visible { outline: 2px solid #c86f37; outline-offset: 2px; }
+.sort-option--active { border-color: #c86f37; background: #c86f37; color: #fffaf2; }
+.sort-option--active:hover { color: #fffaf2; }
 .catalog-row { display: flex; align-items: center; gap: 18px; padding: 16px 20px; border: 1px solid rgb(108 82 54 / 12%); border-radius: 14px; background: rgb(255 250 242 / 85%); color: inherit; text-decoration: none; transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
 .catalog-row:hover { transform: translateX(6px); border-color: #c86f37; box-shadow: 0 12px 28px rgb(92 59 35 / 12%); }
 .row-index { flex: 0 0 auto; color: #c86f37; font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -114,5 +154,6 @@ onMounted(fetchCollection)
 @media (max-width: 760px) {
   .detail-hero { grid-template-columns: 1fr; }
   .row-title { white-space: normal; }
+  .catalog-toolbar { flex-wrap: wrap; row-gap: 8px; }
 }
 </style>
