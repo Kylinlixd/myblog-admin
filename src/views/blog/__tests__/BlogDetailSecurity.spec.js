@@ -26,7 +26,7 @@ describe('blog detail sanitization', () => {
   it('shows the fetched comment total instead of a stale article counter', () => {
     const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'), 'utf8')
 
-    expect(source).toContain('评论 ({{ commentTotal }})')
+    expect(source).toContain("{{ t('detail.comments') }} ({{ commentTotal }})")
     expect(source).not.toContain('评论 ({{ dynamic.comments || 0 }})')
   })
 

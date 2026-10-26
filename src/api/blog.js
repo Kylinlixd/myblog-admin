@@ -65,6 +65,9 @@ export const getBlogCollections = () =>
 export const getBlogCollectionDetail = (id, params) =>
   request.get(createBlogApiUrl(`collections/${id}`), { params })
 
+export const getDynamicTranslation = (id, lang) =>
+  request.get(createBlogApiUrl(`dynamics/${id}/translation`), { params: { lang } })
+
 export const increaseDynamicView = (id) =>
   request.put(createBlogApiUrl(`dynamics/${id}/view`))
 

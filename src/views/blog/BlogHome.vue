@@ -15,11 +15,11 @@
           </div>
         </div>
       </div>
-      <a class="hero-scroll-cue" href="#latest-posts" aria-label="滚动到最新文章" @click="scrollToLatest"><span aria-hidden="true" /></a>
+      <a class="hero-scroll-cue" href="#latest-posts" :aria-label="t('home.scrollAria')" @click="scrollToLatest"><span aria-hidden="true" /></a>
     </section>
 
     <section id="latest-posts" ref="latestSection" class="latest-section home-lazy-section app-container" aria-labelledby="latest-title">
-      <div class="section-heading"><h2 id="latest-title">最新文章</h2><p>从最近一次更新开始，顺着真实问题进入文章。</p></div>
+      <div class="section-heading"><h2 id="latest-title">{{ t('home.latest') }}</h2><p>从最近一次更新开始，顺着真实问题进入文章。</p></div>
       <AsyncState v-if="loading || error || !latest.length" :loading="loading" :error="error" :empty="!loading && !error && !latest.length" @retry="loadLatest" />
       <div v-else class="article-list">
         <router-link v-for="item in latest" :key="item.id" class="article-row" :to="`/blog/dynamics/${item.id}`">
@@ -44,6 +44,7 @@
 
 <script setup>
 import { defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
+import { t } from '@/i18n'
 import { getBlogCategoryList, getRecentDynamics } from '@/api/blog'
 import { normalizeCollectionResponse } from '@/api/collections'
 import AsyncState from '@/components/common/AsyncState.vue'

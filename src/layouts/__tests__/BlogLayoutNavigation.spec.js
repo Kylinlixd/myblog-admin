@@ -42,7 +42,7 @@ describe('BlogLayout navigation active state', () => {
 
     expect(source).toContain('mobile-admin-link')
     expect(source).toContain('quick-search-button')
-    expect(source).toContain('管理后台')
+    expect(source).toContain("t('nav.admin')")
     expect(source).not.toContain('.quick-search input { width: 0; }')
     expect(source).toContain('.quick-search input { width: 100%; min-width: 0;')
   })

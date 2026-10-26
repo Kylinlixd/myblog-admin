@@ -67,7 +67,7 @@
             <div v-if="item.content" class="markdown-content">{{ cardExcerpt(item.content) }}</div>
             <div v-if="hasLongerContent(item.content)" class="read-more">
               <router-link :to="`/blog/dynamics/${item.id}`">
-                阅读全文
+                {{ t('stream.readMore') }}
               </router-link>
             </div>
 
@@ -152,9 +152,9 @@
               @click="loadMore"
               v-if="hasMore"
             >
-              加载更多
+              {{ t('stream.loadMore') }}
             </a-button>
-            <div v-else-if="dynamicList.length > 0" class="no-more">没有更多内容了</div>
+            <div v-else-if="dynamicList.length > 0" class="no-more">{{ t('stream.noMore') }}</div>
           </div>
         </div>
       </div>
@@ -164,6 +164,7 @@
 
 <script setup>
 import { ref, onMounted, onActivated, onUpdated } from 'vue'
+import { t } from '@/i18n'
 import { message } from 'ant-design-vue'
 import { previewMediaItem } from '@/utils/blogMedia'
 import {

@@ -18,7 +18,7 @@
           <img v-if="collection.cover" :src="collection.cover" :alt="collection.title" class="collection-cover" loading="lazy" />
           <div class="collection-body">
             <h3 class="collection-title">{{ collection.title }}</h3>
-            <p class="collection-desc">{{ collection.description || '按系列持续更新的完整阅读路径。' }}</p>
+            <p class="collection-desc">{{ collection.description || t('collection.defaultDesc') }}</p>
             <span class="collection-count">{{ collection.itemCount }} 篇 · 持续更新中</span>
           </div>
         </router-link>
@@ -41,6 +41,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { t } from '@/i18n'
 import { getBlogCategoryList, getBlogCollections } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
 

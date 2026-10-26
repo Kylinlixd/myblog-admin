@@ -31,7 +31,7 @@ describe('focused warm technology blog homepage', () => {
   })
 
   it('provides a first-screen hero with a static title and scroll guidance', () => {
-    expect(source).toContain('aria-label="滚动到最新文章"')
+    expect(source).toContain("t('home.scrollAria')")
     expect(source).toContain('href="#latest-posts"')
     expect(source).toContain('@click="scrollToLatest"')
     expect(source).toContain('function scrollToLatest(event)')

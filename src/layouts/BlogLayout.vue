@@ -12,7 +12,7 @@
           <span><strong>时不语之间</strong><small>Silent Time</small></span>
         </router-link>
 
-        <nav class="desktop-nav" aria-label="主导航">
+        <nav class="desktop-nav" :aria-label="t('nav.mainNav')">
           <router-link
             v-for="item in navigation"
             :key="item.to"
@@ -22,22 +22,33 @@
             :class="{ 'nav-link--active': isNavigationActive(item) }"
             :aria-current="isNavigationActive(item) ? 'page' : undefined"
           >
-            {{ item.label }}
+            {{ t(`nav.${item.key}`) }}
           </router-link>
         </nav>
 
         <div class="header-actions">
           <form class="quick-search" :class="{ 'quick-search--active': isSearchPage }" role="search" @submit.prevent="search">
-            <button class="quick-search-button" type="submit" aria-label="提交搜索">
+            <button class="quick-search-button" type="submit" :aria-label="t('nav.searchSubmit')">
               <search-outlined />
             </button>
-            <input v-model.trim="query" type="search" autocomplete="off" aria-label="搜索博客" placeholder="搜索文章" />
+            <input v-model.trim="query" type="search" autocomplete="off" :aria-label="t('nav.searchAria')" :placeholder="t('nav.searchPlaceholder')" />
           </form>
-          <router-link class="admin-link" to="/login">管理后台</router-link>
+          <a-dropdown :trigger="['click']" placement="bottomRight">
+            <button class="lang-button" type="button" :aria-label="t('nav.language')" :title="t('nav.language')">
+              <global-outlined />
+              <span class="lang-code">{{ currentLocale.toUpperCase() }}</span>
+            </button>
+            <template #overlay>
+              <a-menu :selected-keys="[currentLocale]" @click="onLocalePick">
+                <a-menu-item v-for="item in LOCALES" :key="item.code">{{ item.label }}</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+          <router-link class="admin-link" to="/login">{{ t('nav.admin') }}</router-link>
           <button
             class="menu-button"
             type="button"
-            aria-label="打开导航"
+            :aria-label="t('nav.openMenu')"
             aria-controls="mobile-navigation"
             :aria-expanded="mobileOpen"
             @click="mobileOpen = !mobileOpen"
@@ -46,7 +57,7 @@
           </button>
         </div>
       </div>
-      <nav v-if="mobileOpen" id="mobile-navigation" class="mobile-nav app-container" aria-label="移动端导航">
+      <nav v-if="mobileOpen" id="mobile-navigation" class="mobile-nav app-container" :aria-label="t('nav.mobileNav')">
         <router-link
           v-for="item in navigation"
           :key="item.to"
@@ -57,9 +68,20 @@
           :aria-current="isNavigationActive(item) ? 'page' : undefined"
           @click="mobileOpen = false"
         >
-          {{ item.label }}
+          {{ t(`nav.${item.key}`) }}
         </router-link>
-        <router-link class="mobile-admin-link" to="/login" @click="mobileOpen = false">管理后台</router-link>
+        <a-dropdown :trigger="['click']" placement="bottomRight">
+          <button class="lang-button lang-button--mobile" type="button" :aria-label="t('nav.language')" @click="mobileOpen = false">
+            <global-outlined />
+            <span class="lang-code">{{ currentLocale.toUpperCase() }}</span>
+          </button>
+          <template #overlay>
+            <a-menu :selected-keys="[currentLocale]" @click="onLocalePick">
+              <a-menu-item v-for="item in LOCALES" :key="item.code">{{ item.label }}</a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
+        <router-link class="mobile-admin-link" to="/login" @click="mobileOpen = false">{{ t('nav.admin') }}</router-link>
       </nav>
     </header>
 
@@ -77,8 +99,8 @@
 
     <footer class="site-footer">
       <div class="app-container footer-inner">
-        <span>© {{ year }} 时不语之间。保持好奇，持续构建。</span>
-        <div><router-link to="/blog/about">自叙</router-link><router-link to="/blog/categories">拾光</router-link></div>
+        <span>© {{ year }} 时不语之间 · Silent Time。{{ t('footer.tagline') }}</span>
+        <div><router-link to="/blog/about">{{ t('nav.about') }}</router-link><router-link to="/blog/categories">{{ t('nav.light') }}</router-link></div>
       </div>
     </footer>
     <a-back-top :visibility-height="400" />
@@ -88,8 +110,9 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { resolveBlogNav } from '@/utils/blogNav'
+import { LOCALES, currentLocale, setLocale, t } from '@/i18n'
 
 const router = useRouter()
 const route = useRoute()
@@ -106,13 +129,18 @@ const cachedBlogViews = computed(() =>
     .map((item) => item.name)
 )
 const navigation = [
-  { key: 'home', label: '此间', to: '/blog' },
-  { key: 'book', label: '书遇', to: '/blog/blogdynamic' },
-  { key: 'light', label: '拾光', to: '/blog/categories' },
-  { key: 'about', label: '自叙', to: '/blog/about' }
+  { key: 'home', to: '/blog' },
+  { key: 'book', to: '/blog/blogdynamic' },
+  { key: 'light', to: '/blog/categories' },
+  { key: 'about', to: '/blog/about' }
 ]
 const activeNav = computed(() => resolveBlogNav(route))
 const isSearchPage = computed(() => route.name === 'BlogSearch')
+
+function onLocalePick({ key }) {
+  setLocale(key)
+  mobileOpen.value = false
+}
 
 function search() {
   if (!query.value) return
@@ -172,6 +200,9 @@ watch(() => route.query.keyword, (keyword) => {
 .quick-search input::placeholder { color: #8d857a; }
 .admin-link { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--blog-text); color: #fffaf2; font-size: 12px; font-weight: 750; line-height: 40px; transition: background-color .28s ease; }
 .admin-link:hover { background: #10202f; }
+.lang-button { display: flex; height: 40px; align-items: center; gap: 5px; padding: 0 11px; border: 1px solid var(--blog-line); border-radius: 999px; background: rgb(255 253 248 / 84%); color: var(--blog-text-soft); font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .28s ease, color .28s ease; }
+.lang-button:hover { border-color: var(--blog-accent); color: var(--blog-accent-strong); }
+.lang-code { font-variant-numeric: tabular-nums; letter-spacing: .06em; }
 .menu-button { display: none; width: 44px; height: 44px; border: 1px solid var(--blog-line); border-radius: 12px; background: var(--blog-paper); color: var(--blog-text); }
 .mobile-nav { display: none; margin-top: 8px; padding: 12px; border: 1px solid var(--blog-line); border-radius: 18px; background: rgb(255 250 242 / 96%); box-shadow: 0 24px 60px rgb(89 61 34 / 18%); }
 .mobile-admin-link { display: none; }
@@ -185,7 +216,7 @@ watch(() => route.query.keyword, (keyword) => {
 .page-enter-active, .page-leave-active { transition: opacity var(--transition-fast), transform var(--transition-fast); }
 .page-enter-from { opacity: 0; transform: translateY(5px); }
 .page-leave-to { opacity: 0; }
-@media (max-width: 960px) { .site-header-panel { grid-template-columns: minmax(150px, 1fr) auto; } .desktop-nav, .admin-link { display: none; } .menu-button, .mobile-nav { display: flex; } .mobile-nav { flex-direction: column; gap: 4px; } .mobile-admin-link { display: flex; min-height: 44px; align-items: center; justify-content: center; margin-top: 5px; background: var(--blog-text); color: #fffaf2 !important; font-weight: 750; } }
+@media (max-width: 960px) { .site-header-panel { grid-template-columns: minmax(150px, 1fr) auto; } .desktop-nav, .admin-link { display: none; } .menu-button, .mobile-nav { display: flex; } .mobile-nav { flex-direction: column; gap: 4px; } .mobile-admin-link { display: flex; min-height: 44px; align-items: center; justify-content: center; margin-top: 5px; background: var(--blog-text); color: #fffaf2 !important; font-weight: 750; } .lang-button--mobile { min-height: 44px; justify-content: center; margin-top: 5px; width: 100%; } }
 @media (max-width: 620px) { .blog-shell { --header-top: 8px; --header-height: 66px; } .site-header-panel { width: calc(100% - 20px); min-height: 58px; gap: 7px; padding-inline: 10px; } .brand { flex: 0 0 auto; } .brand-mark { width: 38px; height: 38px; } .header-actions { min-width: 0; flex: 1 1 auto; gap: 6px; } .quick-search { flex: 1 1 auto; width: auto; min-width: 0; max-width: none; height: 40px; padding: 0 11px; } .quick-search input { width: 100%; min-width: 0; font-size: 13px; } .menu-button { flex: 0 0 40px; width: 40px; height: 40px; } .brand small { display: none; } .footer-inner { align-items: flex-start; flex-direction: column; justify-content: center; } }
 @media (max-width: 390px) { .brand > span:last-child { display: none; } .site-header-panel { grid-template-columns: auto minmax(0, 1fr); } .quick-search { height: 36px; padding-inline: 10px; } .quick-search-button { flex-basis: 16px; width: 16px; height: 16px; } .quick-search input { font-size: 12px; } }
 </style>

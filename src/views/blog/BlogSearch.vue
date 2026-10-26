@@ -112,7 +112,7 @@
       <div class="search-history" v-if="searchHistory.length > 0 && !searchPerformed">
         <div class="history-header">
           <h3>搜索历史</h3>
-          <a-button type="link" @click="clearSearchHistory">清空</a-button>
+          <a-button type="link" @click="clearSearchHistory">{{ t('search.clear') }}</a-button>
         </div>
         <div class="history-items">
           <a-tag
@@ -132,7 +132,7 @@
       <!-- 热门搜索 -->
       <div class="popular-searches" v-if="popularSearches.length > 0 && !searchPerformed">
         <div class="popular-header">
-          <h3>热门搜索</h3>
+          <h3>{{ t('search.hot') }}</h3>
         </div>
         <div class="popular-items">
           <a-tag 
@@ -159,7 +159,7 @@
           <h2 v-else>按筛选条件找到的内容</h2>
         </div>
         <div class="result-heading-meta">
-          <span class="result-count">{{ loading ? '检索中' : `找到 ${total} 条` }}</span>
+          <span class="result-count">{{ loading ? '…' : t('search.total', { n: total }) }}</span>
           <a-radio-group v-if="searchResults.length > 0" v-model:value="viewMode" button-style="solid" size="small" class="view-mode-toggle">
             <a-radio-button value="list">
               <unordered-list-outlined />
@@ -263,7 +263,7 @@
             show-quick-jumper
             show-size-changer
             :pageSizeOptions="['10', '20', '50', '100']"
-            :showTotal="(total) => `共 ${total} 条`"
+            :showTotal="(total) => t('search.total', { n: total })"
             @change="handlePageChange"
           />
         </div>
@@ -274,6 +274,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { t } from '@/i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   SearchOutlined,

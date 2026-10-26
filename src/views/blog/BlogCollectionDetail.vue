@@ -1,11 +1,11 @@
 <template>
   <main class="collection-detail cinematic-page">
     <div v-if="loadError" class="detail-error" role="alert">
-      <p class="detail-error__title">获取合集数据失败</p>
-      <p class="detail-error__desc">{{ loadError }}</p>
+      <p class="detail-error__title">{{ t('collection.loadError') }}</p>
+      <p class="detail-error__desc">{{ loadError || t('collection.notFound') }}</p>
       <div class="detail-error__actions">
-        <a-button type="primary" :loading="retrying" @click="fetchCollection">重试</a-button>
-        <router-link to="/blog/categories" class="back-link">← 返回拾光</router-link>
+        <a-button type="primary" :loading="retrying" @click="fetchCollection">{{ t('common.retry') }}</a-button>
+        <router-link to="/blog/categories" class="back-link">{{ t('collection.back') }}</router-link>
       </div>
     </div>
     <div v-else-if="collection" class="detail-inner">
@@ -26,21 +26,21 @@
       <section class="catalog" aria-label="合集目录">
         <div class="catalog-toolbar">
           <span class="catalog-label">目录 · Catalog</span>
-          <div class="sort-toggle" role="group" aria-label="合集排序方式">
+          <div class="sort-toggle" role="group" :aria-label="t('collection.sortAria')">
             <button
               type="button"
               class="sort-option"
               :class="{ 'sort-option--active': sortMode === 'oldest' }"
               :aria-pressed="sortMode === 'oldest'"
               @click="sortMode = 'oldest'"
-            >从最早看起</button>
+            >{{ t('collection.sortOldest') }}</button>
             <button
               type="button"
               class="sort-option"
               :class="{ 'sort-option--active': sortMode === 'latest' }"
               :aria-pressed="sortMode === 'latest'"
               @click="sortMode = 'latest'"
-            >从最新看起</button>
+            >{{ t('collection.sortLatest') }}</button>
           </div>
         </div>
         <router-link
@@ -52,15 +52,15 @@
           <span class="row-index">{{ String(index + 1).padStart(2, '0') }}</span>
           <span class="row-body">
             <span class="row-title">{{ item.title }}</span>
-            <span class="row-meta">{{ formatDate(item.createdAt) }} · {{ item.viewCount }} 次阅读</span>
+            <span class="row-meta">{{ formatDate(item.createdAt) }} · {{ item.viewCount }} {{ t('common.reads') }}</span>
           </span>
           <span class="row-arrow">→</span>
         </router-link>
-        <p v-if="!collection.items.length" class="catalog-empty">这个合集的第一篇还在路上，先去其他分类逛逛。</p>
+        <p v-if="!collection.items.length" class="catalog-empty">{{ t('collection.empty') }}</p>
       </section>
 
       <footer class="detail-footer">
-        <router-link to="/blog/categories" class="back-link">← 返回拾光</router-link>
+        <router-link to="/blog/categories" class="back-link">{{ t('collection.back') }}</router-link>
       </footer>
     </div>
   </main>
@@ -68,6 +68,7 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
+import { t } from '@/i18n'
 import { useRoute } from 'vue-router'
 import { getBlogCollectionDetail } from '@/api/blog'
 import { useAppStore } from '@/stores/app'

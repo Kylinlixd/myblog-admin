@@ -18,13 +18,20 @@
       </Teleport>
       <header class="article-header">
         <router-link class="article-origin" :to="readingOrigin.to">{{ readingOrigin.label }}</router-link>
-        <h1 class="dynamic-title">{{ dynamic.title }}</h1>
+        <h1 class="dynamic-title">{{ displayTitle }}</h1>
         <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
         <div class="dynamic-meta">
           <span class="dynamic-date">{{ formatDate(dynamic.created_at) }}</span>
           <span>{{ dynamic.views || 0 }} 阅读</span>
           <span aria-label="阅读时长">{{ readingMinutes }} 分钟阅读</span>
           <span v-if="dynamic.category?.name">{{ dynamic.category.name }}</span>
+        </div>
+        <div v-if="translationBanner" class="mt-banner" :class="`mt-banner--${translationBanner.kind}`" role="status">
+          <span class="mt-banner__badge">{{ translationBanner.title }}</span>
+          <span class="mt-banner__text">{{ translationBanner.text }}</span>
+          <button v-if="translationBanner.retryable" type="button" class="mt-banner__retry" @click="fetchTranslation">
+            {{ t('common.retry') }}
+          </button>
         </div>
       </header>
 
@@ -145,7 +152,7 @@
           <!-- 正文、标签、相邻文章和评论共用同一张内容卡片。 -->
           <div class="comment-section">
             <div class="comment-header">
-              <h3>评论 ({{ commentTotal }})</h3>
+              <h3>{{ t('detail.comments') }} ({{ commentTotal }})</h3>
             </div>
 
             <div class="comment-form">
@@ -168,13 +175,13 @@
                         <span>回复 @{{ target.nickname || '匿名用户' }}</span>
                         <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
                       </div>
-                      <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count placeholder="请输入回复内容" />
+                      <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count :placeholder="t('detail.replyPlaceholder')" />
                       <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
                     </div>
                   </template>
                 </CommentThread>
               </div>
-              <div v-else class="no-comments">暂无评论，快来发表第一条评论吧！</div>
+              <div v-else class="no-comments">{{ t('detail.noComments') }}</div>
             </div>
 
             <div v-if="commentList && commentList.length > 0" class="comment-pagination">
@@ -212,7 +219,8 @@
 <script setup>
 import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, onUpdated, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getBlogDynamicDetail, getBlogCollectionDetail, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
+import { getBlogDynamicDetail, getBlogCollectionDetail, getDynamicTranslation, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
+import { currentLocale, t } from '@/i18n'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
@@ -287,7 +295,28 @@ const route = useRoute()
 const appStore = useAppStore()
 const userStore = useUserStore()
 const dynamic = ref(null)
-const renderedArticleContent = computed(() => renderMarkdown(dynamic.value?.content || ''))
+// 翻译层：中文显示原文，其他语言走 /translation/ 接口（首次生成较慢，结果缓存在后端）
+const translationState = ref({ status: 'idle', data: null })
+const isZhLocale = computed(() => currentLocale.value === 'zh')
+const displayTitle = computed(() => (
+  !isZhLocale.value && translationState.value.status === 'ready'
+    ? translationState.value.data.title
+    : dynamic.value?.title || ''
+))
+const displayContent = computed(() => (
+  !isZhLocale.value && translationState.value.status === 'ready'
+    ? translationState.value.data.content
+    : dynamic.value?.content || ''
+))
+const renderedArticleContent = computed(() => renderMarkdown(displayContent.value))
+const translationBanner = computed(() => {
+  if (isZhLocale.value || !dynamic.value) return null
+  const { status } = translationState.value
+  if (status === 'loading') return { kind: 'loading', title: t('detail.machineTitle'), text: t('detail.translating') }
+  if (status === 'failed') return { kind: 'failed', title: t('detail.machineTitle'), text: t('detail.mtFailed'), retryable: true }
+  if (status === 'ready') return { kind: 'ready', title: t('detail.machineTitle'), text: t('detail.mtNotice') }
+  return null
+})
 const unavailableMediaUrls = ref(new Set())
 const adjacent = ref({ prev: null, next: null })
 const seriesNav = ref(null)
@@ -756,6 +785,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
   dynamic.value = null
   unavailableMediaUrls.value = new Set()
   detailErrorKind.value = ''
+  translationState.value = { status: 'idle', data: null }
   commentList.value = []
   commentTotal.value = 0
   commentPage.value = 1
@@ -826,6 +856,45 @@ watch(() => route.params.id, (nextId, previousId) => {
     fetchDynamicDetail(nextId)
   }
 })
+
+// 语言切换或换文章后拉取对应译文；中文始终读原文，接口失败回退原文并提示可重试
+let translationRequestSequence = 0
+async function fetchTranslation() {
+  if (!dynamic.value || isZhLocale.value) return
+  const dynamicId = dynamic.value.id
+  const requestSequence = ++translationRequestSequence
+  translationState.value = { status: 'loading', data: null }
+  try {
+    const response = await getDynamicTranslation(dynamicId, currentLocale.value)
+    if (requestSequence !== translationRequestSequence) return
+    if (response?.code === 200 && response.data) {
+      translationState.value = { status: 'ready', data: response.data }
+      document.title = `${response.data.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
+    } else {
+      translationState.value = { status: 'failed', data: null }
+    }
+  } catch (error) {
+    if (requestSequence !== translationRequestSequence) return
+    console.error('获取文章翻译失败:', error)
+    translationState.value = { status: 'failed', data: null }
+  }
+}
+
+watch([currentLocale, () => dynamic.value?.id], () => {
+  if (!dynamic.value) return
+  if (isZhLocale.value) {
+    translationState.value = { status: 'idle', data: null }
+    document.title = `${dynamic.value.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
+    return
+  }
+  fetchTranslation()
+})
+
+watch(renderedArticleContent, () => {
+  // 译文替换正文后重新收集标题/图片/代码块，刷新目录与查看器
+  if (dynamic.value) void syncArticleNavigation()
+})
+
 onMounted(() => {
   resetArticleScrollPosition()
   fetchDynamicDetail(route.params.id)
@@ -845,6 +914,15 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* 机翻状态横幅：中文原文不显示；loading/failed/ready 三态 */
+.mt-banner { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-top: 14px; padding: 9px 14px; border: 1px solid #ead8c7; border-radius: 12px; background: rgb(255 250 242 / 88%); font-size: 12.5px; }
+.mt-banner__badge { flex: 0 0 auto; padding: 2px 9px; border-radius: 999px; background: #f7e2cf; color: #a44e25; font-size: 11px; font-weight: 750; }
+.mt-banner__text { color: #7d695c; }
+.mt-banner__retry { border: 0; padding: 0; background: none; color: #b85e2d; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: underline; }
+.mt-banner--loading .mt-banner__badge { animation: mt-pulse 1.4s ease-in-out infinite; }
+.mt-banner--failed { border-color: #e8c9c2; }
+.mt-banner--failed .mt-banner__badge { background: #f6ded9; color: #9c3d2e; }
+@keyframes mt-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
 .dynamic-detail-container {
   width: 100%;
   margin: 0;
