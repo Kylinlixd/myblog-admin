@@ -73,4 +73,17 @@ describe('ArticleImageLightbox', () => {
     expect(document.querySelector('.image-lightbox__image').style.transform).toContain('scale(1)')
     wrapper.unmount()
   })
+
+  it('解锁后以显式 instant 方式滚回原位置，避免 iOS 橡皮筋回弹', async () => {
+    const scrollSpy = jest.spyOn(window, 'scrollTo').mockImplementation(() => {})
+    const wrapper = mountViewer()
+    expect(document.body.style.position).toBe('fixed')
+    await wrapper.setProps({ open: false })
+    expect(document.body.style.position).toBe('')
+    // 等双 rAF 落定
+    await new Promise((resolve) => setTimeout(resolve, 160))
+    expect(scrollSpy).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' })
+    scrollSpy.mockRestore()
+    wrapper.unmount()
+  })
 })

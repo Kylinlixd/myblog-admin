@@ -406,7 +406,13 @@ const unlockPage = () => {
   document.body.style.left = ''
   document.body.style.right = ''
   document.body.style.width = ''
-  window.scrollTo(0, scrollTop)
+  // iOS 特有：fixed 解除后，浏览器会把「内容回弹」和「滚回原位」拆成异步滚动，
+  // 产生橡皮筋式连续跳动。先让布局落定一帧，再用显式 instant 一次性归位。
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollTop, left: 0, behavior: 'instant' })
+    })
+  })
   if (restoreFocus instanceof HTMLElement) restoreFocus.focus?.({ preventScroll: true })
   restoreFocus = null
 }
