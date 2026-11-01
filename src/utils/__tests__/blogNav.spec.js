@@ -8,6 +8,7 @@ describe('resolveBlogNav', () => {
     expect(resolveBlogNav(route('BlogDynamic'))).toBe('book')
     expect(resolveBlogNav(route('BlogCategories'))).toBe('light')
     expect(resolveBlogNav(route('BlogAbout'))).toBe('about')
+    expect(resolveBlogNav(route('BlogTools'))).toBe('tools')
   })
 
   it('treats collection and category detail as part of 拾光', () => {

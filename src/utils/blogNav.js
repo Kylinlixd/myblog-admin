@@ -8,7 +8,8 @@ const NAV_BY_ROUTE_NAME = {
   BlogCategories: 'light',
   BlogCategoryDetail: 'light',
   BlogCollectionDetail: 'light',
-  BlogAbout: 'about'
+  BlogAbout: 'about',
+  BlogTools: 'tools'
 }
 
 // 拾光里的文章、标签会带 ?from=light，让阅读过程中导航仍停在拾光；

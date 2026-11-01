@@ -104,6 +104,16 @@ const routes = [
         }
       },
       {
+        path: 'tools',
+        name: 'BlogTools',
+        component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogTools.vue'),
+        meta: {
+          title: '御器',
+          keepAlive: true,
+          requiresAuth: false
+        }
+      },
+      {
         path: 'search',
         name: 'BlogSearch',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogSearch.vue'),

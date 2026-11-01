@@ -1,0 +1,494 @@
+[
+  {
+    "term": "集合框架：List、Set、Map 的选型与坑",
+    "def": "从一次导出接口被 ArrayList 拖垮讲起，说清 Collection 体系、HashMap 扩容、equals/hashCode 契约、遍历删除与不可变集合，附一张选型表。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-collections-guide"
+  },
+  {
+    "term": "Java 并发基础：线程、锁与 JMM",
+    "def": "从一次库存超卖和一次 jstack 死锁讲起，说清线程生命周期、锁升级、volatile 与 JMM、ThreadLocal、死锁排查和线程池参数，附可运行代码与上线自查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-concurrency-foundations"
+  },
+  {
+    "term": "Cookie、Session 与登录态：从 JSESSIONID 到 JWT",
+    "def": "多实例部署后为何反复掉登录？本篇讲透 Cookie 属性、Session 原理、分布式 Session、JWT 签名，以及 CSRF 与续期注销链路。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-ee-cookie-session-auth"
+  },
+  {
+    "term": "文件上传下载：multipart、存储与安全",
+    "def": "从售后凭证上传的连环事故讲起：multipart 如何解析、大小与类型两道闸门、临时文件何时消失、本地盘与对象存储的取舍、路径穿越与下载头、断点续传和缓存头。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-ee-file-upload-download"
+  },
+  {
+    "term": "HTTP 与 Servlet：请求响应、生命周期与 Filter",
+    "def": "从一次支付回调的 405 和乱码讲起，拆开 HTTP 报文结构与方法语义，讲清 Servlet 生命周期与并发模型，再处理参数编码、转发与重定向的取舍、Filter 与 Listener 的分工，最后手写一个最小 REST 接口。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-ee-http-servlet"
+  },
+  {
+    "term": "接口幂等与缓存：重复提交、并发与一致性",
+    "def": "从连点下单和支付回调重发两起事故讲起，说清幂等键、去重表、SETNX、Token、乐观锁与 ETag，以及缓存穿透击穿雪崩和缓存数据库一致性，附可运行代码与排查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-ee-idempotency-cache"
+  },
+  {
+    "term": "JDBC 与连接池：事务、批处理与 SQL 注入",
+    "def": "从一次连接池耗尽讲起，讲透 DriverManager 与 DataSource 的取舍、注入防御、隔离级别、池参数与批处理映射，附排查步骤。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-ee-jdbc-connection-pool"
+  },
+  {
+    "term": "REST 接口设计：Spring MVC、状态码与统一响应",
+    "def": "从一次『什么错都返回 200』的接口改造讲起，把资源建模、参数绑定与校验、状态码分工、分页排序、统一响应与错误码、版本化和 OpenAPI 的落地讲清楚，附检查清单与排查步骤。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-ee-rest-spring-mvc"
+  },
+  {
+    "term": "异常、日志与调试：把错误变成可行动的信息",
+    "def": "从一行没有异常栈的线上报错讲起：分清受检与非受检异常的责任，用自动关闭资源保住主异常、用 cause 保住根因，让日志带上可行动的上下文，把断点与排查清单变成习惯。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-exceptions-debugging"
+  },
+  {
+    "term": "泛型与类型擦除：通配符、PECS 与桥方法",
+    "def": "从一次 ClassCastException 事故切入，讲清泛型的设计动机、类型擦除的真实边界、上下界通配符与 PECS 的取舍，拆解桥方法的成因，并用通用 Result 与分页封装给出可直接落地的写法。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-generics-type-erasure"
+  },
+  {
+    "term": "IO 与 NIO：文件、编码、缓冲与大文件处理",
+    "def": "从一次对账文件的乱码与 OOM 事故讲起，说清字节流与字符流的分界、乱码的成因、缓冲的价值、Files/Path 的用法、NIO 与内存映射、大文件按行处理和原子移动。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-io-nio-files"
+  },
+  {
+    "term": "面向对象：类、接口、继承与组合怎么选",
+    "def": "从订单模型讲透类、封装、继承、多态与接口的取舍，给出组合优于继承的判据、record 与 sealed 的用法，以及选型表和踩坑清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-oop-modeling"
+  },
+  {
+    "term": "反射、注解与动态代理：框架的底层魔法",
+    "def": "从订单系统两次注解失效的事故切入，讲透 Class 对象与三种获取方式、Method/Field 调用与 setAccessible 的边界、注解保留策略、JDK 代理与 CGLIB 的取舍，最后手写一个能跑的迷你 DI 与事务代理，并给出一份排查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-reflection-annotation-proxy"
+  },
+  {
+    "term": "基础语法与类型系统：把 Java 的规矩一次讲透",
+    "def": "从订单结算的精度事故讲起，把八个基本类型、变量作用域、溢出与浮点、字符串、数组、== 与 equals、var 边界串成一条线，配可运行代码与排查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-syntax-type-system"
+  },
+  {
+    "term": "JDK 安装与工具链：从 javac 到第一个程序",
+    "def": "从 JDK 21 安装与 JAVA_HOME 配置讲起，用 Hello World 走通编译运行，拆解包名与 classpath，并给出「找不到主类」「版本不对」的排查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/java-toolchain-first-program"
+  },
+  {
+    "term": "微服务拆分：边界、粒度与团队契约",
+    "def": "从订单系统的一次三表耦合讲起，用限界上下文和业务能力两条线找服务边界，讲透数据归属、契约版本、分布式事务预告与绞杀者式渐进拆分，附可运行代码、对比表与检查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/microservice-decomposition"
+  },
+  {
+    "term": "分布式锁：Redis、Redisson 与 ZooKeeper",
+    "def": "从一次线上重复扣款讲起：SET NX PX 怎么一条命令搞定互斥与过期、误删和续期如何配合、Redisson 看门狗的真实边界、ZooKeeper 临时顺序节点的排队模型，附锁粒度、幂等兜底、故障演练剧本与排查步骤。",
+    "cat": "后端",
+    "source": "/blog/dynamics/microservice-distributed-lock"
+  },
+  {
+    "term": "容器化部署：Docker 与 Compose 入门",
+    "def": "从一次 OOMKilled 的预发事故讲起，讲清镜像分层、多阶段构建、JVM 容器内存、Compose 编排与健康检查，以及镜像瘦身和安全该做到哪一步。",
+    "cat": "后端",
+    "source": "/blog/dynamics/microservice-docker-compose"
+  },
+  {
+    "term": "可观测性：日志、指标与链路追踪",
+    "def": "用三条腿讲清可观测性：结构化日志与 MDC traceId、Micrometer 接 Prometheus、OpenTelemetry 链路传播，附告警设计与一次超时排查复盘。",
+    "cat": "后端",
+    "source": "/blog/dynamics/microservice-observability"
+  },
+  {
+    "term": "OpenFeign：超时、重试、熔断与降级",
+    "def": "从一次订单接口被下游拖垮的下午讲起：连接池、三层超时、重试边界、熔断与降级、舱壁隔离、日志和 traceId 透传，附对比表格、踩坑清单与一套固定的排查顺序。",
+    "cat": "后端",
+    "source": "/blog/dynamics/microservice-openfeign-resilience"
+  },
+  {
+    "term": "服务注册与发现：Nacos、心跳与负载均衡",
+    "def": "从订单服务扩缩容后流量打偏的事故讲起：CAP 选型、Nacos 四层模型、心跳与健康检查、客户端负载均衡、优雅上下线，附踩坑清单与故障演练步骤。",
+    "cat": "后端",
+    "source": "/blog/dynamics/microservice-registry-nacos"
+  },
+  {
+    "term": "AOP 与代理：切面是怎么织进方法调用的",
+    "def": "从下单接口返回值变成 null 的事故讲起：切点表达式、五种通知、JDK 代理与 CGLIB、自调用失效、通知顺序，最后收一份 @Around 踩坑清单与排查步骤。",
+    "cat": "后端",
+    "source": "/blog/dynamics/spring-aop-proxy"
+  },
+  {
+    "term": "Spring Boot 配置：Profile、外部化与校验",
+    "def": "从一次配置被旧文件压住的线上事故讲起，讲清 PropertySource 优先级链、Profile 叠加、配置绑定与启动校验、密钥外置，以及刷新换不掉的那部分配置。",
+    "cat": "后端",
+    "source": "/blog/dynamics/spring-boot-config-profiles"
+  },
+  {
+    "term": "全局异常与统一响应：让错误可预期",
+    "def": "从联调只见白页讲起：把错误收进统一出口，按调用方视角定错误码，覆盖校验异常、ProblemDetail 与 traceId，说清前端契约，也说明为什么不能吞异常。",
+    "cat": "后端",
+    "source": "/blog/dynamics/spring-global-exception-response"
+  },
+  {
+    "term": "IoC 与 DI：Bean 的生命周期到底怎么走",
+    "def": "沿 refresh() 的执行顺序，讲清 BeanDefinition、注入方式、作用域、初始化与销毁回调、BeanPostProcessor 与条件装配，附对比表与踩坑清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/spring-ioc-bean-lifecycle"
+  },
+  {
+    "term": "Spring Security：认证、授权与过滤器链",
+    "def": "从一条请求在过滤器链上的闯关次序讲起，拆清认证管理器、密码编码与两层授权的分工，再落到 JWT 集成、CORS/CSRF 取舍和 401/403 的分层排查。",
+    "cat": "后端",
+    "source": "/blog/dynamics/spring-security-auth"
+  },
+  {
+    "term": "算法基础：排序、二分、递归与动态规划",
+    "def": "从自提点接口变慢的场景讲起，用可运行的 Go 与 Python 代码拆开复杂度、三种排序、二分边界、回溯剪枝、贪心反例、DP 状态定义与图遍历，最后给出一套刷题和排查清单。",
+    "cat": "网络技术",
+    "source": "/blog/dynamics/algorithms"
+  },
+  {
+    "term": "认证与授权：会话、RBAC 与最小权限",
+    "def": "从一次越权事故讲起，分清认证与授权，比较 Session 与 JWT 的取舍，用 Go、Python、SQL 实现会话、令牌与 RBAC 判定，附密码重置、多因素与最小权限清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/authn-authz"
+  },
+  {
+    "term": "密码学基础：哈希、加盐与加密",
+    "def": "从一次口令存储整改讲起：哈希与加密的分界、盐与慢哈希的作用、bcrypt 与 argon2 参数怎么定、对称与非对称和数字签名的分工，附排查清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/crypto-password-hash"
+  },
+  {
+    "term": "数据结构：数组、链表、树与堆",
+    "def": "从一次接口 P99 从 40 毫秒涨到 8 秒的事故讲起：数组、链表、栈队列、哈希表、二叉树、堆、图各自的取舍，大 O 忽略的常数与缓存代价，附选型表、踩坑清单与排查顺序。",
+    "cat": "网络技术",
+    "source": "/blog/dynamics/data-structures"
+  },
+  {
+    "term": "数据库原理：B+ 树、事务与日志",
+    "def": "从一条变慢 60 倍的列表 SQL 出发：讲清页与行、B+ 树扇出、回表与覆盖索引、WAL 与 redo/undo、MVCC 的清理代价和优化器估错，附引擎选型与排查清单。",
+    "cat": "网络技术",
+    "source": "/blog/dynamics/db-internals"
+  },
+  {
+    "term": "Docker 部署：镜像、容器与 Compose",
+    "def": "从镜像分层与容器可写层讲起，用 Python 与 Go 的多阶段构建把镜像压小，再覆盖数据卷、容器网络、Compose、健康检查、日志轮转与资源限制，附上线检查清单与五步排查。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/docker-deploy"
+  },
+  {
+    "term": "前端部署：产物、缓存、CDN 与灰度",
+    "def": "从构建产物、contenthash 与缓存头讲起，对比 Nginx 与对象存储托管，给出 CDN 刷新、按用户灰度、软链回滚和运行时环境变量的具体做法，附发布检查清单与白屏五步排查。",
+    "cat": "前端",
+    "source": "/blog/dynamics/frontend-deploy"
+  },
+  {
+    "term": "前端测试：单测、组件测试与 E2E",
+    "def": "从三层测试的职责划分讲到 Vitest 配置、组件断言、MSW 拦网络、Playwright 关键路径、覆盖率分母与 CI 门禁，附 flaky 归因清单与排查步骤。",
+    "cat": "前端",
+    "source": "/blog/dynamics/frontend-testing"
+  },
+  {
+    "term": "Go 基础：变量、类型与流程控制",
+    "def": "从一次配置工具迁移的踩坑讲起，讲透变量与短声明、零值、iota、if/for/switch、多返回值与 error、defer 与 panic，以及 Go 只有值传递。",
+    "cat": "后端",
+    "source": "/blog/dynamics/go-basics-syntax-types"
+  },
+  {
+    "term": "切片与 Map：扩容、引用与常见坑",
+    "def": "从大缓冲被小切片钉住内存讲起，说清数组与切片的差别、cap 与 append 扩容、切片共享与拷贝、map 桶结构与扩容、遍历乱序和并发写 panic，附检查清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/go-slices-maps"
+  },
+  {
+    "term": "结构体与接口：Go 的面向对象",
+    "def": "用真实故障讲透 Go 的面向对象：结构体与方法的复制语义、值/指针接收者怎么选、接口隐式实现与方法集、any 与类型断言、嵌入的边界，以及 typed nil 接口的排查步骤。",
+    "cat": "后端",
+    "source": "/blog/dynamics/go-structs-interfaces"
+  },
+  {
+    "term": "包、模块与测试：把 Go 项目组织好",
+    "def": "从包边界怎么切、go mod 版本怎么定、internal 怎么守边界讲起，落到表驱动测试、benchmark、覆盖率与 CI 的具体写法与踩坑。",
+    "cat": "后端",
+    "source": "/blog/dynamics/go-testing-modules"
+  },
+  {
+    "term": "模块化与打包：ESM、Vite、Webpack 与 Rollup",
+    "def": "从一次白屏事故讲起，讲清模块格式的加载差异、动态导入的拆包边界、打包器里加载器与插件的分工、开发服务器为何不打包、摇树优化的前提、分包策略与源码映射取舍，附常见坑清单和六步排查。",
+    "cat": "前端",
+    "source": "/blog/dynamics/js-modules-bundlers"
+  },
+  {
+    "term": "Linux 基础：文件系统与常用命令",
+    "def": "从一次 cat 大日志卡死终端、磁盘显示满却找不到大文件的真实排查讲起，讲清目录树、查看与搜索命令、管道重定向、软硬链接、压缩和磁盘排查，读完能独立上手。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/linux-files-commands"
+  },
+  {
+    "term": "Linux 网络排查：ip、ss、curl 与 tcpdump",
+    "def": "从一次上传大文件偶发超时的排查讲起，用 ip、ss、curl、tcpdump 串起一条证据链，讲清分层定位顺序、端口与防火墙检查、抓包判读方法，并给出可落地的变更检查清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/linux-network-tools"
+  },
+  {
+    "term": "用户、权限与进程管理",
+    "def": "权限只看 uid 和附加组，目录的 x 才是通行证；kill 发的是信号，先让进程收尾再强杀；nohup 挡不住重启，得交给 systemd；排查 CPU 和内存先分清算与等。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/linux-users-processes"
+  },
+  {
+    "term": "大模型推理：Token、采样与显存",
+    "def": "从账单超支、延迟九秒的问答接口讲起，拆开 token 计费、温度与 top-p、KV Cache、上下文窗口、显存估算、批处理、量化与推理框架，给出能照着算、照着查的优化方法。",
+    "cat": "AI与大模型",
+    "source": "/blog/dynamics/llm-inference"
+  },
+  {
+    "term": "机器学习基础：损失、过拟合与评估",
+    "def": "从一次工单预警的翻车讲起：监督与无监督怎么选、三份数据怎么切、损失与指标为何背离、过拟合与偏差方差的处方，以及数据泄漏的检查清单。",
+    "cat": "AI与大模型",
+    "source": "/blog/dynamics/ml-foundations"
+  },
+  {
+    "term": "MySQL 表设计：字段、范式与索引",
+    "def": "从一张金额存成 varchar 的订单表讲起：字段类型怎么选、主键为何影响全表写入、范式与冗余的边界、联合索引与最左前缀、唯一约束兜底并发、时间金额两个雷区，附设计清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/mysql-schema-design"
+  },
+  {
+    "term": "神经网络：反向传播、CNN 与 RNN",
+    "def": "从感知机只能画直线的局限讲起，讲清激活函数、反向传播、优化器、归一化、卷积网络与循环网络的取舍，以及训练卡住时怎么排查，并给出可运行代码。",
+    "cat": "AI与大模型",
+    "source": "/blog/dynamics/neural-networks"
+  },
+  {
+    "term": "Nginx 配置：反向代理、静态资源与 HTTPS",
+    "def": "从安装目录与 location 匹配顺序讲起，拆解反向代理的透传、静态资源缓存、HTTPS 证书链、gzip 与限流的具体配法，并给出错误码对照、五步排查顺序和一份上线前检查清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/nginx-config"
+  },
+  {
+    "term": "npm 与 package.json：依赖、版本与锁文件",
+    "def": "讲清 package.json 各字段谁在读、版本范围怎么算、锁文件为何必须提交、npm 与 pnpm 的目录差异，以及 overrides 和 workspaces 的用法。",
+    "cat": "前端",
+    "source": "/blog/dynamics/npm-package-json"
+  },
+  {
+    "term": "操作系统：进程、内存与 IO",
+    "def": "从一次导出接口 OOM 讲起：进程与线程的真实成本、调度与容器配额、虚拟内存和缺页的账单、文件系统与 IO 模型怎么选，并用可运行代码测出零拷贝省下的拷贝次数。",
+    "cat": "网络技术",
+    "source": "/blog/dynamics/os-memory-process"
+  },
+  {
+    "term": "OWASP Top 10：注入、XSS、CSRF 与越权",
+    "def": "从一次代码评审的拼接 SQL 讲起，拆清注入、XSS、CSRF、SSRF、越权、上传与反序列化的信任边界，给出可运行修复代码、漏洞对照表和提测检查清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/owasp-top10"
+  },
+  {
+    "term": "Python 基础：类型、容器与推导式",
+    "def": "从合并月度报表的脚本讲起：变量只是名字、四种基础类型与容器怎么选、切片解包与推导式怎么写、可变性为何是坑的源头、== 与 is 的分工，以及缩进和编码这两类不报错却致命的错误。",
+    "cat": "后端",
+    "source": "/blog/dynamics/python-basics-types"
+  },
+  {
+    "term": "函数、模块与虚拟环境",
+    "def": "从默认参数被共享、闭包晚绑定两个真实 bug 讲起，拆清参数语义、作用域、import 机制与 venv/uv 依赖锁定，给出一套能照着做的排查顺序。",
+    "cat": "后端",
+    "source": "/blog/dynamics/python-functions-modules"
+  },
+  {
+    "term": "类、数据类与异常处理",
+    "def": "从报表脚本说起：讲清类与实例、继承与多态的取舍、property 与数据类怎么选、魔术方法的触发时机，以及异常体系、四段式捕获、自定义异常与上下文管理器的正确用法。",
+    "cat": "后端",
+    "source": "/blog/dynamics/python-oop-exceptions"
+  },
+  {
+    "term": "pytest 实战：夹具、Mock 与覆盖率",
+    "def": "把 pytest 的六个部件拆开讲清：fixture 作用域怎么选、参数化怎么写、patch 打在哪、临时目录与异常断言怎么用，最后落到覆盖率门槛与 CI 分层。",
+    "cat": "后端",
+    "source": "/blog/dynamics/python-testing"
+  },
+  {
+    "term": "副作用：useEffect 的依赖、清理与闭包",
+    "def": "从监控看板的定时器泄漏讲起：useEffect 的执行时机、依赖数组、清理函数、闭包快照、竞态取消、useRef 与 memo 的边界、严格模式双调用，配对比表格与自查清单。",
+    "cat": "前端",
+    "source": "/blog/dynamics/react-effects"
+  },
+  {
+    "term": "React 入门：JSX、组件与 props",
+    "def": "从 index key 引发的状态错位讲起：JSX 与函数组件的边界、props 与 children 的契约、条件列表与 key 的作用、事件与样式写法，附拆分信号与提测清单。",
+    "cat": "前端",
+    "source": "/blog/dynamics/react-jsx-components"
+  },
+  {
+    "term": "状态与表单：useState 与受控组件",
+    "def": "从输入框里打不出小数点说起：useState 的快照与不可变更新、批处理、受控与非受控的取舍、多字段表单与校验、useReducer 与状态提升。",
+    "cat": "前端",
+    "source": "/blog/dynamics/react-state-forms"
+  },
+  {
+    "term": "React 测试：Vitest + Testing Library",
+    "def": "从假绿用例讲到可维护测试：Vitest 环境与清理、screen 查询、userEvent 交互、异步时序、MSW 拦截请求、Hook 测试与覆盖率，附坑清单与排查步骤。",
+    "cat": "前端",
+    "source": "/blog/dynamics/react-testing"
+  },
+  {
+    "term": "Redis 数据结构：五种类型与内存模型",
+    "def": "从一次内存翻倍的事故讲起：五种类型的真实编码与内存账、过期与淘汰的分工、大 key 与热 key 的查法与治法、Pipeline 和 Lua 的边界，最后给选型表与排查顺序。",
+    "cat": "后端",
+    "source": "/blog/dynamics/redis-data-structures"
+  },
+  {
+    "term": "安全响应头：CSP、HSTS 与 CORS",
+    "def": "从浏览器默认宽松的安全模型讲起，拆解 CSP 指令与 nonce、HSTS 的不可逆承诺、CORS 预检与 Cookie 属性，附 Nginx 和 Go 配置示例与五步排查。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/security-headers"
+  },
+  {
+    "term": "安全思维：威胁建模与纵深防御",
+    "def": "从一次内部接口越权讲起，先把资产、威胁、漏洞、风险四个概念拆开，再用 STRIDE 与信任边界做威胁建模，最后落到最小权限、纵深防御和开发流程里的检查点。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/security-threat-model"
+  },
+  {
+    "term": "Shell 脚本：变量、循环与健壮性",
+    "def": "从一次产出空备份的脚本讲起，说清 shebang、变量与引号的坑、条件判断、循环、函数数组与管道，再逐条拆开 set -euo pipefail 的四处盲区，补上 trap 日志、cron 排错步骤与上线前检查清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/shell-scripting"
+  },
+  {
+    "term": "SQL 查询基础：JOIN、聚合与子查询",
+    "def": "从一次报表金额对不上的排查讲起，讲清 SQL 的执行顺序，JOIN 时一行代表什么，分组与筛选的分工，NULL 带来的静默错误，窗口函数的用法，以及结果不对时的五步排查法。",
+    "cat": "后端",
+    "source": "/blog/dynamics/sql-select-join"
+  },
+  {
+    "term": "事务与隔离级别：ACID、MVCC 与锁",
+    "def": "两个会话复现脏读、不可重复读与幻读，讲清 ACID 的实现、四种隔离级别的取舍、MVCC 版本链与 ReadView、行锁与间隙锁规则、死锁重试和事务边界，附排查 SQL 与清单。",
+    "cat": "后端",
+    "source": "/blog/dynamics/transactions-isolation"
+  },
+  {
+    "term": "Transformer：注意力、位置编码与 GPT",
+    "def": "从一次顺序被重排却毫无察觉的训练说起：token 与 embedding、自注意力与多头、位置编码、残差与 LayerNorm，直到 GPT 与 BERT 的分岔，附可运行代码。",
+    "cat": "AI与大模型",
+    "source": "/blog/dynamics/transformer-attention"
+  },
+  {
+    "term": "组件化：props、emit、slot 与生命周期",
+    "def": "从一个 700 行的规格编辑器拆起，讲清组件拆分信号、属性校验与单向数据流、子向父通信与双向绑定语法糖、作用域插槽、生命周期清理时机、跨层传值的响应式陷阱，附选型表和排查清单。",
+    "cat": "前端",
+    "source": "/blog/dynamics/vue3-components"
+  },
+  {
+    "term": "响应式原理：ref、reactive 与 watch",
+    "def": "从改完金额页面不动说起：ref 与 reactive 怎么选、解构为何丢响应式、computed 与 watch 的边界、深浅层与 nextTick，附原理速览与排查步骤。",
+    "cat": "前端",
+    "source": "/blog/dynamics/vue3-reactivity"
+  },
+  {
+    "term": "Vue 3 入门：模板、指令与事件",
+    "def": "从一次商品筛选页的排查讲起，讲透 Vue 3 的模板编译、插值、v-bind/v-if/v-for、事件修饰符、class/style 绑定、表单 v-model 与组件注册，附指令对照表、八个模板坑和一套排查顺序，帮你把模板这层真正吃透。",
+    "cat": "前端",
+    "source": "/blog/dynamics/vue3-template-basics"
+  },
+  {
+    "term": "Vue 组件测试：Vitest + Vue Test Utils",
+    "def": "从环境配置讲到覆盖率：mount/shallowMount 取舍、props/emit 断言、异步与 nextTick、接口 mock、组合式函数测试，附常见坑与排查步骤。",
+    "cat": "前端",
+    "source": "/blog/dynamics/vue3-testing"
+  },
+  {
+    "term": "SpringBoot 事务传播机制踩坑总结",
+    "def": "用三个真实事故讲透事务传播：七种方式怎么选、自调用为何失效、吞异常为何炸出 UnexpectedRollbackException。",
+    "cat": "后端",
+    "source": "/blog/dynamics/spring-tx-propagation"
+  },
+  {
+    "term": "蓝队应急：日志、检测与溯源清单",
+    "def": "从 auth.log、nginx、auditd 三处日志复原一次可疑登录：时间线怎么合、IOC 怎么提、隔离取证什么顺序，以及能落地的检测规则与演练清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-blue-team"
+  },
+  {
+    "term": "Burp Suite：拦截、重放与越权复现",
+    "def": "在本地授权靶场用 Burp 走一遍越权测试：代理与证书怎么配、请求怎么拦截重放、参数怎么篡改，IDOR 如何确认，以及越权检测矩阵、自动化边界和修复回归用例怎么写。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-burp"
+  },
+  {
+    "term": "SSH 弱口令复现：Hydra、Medusa 与防护",
+    "def": "在隔离靶场复现 SSH 弱口令：讲清口令字典与尝试速率的取舍，对比两款主流工具，再从认证日志溯源，用自动封禁、密钥登录和口令策略完成防守闭环。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-hydra"
+  },
+  {
+    "term": "搭建 Kali 靶场：授权边界、网络模式与快照",
+    "def": "从零搭一套能反复重来的 Kali 实验靶场：NAT 与 Host-only 的隔离差别、静态地址与连通性四层验证、快照回滚、RoE 授权边界，附检测加固清单与收工清理。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-lab-setup"
+  },
+  {
+    "term": "Metasploit 实战：vsftpd 后门利用与 Meterpreter",
+    "def": "在自有靶场复现 vsftpd 2.3.4 后门：msfconsole 的 search/use/set/run、Meterpreter 会话，附检测与加固清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-metasploit"
+  },
+  {
+    "term": "Nmap 资产发现：从存活主机到服务指纹",
+    "def": "用一台 Kali 和一台 Metasploitable2，走完存活发现、SYN 扫描、服务指纹、NSE 探测与 XML 输出的全流程，并把扫描结果翻译成防守侧的检测与加固动作。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-nmap-recon"
+  },
+  {
+    "term": "Linux 提权排查：SUID、sudo 与内核面",
+    "def": "在授权靶场走完 Linux 提权排查全流程：信息收集、SUID/SGID、sudo 与 GTFOBins、计划任务、内核面与容器边界，最后回到取证与加固。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-privesc"
+  },
+  {
+    "term": "内网资产与弱口令初筛：Angry IP 与常见服务",
+    "def": "用 Angry IP Scanner 与 nmap 对靶场网段做资产与弱口令初筛，讲清端口默认配置风险、验证的停止条件、台账字段设计与误报识别，附检测与加固清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-scan-hosts"
+  },
+  {
+    "term": "SQL 注入复现：从 DVWA 手工注入到 sqlmap",
+    "def": "在授权靶场复现 DVWA 的 SQL 注入：手工 UNION 定位回显位，sqlmap 查看数据库指纹，再用盲注与 tamper 验证 WAF 盲区，最后落到日志检测与参数化修复。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-sqli"
+  },
+  {
+    "term": "文件上传漏洞与 WebShell：从 DVWA 到检测",
+    "def": "靶场复现 DVWA 文件上传漏洞，拆解后缀、MIME 与内容校验的绕过原理，讲清 WebShell 通信形态与工具流量特征，给出日志、流量、文件系统三条检测线与上传目录加固方案。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-webshell"
+  },
+  {
+    "term": "Wireshark 抓包：明文协议与凭据泄露",
+    "def": "用本地靶场复现 FTP、Telnet 与 HTTP 的明文凭据泄露，讲清抓包点如何选择、过滤器如何分工、会话如何重组、加密边界在哪，并给出证据固定与检测加固清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-wireshark"
+  },
+  {
+    "term": "XSS 复现：反射、存储与 Cookie 防护",
+    "def": "在隔离靶场中，从一条 URL 和一条留言复现 DVWA 反射型与存储型 XSS，讲清脚本上下文、编码边界与 Cookie 防护，验证 HttpOnly、CSP 与 BeEF 的实际效果，并给出可落地的检测、修复和加固清单。",
+    "cat": "工程实践",
+    "source": "/blog/dynamics/system-security-xss"
+  }
+]

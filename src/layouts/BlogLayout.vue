@@ -132,7 +132,8 @@ const navigation = [
   { key: 'home', to: '/blog' },
   { key: 'book', to: '/blog/blogdynamic' },
   { key: 'light', to: '/blog/categories' },
-  { key: 'about', to: '/blog/about' }
+  { key: 'about', to: '/blog/about' },
+  { key: 'tools', to: '/blog/tools' }
 ]
 const activeNav = computed(() => resolveBlogNav(route))
 const isSearchPage = computed(() => route.name === 'BlogSearch')

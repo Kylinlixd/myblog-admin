@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "gen:terms": "node scripts/gen-blog-terms.mjs",
+    "predev": "node scripts/gen-blog-terms.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/gen-blog-terms.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "test": "jest",

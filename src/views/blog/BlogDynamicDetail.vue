@@ -115,6 +115,13 @@
           </section>
 
           <div class="dynamic-footer">
+            <router-link
+              :to="{ path: '/blog/tools', query: { tool: 'random-lex', article: route.params.id } }"
+              class="learn-in-tools"
+            >
+              <thunderbolt-outlined />
+              {{ t('tools.openArticle') }}
+            </router-link>
             <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
               <span class="tag-label">标签：</span>
               <router-link 
@@ -233,7 +240,8 @@ import {
   FileWordOutlined,
   FileZipOutlined,
   LeftOutlined,
-  RightOutlined
+  RightOutlined,
+  ThunderboltOutlined
 } from '@ant-design/icons-vue'
 import hljs from 'highlight.js/lib/core'
 import bash from 'highlight.js/lib/languages/bash'
@@ -1039,6 +1047,25 @@ onBeforeUnmount(() => {
   border-top: 1px solid #eee;
   padding-top: 1.5rem;
   margin-top: 2rem;
+}
+
+.learn-in-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 16px;
+  border: 1px solid var(--blog-line);
+  border-radius: 999px;
+  background: rgb(255 253 248 / 84%);
+  color: var(--blog-accent-strong);
+  font-size: 13px;
+  font-weight: 650;
+  margin-bottom: 14px;
+  transition: border-color 0.28s, background-color 0.28s;
+}
+.learn-in-tools:hover {
+  border-color: var(--blog-accent);
+  background: rgb(200 111 55 / 8%);
 }
 
 /* 附件区：正文之后、标签之前。图片/音视频不算附件，这里只放可下载的文件。 */
