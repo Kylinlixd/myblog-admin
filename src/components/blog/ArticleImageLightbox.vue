@@ -391,6 +391,8 @@ const lockPage = () => {
   locked = true
   scrollTop = window.scrollY
   restoreFocus = document.activeElement
+  // 锁屏前同样堵住浏览器的自动滚动恢复，避免解锁时异步恢复与归位滚动打架
+  if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
   document.body.style.position = 'fixed'
   document.body.style.top = `-${scrollTop}px`
   document.body.style.left = '0'
@@ -406,12 +408,12 @@ const unlockPage = () => {
   document.body.style.left = ''
   document.body.style.right = ''
   document.body.style.width = ''
-  // iOS 特有：fixed 解除后，浏览器会把「内容回弹」和「滚回原位」拆成异步滚动，
-  // 产生橡皮筋式连续跳动。先让布局落定一帧，再用显式 instant 一次性归位。
+  // iOS 特有：fixed 解除后浏览器会异步恢复滚动，与我们的归位滚动打架，
+  // 形成连续跳动。先堵住浏览器的自动恢复，再在下一帧用显式 instant
+  // 一次性归位——只留一帧(约 16ms)的过渡，既不弹也不延迟。
+  if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
   requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollTop, left: 0, behavior: 'instant' })
-    })
+    window.scrollTo({ top: scrollTop, left: 0, behavior: 'instant' })
   })
   if (restoreFocus instanceof HTMLElement) restoreFocus.focus?.({ preventScroll: true })
   restoreFocus = null

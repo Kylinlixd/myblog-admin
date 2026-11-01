@@ -74,7 +74,7 @@ describe('ArticleImageLightbox', () => {
     wrapper.unmount()
   })
 
-  it('解锁后以显式 instant 方式滚回原位置，避免 iOS 橡皮筋回弹', async () => {
+  it('解锁后单帧内以显式 instant 滚回原位置，且禁用浏览器自动滚动恢复', async () => {
     const scrollSpy = jest.spyOn(window, 'scrollTo').mockImplementation(() => {})
     const wrapper = mountViewer()
     expect(document.body.style.position).toBe('fixed')
@@ -83,6 +83,9 @@ describe('ArticleImageLightbox', () => {
     // 等双 rAF 落定
     await new Promise((resolve) => setTimeout(resolve, 160))
     expect(scrollSpy).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'instant' })
+    if ('scrollRestoration' in window.history) {
+      expect(window.history.scrollRestoration).toBe('manual')
+    }
     scrollSpy.mockRestore()
     wrapper.unmount()
   })
