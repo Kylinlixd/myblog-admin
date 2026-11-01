@@ -100,7 +100,7 @@
     <footer class="site-footer">
       <div class="app-container footer-inner">
         <span>© {{ year }} 时不语之间 · Silent Time。{{ t('footer.tagline') }}</span>
-        <div><router-link to="/blog/about">{{ t('nav.about') }}</router-link><router-link to="/blog/categories">{{ t('nav.light') }}</router-link></div>
+        <div><router-link to="/blog/about">{{ t('nav.about') }}</router-link><router-link to="/blog/categories">{{ t('nav.light') }}</router-link><router-link to="/blog/tools">{{ t('nav.tools') }}</router-link></div>
       </div>
     </footer>
     <a-back-top :visibility-height="400" />
