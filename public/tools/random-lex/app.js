@@ -291,7 +291,10 @@
     defEl.classList.toggle('dim', !!dim);
     // 博客词条：渲染「阅读原文」链接，target=_top 跳出 iframe 跳回文章
     if (termSourceEl) {
-      if (t.source) {
+      // 只在落定后（非 dim 状态）显示 source 链接，避免抽取动画期间
+      // 博客词条（有 source）和内置词条（无 source）交替出现时
+      // 卡片高度频繁变化导致页面上下抖动
+      if (!dim && t.source) {
         termSourceEl.innerHTML = '<a class="term-source-link" target="_top" href="' + esc(t.source) + '">阅读原文 →</a>';
       } else {
         termSourceEl.innerHTML = '';
