@@ -2,7 +2,7 @@
 // 将 .content 下的博客文章浓缩成词条，输出到 public/tools/random-lex/blog-terms.json
 // 词条格式：{ term: 标题, def: 摘要, cat: 分类, source: '/blog/dynamics/<slug>' }
 // 在 predev / prebuild 阶段自动运行，保证新增文章自动注入工具词库。
-import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { join, relative, dirname, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -62,6 +62,13 @@ function collectMdFiles(dir) {
 }
 
 function main() {
+  // .content/ 是本地未跟踪的内容目录，CI 克隆后不存在。
+  // 此时跳过生成，使用仓库中已提交的 blog-terms.json。
+  if (!existsSync(CONTENT_DIR)) {
+    console.log('[gen-blog-terms] .content/ 不存在，跳过生成（使用已有 blog-terms.json）')
+    return
+  }
+
   const files = collectMdFiles(CONTENT_DIR)
   const terms = []
   const seen = new Set()
