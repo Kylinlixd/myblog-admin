@@ -72,6 +72,19 @@
       if (pendingFocusSlug) focusTermBySlug(pendingFocusSlug);
       return;
     }
+
+    // 清除旧版 blog-terms.json 生成的 slug URL 词条（source 中 id 非纯数字）
+    // 这些词条的「阅读原文」链接指向 /blog/dynamics/<slug>，部署站 API 不识别，会 404
+    var filtered = terms.filter(function (t) {
+      if (!t.source) return true;
+      var idPart = t.source.replace('/blog/dynamics/', '');
+      return /^\d+$/.test(idPart);
+    });
+    if (filtered.length !== terms.length) {
+      terms = filtered;
+      saveTerms();
+    }
+
     try {
       // 分页拉取博客文章列表，每页 200 条
       fetch('/api/blog/dynamics/?page=1&page_size=200', { cache: 'no-cache' })
