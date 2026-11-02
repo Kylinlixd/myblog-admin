@@ -115,13 +115,15 @@
           </section>
 
           <div class="dynamic-footer">
-            <router-link
-              :to="{ path: '/blog/tools', query: { tool: 'random-lex', article: route.params.id } }"
+            <a
+              href="/tools/random-lex/index.html"
+              target="_blank"
+              rel="noopener noreferrer"
               class="learn-in-tools"
             >
               <thunderbolt-outlined />
               {{ t('tools.openArticle') }}
-            </router-link>
+            </a>
             <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
               <span class="tag-label">标签：</span>
               <router-link 
