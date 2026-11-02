@@ -118,9 +118,9 @@ watch(openedTool, (tool) => {
 </script>
 
 <style scoped>
-.tools-page { padding-bottom: 60px; }
+.tools-page { padding-block: 16px 40px; }
 
-.tools-hero { padding: 8px 0 36px; }
+.tools-hero { padding: 0 0 36px; }
 .tools-hero h1 { font-size: 38px; font-weight: 750; letter-spacing: -0.01em; margin: 10px 0 16px; color: var(--blog-text); }
 .tools-hero .hero-intro { font-size: 15px; line-height: 1.7; color: var(--blog-text-soft); max-width: 56ch; margin: 0; }
 
