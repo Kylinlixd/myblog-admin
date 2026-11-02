@@ -61,48 +61,87 @@
   }
 
   /* ================= 博客词条联动 ================= */
-  // 从 blog-terms.json 合并博客文章词条（仅追加不存在的，不覆盖用户已修改的 def/cat）
-  // 失败（file:// 离线 / 网络错误）时静默忽略，工具照常独立运行。
+  // 从博客 API 获取文章列表生成词条（仅追加不存在的，不覆盖用户已修改的 def/cat）
+  // 使用文章的数字 id 构造 source URL，确保「阅读原文」链接可用。
+  // 失败（file:// 离线 / 网络错误 / API 不可用）时静默忽略，工具照常独立运行。
   var blogMergeDone = false;
   var pendingFocusSlug = null;
 
   function mergeBlogTerms() {
     if (blogMergeDone) {
-      // 已合并过，直接处理可能排队的 focus 请求
       if (pendingFocusSlug) focusTermBySlug(pendingFocusSlug);
       return;
     }
     try {
-      fetch('blog-terms.json', { cache: 'no-cache' })
+      // 分页拉取博客文章列表，每页 200 条
+      fetch('/api/blog/dynamics/?page=1&page_size=200', { cache: 'no-cache' })
         .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function (list) {
-          if (!Array.isArray(list)) return;
-          var added = 0;
-          list.forEach(function (bt) {
-            if (!bt || !bt.term) return;
+        .then(function (resp) {
+          var data = resp && resp.data ? resp.data : resp;
+          var items = data && data.items ? data.items : [];
+          var total = data && data.total ? data.total : 0;
+          var pageSize = 200;
+          var totalPages = Math.ceil(total / pageSize);
+
+          // 收集所有页面的文章
+          function fetchPage(page) {
+            if (page > totalPages || page <= 0) {
+              // 所有页面拉取完毕，合并词条
+              return Promise.resolve();
+            }
+            return fetch('/api/blog/dynamics/?page=' + page + '&page_size=' + pageSize, { cache: 'no-cache' })
+              .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+              .then(function (resp2) {
+                var d2 = resp2 && resp2.data ? resp2.data : resp2;
+                var its = d2 && d2.items ? d2.items : [];
+                its.forEach(function (article) {
+                  if (!article || !article.id) return;
+                  var term = String(article.title || '').trim();
+                  if (!term) return;
+                  var exists = terms.some(function (t) {
+                    return t.term.toLowerCase() === term.toLowerCase();
+                  });
+                  if (!exists) {
+                    terms.push({
+                      term: term,
+                      def: String(article.summary || article.excerpt || '').trim(),
+                      cat: '博客',
+                      source: '/blog/dynamics/' + article.id
+                    });
+                  }
+                });
+                return fetchPage(page + 1);
+              });
+          }
+
+          // 第一页已经拿到，先处理再拉后续页
+          items.forEach(function (article) {
+            if (!article || !article.id) return;
+            var term = String(article.title || '').trim();
+            if (!term) return;
             var exists = terms.some(function (t) {
-              return t.term.toLowerCase() === String(bt.term).toLowerCase();
+              return t.term.toLowerCase() === term.toLowerCase();
             });
             if (!exists) {
               terms.push({
-                term: String(bt.term),
-                def: String(bt.def || ''),
-                cat: String(bt.cat || '随笔'),
-                source: String(bt.source || '')
+                term: term,
+                def: String(article.summary || article.excerpt || '').trim(),
+                cat: '博客',
+                source: '/blog/dynamics/' + article.id
               });
-              added++;
             }
           });
-          if (added > 0) {
-            saveTerms();
-            renderList(listSearch.value);
-          }
-          blogMergeDone = true;
-          // 合并完成后处理排队的 focus 请求
-          if (pendingFocusSlug) focusTermBySlug(pendingFocusSlug);
+
+          return fetchPage(2).then(function () {
+            if (terms.length > 0) {
+              saveTerms();
+              renderList(listSearch.value);
+            }
+            blogMergeDone = true;
+            if (pendingFocusSlug) focusTermBySlug(pendingFocusSlug);
+          });
         })
         .catch(function () {
-          // file:// 或网络不可用：静默忽略，标记完成避免反复重试
           blogMergeDone = true;
         });
     } catch (e) {
