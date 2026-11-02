@@ -100,7 +100,7 @@
     <footer class="site-footer">
       <div class="app-container footer-inner">
         <span>© {{ year }} 时不语之间 · Silent Time。{{ t('footer.tagline') }}</span>
-        <div><router-link to="/blog/about">{{ t('nav.about') }}</router-link><router-link to="/blog/categories">{{ t('nav.light') }}</router-link><router-link to="/blog/tools">{{ t('nav.tools') }}</router-link></div>
+        <div><router-link to="/blog/tools">{{ t('nav.tools') }}</router-link><router-link to="/blog/categories">{{ t('nav.light') }}</router-link><router-link to="/blog/about">{{ t('nav.about') }}</router-link></div>
       </div>
     </footer>
     <a-back-top :visibility-height="400" />
@@ -132,8 +132,8 @@ const navigation = [
   { key: 'home', to: '/blog' },
   { key: 'book', to: '/blog/blogdynamic' },
   { key: 'light', to: '/blog/categories' },
-  { key: 'about', to: '/blog/about' },
-  { key: 'tools', to: '/blog/tools' }
+  { key: 'tools', to: '/blog/tools' },
+  { key: 'about', to: '/blog/about' }
 ]
 const activeNav = computed(() => resolveBlogNav(route))
 const isSearchPage = computed(() => route.name === 'BlogSearch')
