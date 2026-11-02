@@ -1,7 +1,6 @@
 <template>
   <div class="tools-page cinematic-page">
     <section class="tools-hero app-container">
-      <p class="eyebrow"><span></span>{{ t('tools.eyebrow') }}</p>
       <h1>{{ t('nav.tools') }}</h1>
       <p class="hero-intro">{{ t('tools.intro') }}</p>
     </section>
