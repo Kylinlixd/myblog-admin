@@ -1007,5 +1007,8 @@
   "shell.noPermission": "No tiene permisos para acceder a esta página",
   "shell.routeLoadFailed": "Error al cargar la página",
   "fileMgr.geoUnknown": "Desconocido",
-  "logMgr.localDbHit": "Coincidencia local"
+  "logMgr.localDbHit": "Coincidencia local",
+  "update.title": "Nueva versión disponible",
+  "update.desc": "El sitio se actualizó; actualice la página para usar la última versión.",
+  "update.action": "Actualizar ahora"
 }

@@ -999,5 +999,8 @@
   "shell.noPermission": "このページにアクセスする権限がありません",
   "shell.routeLoadFailed": "ページの読み込みに失敗しました",
   "fileMgr.geoUnknown": "不明",
-  "logMgr.localDbHit": "ローカル DB でヒット"
+  "logMgr.localDbHit": "ローカル DB でヒット",
+  "update.title": "新バージョンがあります",
+  "update.desc": "サイトが更新されました。更新して最新版をご利用ください。",
+  "update.action": "今すぐ更新"
 }

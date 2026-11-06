@@ -1007,5 +1007,8 @@
   "shell.noPermission": "You do not have permission to access this page",
   "shell.routeLoadFailed": "Failed to load the page",
   "fileMgr.geoUnknown": "Unknown",
-  "logMgr.localDbHit": "Matched in local DB"
+  "logMgr.localDbHit": "Matched in local DB",
+  "update.title": "New version available",
+  "update.desc": "The site has been updated. Refresh to get the latest version.",
+  "update.action": "Refresh now"
 }

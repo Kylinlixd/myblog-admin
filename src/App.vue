@@ -19,11 +19,12 @@
 
 <script setup>
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAppStore } from '@/stores/app'
 import { currentLocale, t } from '@/i18n'
+import { startAppVersionCheck, stopAppVersionCheck } from '@/composables/useAppVersionCheck'
 
 const router = useRouter()
 const appStore = useAppStore()
@@ -57,6 +58,10 @@ watch(currentLocale, async (code) => {
     console.warn(`[i18n] antd 语言包 ${code} 加载失败，继续使用当前语言`, error)
   }
 }, { immediate: true })
+
+// 部署新版本后提示已打开的旧页面刷新；旧 chunk 失效时自动刷新自救
+startAppVersionCheck()
+onBeforeUnmount(stopAppVersionCheck)
 
 const cachedViews = computed(() =>
   router
