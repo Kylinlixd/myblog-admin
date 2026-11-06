@@ -19,7 +19,7 @@
 
 <script setup>
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAppStore } from '@/stores/app'
