@@ -1,6 +1,7 @@
 import request from '@/utils/request'
 import { clearRequestCache } from '@/services/http/publicRequestCache'
 import { unwrapApiResponse } from './response'
+import { t } from '@/i18n'
 
 export function normalizeCollectionResponse(response) {
   const payload = unwrapApiResponse(response)
@@ -70,39 +71,39 @@ export async function getAdminCollectionList(params) {
 }
 
 export async function getAdminCollectionDetail(id) {
-  return unwrapApiResponse(await request.get(`/api/collections/${id}/`), '合集加载失败')
+  return unwrapApiResponse(await request.get(`/api/collections/${id}/`), t('collectionMgr.loadFailed'))
 }
 
 export async function getCollectionOptions() {
-  return unwrapApiResponse(await request.get('/api/collections/options/'), '合集选项加载失败')
+  return unwrapApiResponse(await request.get('/api/collections/options/'), t('collectionMgr.optionsLoadFailed'))
 }
 
 export async function createCollection(data) {
-  const result = await unwrapApiResponse(await request.post('/api/collections/', data), '合集创建失败')
+  const result = await unwrapApiResponse(await request.post('/api/collections/', data), t('collectionMgr.createFailed'))
   clearRequestCache()
   return result
 }
 
 export async function updateCollection(id, data) {
-  const result = await unwrapApiResponse(await request.put(`/api/collections/${id}/`, data), '合集更新失败')
+  const result = await unwrapApiResponse(await request.put(`/api/collections/${id}/`, data), t('collectionMgr.updateFailed'))
   clearRequestCache()
   return result
 }
 
 export async function deleteCollection(id) {
-  const result = await unwrapApiResponse(await request.delete(`/api/collections/${id}/`), '合集删除失败')
+  const result = await unwrapApiResponse(await request.delete(`/api/collections/${id}/`), t('collectionMgr.deleteFailed'))
   clearRequestCache()
   return result
 }
 
 export async function getCollectionItems(id) {
-  return unwrapApiResponse(await request.get(`/api/collections/${id}/items/`), '合集文章加载失败')
+  return unwrapApiResponse(await request.get(`/api/collections/${id}/items/`), t('collectionMgr.itemsLoadFailed'))
 }
 
 export async function saveCollectionItems(id, items) {
   const result = await unwrapApiResponse(
     await request.put(`/api/collections/${id}/items/`, { items }),
-    '章节顺序保存失败'
+    t('collectionMgr.orderSaveFailed')
   )
   clearRequestCache()
   return result

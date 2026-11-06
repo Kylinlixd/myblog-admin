@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 const blue = '#315bea'
 const purple = '#b0a0ee'
 const tooltip = { trigger: 'axis', confine: true, backgroundColor: '#fff', borderColor: '#e5eaf2', textStyle: { color: '#26344b' }, axisPointer: { type: 'line', lineStyle: { color: '#cbd5e1' } } }
@@ -11,8 +13,8 @@ export function publishingOption(daily) {
     legend: { top: 4, right: 8, icon: 'roundRect', itemWidth: 14, itemHeight: 4, textStyle: { color: '#68758b', fontSize: 11 } },
     grid: { top: 64, right: 44, bottom: 30, left: 40 },
     xAxis: xAxis(daily),
-    yAxis: [{ ...axis, name: '文章 / 篇' }, { ...axis, name: '访问 / PV', splitLine: { show: false } }],
-    series: [line('发布文章', daily.map(item => item.count), blue), { ...line('访问 PV', daily.map(item => item.pv), purple), yAxisIndex: 1 }]
+    yAxis: [{ ...axis, name: t('dashboard.chart.articleAxis') }, { ...axis, name: t('dashboard.chart.pvAxis'), splitLine: { show: false } }],
+    series: [line(t('dashboard.chart.published'), daily.map(item => item.count), blue), { ...line(t('dashboard.chart.pv'), daily.map(item => item.pv), purple), yAxisIndex: 1 }]
   }
 }
 
@@ -20,6 +22,6 @@ export function visitsOption(daily) {
   return {
     tooltip, animationDuration: 350, grid: { top: 18, right: 12, bottom: 26, left: 38 },
     xAxis: xAxis(daily), yAxis: { ...axis, splitNumber: 2 },
-    series: [{ ...line('访问 PV', daily.map(item => item.pv), blue), areaStyle: { color: '#edf2ff', opacity: 0.8 } }]
+    series: [{ ...line(t('dashboard.chart.pv'), daily.map(item => item.pv), blue), areaStyle: { color: '#edf2ff', opacity: 0.8 } }]
   }
 }

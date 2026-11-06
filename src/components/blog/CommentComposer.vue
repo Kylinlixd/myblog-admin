@@ -2,25 +2,25 @@
   <form class="comment-composer" @submit.prevent="handleSubmit">
     <div class="comment-composer__fields">
       <label class="comment-composer__field">
-        <span>昵称：</span>
-        <input v-model="form.nickname" type="text" maxlength="50" placeholder="怎么称呼你" autocomplete="nickname" />
+        <span>{{ t('component.nickname') }}</span>
+        <input v-model="form.nickname" type="text" maxlength="50" :placeholder="t('component.nicknamePlaceholder')" autocomplete="nickname" />
       </label>
       <label class="comment-composer__field">
-        <span>邮箱：</span>
-        <input v-model="form.email" type="email" maxlength="254" placeholder="用于接收回复" autocomplete="email" />
+        <span>{{ t('component.email') }}</span>
+        <input v-model="form.email" type="email" maxlength="254" :placeholder="t('component.emailPlaceholder')" autocomplete="email" />
       </label>
       <label class="comment-composer__field">
-        <span>网址：</span>
-        <input v-model="form.website" type="url" maxlength="500" placeholder="你的主页地址" autocomplete="url" />
+        <span>{{ t('component.website') }}</span>
+        <input v-model="form.website" type="url" maxlength="500" :placeholder="t('component.websitePlaceholder')" autocomplete="url" />
       </label>
     </div>
     <label class="comment-composer__field comment-composer__field--content">
-      <textarea v-model="form.content" rows="4" maxlength="500" placeholder="欢迎评论" aria-label="评论内容" />
+      <textarea v-model="form.content" rows="4" maxlength="500" :placeholder="t('component.contentPlaceholder')" :aria-label="t('component.contentLabel')" />
     </label>
     <p v-if="errorMessage" class="comment-composer__error" role="alert">{{ errorMessage }}</p>
     <div class="comment-composer__footer">
-      <span>信息仅用于展示评论，均可留空</span>
-      <button type="submit" :disabled="loading">{{ loading ? '提交中…' : submitLabel }}</button>
+      <span>{{ t('component.identityHint') }}</span>
+      <button type="submit" :disabled="loading">{{ loading ? t('component.submitting') : (submitLabel || t('component.commentSubmit')) }}</button>
     </div>
   </form>
 </template>
@@ -28,10 +28,11 @@
 <script setup>
 import { onMounted, reactive, ref, watch } from 'vue'
 import { readCommentIdentity, saveCommentIdentity } from '@/utils/commentIdentity'
+import { t } from '@/i18n'
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
-  submitLabel: { type: String, default: '发表评论' },
+  submitLabel: { type: String, default: '' },
   resetKey: { type: [String, Number], default: 0 }
 })
 const emit = defineEmits(['submit'])
@@ -54,7 +55,7 @@ watch(() => props.resetKey, () => {
 const handleSubmit = () => {
   const content = form.content.trim()
   if (!content) {
-    errorMessage.value = '请输入评论内容'
+    errorMessage.value = t('component.pleaseEnterContent')
     return
   }
   errorMessage.value = ''

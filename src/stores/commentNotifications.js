@@ -1,6 +1,7 @@
 import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref } from 'vue'
 import { defineStore } from 'pinia'
 import request from '@/services/http/client'
+import { t } from '@/i18n'
 
 export const useCommentNotificationsStore = defineStore('commentNotifications', () => {
   const unreadCount = ref(null)
@@ -34,7 +35,7 @@ export const useCommentNotificationsStore = defineStore('commentNotifications', 
       initialized.value = Boolean(data.initialized)
       error.value = ''
     } catch (reason) {
-      if (version === requestVersion) error.value = reason?.message || '未读评论加载失败'
+      if (version === requestVersion) error.value = reason?.message || t('dashboard.unreadLoadFailed')
     } finally {
       if (version === requestVersion) loading.value = false
     }

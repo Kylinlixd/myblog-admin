@@ -48,7 +48,7 @@ describe('enhanceCodeBlocks', () => {
     expect(windows[1]).not.toHaveClass('is-collapsed')
     expect(windows[0].querySelector('[data-blog-code-action="collapse"]')).toHaveAttribute('aria-expanded', 'false')
     expect(windows[0].querySelector('.blog-code-run-footer')).toHaveClass('is-collapsed')
-    expect(root.querySelectorAll('[data-blog-code-bound="true"]')).toHaveLength(2)
+    expect(root.querySelectorAll('[data-blog-code-bound="zh"]')).toHaveLength(2)
   })
 
   it('uses the textarea fallback when Clipboard API is unavailable', async () => {

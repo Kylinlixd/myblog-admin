@@ -1,7 +1,9 @@
+import { t } from '@/i18n'
+
 // 客户端 SEO 元信息：本站是无 SSR 的 SPA，Google 等会执行 JS 的爬虫
 // 依赖这里写入的 per-page meta / canonical / JSON-LD；不执行 JS 的
 // 社交爬虫只能读到 index.html 里的站点级静态标签。
-const SITE_NAME = '时不语之间'
+const SITE_NAME = t('common.siteName')
 const DEFAULT_OG_IMAGE = '/apple-touch-icon.png'
 
 function upsertMeta(attrName, attrKey, content) {
@@ -55,7 +57,7 @@ export function excerptFromMarkdown(markdown, maxLength = 120) {
 export function applyArticleSeoMeta({ title, description, path, publishedAt, image }) {
   const origin = window.location.origin
   const fullTitle = title ? `${title}｜${SITE_NAME}` : document.title
-  const desc = description || '个人博客文章'
+  const desc = description || t('footer.tagline')
   const url = `${origin}${path}`
   const ogImage = image || `${origin}${DEFAULT_OG_IMAGE}`
 

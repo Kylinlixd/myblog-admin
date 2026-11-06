@@ -1,4 +1,6 @@
-export function unwrapApiResponse(response, errorMessage = '请求失败') {
+import { t } from '@/i18n'
+
+export function unwrapApiResponse(response, errorMessage = t('common.requestFailed')) {
   if (!response || typeof response !== 'object' || Array.isArray(response)) {
     return response
   }

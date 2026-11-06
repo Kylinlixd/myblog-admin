@@ -1,74 +1,74 @@
 <template>
   <div class="admin-page access-log-page">
-    <PageHeader compact title="访问日志与安全防护" subtitle="识别 IP 类型、归属与行为画像，并对风险来源执行人工防护规则。" />
+    <PageHeader compact :title="t('logMgr.pageTitle')" :subtitle="t('logMgr.subtitle')" />
 
     <section v-if="showVisits" class="visits-panel">
-      <div class="visits-heading"><h2>近7天文章访问统计</h2><router-link to="/dashboard">返回仪表盘 &gt;</router-link></div>
-      <p>PV 按成功的文章详情请求统计，UV 按 IP＋浏览器去重；跳出率按30分钟会话估算。</p>
-      <div v-if="visitError" role="alert">{{ visitError }} <a-button @click="loadVisits">重试</a-button></div>
+      <div class="visits-heading"><h2>{{ t('logMgr.visitsHeading') }}</h2><router-link to="/dashboard">{{ t('logMgr.backToDashboard') }} &gt;</router-link></div>
+      <p>{{ t('logMgr.visitsDesc') }}</p>
+      <div v-if="visitError" role="alert">{{ visitError }} <a-button @click="loadVisits">{{ t('common.retry') }}</a-button></div>
       <template v-else-if="visitStats">
         <div class="security-summary">
-          <div class="summary-card"><span>7天总PV</span><strong>{{ visitStats.visits.pv }}</strong></div>
-          <div class="summary-card"><span>7天UV</span><strong>{{ visitStats.visits.uv }}</strong></div>
-          <div class="summary-card"><span>日均阅读</span><strong>{{ visitStats.visits.average }}</strong></div>
-          <div class="summary-card"><span>跳出率（估算）</span><strong>{{ visitStats.visits.bounceRate == null ? '—' : `${visitStats.visits.bounceRate}%` }}</strong></div>
+          <div class="summary-card"><span>{{ t('logMgr.pv7') }}</span><strong>{{ visitStats.visits.pv }}</strong></div>
+          <div class="summary-card"><span>{{ t('logMgr.uv7') }}</span><strong>{{ visitStats.visits.uv }}</strong></div>
+          <div class="summary-card"><span>{{ t('logMgr.dailyAvg') }}</span><strong>{{ visitStats.visits.average }}</strong></div>
+          <div class="summary-card"><span>{{ t('logMgr.bounceRate') }}</span><strong>{{ visitStats.visits.bounceRate == null ? '—' : `${visitStats.visits.bounceRate}%` }}</strong></div>
         </div>
-        <DashboardChart :option="visitsOption(visitStats.daily)" label="近7天文章访问统计" />
+        <DashboardChart :option="visitsOption(visitStats.daily)" :label="t('logMgr.visitsHeading')" />
       </template>
-      <p v-else>正在加载访问统计…</p>
+      <p v-else>{{ t('logMgr.loadingVisits') }}</p>
     </section>
-    <section class="security-summary" aria-label="安全概览">
-      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'profiles' }" type="button" @click="selectSummary('profiles')"><span>活跃 IP</span><strong>{{ overviewValue('active_ips') }}</strong><small>查看 IP 画像 →</small></button>
-      <button class="summary-card summary-card--danger" :class="{ 'summary-card--selected': currentView === 'high-risk' }" type="button" @click="selectSummary('high-risk')"><span>高风险 IP</span><strong>{{ overviewValue('high_risk_ips') }}</strong><small>查看高风险画像 →</small></button>
-      <button class="summary-card summary-card--rule" :class="{ 'summary-card--selected': currentView === 'rules' }" type="button" @click="selectSummary('rules')"><span>生效防护规则</span><strong>{{ overviewValue('active_rules') }}</strong><small>查看规则明细 →</small></button>
-      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'blocks' }" type="button" @click="selectSummary('blocks')"><span>封禁/限流命中</span><strong>{{ overviewValue('blocked_requests') }}</strong><small>查看拦截记录 →</small></button>
+    <section class="security-summary" :aria-label="t('logMgr.securityOverview')">
+      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'profiles' }" type="button" @click="selectSummary('profiles')"><span>{{ t('logMgr.activeIps') }}</span><strong>{{ overviewValue('active_ips') }}</strong><small>{{ t('logMgr.viewIpProfiles') }}</small></button>
+      <button class="summary-card summary-card--danger" :class="{ 'summary-card--selected': currentView === 'high-risk' }" type="button" @click="selectSummary('high-risk')"><span>{{ t('logMgr.highRiskIps') }}</span><strong>{{ overviewValue('high_risk_ips') }}</strong><small>{{ t('logMgr.viewHighRiskProfiles') }}</small></button>
+      <button class="summary-card summary-card--rule" :class="{ 'summary-card--selected': currentView === 'rules' }" type="button" @click="selectSummary('rules')"><span>{{ t('logMgr.activeRules') }}</span><strong>{{ overviewValue('active_rules') }}</strong><small>{{ t('logMgr.viewRuleDetails') }}</small></button>
+      <button class="summary-card" :class="{ 'summary-card--selected': currentView === 'blocks' }" type="button" @click="selectSummary('blocks')"><span>{{ t('logMgr.blockedHits') }}</span><strong>{{ overviewValue('blocked_requests') }}</strong><small>{{ t('logMgr.viewBlockedRecords') }}</small></button>
     </section>
 
     <div v-if="currentView === 'profiles' || currentView === 'high-risk'" class="access-log-toolbar">
       <a-form class="access-log-filters" @submit.prevent="applyFilters">
-        <a-form-item label="IP"><a-input v-model:value="filters.ip" allow-clear placeholder="IP 或 CIDR" /></a-form-item>
-        <a-form-item label="风险">
-          <a-select v-model:value="filters.risk" allow-clear placeholder="全部" style="width: 150px">
-            <a-select-option value="low">低风险</a-select-option>
-            <a-select-option value="medium">中风险</a-select-option>
-            <a-select-option value="high">高风险</a-select-option>
-            <a-select-option value="critical">严重风险</a-select-option>
+        <a-form-item :label="t('logMgr.filterIp')"><a-input v-model:value="filters.ip" allow-clear :placeholder="t('logMgr.ipPlaceholder')" /></a-form-item>
+        <a-form-item :label="t('logMgr.filterRisk')">
+          <a-select v-model:value="filters.risk" allow-clear :placeholder="t('logMgr.allFilter')" style="width: 150px">
+            <a-select-option value="low">{{ t('adminShared.risk.low') }}</a-select-option>
+            <a-select-option value="medium">{{ t('adminShared.risk.medium') }}</a-select-option>
+            <a-select-option value="high">{{ t('adminShared.risk.high') }}</a-select-option>
+            <a-select-option value="critical">{{ t('adminShared.risk.critical') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="网络">
-          <a-select v-model:value="filters.network" allow-clear placeholder="内网 / 公网" style="width: 140px">
-            <a-select-option value="private">内网</a-select-option>
-            <a-select-option value="public">公网</a-select-option>
+        <a-form-item :label="t('logMgr.filterNetwork')">
+          <a-select v-model:value="filters.network" allow-clear :placeholder="t('logMgr.networkPlaceholder')" style="width: 140px">
+            <a-select-option value="private">{{ t('logMgr.networkPrivate') }}</a-select-option>
+            <a-select-option value="public">{{ t('logMgr.networkPublic') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="地区"><a-input v-model:value="filters.region" allow-clear placeholder="国家 / 省份 / 城市" /></a-form-item>
+        <a-form-item :label="t('logMgr.regionLabel')"><a-input v-model:value="filters.region" allow-clear :placeholder="t('logMgr.regionPlaceholder')" /></a-form-item>
         <div class="filter-actions">
-          <a-button @click="resetFilters">重置</a-button>
-          <a-button type="primary" html-type="submit">筛选</a-button>
+          <a-button @click="resetFilters">{{ t('component.reset') }}</a-button>
+          <a-button type="primary" html-type="submit">{{ t('logMgr.applyFilters') }}</a-button>
         </div>
       </a-form>
     </div>
 
     <section v-if="currentView === 'rules'" class="summary-detail-card">
-      <header><div><h2>当前生效防护规则</h2><p>已排除撤销和已过期规则。</p></div></header>
+      <header><div><h2>{{ t('logMgr.rulesTitle') }}</h2><p>{{ t('logMgr.rulesDesc') }}</p></div></header>
       <div v-if="activeRules.length" class="rules-list">
-        <div v-for="rule in activeRules" :key="rule.id" class="rule-summary-row"><a-tag :color="ruleColor(rule.rule_type)">{{ ruleLabel(rule.rule_type) }}</a-tag><strong>{{ rule.target }}</strong><span>{{ rule.reason || '无原因说明' }}</span><small>{{ rule.expires_at ? `至 ${formatDate(rule.expires_at)}` : '长期有效' }}</small></div>
+        <div v-for="rule in activeRules" :key="rule.id" class="rule-summary-row"><a-tag :color="ruleColor(rule.rule_type)">{{ ruleLabel(rule.rule_type) }}</a-tag><strong>{{ rule.target }}</strong><span>{{ rule.reason || t('logMgr.noReason') }}</span><small>{{ rule.expires_at ? t('logMgr.validUntil', { date: formatDate(rule.expires_at) }) : t('logMgr.validForever') }}</small></div>
       </div>
-      <div v-else class="state-box">暂无生效规则</div>
+      <div v-else class="state-box">{{ t('logMgr.noRules') }}</div>
     </section>
     <section v-else-if="currentView === 'blocks'" class="summary-detail-card">
-      <header><div><h2>拦截记录</h2><p>当前仅展示已归因的安全拦截请求；历史日志未记录归因时不会推断为命中。</p></div></header>
-      <div v-if="blockedLoading" class="state-box">正在加载拦截记录…</div>
+      <header><div><h2>{{ t('logMgr.blockedTitle') }}</h2><p>{{ t('logMgr.blockedDesc') }}</p></div></header>
+      <div v-if="blockedLoading" class="state-box">{{ t('logMgr.loadingBlocked') }}</div>
       <div v-else-if="blockedError" class="state-box" role="alert">{{ blockedError }}</div>
       <div v-else-if="blockedLogs.length" class="blocked-log-list">
         <div v-for="log in blockedLogs" :key="log.id" class="blocked-log-row">
-          <strong>{{ log.ip_address || '未识别 IP' }}</strong>
+          <strong>{{ log.ip_address || t('logMgr.unknownIp') }}</strong>
           <code>{{ log.method }} {{ log.path }}</code>
-          <a-tag color="error">{{ log.security_action === 'rate_limited' ? '限流' : '封禁' }}</a-tag>
+          <a-tag color="error">{{ log.security_action === 'rate_limited' ? t('logMgr.rule.rateLimit') : t('logMgr.rule.ban') }}</a-tag>
           <span>{{ formatDate(log.created_at) }}</span>
         </div>
       </div>
-      <div v-else class="state-box">暂无已归因的拦截记录</div>
+      <div v-else class="state-box">{{ t('logMgr.blockedLoadFailed') }}</div>
     </section>
 
     <DataTable v-if="currentView !== 'rules' && currentView !== 'blocks'"
@@ -80,7 +80,7 @@
     >
       <template #ip="{ row }">
         <div class="ip-cell">
-          <strong>{{ row.ip_address || '未识别' }}</strong>
+          <strong>{{ row.ip_address || t('logMgr.unidentified') }}</strong>
           <a-tag :color="ipColor(row.scope)">{{ row.ip_type }}</a-tag>
         </div>
       </template>
@@ -89,8 +89,8 @@
       </template>
       <template #behavior="{ row }">
         <div class="behavior-cell">
-          <strong>总请求：{{ totalRequestsText(row) }}</strong>
-          <small>失败率：{{ failureRateText(row) }}</small>
+          <strong>{{ t('logMgr.totalRequests', { n: totalRequestsText(row) }) }}</strong>
+          <small>{{ t('logMgr.failureRate', { n: failureRateText(row) }) }}</small>
           <a-tag v-if="hasAnomaly(row)" :color="anomalyColor(row.behavior?.risk?.anomaly_level)">{{ anomalyLabel(row.behavior?.risk?.anomaly_level) }}</a-tag>
         </div>
       </template>
@@ -107,13 +107,13 @@
           <a-tag v-for="rule in row.rules" :key="rule.id" :color="ruleColor(rule.rule_type)">
             {{ ruleLabel(rule.rule_type) }}
           </a-tag>
-          <span v-if="!row.rules || !row.rules.length" class="muted">无防护规则</span>
+          <span v-if="!row.rules || !row.rules.length" class="muted">{{ t('logMgr.noRulesApplied') }}</span>
         </div>
       </template>
       <template #action="{ row }">
         <a-space>
-          <a-button size="small" type="primary" ghost @click="openProfile(row)">画像</a-button>
-          <a-button size="small" @click="openRuleModal(row)">添加防护</a-button>
+          <a-button size="small" type="primary" ghost @click="openProfile(row)">{{ t('logMgr.profileButton') }}</a-button>
+          <a-button size="small" @click="openRuleModal(row)">{{ t('logMgr.addProtection') }}</a-button>
         </a-space>
       </template>
     </DataTable>
@@ -128,21 +128,21 @@
     <a-drawer
       v-model:open="drawerOpen"
       :width="Math.min(760, documentWidth - 16)"
-      title="IP 安全画像"
+      :title="t('logMgr.profileModalTitle')"
     >
-      <div v-if="loadingDetail" class="state-box">正在加载画像...</div>
+      <div v-if="loadingDetail" class="state-box">{{ t('logMgr.loadingProfile') }}</div>
       <div v-else-if="selectedProfile" class="profile-detail">
         <section>
-          <h3>归属画像</h3>
+          <h3>{{ t('logMgr.profileGeo') }}</h3>
           <dl class="detail-grid">
             <div><dt>IP</dt><dd>{{ selectedProfile.ip_address }}</dd></div>
-            <div><dt>类型</dt><dd>{{ selectedProfile.ip_type }}</dd></div>
+            <div><dt>{{ t('logMgr.field.type') }}</dt><dd>{{ selectedProfile.ip_type }}</dd></div>
             <div><dt>归属</dt><dd>{{ geoText(selectedProfile) }}</dd></div>
-            <div><dt>风险</dt><dd>{{ riskLabel(selectedProfile.risk_level) }} · {{ selectedProfile.risk_score }} 分</dd></div>
+            <div><dt>{{ t('logMgr.field.risk') }}</dt><dd>{{ riskLabel(selectedProfile.risk_level) }} · {{ selectedProfile.risk_score }} 分</dd></div>
           </dl>
         </section>
         <section>
-          <h3>行为画像</h3>
+          <h3>{{ t('logMgr.profileBehavior') }}</h3>
           <div class="behavior-chips">
             <span>总请求：{{ totalRequestsText(selectedProfile) }}</span>
             <span>认证失败：{{ countText(selectedProfile.behavior?.risk?.auth_failures) }}</span>
@@ -158,55 +158,55 @@
           <p class="risk-reason">安全风险：{{ riskReasonsText(selectedProfile) }}</p>
         </section>
         <section v-if="selectedProfile.rules?.length">
-          <h3>当前防护</h3>
+          <h3>{{ t('logMgr.profileCurrent') }}</h3>
           <div v-for="rule in selectedProfile.rules" :key="rule.id" class="rule-row">
             <a-tag :color="ruleColor(rule.rule_type)">{{ ruleLabel(rule.rule_type) }}</a-tag>
-            <span>{{ rule.reason || '无原因说明' }}</span>
-            <a-button size="small" type="link" danger @click="revokeRule(rule)">撤销</a-button>
+            <span>{{ rule.reason || t('logMgr.noReason') }}</span>
+            <a-button size="small" type="link" danger @click="revokeRule(rule)">{{ t('logMgr.revoke') }}</a-button>
           </div>
         </section>
         <section>
-          <h3>最近请求</h3>
+          <h3>{{ t('logMgr.profileRecent') }}</h3>
           <div v-if="selectedProfile.recent_logs?.length" class="recent-logs">
             <div v-for="log in selectedProfile.recent_logs" :key="log.id" class="log-row">
               <span>{{ log.method }}</span><code>{{ log.path }}</code><a-tag :color="log.status_code < 400 ? 'success' : 'error'">{{ log.status_code }}</a-tag>
             </div>
           </div>
-          <div v-else class="muted">暂无请求记录</div>
+          <div v-else class="muted">{{ t('logMgr.noRequests') }}</div>
         </section>
       </div>
     </a-drawer>
 
-    <a-modal v-model:open="ruleModalOpen" title="添加防护规则" :confirm-loading="savingRule" ok-text="保存规则" @ok="submitRule">
+    <a-modal v-model:open="ruleModalOpen" :title="t('logMgr.ruleModalTitle')" :confirm-loading="savingRule" ok-text="保存规则" @ok="submitRule">
       <a-form layout="vertical">
-        <a-form-item label="目标"><a-input v-model:value="ruleForm.target" disabled /></a-form-item>
-        <a-form-item label="规则类型">
+        <a-form-item :label="t('logMgr.field.target')"><a-input v-model:value="ruleForm.target" disabled /></a-form-item>
+        <a-form-item :label="t('logMgr.field.ruleType')">
           <a-select v-model:value="ruleForm.rule_type">
-            <a-select-option value="whitelist">白名单</a-select-option>
-            <a-select-option value="blacklist">黑名单</a-select-option>
-            <a-select-option value="ban">封禁</a-select-option>
-            <a-select-option value="rate_limit">限流</a-select-option>
+            <a-select-option value="whitelist">{{ t('logMgr.rule.whitelist') }}</a-select-option>
+            <a-select-option value="blacklist">{{ t('logMgr.rule.blacklist') }}</a-select-option>
+            <a-select-option value="ban">{{ t('logMgr.rule.ban') }}</a-select-option>
+            <a-select-option value="rate_limit">{{ t('logMgr.rule.rateLimit') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="攻击等级">
+        <a-form-item :label="t('logMgr.field.attackLevel')">
           <a-select v-model:value="ruleForm.attack_level">
-            <a-select-option value="low">低</a-select-option>
-            <a-select-option value="medium">中</a-select-option>
-            <a-select-option value="high">高</a-select-option>
-            <a-select-option value="critical">严重</a-select-option>
+            <a-select-option value="low">{{ t('logMgr.level.low') }}</a-select-option>
+            <a-select-option value="medium">{{ t('logMgr.level.medium') }}</a-select-option>
+            <a-select-option value="high">{{ t('logMgr.level.high') }}</a-select-option>
+            <a-select-option value="critical">{{ t('logMgr.level.critical') }}</a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item v-if="ruleForm.rule_type === 'ban'" label="封禁方式">
-          <a-checkbox v-model:checked="ruleForm.is_permanent">永久封禁</a-checkbox>
+        <a-form-item v-if="ruleForm.rule_type === 'ban'" :label="t('logMgr.field.banMode')">
+          <a-checkbox v-model:checked="ruleForm.is_permanent">{{ t('logMgr.permanentBan') }}</a-checkbox>
         </a-form-item>
-        <a-form-item v-if="ruleForm.rule_type === 'ban' && !ruleForm.is_permanent" label="过期时间">
+        <a-form-item v-if="ruleForm.rule_type === 'ban' && !ruleForm.is_permanent" :label="t('logMgr.field.expiresAt')">
           <a-input v-model:value="ruleForm.expires_at" type="datetime-local" />
         </a-form-item>
         <template v-if="ruleForm.rule_type === 'rate_limit'">
-          <a-form-item label="窗口请求数"><a-input-number v-model:value="ruleForm.requests" :min="1" :max="1000000" /></a-form-item>
-          <a-form-item label="窗口秒数"><a-input-number v-model:value="ruleForm.window_seconds" :min="1" :max="86400" /></a-form-item>
+          <a-form-item :label="t('logMgr.field.windowRequests')"><a-input-number v-model:value="ruleForm.requests" :min="1" :max="1000000" /></a-form-item>
+          <a-form-item :label="t('logMgr.field.windowSeconds')"><a-input-number v-model:value="ruleForm.window_seconds" :min="1" :max="86400" /></a-form-item>
         </template>
-        <a-form-item label="原因说明"><a-textarea v-model:value="ruleForm.reason" :rows="3" maxlength="500" show-count /></a-form-item>
+        <a-form-item :label="t('logMgr.field.reason')"><a-textarea v-model:value="ruleForm.reason" :rows="3" maxlength="500" show-count /></a-form-item>
       </a-form>
     </a-modal>
   </div>
@@ -232,6 +232,7 @@ import {
 import DataTable from '@/components/common/DataTable.vue'
 import Pagination from '@/components/common/Pagination.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import { t } from '@/i18n'
 
 const route = useRoute()
 const showVisits = computed(() => route.query.view === 'visits')
@@ -240,18 +241,18 @@ const visitError = ref('')
 async function loadVisits() {
   visitError.value = ''
   try { visitStats.value = mapDashboardData(await request.get('/api/stats/')) }
-  catch (error) { visitError.value = error?.message || '访问统计加载失败' }
+  catch (error) { visitError.value = error?.message || t('logMgr.visitLoadFailed') }
 }
 onMounted(() => { if (showVisits.value) loadVisits() })
 
 const columns = [
-  { key: 'ip', label: 'IP 地址', slot: 'ip', width: '210px' },
-  { key: 'geo', label: '归属画像', slot: 'geo', width: '180px' },
-  { key: 'behavior', label: '行为画像', slot: 'behavior', width: '130px' },
-  { key: 'risk', label: '风险', slot: 'risk', width: '210px' },
-  { key: 'last_seen', label: '最近访问', slot: 'last_seen', width: '170px' },
-  { key: 'rules', label: '当前规则', slot: 'rules', width: '160px' },
-  { key: 'action', label: '操作', slot: 'action', width: '160px', fixed: 'right' }
+  { key: 'ip', label: t('logMgr.column.ip'), slot: 'ip', width: '210px' },
+  { key: 'geo', label: t('logMgr.column.geo'), slot: 'geo', width: '180px' },
+  { key: 'behavior', label: t('logMgr.column.behavior'), slot: 'behavior', width: '130px' },
+  { key: 'risk', label: t('logMgr.column.risk'), slot: 'risk', width: '210px' },
+  { key: 'last_seen', label: t('logMgr.column.lastSeen'), slot: 'last_seen', width: '170px' },
+  { key: 'rules', label: t('logMgr.column.rules'), slot: 'rules', width: '160px' },
+  { key: 'action', label: t('adminShared.actions'), slot: 'action', width: '160px', fixed: 'right' }
 ]
 
 const profiles = ref([])
@@ -298,13 +299,13 @@ function emptyRuleForm() {
   }
 }
 
-const riskLabel = (level) => ({ normal: '低风险', low: '低风险', medium: '中风险', high: '高风险', critical: '严重风险', unknown: '未知' }[level] || level)
+const riskLabel = (level) => ({ normal: t('adminShared.risk.low'), low: t('adminShared.risk.low'), medium: t('adminShared.risk.medium'), high: t('adminShared.risk.high'), critical: t('adminShared.risk.critical'), unknown: t('logMgr.unknown') }[level] || level)
 const riskColor = (level) => ({ normal: 'success', low: 'blue', medium: 'orange', high: 'volcano', critical: 'red', unknown: 'default' }[level] || 'default')
-const ruleLabel = (type) => ({ whitelist: '白名单', blacklist: '黑名单', ban: '封禁', rate_limit: '限流' }[type] || type)
+const ruleLabel = (type) => ({ whitelist: t('logMgr.rule.whitelist'), blacklist: t('logMgr.rule.blacklist'), ban: t('logMgr.rule.ban'), rate_limit: t('logMgr.rule.rateLimit') }[type] || type)
 const ruleColor = (type) => ({ whitelist: 'green', blacklist: 'red', ban: 'volcano', rate_limit: 'gold' }[type] || 'blue')
 const ipColor = (scope) => ({ public: 'blue', private: 'orange', loopback: 'green', reserved: 'red', unknown: 'default' }[scope] || 'default')
 const formatDate = (value) => value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-'
-const countText = (value) => `${value ?? 0}次`
+const countText = (value) => t('logMgr.countTimes', { n: value ?? 0 })
 const totalRequestsText = (row) => {
   const value = row?.behavior?.total_requests
   return value == null ? '—' : countText(value)
@@ -313,16 +314,16 @@ const failureRateText = (row) => {
   const value = row?.behavior?.risk?.error_rate
   return value == null ? '—' : `${value}%`
 }
-const anomalyLabel = (level) => ({ medium: '异常', high: '高度异常', critical: '严重异常' }[level] || '')
+const anomalyLabel = (level) => ({ medium: t('logMgr.anomaly.medium'), high: t('logMgr.anomaly.high'), critical: t('logMgr.anomaly.critical') }[level] || '')
 const anomalyColor = (level) => ({ medium: 'gold', high: 'volcano', critical: 'red' }[level] || 'default')
 const hasAnomaly = (row) => ['medium', 'high', 'critical'].includes(row?.behavior?.risk?.anomaly_level)
-const anomalyReasonsText = (row) => (row?.behavior?.risk?.anomaly_reasons || []).join('，') || '请求异常'
+const anomalyReasonsText = (row) => (row?.behavior?.risk?.anomaly_reasons || []).join('，') || t('logMgr.anomalyFallback')
 const geoText = (row) => {
   const geo = row.geo
-  if (!geo) return '未知'
-  return [geo.location || [...new Set([geo.country, geo.region, geo.city].filter(Boolean))].join(' · '), geo.isp].filter(Boolean).join(' · ') || (geo.matched ? '本地库已命中' : '未知')
+  if (!geo) return t('logMgr.unknown')
+  return [geo.location || [...new Set([geo.country, geo.region, geo.city].filter(Boolean))].join(' · '), geo.isp].filter(Boolean).join(' · ') || (geo.matched ? t('logMgr.localDbHit') : t('logMgr.unknown'))
 }
-const riskReasonsText = (row) => (row.risk_reasons || []).join('，') || '未发现明显异常'
+const riskReasonsText = (row) => (row.risk_reasons || []).join('，') || t('logMgr.riskReasonsFallback')
 
 async function loadProfiles() {
   const requestId = ++profileRequestId.value
@@ -340,7 +341,7 @@ async function loadProfiles() {
     profiles.value = response?.data?.list || []
     total.value = response?.data?.total || 0
   } catch (error) {
-    message.error(error?.message || 'IP 画像加载失败')
+    message.error(error?.message || t('logMgr.ipProfileFailed'))
   } finally {
     if (requestId === profileRequestId.value) loadingProfiles.value = false
   }
@@ -355,7 +356,7 @@ async function loadOverview() {
     if (requestId !== overviewRequestId.value) return
     overview.value = response?.data || response || null
   } catch (error) {
-    message.error(error?.message || '安全概览加载失败')
+    message.error(error?.message || t('logMgr.securityOverviewFailed'))
   } finally {
     if (requestId === overviewRequestId.value) overviewLoading.value = false
   }
@@ -374,7 +375,7 @@ async function loadBlockedLogs() {
     blockedTotal.value = data.total ?? data.count ?? blockedLogs.value.length
     total.value = blockedTotal.value
   } catch (error) {
-    blockedError.value = error?.message || '拦截记录加载失败'
+    blockedError.value = error?.message || t('logMgr.blockedLoadFailed')
   } finally {
     if (requestId === blockedRequestId.value) blockedLoading.value = false
   }
@@ -432,9 +433,9 @@ async function openProfile(row) {
   try {
     const response = await getAccessLogProfileDetail(row.ip_address)
     selectedProfile.value = response?.data || null
-    if (!selectedProfile.value) message.error('画像详情为空')
+    if (!selectedProfile.value) message.error(t('logMgr.profileEmpty'))
   } catch (error) {
-    message.error(error?.message || '画像详情加载失败')
+    message.error(error?.message || t('logMgr.profileLoadFailed'))
   } finally {
     loadingDetail.value = false
   }
@@ -457,15 +458,15 @@ async function submitRule() {
       delete payload.requests
       delete payload.window_seconds
     }
-    if (!payload.reason.trim()) message.error('请填写原因说明')
+    if (!payload.reason.trim()) message.error(t('logMgr.reasonRequired'))
     else {
       await createAccessLogRule(payload)
-      message.success('防护规则已创建')
+      message.success(t('logMgr.ruleCreated'))
       ruleModalOpen.value = false
       await loadAll()
     }
   } catch (error) {
-    message.error(error?.message || '规则创建失败')
+    message.error(error?.message || t('logMgr.ruleCreateFailed'))
   } finally {
     savingRule.value = false
   }
@@ -474,10 +475,10 @@ async function submitRule() {
 async function revokeRule(rule) {
   try {
     await revokeAccessLogRule(rule.id)
-    message.success('规则已撤销')
+    message.success(t('logMgr.ruleRevoked'))
     await Promise.all([loadRules(), selectedProfile.value ? openProfile({ ip_address: selectedProfile.value.ip_address }) : Promise.resolve()])
   } catch (error) {
-    message.error(error?.message || '撤销失败')
+    message.error(error?.message || t('logMgr.revokeFailed'))
   }
 }
 

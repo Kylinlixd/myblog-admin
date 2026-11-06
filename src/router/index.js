@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import { useAppStore } from '../stores/app'
 import { useUserStore } from '../stores/user'
+import { t } from '../i18n'
 import { message } from 'ant-design-vue'
 
 const routes = [
@@ -13,7 +14,7 @@ const routes = [
     component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicList.vue'),
     meta: { 
       requiresAuth: true,
-      title: '动态管理'
+      title: 'shell.menu.dynamics'
     }
   },
   {
@@ -21,7 +22,7 @@ const routes = [
     name: 'Login',
     component: () => import(/* webpackPrefetch: true */ '../views/Login.vue'),
     meta: { 
-      title: '登录',
+      title: 'login.title',
       requiresAuth: false
     }
   },
@@ -30,7 +31,7 @@ const routes = [
     component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
     meta: { 
       requiresAuth: false,
-      title: '此间'
+      title: 'nav.home'
     },
     children: [
       {
@@ -38,7 +39,7 @@ const routes = [
         name: 'BlogHome',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogHome.vue'),
         meta: { 
-          title: '此间',
+          title: 'nav.home',
           keepAlive: true,
           requiresAuth: false
         }
@@ -48,7 +49,7 @@ const routes = [
         name: 'BlogDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamic.vue'),
         meta: { 
-          title: '书遇',
+          title: 'nav.book',
           keepAlive: true,
           requiresAuth: false
         }
@@ -58,7 +59,7 @@ const routes = [
         name: 'BlogCategories',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategories.vue'),
         meta: { 
-          title: '拾光',
+          title: 'nav.light',
           keepAlive: true,
           requiresAuth: false
         }
@@ -68,7 +69,7 @@ const routes = [
         name: 'BlogCollectionDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCollectionDetail.vue'),
         meta: {
-          title: '合集',
+          title: 'collection.kicker',
           keepAlive: false,
           requiresAuth: false
         }
@@ -78,7 +79,7 @@ const routes = [
         name: 'BlogCategoryDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategoryDetail.vue'),
         meta: { 
-          title: '分类文章',
+          title: 'nav.light',
           keepAlive: true,
           requiresAuth: false
         }
@@ -88,7 +89,7 @@ const routes = [
         name: 'BlogDynamicDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamicDetail.vue'),
         meta: { 
-          title: '文章详情',
+          title: 'nav.book',
           keepAlive: true,
           requiresAuth: false
         }
@@ -98,7 +99,7 @@ const routes = [
         name: 'BlogAbout',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogAbout.vue'),
         meta: { 
-          title: '自叙',
+          title: 'nav.about',
           keepAlive: true,
           requiresAuth: false
         }
@@ -108,7 +109,7 @@ const routes = [
         name: 'BlogTools',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogTools.vue'),
         meta: {
-          title: '御器',
+          title: 'nav.tools',
           keepAlive: true,
           requiresAuth: false
         }
@@ -118,7 +119,7 @@ const routes = [
         name: 'BlogSearch',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogSearch.vue'),
         meta: { 
-          title: '搜索结果',
+          title: 'search.heroTitle',
           keepAlive: false,
           requiresAuth: false
         }
@@ -128,7 +129,7 @@ const routes = [
         name: 'BlogTagDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogTagDetail.vue'),
         meta: { 
-          title: '标签文章',
+          title: 'nav.book',
           keepAlive: false,
           requiresAuth: false
         }
@@ -141,7 +142,7 @@ const routes = [
     redirect: '/dashboard',
     meta: { 
       requiresAuth: true,
-      title: '控制台'
+      title: 'shell.console'
     },
     children: [
       {
@@ -149,7 +150,7 @@ const routes = [
         name: 'Dashboard',
         component: () => import(/* webpackPrefetch: true */ '../views/Dashboard.vue'),
         meta: { 
-          title: '仪表盘',
+          title: 'shell.menu.dashboard',
           icon: 'Monitor',
           keepAlive: true
         }
@@ -159,7 +160,7 @@ const routes = [
         name: 'Dynamics',
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicList.vue'),
         meta: {
-          title: '动态管理',
+          title: 'shell.menu.dynamics',
           icon: 'dynamic'
         }
       },
@@ -168,7 +169,7 @@ const routes = [
         name: 'CreateDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
         meta: {
-          title: '新建动态',
+          title: 'dynamicMgr.createTitle',
           icon: 'dynamic'
         }
       },
@@ -177,7 +178,7 @@ const routes = [
         name: 'EditDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicEdit.vue'),
         meta: {
-          title: '编辑动态',
+          title: 'dynamicMgr.editTitle',
           icon: 'dynamic'
         }
       },
@@ -193,7 +194,7 @@ const routes = [
         name: 'PreviewDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/dynamics/DynamicPreview.vue'),
         meta: {
-          title: '预览动态',
+          title: 'dynamicMgr.previewPageTitle',
           icon: 'dynamic'
         }
       },
@@ -202,7 +203,7 @@ const routes = [
         name: 'Category',
         component: () => import(/* webpackPrefetch: true */ '../views/categories/CategoryList.vue'),
         meta: {
-          title: '分类管理',
+          title: 'shell.menu.category',
           icon: 'Folder',
           keepAlive: true
         }
@@ -212,7 +213,7 @@ const routes = [
         name: 'Collections',
         component: () => import(/* webpackPrefetch: true */ '../views/collections/CollectionList.vue'),
         meta: {
-          title: '合集管理',
+          title: 'shell.menu.collections',
           icon: 'collection',
           keepAlive: true
         }
@@ -222,7 +223,7 @@ const routes = [
         name: 'CreateCollection',
         component: () => import(/* webpackPrefetch: true */ '../views/collections/CollectionEdit.vue'),
         meta: {
-          title: '新建合集',
+          title: 'collectionMgr.createTitle',
           icon: 'collection'
         }
       },
@@ -231,7 +232,7 @@ const routes = [
         name: 'EditCollection',
         component: () => import(/* webpackPrefetch: true */ '../views/collections/CollectionEdit.vue'),
         meta: {
-          title: '编辑合集',
+          title: 'collectionMgr.editTitle',
           icon: 'collection'
         }
       },
@@ -240,7 +241,7 @@ const routes = [
         name: 'Tags',
         component: () => import(/* webpackPrefetch: true */ '../views/tags/TagList.vue'),
         meta: {
-          title: '标签管理',
+          title: 'shell.menu.tags',
           icon: 'Collection',
           keepAlive: true
         }
@@ -250,7 +251,7 @@ const routes = [
         name: 'Comments',
         component: () => import('../views/comments/CommentList.vue'),
         meta: { 
-          title: '评论管理',
+          title: 'shell.menu.comments',
           icon: 'ChatDotRound',
           keepAlive: true,
           permissions: ['comment:view']
@@ -261,7 +262,7 @@ const routes = [
         name: 'Profile',
         component: () => import('../views/user/Profile.vue'),
         meta: { 
-          title: '个人资料',
+          title: 'shell.profile',
           icon: 'User',
           keepAlive: false,
           hideInMenu: true
@@ -272,7 +273,7 @@ const routes = [
         name: 'FileList',
         component: () => import('@/views/files/FileList.vue'),
         meta: {
-          title: '文件管理',
+          title: 'shell.menu.files',
           requiresAuth: true
         }
       },
@@ -280,7 +281,7 @@ const routes = [
         path: 'access-logs',
         name: 'AccessLogs',
         component: () => import('@/views/accessLogs/AccessLogList.vue'),
-        meta: { title: '访问日志', requiresAuth: true }
+        meta: { title: 'shell.menu.logs', requiresAuth: true }
       }
     ]
   },
@@ -289,7 +290,7 @@ const routes = [
     name: 'NotFound',
     component: () => import('../views/NotFound.vue'),
     meta: {
-      title: '页面未找到',
+      title: 'notFound.title',
       hideInMenu: true,
       requiresAuth: false
     }
@@ -332,7 +333,7 @@ router.beforeEach(async (to) => {
   const requiredRoles = to.meta.roles || []
   const userRoles = userStore.userInfo?.roles || []
   if (requiredRoles.length && !requiredRoles.some((role) => userRoles.includes(role))) {
-    message.error('您没有权限访问该页面')
+    message.error(t('shell.noPermission'))
     return { name: 'Dashboard' }
   }
 
@@ -344,7 +345,7 @@ router.afterEach((to) => {
   const appStore = useAppStore()
   appStore.endNavigation()
   sessionStorage.removeItem('vite-chunk-recovery')
-  document.title = to.meta.title ? `${to.meta.title}｜时不语之间` : '此间｜时不语之间'
+  document.title = to.meta.title ? `${t(to.meta.title)}｜${t('common.siteName')}` : `${t('nav.home')}｜${t('common.siteName')}`
 })
 
 // 添加路由错误处理
@@ -359,7 +360,7 @@ router.onError((error) => {
   sessionStorage.removeItem('vite-chunk-recovery')
   const appStore = useAppStore()
   appStore.hasError = true
-  appStore.errorMessage = error.message || '路由加载失败'
+  appStore.errorMessage = error.message || t('shell.routeLoadFailed')
   appStore.endNavigation()
 })
 

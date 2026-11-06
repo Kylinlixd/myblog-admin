@@ -25,7 +25,7 @@ const codeWindowStyles = fs.readFileSync(
 test('文章详情包含编辑型头部元信息与阅读结构', () => {
   expect(source).toContain('article-reading-shell')
   expect(source).toContain('reading-progress')
-  expect(source).toContain('阅读时长')
+  expect(source).toContain("t('detail.readingTime'")
 })
 
 test('文章详情不展示文章类型字段', () => {
@@ -96,13 +96,13 @@ test('动态详情按媒体项类型渲染并隔离加载失败', () => {
   expect(source).toContain("item.type === 'audio'")
   expect(source).toContain("item.type === 'video'")
   expect(source).toContain('markMediaUnavailable')
-  expect(source).toContain('该媒体已不可用')
+  expect(source).toContain("t('detail.mediaUnavailable')")
 })
 
 test('动态详情区分失效文章与可重试的加载失败', () => {
   expect(source).toContain('detailErrorKind')
-  expect(source).toContain("文章加载失败，请稍后重试")
-  expect(source).toContain('重试')
+  expect(source).toContain("t('detail.articleLoadFailed')")
+  expect(source).toContain("t('common.retry')")
   expect(source).toContain('Number(status) === 404')
 })
 
@@ -115,8 +115,8 @@ test('动态详情在路由 ID 变化时重新加载，并隔离附加请求', (
 test('文章详情提供上一篇与下一篇导航', () => {
   expect(source).toContain('getAdjacentDynamics')
   expect(source).toContain('class="article-adjacent"')
-  expect(source).toContain('上一篇')
-  expect(source).toContain('下一篇')
+  expect(source).toContain("t('detail.prevArticle')")
+  expect(source).toContain("t('detail.nextArticle')")
 })
 
 test('正文已嵌入的封面图片不会在附件区重复展示', () => {

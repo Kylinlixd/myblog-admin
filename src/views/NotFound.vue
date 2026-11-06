@@ -1,17 +1,18 @@
 <template>
   <div class="not-found">
     <div class="error-code">404</div>
-    <h1 class="error-title">页面未找到</h1>
-    <p class="error-message">抱歉，您访问的页面不存在或已被移动</p>
+    <h1 class="error-title">{{ t('notFound.title') }}</h1>
+    <p class="error-message">{{ t('notFound.desc') }}</p>
     <div class="actions">
-      <a-button type="primary" @click="goHome">返回首页</a-button>
-      <a-button @click="goBack">返回上一页</a-button>
+      <a-button type="primary" @click="goHome">{{ t('notFound.goHome') }}</a-button>
+      <a-button @click="goBack">{{ t('notFound.goBack') }}</a-button>
     </div>
   </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { t } from '@/i18n'
 
 const router = useRouter()
 

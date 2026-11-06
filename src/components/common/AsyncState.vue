@@ -1,32 +1,34 @@
 <template>
   <div class="async-state" role="status" :aria-busy="loading">
-    <div v-if="loading" class="state-skeleton" aria-label="正在加载内容">
+    <div v-if="loading" class="state-skeleton" :aria-label="t('component.loadingContent')">
       <span />
       <span />
       <span />
     </div>
     <template v-else-if="error">
       <div class="state-icon">!</div>
-      <h3>内容暂时无法加载</h3>
+      <h3>{{ t('component.contentError') }}</h3>
       <p>{{ error }}</p>
-      <a-button type="primary" class="state-retry" @click="$emit('retry')">重新加载</a-button>
+      <a-button type="primary" class="state-retry" @click="$emit('retry')">{{ t('component.reload') }}</a-button>
     </template>
     <template v-else-if="empty">
       <div class="state-icon state-icon--empty">○</div>
-      <h3>{{ emptyTitle }}</h3>
-      <p>{{ emptyDescription }}</p>
-      <a-button class="state-retry" @click="$emit('retry')">重新加载</a-button>
+      <h3>{{ emptyTitle || t('component.emptyTitle') }}</h3>
+      <p>{{ emptyDescription || t('component.emptyDesc') }}</p>
+      <a-button class="state-retry" @click="$emit('retry')">{{ t('component.reload') }}</a-button>
     </template>
   </div>
 </template>
 
 <script setup>
+import { t } from '@/i18n'
+
 defineProps({
   loading: Boolean,
   error: { type: String, default: '' },
   empty: Boolean,
-  emptyTitle: { type: String, default: '暂时没有内容' },
-  emptyDescription: { type: String, default: '新的内容正在路上，稍后再来看看。' }
+  emptyTitle: { type: String, default: '' },
+  emptyDescription: { type: String, default: '' }
 })
 
 defineEmits(['retry'])

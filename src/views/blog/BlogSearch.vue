@@ -1,8 +1,8 @@
 <template>
   <div class="blog-search-container cinematic-page">
     <header class="search-hero cinematic-hero">
-      <h1>搜索数字花园</h1>
-      <p>从文章、分类和标签中，找到与你当前问题最接近的线索。</p>
+      <h1>{{ t('search.heroTitle') }}</h1>
+      <p>{{ t('search.heroDesc') }}</p>
     </header>
     <div class="search-section">
       <!-- 搜索框 -->
@@ -11,7 +11,7 @@
           <!-- 回车由 a-input-search 内部转成 @search，press-enter 绑定会被覆盖、属无效绑定 -->
           <a-input-search
             v-model:value="keyword"
-            placeholder="搜索文章、标签或关键词..."
+            :placeholder="t('search.placeholder')"
             enter-button
             size="large"
             :loading="loading"
@@ -27,7 +27,7 @@
         <!-- 高级搜索开关：与输入框同排，不再单独占一行 -->
         <div class="search-options">
           <a-button type="text" :aria-expanded="showAdvancedSearch" @click="toggleAdvancedSearch">
-            {{ showAdvancedSearch ? '收起筛选' : '筛选' }}
+            {{ showAdvancedSearch ? t('search.filterCollapse') : t('search.filterToggle') }}
             <template #icon>
               <component :is="showAdvancedSearch ? UpOutlined : DownOutlined" />
             </template>
@@ -37,11 +37,11 @@
         <div v-show="showAdvancedSearch" class="advanced-search-options">
           <div class="filter-grid">
             <label class="filter-field">
-              <span class="filter-label">分类</span>
+              <span class="filter-label">{{ t('search.category') }}</span>
               <a-select
                 v-model:value="advancedOptions.category"
                 class="filter-control"
-                placeholder="选择分类"
+                :placeholder="t('search.category')"
                 allowClear
               >
                 <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
@@ -51,11 +51,11 @@
             </label>
 
             <label class="filter-field">
-              <span class="filter-label">标签</span>
+              <span class="filter-label">{{ t('search.tag') }}</span>
               <a-select
                 v-model:value="advancedOptions.tag"
                 class="filter-control"
-                placeholder="选择标签"
+                :placeholder="t('search.tag')"
                 allowClear
               >
                 <a-select-option v-for="tag in tags" :key="tag.id" :value="tag.id">
@@ -65,44 +65,44 @@
             </label>
 
             <label class="filter-field">
-              <span class="filter-label">发布时间</span>
+              <span class="filter-label">{{ t('search.timeRange') }}</span>
               <a-select
                 v-model:value="advancedOptions.time"
                 class="filter-control"
-                placeholder="选择时间范围"
+                :placeholder="t('search.timeRange')"
                 allowClear
               >
-                <a-select-option value="week">最近一周</a-select-option>
-                <a-select-option value="month">最近一月</a-select-option>
-                <a-select-option value="quarter">最近三月</a-select-option>
-                <a-select-option value="year">最近一年</a-select-option>
+                <a-select-option value="week">{{ t('search.timeWeek') }}</a-select-option>
+                <a-select-option value="month">{{ t('search.timeMonth') }}</a-select-option>
+                <a-select-option value="quarter">{{ t('search.timeQuarter') }}</a-select-option>
+                <a-select-option value="year">{{ t('search.timeYear') }}</a-select-option>
               </a-select>
             </label>
 
             <label class="filter-field">
-              <span class="filter-label">排序方式</span>
+              <span class="filter-label">{{ t('search.sortBy') }}</span>
               <a-select v-model:value="advancedOptions.sortBy" class="filter-control">
-                <a-select-option value="time_desc">最新发布</a-select-option>
-                <a-select-option value="time_asc">最早发布</a-select-option>
-                <a-select-option value="likes_desc">最多点赞</a-select-option>
-                <a-select-option value="comments_desc">最多评论</a-select-option>
-                <a-select-option value="views_desc">最多浏览</a-select-option>
+                <a-select-option value="time_desc">{{ t('search.sortLatest') }}</a-select-option>
+                <a-select-option value="time_asc">{{ t('search.sortEarliest') }}</a-select-option>
+                <a-select-option value="likes_desc">{{ t('search.sortMostLikes') }}</a-select-option>
+                <a-select-option value="comments_desc">{{ t('search.sortMostComments') }}</a-select-option>
+                <a-select-option value="views_desc">{{ t('search.sortMostViews') }}</a-select-option>
               </a-select>
             </label>
 
             <div class="filter-field filter-field--check">
               <span class="filter-label" aria-hidden="true"></span>
-              <a-checkbox v-model:checked="advancedOptions.hasMedia">只显示包含多媒体</a-checkbox>
+              <a-checkbox v-model:checked="advancedOptions.hasMedia">{{ t('search.onlyMedia') }}</a-checkbox>
             </div>
           </div>
 
           <div class="filter-footer">
             <span v-if="filtersDirty" class="filter-dirty" role="status">
-              {{ keyword.trim() ? '筛选条件已更新，点「搜索」应用' : '可直接按条件筛选，点「搜索」开始' }}
+              {{ keyword.trim() ? t('search.filterUpdated') : t('search.filterReady') }}
             </span>
             <div class="filter-actions">
-              <a-button @click="resetAdvancedOptions">重置</a-button>
-              <a-button type="primary" :disabled="!canSearch" :loading="loading" @click="handleSearch">搜索</a-button>
+              <a-button @click="resetAdvancedOptions">{{ t('search.reset') }}</a-button>
+              <a-button type="primary" :disabled="!canSearch" :loading="loading" @click="handleSearch">{{ t('search.searchBtn') }}</a-button>
             </div>
           </div>
         </div>
@@ -111,7 +111,7 @@
       <!-- 搜索历史 -->
       <div class="search-history" v-if="searchHistory.length > 0 && !searchPerformed">
         <div class="history-header">
-          <h3>搜索历史</h3>
+          <h3>{{ t('search.history') }}</h3>
           <a-button type="link" @click="clearSearchHistory">{{ t('search.clear') }}</a-button>
         </div>
         <div class="history-items">
@@ -154,20 +154,20 @@
     <div class="search-results cinematic-card" v-if="searched">
       <div class="search-result-heading">
         <div>
-          <span class="search-result-kicker">SEARCH INDEX · 搜索索引</span>
-          <h2 v-if="keyword.trim()">与“<strong>{{ keyword }}</strong>”相关的内容</h2>
-          <h2 v-else>按筛选条件找到的内容</h2>
+          <span class="search-result-kicker">{{ t('search.searchIndex') }}</span>
+          <h2 v-if="keyword.trim()">{{ t('search.resultsWithKeyword', { keyword }) }}</h2>
+          <h2 v-else>{{ t('search.resultsWithFilters') }}</h2>
         </div>
         <div class="result-heading-meta">
           <span class="result-count">{{ loading ? '…' : t('search.total', { n: total }) }}</span>
           <a-radio-group v-if="searchResults.length > 0" v-model:value="viewMode" button-style="solid" size="small" class="view-mode-toggle">
             <a-radio-button value="list">
               <unordered-list-outlined />
-              列表
+              {{ t('search.listView') }}
             </a-radio-button>
             <a-radio-button value="card">
               <appstore-outlined />
-              卡片
+              {{ t('search.cardView') }}
             </a-radio-button>
           </a-radio-group>
         </div>
@@ -176,14 +176,14 @@
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" />
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
         <a-skeleton :active="true" :paragraph="{ rows: 4 }" :title="true" :loading="true" style="margin-top: 2rem;" />
-        <p style="margin-top:2rem; color:#888;">搜索中...</p>
+        <p style="margin-top:2rem; color:#888;">{{ t('search.searching') }}</p>
       </div>
       
       <div v-else-if="!searchResults || searchResults.length === 0" class="no-results">
         <inbox-outlined />
-        <strong class="no-results__title">没有找到匹配的线索</strong>
-        <p>{{ keyword.trim() ? '换一个更具体的词，或减少筛选条件后再试一次。' : '当前筛选条件下还没有内容，试试放宽时间范围。' }}</p>
-        <a-button type="primary" @click="resetSearch">重新筛选</a-button>
+        <strong class="no-results__title">{{ t('search.noResultsTitle') }}</strong>
+        <p>{{ keyword.trim() ? t('search.noResultsKeyword') : t('search.noResultsFilters') }}</p>
+        <a-button type="primary" @click="resetSearch">{{ t('search.refilter') }}</a-button>
       </div>
       
       <div v-else class="results-content">
@@ -208,7 +208,7 @@
                   <p v-if="item.excerpt" class="result-excerpt" v-html="highlightKeyword(plainExcerpt(item.excerpt))"></p>
                   <div class="result-meta">
                     <span v-if="item.createdAt" class="result-date">{{ formatDate(item.createdAt) }}</span>
-                    <span v-if="item.views" class="result-views">{{ item.views }} 阅读</span>
+                    <span v-if="item.views" class="result-views">{{ item.views }} {{ t("search.reads") }}</span>
                     <span v-if="item.category" class="result-category">
                       <folder-outlined /> {{ item.category.name }}
                     </span>
@@ -238,7 +238,7 @@
                 <div class="card-meta">
                   <span class="card-type">{{ getItemType(item) }}</span>
                   <span v-if="item.createdAt" class="card-date">{{ formatDate(item.createdAt) }}</span>
-                  <span v-if="item.views" class="card-views">{{ item.views }} 阅读</span>
+                  <span v-if="item.views" class="card-views">{{ item.views }} {{ t("search.reads") }}</span>
                   <span v-if="item.category" class="card-category">
                     <folder-outlined /> {{ item.category.name }}
                   </span>
@@ -274,7 +274,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted } from 'vue'
-import { t } from '@/i18n'
+import { t, formatDate as formatLocaleDate } from '@/i18n'
 import { useRoute, useRouter } from 'vue-router'
 import {
   SearchOutlined,
@@ -351,8 +351,7 @@ const popularSearches = ref([
 // 格式化日期
 const formatDate = (date) => {
   if (!date) return ''
-  const d = new Date(date)
-  return d.toLocaleDateString('zh-CN', {
+  return formatLocaleDate(date, {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -434,7 +433,7 @@ const handleSearch = async () => {
   const trimmed = keyword.value.trim()
 
   if (!trimmed && activeFilterCount.value === 0) {
-    message.warning('请输入关键词，或至少选择一个筛选条件')
+    message.warning(t('search.noKeyword'))
     return
   }
 
@@ -461,15 +460,15 @@ const handleSearch = async () => {
     pageSize.value = paged.pageSize
 
     if (total.value === 0) {
-      message.info(trimmed ? '未找到相关结果，请尝试其他关键词' : '当前筛选条件下还没有内容')
+      message.info(trimmed ? t('search.noResultsKeywordMsg') : t('search.noResultsFiltersMsg'))
     }
   } catch (error) {
     if (sequence !== searchSequence) return
     console.error('[Search] 搜索失败:', error)
     if (error?.code === 'NETWORK_ERROR' || error?.status === 0) {
-      showError('网络连接失败，请检查网络设置')
+      showError(t('search.networkError'))
     } else {
-      showError('搜索失败，请稍后重试')
+      showError(t('search.searchFailed'))
     }
     searchResults.value = []
     total.value = 0
@@ -625,13 +624,13 @@ const getItemLink = (item) => {
 const getItemType = (item) => {
   switch (item.type) {
     case 'dynamic':
-      return '动态'
+      return t('search.typeDynamic')
     case 'category':
-      return '分类'
+      return t('search.typeCategory')
     case 'tag':
-      return '标签'
+      return t('search.typeTag')
     default:
-      return '未知'
+      return t('search.typeUnknown')
   }
 }
 

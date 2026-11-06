@@ -8,7 +8,7 @@
           {{ tag.name }}
         </h1>
         <div class="tag-meta">
-          <span class="tag-count">{{ tag.count ?? 0 }}篇文章</span>
+          <span class="tag-count">{{ tag.count ?? 0 }} {{ t('tagDetail.articles') }}</span>
           <span v-if="tag.description" class="tag-description">{{ tag.description }}</span>
         </div>
       </div>
@@ -17,16 +17,16 @@
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
       <a-spin size="large" />
-      <p>加载中...</p>
+      <p>{{ t('tagDetail.loading') }}</p>
     </div>
 
     <!-- 加载失败 -->
     <div v-else-if="loadError" class="empty-container" role="alert">
-      <a-empty description="获取标签内容失败" />
+      <a-empty :description="t('tagDetail.loadFailed')" />
       <p class="error-detail">{{ loadError }}</p>
-      <a-button type="primary" @click="fetchTagDynamics">重试</a-button>
+      <a-button type="primary" @click="fetchTagDynamics">{{ t('tagDetail.retry') }}</a-button>
       <router-link to="/blog">
-        <a-button>返回首页</a-button>
+        <a-button>{{ t('tagDetail.returnHome') }}</a-button>
       </router-link>
     </div>
 
@@ -40,7 +40,7 @@
               <img 
                 v-if="coverUrl(dynamic) && !isMediaUnavailable(coverUrl(dynamic))"
                 :src="coverUrl(dynamic)"
-                alt="文章图片"
+                :alt="t('tagDetail.articleImage')"
                 class="dynamic-image"
                 loading="lazy"
                 decoding="async"
@@ -81,16 +81,16 @@
           @change="handlePageChange"
           showSizeChanger
           :pageSizeOptions="['6', '12', '24', '48']"
-          :showTotal="total => `共 ${total} 篇文章`"
+          :showTotal="(total) => t('tagDetail.totalArticles', { n: total })"
         />
       </div>
     </div>
     
     <!-- 无数据状态 -->
     <div v-else class="empty-container">
-      <a-empty description="暂无文章" />
+      <a-empty :description="t('tagDetail.noArticles')" />
       <router-link to="/blog">
-        <a-button type="primary">返回首页</a-button>
+        <a-button type="primary">{{ t('tagDetail.returnHome') }}</a-button>
       </router-link>
     </div>
   </div>
@@ -105,6 +105,7 @@ import { TagOutlined, EyeOutlined, HeartOutlined, FileTextOutlined } from '@ant-
 import { useAppStore } from '@/stores/app'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { excerptFromMarkdown } from '@/utils/seoMeta'
+import { t } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -141,7 +142,7 @@ let tagRequestSequence = 0
 
 const fetchTagDynamics = async () => {
   if (!route.params.id) {
-    message.error('未找到标签ID')
+    message.error(t('tagDetail.missingTagId'))
     router.push('/blog')
     return
   }
@@ -152,7 +153,7 @@ const fetchTagDynamics = async () => {
 
   try {
     loading.value = true
-    appStore.startLoading('加载标签内容...')
+    appStore.startLoading(t('tagDetail.loadingContent'))
 
     const params = {
       page: currentPage.value,
@@ -175,17 +176,17 @@ const fetchTagDynamics = async () => {
 
       // 设置页面标题
       if (tag.value) {
-        document.title = `${tag.value.name}｜${route.query.from === 'light' ? '拾光' : '书遇'}｜时不语之间`
+        document.title = `${tag.value.name}｜${route.query.from === 'light' ? t('nav.light') : t('nav.book')}｜${t('common.siteName')}`
       }
     } else {
-      loadError.value = response?.message || '服务暂时不可用，请稍后重试'
+      loadError.value = response?.message || t('tagDetail.serviceError')
       dynamics.value = []
       total.value = 0
     }
   } catch (error) {
     if (sequence !== tagRequestSequence) return
     console.error('获取标签详情失败:', error)
-    loadError.value = error?.message || '网络异常，请稍后重试'
+    loadError.value = error?.message || t('tagDetail.networkError')
     dynamics.value = []
     total.value = 0
   } finally {

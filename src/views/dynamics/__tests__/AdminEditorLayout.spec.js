@@ -88,8 +88,8 @@ describe('admin editor layout', () => {
 
     expect(source).toContain('class="file-pagination"')
     expect(source).toContain('@change="handleFilePageChange"')
-    expect(source).toContain('仅关联媒体：')
-    expect(source).toContain('插入正文：')
+    expect(source).toContain("t('dynamicMgr.attachHint')")
+    expect(source).toContain("t('dynamicMgr.attachHint')")
     expect(source).toContain('@click="handleFileConfirm"')
     expect(source).toContain('@click="handleFileInsert"')
   })

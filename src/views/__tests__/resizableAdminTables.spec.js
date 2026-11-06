@@ -26,7 +26,7 @@ describe('resizable admin tables', () => {
   it('shares dynamic column widths between desktop and mobile configurations', () => {
     const source = readView('dynamics/DynamicList.vue')
 
-    expect(source).toMatch(/const\s+activeColumns\s*=\s*computed\(\(\)\s*=>\s*responsive\.value\s*\?\s*columnsForMobile\s*:\s*columns\)/)
+    expect(source).toMatch(/activeColumns = computed\(\(\) => \(responsive.value \? columnsForMobile.value : columns.value\)\)/)
     expect(source).toMatch(/useResizableColumns\(\s*['"]dynamics['"]\s*,\s*activeColumns\s*\)/)
   })
 

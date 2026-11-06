@@ -2,11 +2,10 @@
   <div class="about-page cinematic-page">
     <section class="about-hero app-container">
       <div class="hero-copy">
-        <p class="eyebrow"><span></span> 关于时不语之间</p>
-        <h1>持续学习，也持续输出。</h1>
+        <p class="eyebrow"><span></span> {{ t("about.title") }}</p>
+        <h1>{{ t("about.heroTitle") }}</h1>
         <p class="hero-intro">
-          我是小东，一名全栈开发者。这里记录真实项目里的取舍、踩坑与解法，
-          把开发经验整理成能复用的方法。
+          {{ t("about.intro") }}
         </p>
         <div class="hero-actions">
           <a
@@ -14,12 +13,12 @@
             href="https://github.com/Kylinlixd"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="在 GitHub 查看时不语之间"
+            :aria-label="t('about.github')"
           >
             <github-outlined /> GitHub <arrow-right-outlined />
           </a>
           <a class="secondary-action" href="mailto:946951925@qq.com">
-            <mail-outlined /> 发送邮件
+            <mail-outlined /> {{ t("about.sendEmail") }}
           </a>
         </div>
       </div>
@@ -27,23 +26,23 @@
       <div class="profile-card">
         <div class="profile-head">
           <div class="profile-headline">
-            <strong>时不语之间</strong>
+            <strong>{{ t("about.siteName") }}</strong>
             <p>Full-stack developer</p>
           </div>
-          <p class="profile-status"><span class="pulse-dot" aria-hidden="true"></span>保持创作中</p>
+          <p class="profile-status"><span class="pulse-dot" aria-hidden="true"></span>{{ t("about.creating") }}</p>
         </div>
         <dl class="profile-facts">
-          <div><dt>当前关注</dt><dd>可靠的 Web 产品</dd></div>
-          <div><dt>技术方向</dt><dd>Vue · Django · Java</dd></div>
-          <div><dt>生活之外</dt><dd>阅读 · 旅行 · 摄影</dd></div>
+          <div><dt>{{ t("about.currentFocus") }}</dt><dd>{{ t("about.reliableWeb") }}</dd></div>
+          <div><dt>{{ t("about.techDirection") }}</dt><dd>{{ t("about.techStack") }}</dd></div>
+          <div><dt>{{ t("about.beyondLife") }}</dt><dd>{{ t("about.lifeBeyond") }}</dd></div>
         </dl>
       </div>
     </section>
 
     <section class="about-body app-container">
       <div class="section-heading">
-        <p class="eyebrow">我如何工作</p>
-        <h2>用工程化思维，把复杂问题讲清楚</h2>
+        <p class="eyebrow">{{ t("about.howIWork") }}</p>
+        <h2>{{ t("about.engineeringTitle") }}</h2>
       </div>
 
       <div class="principles-grid">
@@ -57,10 +56,10 @@
 
       <div class="stack-section">
         <div>
-          <p class="eyebrow">常用技术</p>
-          <h2>从界面到服务端，关注完整交付链路</h2>
+          <p class="eyebrow">{{ t("about.commonTech") }}</p>
+          <h2>{{ t("about.deliveryTitle") }}</h2>
           <p class="stack-description">
-            工具会变化，解决问题的能力不会。技术选择以可维护、可验证和适合团队为先。
+            {{ t("about.stackDesc") }}
           </p>
         </div>
         <div class="stack-groups">
@@ -75,8 +74,8 @@
 
       <aside class="contact-banner">
         <div>
-          <p class="eyebrow">保持连接</p>
-          <h2>有值得讨论的问题？欢迎来信。</h2>
+          <p class="eyebrow">{{ t("about.stayConnected") }}</p>
+          <h2>{{ t("about.contactTitle") }}</h2>
         </div>
         <a href="mailto:946951925@qq.com">946951925@qq.com <arrow-right-outlined /></a>
       </aside>
@@ -93,30 +92,32 @@ import {
   ReadOutlined,
   RocketOutlined
 } from '@ant-design/icons-vue'
+import { computed } from 'vue'
+import { t } from '@/i18n'
 
-const principles = [
+const principles = computed(() => [
   {
-    title: '先理解，再动手',
-    description: '从用户目标和系统边界出发，避免用更多代码掩盖没有想清楚的问题。',
+    title: t('about.principle1Title'),
+    description: t('about.principle1Desc'),
     icon: ReadOutlined
   },
   {
-    title: '保持简单可靠',
-    description: '拆小复杂度，用清晰的数据流、自动化测试和文档守住长期可维护性。',
+    title: t('about.principle2Title'),
+    description: t('about.principle2Desc'),
     icon: CodeOutlined
   },
   {
-    title: '持续交付价值',
-    description: '让每次迭代都能被看见、被验证，也能为下一次改进留下空间。',
+    title: t('about.principle3Title'),
+    description: t('about.principle3Desc'),
     icon: RocketOutlined
   }
-]
+])
 
-const stack = [
-  { label: '前端', items: ['Vue', 'React', 'TypeScript', 'CSS'] },
-  { label: '后端', items: ['Django', 'Python', 'Spring Boot', 'Java'] },
-  { label: '数据与交付', items: ['PostgreSQL', 'MySQL', 'Redis', 'Docker'] }
-]
+const stack = computed(() => [
+  { label: t('about.stackFrontend'), items: ['Vue', 'React', 'TypeScript', 'CSS'] },
+  { label: t('about.stackBackend'), items: ['Django', 'Python', 'Spring Boot', 'Java'] },
+  { label: t('about.stackData'), items: ['PostgreSQL', 'MySQL', 'Redis', 'Docker'] }
+])
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
   <div class="comment-list admin-page">
-    <PageHeader compact title="评论管理" subtitle="审核读者反馈并维护讨论秩序。" />
+    <PageHeader compact :title="t('shell.menu.comments')" :subtitle="t('commentMgr.subtitle')" />
     
     <!-- 搜索表单 -->
     <SearchForm 
@@ -10,14 +10,14 @@
       @search="handleSearch" 
       @reset="resetFilter"
     >
-      <a-form-item label="评论者" name="author">
-        <a-input v-model:value="filterForm.author" placeholder="请输入评论者" allowClear />
+      <a-form-item :label="t('commentMgr.author')" name="author">
+        <a-input v-model:value="filterForm.author" :placeholder="t('commentMgr.authorPlaceholder')" allowClear />
       </a-form-item>
-      <a-form-item label="状态" name="status">
-        <a-select v-model:value="filterForm.status" placeholder="请选择状态" allowClear>
-          <a-select-option value="pending">待审核</a-select-option>
-          <a-select-option value="approved">已通过</a-select-option>
-          <a-select-option value="rejected">已拒绝</a-select-option>
+      <a-form-item :label="t('adminShared.status')" name="status">
+        <a-select v-model:value="filterForm.status" :placeholder="t('commentMgr.statusPlaceholder')" allowClear>
+          <a-select-option value="pending">{{ t('commentMgr.status.pending') }}</a-select-option>
+          <a-select-option value="approved">{{ t('commentMgr.status.approved') }}</a-select-option>
+          <a-select-option value="rejected">{{ t('commentMgr.status.rejected') }}</a-select-option>
         </a-select>
       </a-form-item>
     </SearchForm>
@@ -25,7 +25,7 @@
     <div class="comment-batch-toolbar" :class="{ 'comment-batch-toolbar--active': selectedCommentIds.length }">
       <span>
         <strong>{{ selectedCommentIds.length }}</strong>
-        {{ selectedCommentIds.length ? '条评论已选择' : '选择评论后可批量处理' }}
+        {{ selectedCommentIds.length ? t('commentMgr.selectedCount', { n: selectedCommentIds.length }) : t('commentMgr.selectHint') }}
       </span>
           <a-space>
             <a-button
@@ -35,7 +35,7 @@
               @click="handleBatchApprove"
             >
               <template #icon><check-outlined /></template>
-              批量通过
+              {{ t('adminShared.batchApprove') }}
             </a-button>
             <a-button
               danger
@@ -44,7 +44,7 @@
               @click="handleBatchDelete"
             >
               <template #icon><delete-outlined /></template>
-              批量删除
+              {{ t('adminShared.batchDelete') }}
             </a-button>
           </a-space>
     </div>
@@ -56,8 +56,8 @@
       :loading="loading"
       :error="errorMessage"
       :empty="!loading && !errorMessage"
-      empty-title="暂无评论"
-      empty-description="当前筛选条件下没有评论。"
+      :empty-title="t('commentMgr.empty')"
+      :empty-description="t('commentMgr.emptyHint')"
       @retry="getComments"
     />
 
@@ -83,7 +83,7 @@
       </template>
       
       <template #nickname="{ row }">
-        <span>{{ row.nickname || '匿名用户' }}</span>
+        <span>{{ row.nickname || t('component.anonymous') }}</span>
       </template>
 
       <template #createTime="{ row }">
@@ -102,7 +102,7 @@
             :disabled="isCommentPending(row.id)"
             @click="handleApprove(row)"
           >
-            <template #icon><check-outlined /></template>通过
+            <template #icon><check-outlined /></template>{{ t('adminShared.approve') }}
           </a-button>
           <a-button
             v-if="row.status === 'pending'"
@@ -114,12 +114,12 @@
             :disabled="isCommentPending(row.id)"
             @click="handleReject(row)"
           >
-            <template #icon><close-outlined /></template>拒绝
+            <template #icon><close-outlined /></template>{{ t('adminShared.reject') }}
           </a-button>
           <a-popconfirm
-            title="确定要删除该评论吗？"
-            ok-text="确定"
-            cancel-text="取消"
+            :title="t('commentMgr.deleteConfirm')"
+            :ok-text="t('adminShared.confirm')"
+            :cancel-text="t('adminShared.cancel')"
             @confirm="handleDelete(row)"
           >
             <a-button
@@ -131,7 +131,7 @@
               :loading="isActionPending(row.id, 'delete')"
               :disabled="isCommentPending(row.id)"
             >
-              <template #icon><delete-outlined /></template>删除
+              <template #icon><delete-outlined /></template>{{ t('adminShared.delete') }}
             </a-button>
           </a-popconfirm>
         </a-space>
@@ -162,17 +162,18 @@ import Pagination from '../../components/common/Pagination.vue'
 import PageHeader from '../../components/common/PageHeader.vue'
 import SearchForm from '../../components/common/SearchForm.vue'
 import AsyncState from '../../components/common/AsyncState.vue'
+import { t } from '@/i18n'
 
 // 表格列配置
-const columns = [
-  { key: 'serialNo', label: '序号', prop: 'serialNo', width: '72px' },
-  { key: 'content', label: '评论内容', prop: 'content', slot: 'content', width: '300px' },
-  { key: 'nickname', label: '评论者', prop: 'nickname', slot: 'nickname', width: '120px' },
-  { key: 'email', label: '邮箱', prop: 'email', width: '180px' },
-  { key: 'status', label: '状态', prop: 'status', slot: 'status', width: '100px' },
-  { key: 'createTime', label: '评论时间', prop: 'createTime', slot: 'createTime', width: '150px' },
-  { key: 'actions', label: '操作', slot: 'actions', width: '200px' }
-]
+const columns = computed(() => [
+  { key: 'serialNo', label: t('adminShared.serialNo'), prop: 'serialNo', width: '72px' },
+  { key: 'content', label: t('commentMgr.column.content'), prop: 'content', slot: 'content', width: '300px' },
+  { key: 'nickname', label: t('commentMgr.author'), prop: 'nickname', slot: 'nickname', width: '120px' },
+  { key: 'email', label: t('commentMgr.column.email'), prop: 'email', width: '180px' },
+  { key: 'status', label: t('adminShared.status'), prop: 'status', slot: 'status', width: '100px' },
+  { key: 'createTime', label: t('commentMgr.column.createTime'), prop: 'createTime', slot: 'createTime', width: '150px' },
+  { key: 'actions', label: t('adminShared.actions'), slot: 'actions', width: '200px' }
+])
 
 // 数据列表
 const comments = ref([])
@@ -224,7 +225,7 @@ const getComments = async (allowPageReset = true) => {
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('获取评论列表失败:', error);
-    errorMessage.value = error.message || '获取评论列表失败'
+    errorMessage.value = error.message || t('commentMgr.loadFailed')
     
     // 检查是否是认证错误
     if (error.message && (
@@ -232,9 +233,9 @@ const getComments = async (allowPageReset = true) => {
       error.message.includes('未登录') ||
       error.status === 401
     )) {
-      message.error('登录已过期，请重新登录');
+      message.error(t('commentMgr.sessionExpired'));
     } else {
-      message.error('获取评论列表失败: ' + (error.message || '未知错误'));
+      message.error(t('commentMgr.loadFailed') + ': ' + (error.message || t('commentMgr.unknownError')));
     }
   } finally {
     if (generation === requestGeneration) loading.value = false;
@@ -272,11 +273,11 @@ const handleApprove = async (row) => {
   pendingActions[key] = true
   try {
     await approveComment(row.id)
-    message.success('评论已通过')
+    message.success(t('commentMgr.approveSuccess'))
     await getComments()
   } catch (error) {
     console.error('审核评论失败:', error)
-    message.error(error.message || '操作失败')
+    message.error(error.message || t('adminShared.operationFailed'))
   } finally {
     delete pendingActions[key]
   }
@@ -288,11 +289,11 @@ const handleReject = async (row) => {
   pendingActions[key] = true
   try {
     await rejectComment(row.id)
-    message.success('评论已拒绝')
+    message.success(t('commentMgr.rejectSuccess'))
     await getComments()
   } catch (error) {
     console.error('拒绝评论失败:', error)
-    message.error(error.message || '操作失败')
+    message.error(error.message || t('adminShared.operationFailed'))
   } finally {
     delete pendingActions[key]
   }
@@ -304,12 +305,12 @@ const handleDelete = async (row) => {
   pendingActions[key] = true
   try {
     await deleteComment(row.id)
-    message.success('删除成功')
+    message.success(t('adminShared.deleteSuccess'))
     selectedCommentIds.value = selectedCommentIds.value.filter((id) => id !== row.id)
     await getComments()
   } catch (error) {
     console.error('删除评论失败:', error)
-    message.error(error.message || '删除失败')
+    message.error(error.message || t('adminShared.deleteFailed'))
   } finally {
     delete pendingActions[key]
   }
@@ -324,10 +325,10 @@ const handleBatchDelete = () => {
   batchActionPending.value = 'delete'
 
   Modal.confirm({
-    title: `删除选中的 ${selectedCommentIds.value.length} 条评论？`,
-    content: '删除后无法恢复，请确认这些评论不再需要保留。',
-    okText: '确认删除',
-    cancelText: '取消',
+    title: t('commentMgr.batchDeleteTitle', { n: selectedCommentIds.value.length }),
+    content: t('commentMgr.batchDeleteContent'),
+    okText: t('commentMgr.confirmDelete'),
+    cancelText: t('adminShared.cancel'),
     okButtonProps: { danger: true },
     onCancel() {
       if (batchActionPending.value === 'delete') batchActionPending.value = ''
@@ -346,8 +347,8 @@ const handleBatchDelete = () => {
         const successCount = ids.length - failedIds.length
         selectedCommentIds.value = failedIds
 
-        if (!failedIds.length) message.success(`已删除 ${successCount} 条评论`)
-        else message.warning(`已删除 ${successCount} 条，${failedIds.length} 条删除失败并保持选中`)
+        if (!failedIds.length) message.success(t('commentMgr.batchDeleteDone', { n: successCount }))
+        else message.warning(t('commentMgr.batchDeletePartial', { success: successCount, failed: failedIds.length }))
         await getComments()
       } finally {
         if (batchActionPending.value === 'delete') batchActionPending.value = ''
@@ -361,10 +362,10 @@ const handleBatchApprove = () => {
 
   batchActionPending.value = 'approve'
   Modal.confirm({
-    title: `通过选中的 ${selectedCommentIds.value.length} 条评论？`,
-    content: '通过后评论会显示在文章讨论区。',
-    okText: '确认通过',
-    cancelText: '取消',
+    title: t('commentMgr.batchApproveTitle', { n: selectedCommentIds.value.length }),
+    content: t('commentMgr.batchApproveContent'),
+    okText: t('commentMgr.confirmApprove'),
+    cancelText: t('adminShared.cancel'),
     onCancel() {
       if (batchActionPending.value === 'approve') batchActionPending.value = ''
     },
@@ -381,8 +382,8 @@ const handleBatchApprove = () => {
         }, [])
         const successCount = ids.length - failedIds.length
         selectedCommentIds.value = failedIds
-        if (!failedIds.length) message.success(`已通过 ${successCount} 条评论`)
-        else message.warning(`已通过 ${successCount} 条，${failedIds.length} 条失败并保持选中`)
+        if (!failedIds.length) message.success(t('commentMgr.batchApproveDone', { n: successCount }))
+        else message.warning(t('commentMgr.batchApprovePartial', { success: successCount, failed: failedIds.length }))
         await getComments()
       } finally {
         if (batchActionPending.value === 'approve') batchActionPending.value = ''
@@ -404,9 +405,9 @@ const getStatusColor = (status) => {
 // 获取状态文本
 const getStatusText = (status) => {
   const map = {
-    pending: '待审核',
-    approved: '已通过',
-    rejected: '已拒绝'
+    pending: t('commentMgr.status.pending'),
+    approved: t('commentMgr.status.approved'),
+    rejected: t('commentMgr.status.rejected')
   }
   return map[status] || status
 }

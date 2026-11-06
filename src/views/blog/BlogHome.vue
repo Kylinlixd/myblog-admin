@@ -5,12 +5,12 @@
       <FluidCursor v-if="fluidCursorVisible" class="home-fluid-cursor" :sim-resolution="64" :dye-resolution="480" :capture-resolution="256" :density-dissipation="4.8" :velocity-dissipation="2.8" :pressure-iterations="10" :splat-radius=".25" :splat-force="2800" :shading="false" :color-update-speed="7" />
       <div class="hero-inner app-container">
         <div class="hero-copy">
-          <h1 id="home-title" :class="['hero-title', `hero-title--${titlePhase}`]" aria-label="探索技术，无限可能，开发、构建、应用">
+          <h1 id="home-title" :class="['hero-title', `hero-title--${titlePhase}`]" :aria-label="[t('home.lead'), t('home.accent'), ...t('home.trailWords').split(',')].join('，')">
             <span class="hero-title__lead">{{ typedLead }}</span>
             <span class="hero-title__accent">{{ typedAccent }}</span>
           </h1>
           <!-- 打字机逐字符变化，标 aria-live 只会让读屏软件逐字母播报 -->
-          <div class="hero-title-loop" :class="`hero-title-loop--${trailPhase}`" aria-label="动态关键词">
+          <div class="hero-title-loop" :class="`hero-title-loop--${trailPhase}`" :aria-label="t('home.dynamicKeywords')">
             <span class="hero-title-loop__word">{{ typedTrail }}<i v-if="['typing', 'deleting'].includes(trailPhase)" class="hero-title-loop__cursor" aria-hidden="true">_</i></span>
           </div>
         </div>
@@ -19,32 +19,32 @@
     </section>
 
     <section id="latest-posts" ref="latestSection" class="latest-section home-lazy-section app-container" aria-labelledby="latest-title">
-      <div class="section-heading"><h2 id="latest-title">{{ t('home.latest') }}</h2><p>从最近一次更新开始，顺着真实问题进入文章。</p></div>
+      <div class="section-heading"><h2 id="latest-title">{{ t('home.latest') }}</h2><p>{{ t("home.latestDesc") }}</p></div>
       <AsyncState v-if="loading || error || !latest.length" :loading="loading" :error="error" :empty="!loading && !error && !latest.length" @retry="loadLatest" />
       <div v-else class="article-list">
         <router-link v-for="item in latest" :key="item.id" class="article-row" :to="`/blog/dynamics/${item.id}`">
           <div class="article-body">
-            <div class="article-meta"><span>{{ item.category?.name || '持续构建' }}</span><time v-if="articleDate(item)" :datetime="articleDate(item)">{{ formatDate(item) }}</time></div>
+            <div class="article-meta"><span>{{ item.category?.name || t('home.continuousBuilding') }}</span><time v-if="articleDate(item)" :datetime="articleDate(item)">{{ formatDate(item) }}</time></div>
             <h3>{{ item.title }}</h3><p>{{ excerpt(item) }}</p>
           </div><span class="article-arrow" aria-hidden="true">↗</span>
         </router-link>
       </div>
-      <router-link class="section-link" to="/blog/blogdynamic">浏览全部文章 <span aria-hidden="true">→</span></router-link>
+      <router-link class="section-link" to="/blog/blogdynamic">{{ t("home.browseAll") }} <span aria-hidden="true">→</span></router-link>
     </section>
 
     <section id="topics" ref="categorySection" class="topics-section home-lazy-section app-container" aria-labelledby="topics-title">
-      <div class="section-heading"><h2 id="topics-title">主题分类</h2><p>按主题浏览，找到属于你的阅读路径。</p></div>
-      <div v-if="categoryLoading || (!categoriesLoaded && !categoryError)" class="category-skeleton" role="status" aria-label="正在加载主题分类"><span v-for="index in 4" :key="index" /></div>
-      <div v-else-if="categoryError" class="category-error" role="alert"><p>{{ categoryError }}</p><button type="button" @click="loadCategories">重新加载分类</button></div>
-      <div v-else-if="categories.length" class="category-list"><router-link v-for="item in categories" :key="item.id" class="category-row" :to="`/blog/categories/${item.id}`"><span class="category-name">{{ item.name }}</span><span class="category-description">{{ item.description || '沿着这个主题继续阅读。' }}</span><span class="category-arrow" aria-hidden="true">↗</span></router-link></div>
-      <p v-else class="category-empty">新的主题正在整理中。</p>
+      <div class="section-heading"><h2 id="topics-title">{{ t("home.topicsHeading") }}</h2><p>{{ t("home.topicsDesc") }}</p></div>
+      <div v-if="categoryLoading || (!categoriesLoaded && !categoryError)" class="category-skeleton" role="status" :aria-label="t('home.loadingTopics')"><span v-for="index in 4" :key="index" /></div>
+      <div v-else-if="categoryError" class="category-error" role="alert"><p>{{ categoryError }}</p><button type="button" @click="loadCategories">{{ t("home.reloadCategories") }}</button></div>
+      <div v-else-if="categories.length" class="category-list"><router-link v-for="item in categories" :key="item.id" class="category-row" :to="`/blog/categories/${item.id}`"><span class="category-name">{{ item.name }}</span><span class="category-description">{{ item.description || t('categories.categoryDesc') }}</span><span class="category-arrow" aria-hidden="true">↗</span></router-link></div>
+      <p v-else class="category-empty">{{ t("home.categoryEmpty") }}</p>
     </section>
   </div>
 </template>
 
 <script setup>
 import { defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
-import { t } from '@/i18n'
+import { t, formatDate as formatLocaleDate } from '@/i18n'
 import { getBlogCategoryList, getRecentDynamics } from '@/api/blog'
 import { normalizeCollectionResponse } from '@/api/collections'
 import AsyncState from '@/components/common/AsyncState.vue'
@@ -74,18 +74,18 @@ let titleSettleTimer
 let trailTimer
 const extractList = (response) => normalizeCollectionResponse(response).results
 
-function excerpt(article) { return (article?.summary || article?.content || '点击阅读完整内容。').replace(/[#>*_`\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 110) }
+function excerpt(article) { return (article?.summary || article?.content || t('home.clickReadMore')).replace(/[#>*_`\[\]]/g, '').replace(/\s+/g, ' ').trim().slice(0, 110) }
 function articleDate(article) { return article?.published_at || article?.publishedAt || article?.created_at || article?.createdAt || '' }
-function formatDate(article) { const value = articleDate(article); if (!value) return ''; const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date) }
+function formatDate(article) { const value = articleDate(article); if (!value) return ''; return formatLocaleDate(value, { year: 'numeric', month: '2-digit', day: '2-digit' }) }
 
 async function loadLatest() {
   loading.value = true; error.value = ''
-  try { latest.value = extractList(await getRecentDynamics({ limit: 6 })).slice(0, 6) } catch (reason) { error.value = reason?.message || '请检查后端服务是否正常运行。' } finally { loading.value = false }
+  try { latest.value = extractList(await getRecentDynamics({ limit: 6 })).slice(0, 6) } catch (reason) { error.value = reason?.message || t('home.serviceError') } finally { loading.value = false }
 }
 async function loadCategories() {
   if (categoriesLoaded.value || categoryLoading.value) return
   categoryLoading.value = true; categoryError.value = ''
-  try { categories.value = extractList(await getBlogCategoryList()); categoriesLoaded.value = true } catch (reason) { categoryError.value = reason?.message || '主题分类暂时无法加载。' } finally { categoryLoading.value = false }
+  try { categories.value = extractList(await getBlogCategoryList()); categoriesLoaded.value = true } catch (reason) { categoryError.value = reason?.message || t('home.categoriesError') } finally { categoryLoading.value = false }
 }
 function observeCategories() {
   if (!categorySection.value) return
@@ -101,9 +101,9 @@ function scrollToLatest(event) {
   latestSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 function startTitleTyping() {
-  const lead = '探索技术'
-  const accent = '无限可能'
-  const trailWords = ['开发', '构建', '应用']
+  const lead = t('home.lead')
+  const accent = t('home.accent')
+  const trailWords = t('home.trailWords').split(',')
   const leadDelays = [180, 118, 148, 126]
   const accentDelays = [176, 122, 150, 120, 136]
   const typeDelays = [176, 122, 150, 120]

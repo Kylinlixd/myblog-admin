@@ -46,7 +46,7 @@ describe('blog detail sanitization', () => {
     const source = fs.readFileSync(path.join(process.cwd(), 'src/views/blog/BlogDynamicDetail.vue'), 'utf8')
 
     expect(source).toContain("result.data?.status === 'pending'")
-    expect(source).toContain('需人工审核后展示')
+    expect(source).toContain("t('detail.commentPendingReview')")
     expect(source).toContain('error.message ||')
   })
 })

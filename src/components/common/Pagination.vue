@@ -7,7 +7,7 @@
         :pageSize="currentSize"
         :showSizeChanger="true"
         :pageSizeOptions="pageSizes.map(String)"
-        :showTotal="total => `共 ${total} 条`"
+        :showTotal="(total) => t('common.total', { n: total })"
         @change="handleCurrentChange"
         @showSizeChange="handleSizeChange"
       />
@@ -17,6 +17,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { t } from '@/i18n'
 
 const props = defineProps({
   total: {

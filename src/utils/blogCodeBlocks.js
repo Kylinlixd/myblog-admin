@@ -1,3 +1,5 @@
+import { t, currentLocale } from '@/i18n'
+
 const getLanguage = (pre, code) => {
   const language = pre.dataset.language || [...(code?.classList || [])]
     .find((name) => name.startsWith('language-'))
@@ -28,7 +30,7 @@ const ensureActionLabel = (button, text) => {
 
 const setCopyState = (button, text) => {
   const feedback = button.parentElement?.querySelector('.blog-code-copy-feedback')
-  const copied = text === '已复制'
+  const copied = text === t('code.copied')
   button.classList.toggle('is-copied', copied)
   ensureActionLabel(button, text)
   button.setAttribute('aria-label', text)
@@ -41,10 +43,10 @@ const setCopyState = (button, text) => {
     window.setTimeout(() => {
       feedback?.classList.remove('is-visible')
       button.classList.remove('is-copied')
-      const defaultLabel = button.dataset.copyLabel || '复制代码'
+      const defaultLabel = button.dataset.copyLabel || t('code.copyCode')
       button.setAttribute('aria-label', defaultLabel)
       button.setAttribute('title', defaultLabel)
-      ensureActionLabel(button, '复制')
+      ensureActionLabel(button, t('code.copy'))
     }, 1400)
   }
 }
@@ -116,15 +118,15 @@ const runHtml = (pre, rawCode) => {
   panel.classList.remove('is-collapsed')
   const previewToggle = panel.querySelector('[data-blog-code-preview-collapse]')
   previewToggle?.setAttribute('aria-expanded', 'true')
-  previewToggle?.setAttribute('aria-label', '折叠预览')
-  previewToggle?.setAttribute('title', '折叠预览')
+  previewToggle?.setAttribute('aria-label', t('code.collapsePreview'))
+  previewToggle?.setAttribute('title', t('code.collapsePreview'))
   previewToggle?.querySelector('.blog-code-collapse-icon')?.classList.remove('is-collapsed')
   target.replaceChildren()
   const frame = document.createElement('iframe')
   const messageId = `blog-preview-${Date.now()}-${Math.random().toString(36).slice(2)}`
   frame.className = 'blog-code-run-preview-frame blog-code-run-preview-frame--expanded'
   frame.setAttribute('sandbox', 'allow-scripts')
-  frame.setAttribute('title', 'HTML 试运行预览')
+  frame.setAttribute('title', t('code.htmlPreview'))
   frame.dataset.blogCodePreviewId = messageId
   frame.style.height = '220px'
   const onMessage = (event) => {
@@ -164,7 +166,7 @@ const clipLongCode = (pre, rawCode) => {
   const more = document.createElement('button')
   more.type = 'button'
   more.className = 'blog-code-more'
-  more.innerHTML = `展开全部 <span>${lineCount} 行</span>`
+  more.innerHTML = `${t('code.expandAll')} <span>${lineCount} ${t('code.lines')}</span>`
   more.addEventListener('click', () => {
     pre.classList.remove('is-clipped')
     more.remove()
@@ -200,7 +202,7 @@ const setupHorizontalScroll = (pre, compact) => {
     if (header && actions && !pre.querySelector('.blog-code-swipe-hint')) {
       const hint = document.createElement('span')
       hint.className = 'blog-code-swipe-hint'
-      hint.textContent = '左右滑动'
+      hint.textContent = t('code.swipeHint')
       header.insertBefore(hint, actions)
       window.setTimeout(removeHint, 6000)
     }
@@ -230,7 +232,7 @@ export function bindCodeBlockInteractions(root) {
   if (!root?.querySelectorAll) return []
 
   return [...root.querySelectorAll('pre[data-blog-code-window="true"]')].map((pre) => {
-    if (pre.dataset.blogCodeBound === 'true') return pre
+    if (pre.dataset.blogCodeBound === currentLocale.value) return pre
 
     const code = pre.querySelector('code')
     const language = getLanguage(pre, code)
@@ -238,13 +240,13 @@ export function bindCodeBlockInteractions(root) {
     const collapseButton = pre.querySelector('[data-blog-code-action="collapse"]') || pre.querySelector('.blog-code-collapse')
     const copyButton = pre.querySelector('[data-blog-code-action="copy"]') || pre.querySelector('.blog-code-copy')
     if (copyButton && !copyButton.dataset.copyLabel) {
-      copyButton.dataset.copyLabel = copyButton.getAttribute('aria-label') || '复制代码'
+      copyButton.dataset.copyLabel = copyButton.getAttribute('aria-label') || t('code.copyCode')
     }
 
     const compact = isCompactViewport()
     if (compact) {
-      ensureActionLabel(collapseButton, '折叠')
-      ensureActionLabel(copyButton, '复制')
+      ensureActionLabel(collapseButton, t('code.collapse'))
+      ensureActionLabel(copyButton, t('code.copy'))
     }
 
     collapseButton?.addEventListener('click', () => {
@@ -252,17 +254,17 @@ export function bindCodeBlockInteractions(root) {
       const runFooter = pre.querySelector('.blog-code-run-footer')
       runFooter?.classList.toggle('is-collapsed', collapsed)
       collapseButton.setAttribute('aria-expanded', String(!collapsed))
-      collapseButton.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}${language}代码`)
-      ensureActionLabel(collapseButton, collapsed ? '展开' : '折叠')
+      collapseButton.setAttribute('aria-label', t(collapsed ? 'code.expandCode' : 'code.collapseCode', { language }))
+      ensureActionLabel(collapseButton, t(collapsed ? 'code.expand' : 'code.collapse'))
       collapseButton.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
     })
 
     copyButton?.addEventListener('click', async () => {
       try {
         await copyCode(rawCode)
-        setCopyState(copyButton, '已复制')
+        setCopyState(copyButton, t('code.copied'))
       } catch {
-        setCopyState(copyButton, '复制失败')
+        setCopyState(copyButton, t('code.copyFailed'))
       }
     })
 
@@ -274,8 +276,8 @@ export function bindCodeBlockInteractions(root) {
     previewToggle?.addEventListener('click', () => {
       const collapsed = previewPanel.classList.toggle('is-collapsed')
       previewToggle.setAttribute('aria-expanded', String(!collapsed))
-      previewToggle.setAttribute('aria-label', `${collapsed ? '展开' : '折叠'}预览`)
-      previewToggle.setAttribute('title', `${collapsed ? '展开' : '折叠'}预览`)
+      previewToggle.setAttribute('aria-label', t(collapsed ? 'code.expandPreview' : 'code.collapsePreview'))
+      previewToggle.setAttribute('title', t(collapsed ? 'code.expandPreview' : 'code.collapsePreview'))
       previewToggle.querySelector('.blog-code-collapse-icon')?.classList.toggle('is-collapsed', collapsed)
     })
 
@@ -284,7 +286,7 @@ export function bindCodeBlockInteractions(root) {
     }
     setupHorizontalScroll(pre, compact)
 
-    pre.dataset.blogCodeBound = 'true'
+    pre.dataset.blogCodeBound = currentLocale.value
     return pre
   })
 }
@@ -316,23 +318,23 @@ const wrapLegacyCodeBlock = (pre) => {
   collapseButton.className = 'blog-code-action blog-code-collapse'
   collapseButton.setAttribute('data-blog-code-action', 'collapse')
   collapseButton.setAttribute('aria-expanded', 'true')
-  collapseButton.setAttribute('aria-label', `折叠${language}代码`)
-  collapseButton.setAttribute('title', `折叠${language}代码`)
+  collapseButton.setAttribute('aria-label', t('code.collapseCode', { language }))
+  collapseButton.setAttribute('title', t('code.collapseCode', { language }))
   collapseButton.innerHTML = collapseIconMarkup
 
   const copyButton = document.createElement('button')
   copyButton.type = 'button'
   copyButton.className = 'blog-code-action blog-code-copy'
   copyButton.setAttribute('data-blog-code-action', 'copy')
-  copyButton.setAttribute('aria-label', `复制${language}代码`)
-  copyButton.setAttribute('title', `复制${language}代码`)
+  copyButton.setAttribute('aria-label', t('code.copyCode', { language }))
+  copyButton.setAttribute('title', t('code.copyCode', { language }))
   copyButton.innerHTML = '<svg class="blog-code-copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="11" height="11" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>'
 
   const copyFeedback = document.createElement('span')
   copyFeedback.className = 'blog-code-copy-feedback'
   copyFeedback.setAttribute('role', 'status')
   copyFeedback.setAttribute('aria-live', 'polite')
-  copyFeedback.textContent = '已复制'
+  copyFeedback.textContent = t('code.copied')
 
   actions.append(collapseButton, copyButton, copyFeedback)
   header.append(dots, label, actions)
@@ -360,9 +362,9 @@ const wrapLegacyCodeBlock = (pre) => {
     runButton.className = 'blog-code-action blog-code-run'
     runButton.setAttribute('data-blog-code-action', 'run')
     runButton.setAttribute('data-blog-code-run-kind', language)
-    runButton.setAttribute('aria-label', `试运行${language}代码`)
-    runButton.setAttribute('title', '试运行')
-    runButton.innerHTML = `${runIconMarkup}<span>试运行</span>`
+    runButton.setAttribute('aria-label', t('code.runCode', { language }))
+    runButton.setAttribute('title', t('code.run'))
+    runButton.innerHTML = `${runIconMarkup}<span>${t('code.run')}</span>`
     footer.appendChild(runButton)
     const panel = document.createElement('div')
     panel.className = language === 'js'
@@ -371,8 +373,8 @@ const wrapLegacyCodeBlock = (pre) => {
     panel.setAttribute(language === 'js' ? 'data-blog-code-run-output' : 'data-blog-code-run-preview', '')
     panel.hidden = true
     panel.innerHTML = language === 'js'
-      ? '<div class="blog-code-run-panel-title">运行输出</div><div class="blog-code-run-output" role="log" aria-live="polite"></div>'
-      : '<div class="blog-code-run-panel-header"><div class="blog-code-run-panel-title">预览</div><button type="button" class="blog-code-preview-collapse" data-blog-code-preview-collapse aria-expanded="true" aria-label="折叠预览" title="折叠预览"><svg class="blog-code-collapse-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"></path></svg></button></div><div class="blog-code-run-preview-target"></div>'
+      ? `<div class="blog-code-run-panel-title">${t('code.runOutput')}</div><div class="blog-code-run-output" role="log" aria-live="polite"></div>`
+      : `<div class="blog-code-run-panel-header"><div class="blog-code-run-panel-title">${t('code.preview')}</div><button type="button" class="blog-code-preview-collapse" data-blog-code-preview-collapse aria-expanded="true" aria-label="${t('code.collapsePreview')}" title="${t('code.collapsePreview')}"><svg class="blog-code-collapse-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m6 9 6 6 6-6"></path></svg></button></div><div class="blog-code-run-preview-target"></div>`
     footer.appendChild(panel)
     pre.appendChild(footer)
   }

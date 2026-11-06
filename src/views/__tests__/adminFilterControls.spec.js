@@ -35,8 +35,8 @@ describe('admin filter controls', () => {
       'utf8'
     )
 
-    expect(homeView).toContain("const lead = '探索技术'")
-    expect(homeView).toContain('aria-label="探索技术，无限可能，开发、构建、应用"')
+    expect(homeView).toContain("const lead = t('home.lead')")
+    expect(homeView).toContain(':aria-label="[t(\'home.lead\')')
     expect(homeView).not.toContain('持续构建，<br /><em>保持清醒。</em>')
     expect(layout).not.toContain('本地开发')
     expect(layout).not.toContain('API 已代理到 8000')
@@ -46,8 +46,8 @@ describe('admin filter controls', () => {
     const listView = readView('dynamics/DynamicList.vue')
     expect(listView).toContain('content-table-scroll')
     expect(listView).toContain('min-width: 1120px')
-    expect(listView).toContain("title: '标题'")
-    expect(listView).toContain("title: '分类'")
+    expect(listView).toContain("title: t('dynamicMgr.column.title')")
+    expect(listView).toContain("title: t('adminShared.category')")
   })
 
   it('defers dynamic body and media loading to edit and preview views', () => {

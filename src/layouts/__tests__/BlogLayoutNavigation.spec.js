@@ -31,7 +31,7 @@ describe('BlogLayout navigation active state', () => {
 
     expect(detail).toContain("route.query.from === 'light'")
     expect(detail).toContain('query: contextQuery')
-    expect(detail).toContain('← 返回拾光')
+    expect(detail).toContain("t('detail.backToLight')")
     expect(collection).toContain("query: { from: 'light' }")
     expect(category).toContain("query: { from: 'light' }")
     expect(tag).toContain('route.query.from === \'light\'')

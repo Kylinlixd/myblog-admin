@@ -1,20 +1,20 @@
 <template>
   <article class="comment-thread" :class="{ 'comment-thread--reply': depth > 0 }">
     <div class="comment-user">
-      <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" :size="depth ? 28 : 36" tone="warm" fallback="anonymous" :fallback-seed="comment.id" />
+      <UserAvatar :src="comment.avatar" :nickname="comment.nickname || t('component.anonymous')" :size="depth ? 28 : 36" tone="warm" fallback="anonymous" :fallback-seed="comment.id" />
       <div class="comment-user__identity">
-        <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
-        <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
+        <span class="nickname">{{ comment.nickname || t('component.anonymous') }}</span>
+        <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" :aria-label="t('component.clientInfo')">
           <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
           <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
         </div>
       </div>
-      <a v-if="safeWebsiteHref" class="comment-website" :href="safeWebsiteHref" target="_blank" rel="noopener noreferrer">主页</a>
-      <span v-if="comment.reply_to_nickname" class="reply-target">回复 @{{ comment.reply_to_nickname }}</span>
+      <a v-if="safeWebsiteHref" class="comment-website" :href="safeWebsiteHref" target="_blank" rel="noopener noreferrer">{{ t('component.homepage') }}</a>
+      <span v-if="comment.reply_to_nickname" class="reply-target">{{ t('component.replyTo', { name: comment.reply_to_nickname }) }}</span>
       <span class="time">{{ formatDate(comment.created_at || comment.createTime) }}</span>
     </div>
     <div class="comment-content">{{ comment.content }}</div>
-    <button class="comment-reply" type="button" @click="$emit('reply', comment)">回复</button>
+    <button class="comment-reply" type="button" @click="$emit('reply', comment)">{{ t('component.reply') }}</button>
     <slot name="reply-editor" :comment="comment" />
     <div v-if="depth === 0 && comment.replies_preview?.length" class="comment-replies">
       <CommentThread v-for="reply in comment.replies_preview" :key="reply.id" :comment="reply" :depth="1" @reply="$emit('reply', $event)">
@@ -29,7 +29,7 @@
         :disabled="loadingMore"
         @click="$emit('more', comment)"
       >
-        {{ loadingMore ? '回复加载中...' : `查看更多回复（${comment.reply_count - comment.replies_preview.length}）` }}
+        {{ loadingMore ? t('component.repliesLoading') : t('component.viewMoreReplies', { n: comment.reply_count - comment.replies_preview.length }) }}
       </button>
     </div>
   </article>
@@ -39,6 +39,7 @@
 import { computed } from 'vue'
 import UserAvatar from '@/components/common/UserAvatar.vue'
 import dayjs from 'dayjs'
+import { t } from '@/i18n'
 
 defineOptions({ name: 'CommentThread' })
 const props = defineProps({

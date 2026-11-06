@@ -15,6 +15,7 @@ describe('Ant Design component registry', () => {
 
     expect(appView).toContain('<a-config-provider :locale="antLocale">')
     expect(appView).toContain("import zhCN from 'ant-design-vue/es/locale/zh_CN'")
-    expect(appView).toContain("items_per_page: '/页'")
+    expect(appView).toContain('antLocale = ref(zhCN)')
+    expect(appView).toContain("ant-design-vue/es/locale/en_US")
   })
 })

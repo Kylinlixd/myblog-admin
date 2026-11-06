@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { t } from '@/i18n'
 
 const LOADING_TIMEOUT = 15_000
 
 export const useAppStore = defineStore('app', () => {
   const isLoading = ref(false)
-  const loadingText = ref('加载中...')
+  const loadingText = ref(t('common.loading'))
   const hasError = ref(false)
   const errorMessage = ref('')
   const sidebarCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
@@ -18,7 +19,7 @@ export const useAppStore = defineStore('app', () => {
     loadingTimer = undefined
   }
 
-  function setLoading(status, text = '加载中...') {
+  function setLoading(status, text = t('common.loading')) {
     clearLoadingTimer()
     isLoading.value = status
     loadingText.value = text
@@ -27,13 +28,13 @@ export const useAppStore = defineStore('app', () => {
       hasError.value = false
       errorMessage.value = ''
       loadingTimer = window.setTimeout(() => {
-        setLoadingError('加载超时，请刷新页面重试')
+        setLoadingError(t('common.loadingTimeout'))
         isLoading.value = false
       }, LOADING_TIMEOUT)
     }
   }
 
-  const startLoading = (text = '加载中...') => setLoading(true, text)
+  const startLoading = (text = t('common.loading')) => setLoading(true, text)
   const endLoading = () => setLoading(false)
 
   function setLoadingError(message) {
@@ -41,14 +42,14 @@ export const useAppStore = defineStore('app', () => {
     errorMessage.value = message
   }
 
-  function retryLoading(text = '正在重试...') {
+  function retryLoading(text = t('common.retrying')) {
     setLoading(true, text)
   }
 
   function resetLoadingState() {
     clearLoadingTimer()
     isLoading.value = false
-    loadingText.value = '加载中...'
+    loadingText.value = t('common.loading')
     hasError.value = false
     errorMessage.value = ''
   }

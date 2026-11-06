@@ -3,27 +3,27 @@
     <div class="blog-dynamic">
       <!-- 页面标题 -->
       <div class="page-header cinematic-hero blog-dynamic-hero">
-        <h1 class="page-title">探索动态</h1>
-        <p class="page-description">记录我的开发之路，分享生活点滴和思考</p>
+        <h1 class="page-title">{{ t("dynamic.explore") }}</h1>
+        <p class="page-description">{{ t("dynamic.description") }}</p>
       </div>
 
       <div v-if="dynamicList.length === 0 && !loading" class="empty-state cinematic-card">
-        <p>暂无动态内容</p>
-        <a-button @click="refreshList" type="primary" size="small">刷新</a-button>
+        <p>{{ t("dynamic.empty") }}</p>
+        <a-button @click="refreshList" type="primary" size="small">{{ t("dynamic.refresh") }}</a-button>
       </div>
 
       <div v-if="dynamicList.length > 0" class="blog-dynamic-layout">
-        <aside v-if="timelineGroups.length || activeTimeline" class="dynamic-timeline" aria-label="时间线">
-          <div class="dynamic-timeline__label">时间线</div>
-          <p class="dynamic-timeline__intro">按发布节奏回看内容</p>
+        <aside v-if="timelineGroups.length || activeTimeline" class="dynamic-timeline" :aria-label="t('dynamic.timeline')">
+          <div class="dynamic-timeline__label">{{ t("dynamic.timeline") }}</div>
+          <p class="dynamic-timeline__intro">{{ t("dynamic.timelineIntro") }}</p>
           <nav class="dynamic-timeline__nav">
             <button
               type="button"
               :class="{ 'is-active': !activeTimeline }"
               @click="selectTimelinePeriod('')"
             >
-              <span class="timeline-year">全部</span>
-              <strong>动态</strong>
+              <span class="timeline-year">{{ t("dynamic.timelineAll") }}</span>
+              <strong>{{ t("dynamic.timelineLabel") }}</strong>
             </button>
             <button
               v-for="group in timelineGroups"
@@ -34,7 +34,7 @@
             >
               <span class="timeline-year">{{ group.year }}</span>
               <strong>{{ group.monthLabel }}</strong>
-              <small>{{ group.count }} 篇</small>
+              <small>{{ t("dynamic.articles", { n: group.count }) }}</small>
             </button>
           </nav>
         </aside>
@@ -72,11 +72,11 @@
             </div>
 
             <div v-if="previewMedia(item)" class="dynamic-media-list">
-              <div v-if="isMediaUnavailable(previewMedia(item).url)" class="media-unavailable">该媒体已不可用</div>
+              <div v-if="isMediaUnavailable(previewMedia(item).url)" class="media-unavailable">{{ t("detail.mediaUnavailable") }}</div>
               <div v-else-if="previewMedia(item).type === 'image'" class="dynamic-media-frame">
-                <img :src="previewMedia(item).url" :alt="previewMedia(item).name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(previewMedia(item).url)" />
+                <img :src="previewMedia(item).url" :alt="previewMedia(item).name || t('detail.dynamicImage')" loading="lazy" decoding="async" @error="markMediaUnavailable(previewMedia(item).url)" />
               </div>
-              <video v-else controls preload="none" :src="previewMedia(item).url" :poster="previewMedia(item).posterUrl || undefined" playsinline @error="markMediaUnavailable(previewMedia(item).url)">您的浏览器不支持视频播放</video>
+              <video v-else controls preload="none" :src="previewMedia(item).url" :poster="previewMedia(item).posterUrl || undefined" playsinline @error="markMediaUnavailable(previewMedia(item).url)">{{ t("detail.videoNotSupported") }}</video>
             </div>
           </div>
 
@@ -98,7 +98,7 @@
               <router-link :to="`/blog/dynamics/${item.id}`" class="view-detail-link">
                 <a-button type="text">
                   <eye-outlined />
-                  <span>查看详情</span>
+                  <span>{{ t("dynamic.viewDetail") }}</span>
                 </a-button>
               </router-link>
             </div>
@@ -107,20 +107,20 @@
           <!-- 展开后仅展示评论，不提供编辑窗口 -->
           <div v-if="selectedDynamic?.id === item.id" class="comment-section cinematic-card">
             <div class="comment-header">
-              <h3>评论 ({{ item.commentTotal ?? item.comments ?? 0 }})</h3>
+              <h3>{{ t("dynamic.comments") }} ({{ item.commentTotal ?? item.comments ?? 0 }})</h3>
             </div>
             <div class="comment-list">
               <div v-if="item.commentError" class="no-comments" role="alert">
                 {{ item.commentError }}
-                <button type="button" class="comment-retry" @click="fetchComments(item)">重试</button>
+                <button type="button" class="comment-retry" @click="fetchComments(item)">{{ t("common.retry") }}</button>
               </div>
               <div v-else-if="item.commentList?.length">
                 <div v-for="comment in item.commentList" :key="comment.id" class="comment-item">
                   <div class="comment-user">
-                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname || '匿名用户'" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
+                    <UserAvatar :src="comment.avatar" :nickname="comment.nickname || t('component.anonymous')" tone="warm" fallback="anonymous" :fallback-seed="comment.id" :size="36" />
                     <div class="comment-user__identity">
-                      <span class="nickname">{{ comment.nickname || '匿名用户' }}</span>
-                      <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" aria-label="客户端信息">
+                      <span class="nickname">{{ comment.nickname || t('component.anonymous') }}</span>
+                      <div v-if="comment.client_browser || comment.client_os" class="comment-client-tags" :aria-label="t('component.clientInfo')">
                         <span v-if="comment.client_browser" class="comment-client-tag">{{ comment.client_browser }}</span>
                         <span v-if="comment.client_os" class="comment-client-tag">{{ comment.client_os }}</span>
                       </div>
@@ -130,7 +130,7 @@
                   <div class="comment-content">{{ comment.content }}</div>
                 </div>
               </div>
-              <div v-else class="no-comments">暂无评论</div>
+              <div v-else class="no-comments">{{ t("dynamic.noComments") }}</div>
             </div>
             <div v-if="item.commentTotal > (item.commentPageSize || 10)" class="comment-pagination">
               <a-pagination
@@ -241,7 +241,7 @@ const fetchComments = async (item) => {
     item.commentList = []
     item.commentTotal = 0
     // 失败要有可区分的提示，不能让评论区伪装成「暂无评论」
-    item.commentError = error?.message || '评论加载失败，请稍后重试'
+    item.commentError = error?.message || t('dynamic.commentFailed')
   } finally {
     item.isLoadingComments = false
   }
@@ -348,7 +348,7 @@ const fetchDynamicList = async (isRefresh = false) => {
     
   } catch (error) {
     console.error('获取动态列表失败:', error);
-    message.error('动态内容加载失败，请稍后重试')
+    message.error(t('dynamic.loadFailed'))
     if (isRefresh) dynamicList.value = []
     hasMore.value = false;
   } finally {
@@ -382,16 +382,16 @@ const handleLike = async (item) => {
       item.liked = response.data.liked
       item.likes = response.data.like_count
       if (response.data.already_liked) {
-        message.info('你已点赞，无需重复操作')
+        message.info(t('dynamic.alreadyLiked'))
       } else {
-        message.success(item.liked ? '点赞成功' : '取消点赞成功')
+        message.success(item.liked ? t('dynamic.likeSuccess') : t('dynamic.unlikeSuccess'))
       }
     } else {
-      message.error(response.message || '操作失败')
+      message.error(response.message || t('dynamic.operationFailed'))
     }
   } catch (error) {
     console.error('点赞失败:', error)
-    message.error(error.message || '点赞失败')
+    message.error(error.message || t('dynamic.likeFailed'))
   } finally {
     item.isLiking = false
   }

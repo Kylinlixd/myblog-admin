@@ -20,6 +20,7 @@
 import { computed, ref, watch } from 'vue'
 import { UserOutlined } from '@ant-design/icons-vue'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
+import { t } from '@/i18n'
 
 const props = defineProps({
   src: { type: String, default: '' },
@@ -53,7 +54,7 @@ const normalisedSrc = computed(() => {
   return buildApiUrl(value)
 })
 const imageSrc = computed(() => failed.value ? '' : (normalisedSrc.value || fallbackSrc.value))
-const label = computed(() => props.nickname || props.username || '用户')
+const label = computed(() => props.nickname || props.username || t('component.user'))
 
 watch([normalisedSrc, fallbackSrc], () => { failed.value = false })
 const handleError = () => { failed.value = true }

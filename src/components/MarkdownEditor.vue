@@ -6,7 +6,7 @@
       :theme="theme"
       :preview-theme="previewTheme"
       :code-theme="codeTheme"
-      :language="language"
+      :language="effectiveLanguage"
       :height="height"
       :on-upload-img="handleUploadImg"
       @onSave="handleSave"
@@ -16,13 +16,14 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { MdEditor } from 'md-editor-v3'
 import { message } from 'ant-design-vue'
 import 'md-editor-v3/lib/style.css'
 
 import { uploadImage } from '@/utils/upload'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
+import { t, currentLocale } from '@/i18n'
 
 const editorRef = ref(null)
 
@@ -49,7 +50,7 @@ const props = defineProps({
   },
   language: {
     type: String,
-    default: 'zh-CN'
+    default: ''
   }
 })
 
@@ -93,14 +94,14 @@ const handleUploadImg = async (files, callback) => {
       urls.push(buildApiUrl(result.url))
     }
 
-    if (!urls.length) throw new Error('图片上传失败，请重试')
+    if (!urls.length) throw new Error(t('adminShared.imageUploadFailed'))
 
     callback(urls)
     uploaded.forEach((item) => emit('on-image-uploaded', item))
-    message.success(`已上传 ${uploaded.length} 张图片`)
+    message.success(t('adminShared.imagesUploaded', { n: uploaded.length }))
   } catch (error) {
     console.error('编辑器图片上传失败:', error)
-    message.error(error?.message || '图片上传失败，请重试')
+    message.error(error?.message || t('adminShared.imageUploadFailed'))
     callback([])
   }
 }

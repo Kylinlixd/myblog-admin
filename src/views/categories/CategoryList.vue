@@ -1,10 +1,10 @@
 <template>
   <div class="category-list admin-page">
-    <PageHeader compact title="分类管理" subtitle="整理内容分类与展示状态。">
+    <PageHeader compact :title="t('shell.menu.category')" :subtitle="t('categoryMgr.subtitle')">
       <template #actions>
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>
-          新建分类
+          {{ t('categoryMgr.create') }}
         </a-button>
       </template>
     </PageHeader>
@@ -12,21 +12,21 @@
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
-        <a-form-item label="名称">
+        <a-form-item :label="t('adminShared.nameLabel')">
           <a-input 
             v-model:value="searchForm.name" 
-            placeholder="搜索分类名称" 
+            :placeholder="t('categoryMgr.searchPlaceholder')" 
             allowClear 
           />
         </a-form-item>
-        <a-form-item label="状态">
+        <a-form-item :label="t('adminShared.status')">
           <a-select
             v-model:value="searchForm.status"
-            placeholder="选择状态"
+            :placeholder="t('dynamicMgr.statusPlaceholder')"
             allowClear
           >
-            <a-select-option value="active">启用</a-select-option>
-            <a-select-option value="inactive">禁用</a-select-option>
+            <a-select-option value="active">{{ t('adminShared.status.active') }}</a-select-option>
+            <a-select-option value="inactive">{{ t('adminShared.status.inactive') }}</a-select-option>
           </a-select>
         </a-form-item>
       </div>
@@ -35,11 +35,11 @@
           <a-space size="middle">
             <a-button type="primary" @click="handleSearch">
               <template #icon><SearchOutlined /></template>
-              搜索
+              {{ t('component.search') }}
             </a-button>
             <a-button @click="resetSearch">
               <template #icon><ReloadOutlined /></template>
-              重置
+              {{ t('component.reset') }}
             </a-button>
           </a-space>
         </a-form-item>
@@ -50,9 +50,9 @@
     <div v-if="selectedRowKeys.length" class="table-operations admin-toolbar">
       <a-space size="middle">
         <a-popconfirm
-          title="确定要删除选中的分类吗？"
-          ok-text="确定"
-          cancel-text="取消"
+          :title="t('categoryMgr.batchDeleteConfirm')"
+          :ok-text="t('adminShared.confirm')"
+          :cancel-text="t('adminShared.cancel')"
           @confirm="handleBatchDelete"
         >
           <a-button
@@ -61,7 +61,7 @@
             :disabled="!selectedRowKeys.length || batchDeleting"
           >
             <template #icon><DeleteOutlined /></template>
-            批量删除
+            {{ t('adminShared.batchDelete') }}
           </a-button>
         </a-popconfirm>
       </a-space>
@@ -74,8 +74,8 @@
       :loading="loading"
       :error="errorMessage"
       :empty="!loading && !errorMessage"
-      empty-title="暂无分类"
-      empty-description="创建一个分类来整理文章内容。"
+      :empty-title="t('categoryMgr.empty')"
+      :empty-description="t('categoryMgr.emptyHint')"
       @retry="fetchCategories"
     />
 
@@ -103,7 +103,7 @@
         <!-- 状态列 -->
         <template v-else-if="column.dataIndex === 'status'">
           <a-tag :color="record.status === 'active' ? 'success' : 'default'">
-            {{ record.status === 'active' ? '启用' : '禁用' }}
+            {{ record.status === 'active' ? t('adminShared.status.active') : t('adminShared.status.inactive') }}
           </a-tag>
         </template>
 
@@ -117,12 +117,12 @@
           <a-space class="table-row-actions">
             <a-button type="text" size="small" class="row-action row-action--primary" @click="handleEdit(record)">
               <template #icon><EditOutlined /></template>
-              编辑
+              {{ t('adminShared.edit') }}
             </a-button>
             <a-popconfirm
-              title="确定要删除该分类吗？"
-              ok-text="确定"
-              cancel-text="取消"
+              :title="t('categoryMgr.deleteConfirm')"
+              :ok-text="t('adminShared.confirm')"
+              :cancel-text="t('adminShared.cancel')"
               @confirm="handleDelete(record)"
             >
               <a-button
@@ -134,7 +134,7 @@
                 :disabled="isDeleting(record.id)"
               >
                 <template #icon><DeleteOutlined /></template>
-                删除
+                {{ t('adminShared.delete') }}
               </a-button>
             </a-popconfirm>
           </a-space>
@@ -146,7 +146,7 @@
     <!-- 分类编辑对话框 -->
     <a-modal
       v-model:open="dialogVisible"
-      :title="dialogType === 'create' ? '新建分类' : '编辑分类'"
+      :title="dialogType === 'create' ? t('categoryMgr.createTitle') : t('categoryMgr.editTitle')"
       wrap-class-name="admin-edit-modal"
       width="600px"
       @ok="handleSubmit"
@@ -160,22 +160,22 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="分类名称" name="name">
-          <a-input v-model:value="categoryForm.name" placeholder="请输入分类名称" />
+        <a-form-item :label="t('categoryMgr.column.name')" name="name">
+          <a-input v-model:value="categoryForm.name" :placeholder="t('categoryMgr.nameRequired')" />
         </a-form-item>
         
-        <a-form-item label="描述" name="description">
+        <a-form-item :label="t('adminShared.description')" name="description">
           <a-textarea
             v-model:value="categoryForm.description"
             :rows="3"
-            placeholder="请输入分类描述"
+            :placeholder="t('categoryMgr.descPlaceholder')"
           />
         </a-form-item>
         
-        <a-form-item label="状态" name="status">
+        <a-form-item :label="t('adminShared.status')" name="status">
           <a-select v-model:value="categoryForm.status">
-            <a-select-option value="active">启用</a-select-option>
-            <a-select-option value="inactive">禁用</a-select-option>
+            <a-select-option value="active">{{ t('adminShared.status.active') }}</a-select-option>
+            <a-select-option value="inactive">{{ t('adminShared.status.inactive') }}</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -184,39 +184,40 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Input as AInput, Textarea as ATextarea, Select as ASelect } from 'ant-design-vue'
 import { getCategoryList, createCategory, updateCategory, deleteCategory } from '@/api/category'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
 import { useResizableColumns } from '@/composables/useResizableColumns'
+import { t } from '@/i18n'
 
 // 表格列配置
-const columns = [
+const columns = computed(() => [
   {
-    title: '序号',
+    title: t('adminShared.serialNo'),
     dataIndex: 'serialNo',
     key: 'serialNo',
     width: 72,
     align: 'center'
   },
   {
-    title: '分类名称',
+    title: t('categoryMgr.column.name'),
     dataIndex: 'name',
     key: 'name',
     width: 180,
     ellipsis: true
   },
   {
-    title: '描述',
+    title: t('adminShared.description'),
     dataIndex: 'description',
     key: 'description',
     width: 300,
     ellipsis: true
   },
   {
-    title: '排序',
+    title: t('categoryMgr.column.sort'),
     dataIndex: 'sort',
     key: 'sort',
     width: 100,
@@ -228,21 +229,21 @@ const columns = [
     }
   },
   {
-    title: '创建时间',
+    title: t('adminShared.createTime'),
     dataIndex: 'created_at',
     key: 'created_at',
     width: 180,
   },
   {
-    title: '操作',
+    title: t('adminShared.actions'),
     dataIndex: 'action',
     key: 'action',
     width: 190,
     fixed: 'right'
   }
-]
+])
 
-const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('categories', columns)
+const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('categories', computed(() => columns.value))
 
 // 数据列表
 const categoryList = ref([])
@@ -261,7 +262,7 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total) => `共 ${total} 条`,
+  showTotal: (total) => t('adminShared.totalItems', { n: total }),
   onChange: (page, nextPageSize) => {
     const sizeChanged = nextPageSize !== pagination.pageSize
     pagination.pageSize = nextPageSize
@@ -316,11 +317,11 @@ const categoryForm = reactive({
 // 表单规则
 const rules = {
   name: [
-    { required: true, message: '请输入分类名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+    { required: true, message: t('categoryMgr.nameRequired'), trigger: 'blur' },
+    { min: 2, max: 50, message: t('categoryMgr.nameLength'), trigger: 'blur' }
   ],
   description: [
-    { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
+    { max: 200, message: t('categoryMgr.descMax'), trigger: 'blur' }
   ]
 }
 
@@ -372,7 +373,7 @@ const fetchCategories = async (allowPageReset = true) => {
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('获取分类列表失败:', error)
-    errorMessage.value = error.message || '获取分类列表失败'
+    errorMessage.value = error.message || t('categoryMgr.loadFailed')
     categoryList.value = []
     pagination.total = 0
   } finally {
@@ -416,10 +417,10 @@ const handleSubmit = async () => {
     
     if (dialogType.value === 'create') {
       await createCategory(submitData)
-      message.success('分类创建成功')
+      message.success(t('categoryMgr.createSuccess'))
     } else {
       await updateCategory(submitData.id, submitData)
-      message.success('分类更新成功')
+      message.success(t('categoryMgr.updateSuccess'))
     }
     
     // 刷新分类列表
@@ -427,7 +428,7 @@ const handleSubmit = async () => {
     dialogVisible.value = false
   } catch (error) {
     console.error('保存分类失败:', error)
-    message.error(error.message || '操作失败，请重试')
+    message.error(error.message || t('adminShared.operationFailed'))
   } finally {
     formLoading.value = false
   }
@@ -439,11 +440,11 @@ const handleDelete = async (record) => {
   deletingIds.add(record.id)
   try {
     await deleteCategory(record.id)
-    message.success('分类删除成功')
+    message.success(t('categoryMgr.deleteSuccess'))
     await fetchCategories()
   } catch (error) {
     console.error('删除分类失败:', error)
-    message.error('删除失败，请重试')
+    message.error(t('adminShared.deleteFailed'))
   } finally {
     deletingIds.delete(record.id)
   }
@@ -455,7 +456,7 @@ const isDeleting = (id) => deletingIds.has(id)
 const handleBatchDelete = async () => {
   if (batchDeleting.value || !selectedRowKeys.value.length) {
     if (batchDeleting.value) return
-    message.warning('请选择要删除的分类')
+    message.warning(t('adminShared.selectToDelete', { item: t('categoryMgr.name') }))
     return
   }
 
@@ -475,12 +476,12 @@ const handleBatchDelete = async () => {
     }, [])
     const skippedIds = selectedIds.filter((id) => !ids.includes(id))
     selectedRowKeys.value = [...skippedIds, ...failedIds]
-    if (failedIds.length) message.warning(`${failedIds.length} 个分类删除失败并保持选中`)
-    else message.success('批量删除成功')
+    if (failedIds.length) message.warning(t('adminShared.batchPartialFailed', { n: failedIds.length, item: t('categoryMgr.name') }))
+    else message.success(t('adminShared.batchDeleteSuccess'))
     await fetchCategories()
   } catch (error) {
     console.error('批量删除失败:', error)
-    message.error('批量删除失败，请重试')
+    message.error(t('adminShared.batchDeleteFailed'))
   } finally {
     ids.forEach((id) => deletingIds.delete(id))
     batchDeleting.value = false

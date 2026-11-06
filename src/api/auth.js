@@ -5,11 +5,12 @@ import {
 } from '@/services/http/tokenStorage'
 
 import { unwrapApiResponse } from './response'
+import { t } from '@/i18n'
 
 export function persistAuthResponse(response) {
   const session = response?.data?.data || response?.data || response
   if (!session?.access) {
-    throw new TypeError('登录响应缺少 access token')
+    throw new TypeError(t('login.noToken'))
   }
   saveSession({ access: session.access })
   return response
@@ -36,28 +37,28 @@ export const changePassword = ({ oldPassword, newPassword }) =>
 export const updateUserProfile = (data) => request.put('/api/auth/profile/', data)
 
 export async function uploadAvatar(file) {
-  if (!file) throw new TypeError('缺少头像文件')
+  if (!file) throw new TypeError(t('login.missingAvatarFile'))
 
   const formData = new FormData()
   formData.append('file', file)
   const payload = unwrapApiResponse(
     await request.post('/api/upload/avatar/', formData),
-    '头像上传失败'
+    t('profile.avatarFailed')
   )
 
   if (typeof payload === 'string') {
-    if (!payload) throw new TypeError('头像上传响应缺少可用 URL')
+    if (!payload) throw new TypeError(t('profile.avatarInvalidResponse'))
     return { url: payload }
   }
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    throw new TypeError('头像上传响应缺少可用 URL')
+    throw new TypeError(t('profile.avatarInvalidResponse'))
   }
 
   const result = {
     ...payload,
     url: payload.url ?? payload.avatar_url ?? payload.avatar ?? null
   }
-  if (!result.url) throw new TypeError('头像上传响应缺少可用 URL')
+  if (!result.url) throw new TypeError(t('profile.avatarInvalidResponse'))
   return result
 }
 

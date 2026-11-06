@@ -19,6 +19,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
+import { t, currentLocale } from '@/i18n'
 
 const props = defineProps({
   state: { type: String, default: 'checking' },
@@ -27,13 +28,13 @@ const props = defineProps({
   error: { type: String, default: '' }
 })
 const emit = defineEmits(['check'])
-const labels = { ok: '服务正常', checking: '正在检测', error: '连接异常', expired: '会话已过期', forbidden: '无检测权限' }
+const labels = { ok: t('service.ok'), checking: t('service.checking'), error: t('service.error'), expired: t('service.expired'), forbidden: t('service.forbidden') }
 const label = computed(() => labels[props.state] || labels.error)
 const showDetails = ref(false)
 const detail = computed(() => {
   if (props.error) return props.error
-  const when = props.checkedAt ? new Date(props.checkedAt).toLocaleTimeString('zh-CN', { hour12: false }) : '尚未检测'
-  return `仅检查后台 API 连接 · ${when}${props.latency == null ? '' : ` · 往返 ${props.latency}ms`}`
+  const when = props.checkedAt ? new Date(props.checkedAt).toLocaleTimeString(currentLocale.value, { hour12: false }) : t('service.notChecked')
+  return t('service.tooltip', { when, latency: props.latency == null ? '' : t('service.latencySuffix', { n: props.latency }) })
 })
 const check = () => emit('check')
 </script>

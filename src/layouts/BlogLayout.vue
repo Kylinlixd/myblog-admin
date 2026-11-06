@@ -7,9 +7,9 @@
     </div>
     <header class="site-header" @keydown.esc="mobileOpen = false">
       <div class="site-header-panel app-container header-inner">
-        <router-link class="brand" to="/blog" aria-label="时不语之间首页">
+        <router-link class="brand" to="/blog" :aria-label="t('common.siteName')">
           <span class="brand-mark"><img src="/logo-coffee-code.png" alt="" aria-hidden="true" /></span>
-          <span><strong>时不语之间</strong><small>Silent Time</small></span>
+          <span><strong>{{ t('common.siteName') }}</strong><small>Silent Time</small></span>
         </router-link>
 
         <nav class="desktop-nav" :aria-label="t('nav.mainNav')">
@@ -40,7 +40,7 @@
             </button>
             <template #overlay>
               <a-menu :selected-keys="[currentLocale]" @click="onLocalePick">
-                <a-menu-item v-for="item in LOCALES" :key="item.code">{{ item.label }}</a-menu-item>
+                <a-menu-item v-for="item in LOCALES" :key="item.code" @pointerenter="prefetchLocale(item.code)">{{ item.label }}</a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -77,7 +77,7 @@
           </button>
           <template #overlay>
             <a-menu :selected-keys="[currentLocale]" @click="onLocalePick">
-              <a-menu-item v-for="item in LOCALES" :key="item.code">{{ item.label }}</a-menu-item>
+              <a-menu-item v-for="item in LOCALES" :key="item.code" @pointerenter="prefetchLocale(item.code)">{{ item.label }}</a-menu-item>
             </a-menu>
           </template>
         </a-dropdown>
@@ -99,7 +99,7 @@
 
     <footer class="site-footer">
       <div class="app-container footer-inner">
-        <span>© {{ year }} 时不语之间 · Silent Time。{{ t('footer.tagline') }}</span>
+        <span>© {{ year }} {{ t('common.siteName') }} · Silent Time。{{ t('footer.tagline') }}</span>
         <div><router-link to="/blog/tools">{{ t('nav.tools') }}</router-link><router-link to="/blog/categories">{{ t('nav.light') }}</router-link><router-link to="/blog/about">{{ t('nav.about') }}</router-link></div>
       </div>
     </footer>
@@ -112,7 +112,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { resolveBlogNav } from '@/utils/blogNav'
-import { LOCALES, currentLocale, setLocale, t } from '@/i18n'
+import { LOCALES, currentLocale, setLocale, t, prefetchLocale } from '@/i18n'
 
 const router = useRouter()
 const route = useRoute()
@@ -158,6 +158,14 @@ watch(() => route.query.keyword, (keyword) => {
   if (!isSearchPage.value) return
   query.value = typeof keyword === 'string' ? keyword : ''
 }, { immediate: true })
+
+// 切换语言后立即刷新页面标题：afterEach 只在导航时设置 document.title，
+// 语言切换不触发导航，需要这里补一次（文章详情页有自己的标题翻译逻辑，跳过）。
+watch(currentLocale, () => {
+  if (route.name === 'BlogDynamicDetail') return
+  const title = route.meta.title
+  document.title = title ? `${t(title)}｜${t('common.siteName')}` : `${t('nav.home')}｜${t('common.siteName')}`
+})
 </script>
 
 <style scoped>

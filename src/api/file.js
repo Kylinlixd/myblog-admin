@@ -2,6 +2,7 @@ import request from '@/utils/request'
 
 import { normalizeCollectionResponse } from './collections'
 import { unwrapApiResponse } from './response'
+import { t } from '@/i18n'
 
 const FILE_TRANSFER_TIMEOUT_MS = 1800000
 
@@ -43,7 +44,7 @@ export function buildUploadData(params) {
 }
 
 function normalizeUploadResponse(response) {
-  const item = unwrapApiResponse(response, '上传失败')
+  const item = unwrapApiResponse(response, t('adminShared.uploadFailed'))
   return item && typeof item === 'object' && !Array.isArray(item)
     ? normalizeFileItem(item)
     : item

@@ -1,17 +1,17 @@
 <template>
   <main class="categories-container cinematic-page">
     <header class="page-header cinematic-hero archive-hero">
-      <span class="archive-kicker">KNOWLEDGE ARCHIVE · 归档索引</span>
-      <h1 class="page-title">把零散问题，整理成可继续探索的路径。</h1>
+      <span class="archive-kicker">{{ t('categories.kicker') }}</span>
+      <h1 class="page-title">{{ t('categories.title') }}</h1>
       <div class="archive-aside">
-        <p class="page-desc">按主题进入内容脉络，每个分类都是一段正在生长的技术记录。</p>
-        <div class="archive-meta"><span>{{ categories.length }} 个主题</span><span>{{ collections.length }} 个系列</span><span>持续更新中</span></div>
+        <p class="page-desc">{{ t('categories.desc') }}</p>
+        <div class="archive-meta"><span>{{ t('categories.topics', { n: categories.length }) }}</span><span>{{ t('categories.series', { n: collections.length }) }}</span><span>{{ t('common.ongoing') }}</span></div>
       </div>
     </header>
-    <section v-if="collections.length" class="collections-section" aria-label="文章合集">
+    <section v-if="collections.length" class="collections-section" :aria-label="t('categories.collectionsAria')">
       <div class="collections-head">
-        <h2 class="collections-title">合集 · Series</h2>
-        <span class="collections-sub">成体系的连续更新，适合按顺序从头读到尾。</span>
+        <h2 class="collections-title">{{ t('categories.collectionsTitle') }}</h2>
+        <span class="collections-sub">{{ t('categories.collectionsSub') }}</span>
       </div>
       <div class="collections-grid">
         <router-link v-for="collection in collections" :key="collection.id" :to="`/blog/collections/${collection.id}`" class="collection-card">
@@ -19,19 +19,19 @@
           <div class="collection-body">
             <h3 class="collection-title">{{ collection.title }}</h3>
             <p class="collection-desc">{{ collection.description || t('collection.defaultDesc') }}</p>
-            <span class="collection-count">{{ collection.itemCount }} 篇 · 持续更新中</span>
+            <span class="collection-count">{{ t('categories.collectionCount', { n: collection.itemCount }) }}</span>
           </div>
         </router-link>
       </div>
     </section>
-    <section class="categories-grid" aria-label="文章分类">
+    <section class="categories-grid" :aria-label="t('categories.categoriesAria')">
       <article v-for="(category, index) in categories" :key="category.id" class="category-card cinematic-card">
         <router-link :to="`/blog/categories/${category.id}`" class="category-link">
           <div class="category-content">
             <span class="category-index">{{ String(index + 1).padStart(2, '0') }}</span>
             <h2 class="category-name">{{ category.name }}</h2>
-            <span class="category-count">{{ category.dynamic_count ?? category.dynamicCount ?? category.count ?? 0 }} 篇文章</span>
-            <p class="category-desc">{{ category.description || '记录实践、判断与下一步。' }}</p>
+            <span class="category-count">{{ t('categories.articleCount', { n: category.dynamic_count ?? category.dynamicCount ?? category.count ?? 0 }) }}</span>
+            <p class="category-desc">{{ category.description || t('categories.categoryDesc') }}</p>
           </div>
         </router-link>
       </article>
@@ -60,16 +60,16 @@ async function fetchCollections() {
 
 async function fetchCategories() {
   try {
-    appStore.startLoading('加载分类数据...')
+    appStore.startLoading(t('categories.loadingData'))
     const response = await getBlogCategoryList()
     if (response?.code === 200) { const list = Array.isArray(response.data) ? response.data : (response.data?.items ?? [])
       categories.value = list.map((category) => ({ ...category, count: category.dynamic_count ?? category.dynamicCount ?? category.count ?? 0 }))
     }
-    else appStore.setLoadingError('获取分类数据失败，请刷新重试')
+    else appStore.setLoadingError(t('categories.loadFailed'))
     appStore.endLoading()
   } catch (error) {
     console.error('获取分类数据失败:', error)
-    appStore.setLoadingError('获取分类数据失败，请刷新重试')
+    appStore.setLoadingError(t('categories.loadFailed'))
   }
 }
 

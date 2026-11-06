@@ -84,13 +84,13 @@ it('renders historical total requests separately from the seven-day risk window'
   const wrapper = mountPage()
   await flushPromises()
 
-  expect(wrapper.text()).toContain('总请求：688次')
+  expect(wrapper.text()).toContain('总请求：688 次')
   expect(wrapper.text()).not.toContain('近7天总请求：68次')
   expect(wrapper.text()).toContain('失败率：97.1%')
   wrapper.vm.selectedProfile = profile
   await nextTick()
-  expect(wrapper.text()).toContain('客户端错误（4xx）：66次')
-  expect(wrapper.text()).toContain('服务端错误（5xx）：0次')
+  expect(wrapper.text()).toContain('客户端错误（4xx）：66 次')
+  expect(wrapper.text()).toContain('服务端错误（5xx）：0 次')
   expect(wrapper.text()).toContain('高度异常')
   expect(wrapper.text()).toContain('请求失败集中（失败 66/68，97.1%）')
   wrapper.unmount()

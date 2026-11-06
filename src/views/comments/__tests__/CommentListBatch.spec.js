@@ -14,14 +14,14 @@ describe('CommentList batch management', () => {
   })
 
   it('offers guarded batch deletion and retains failed selections', () => {
-    expect(source).toContain('批量删除')
+    expect(source).toContain("t('adminShared.batchDelete')")
     expect(source).toContain('selectedCommentIds')
     expect(source).toContain('Promise.allSettled')
     expect(source).toContain('failedIds')
   })
 
   it('offers guarded batch approval for pending comments', () => {
-    expect(source).toContain('批量通过')
+    expect(source).toContain("t('adminShared.batchApprove')")
     expect(source).toContain('batchApproving')
     expect(source).toContain('approveComment')
   })

@@ -12,20 +12,20 @@
       <header class="detail-hero">
         <img v-if="collection.cover" :src="collection.cover" :alt="collection.title" class="detail-cover" />
         <div class="detail-head">
-          <span class="detail-kicker">COLLECTION · 合集</span>
+          <span class="detail-kicker">{{ t('collection.kicker') }}</span>
           <h1 class="detail-title">{{ collection.title }}</h1>
-          <p class="detail-desc">{{ collection.description || '按系列持续更新的完整阅读路径。' }}</p>
+          <p class="detail-desc">{{ collection.description || t('collection.defaultDesc') }}</p>
           <div class="detail-meta">
-            <span>{{ collection.itemCount }} 篇</span>
-            <span>{{ sortMode === 'oldest' ? '从最早一期开始' : '从最新一期开始' }}</span>
-            <span>持续更新中</span>
+            <span>{{ collection.itemCount }} {{ t('collection.articles') }}</span>
+            <span>{{ sortMode === 'oldest' ? t('collection.fromOldest') : t('collection.fromLatest') }}</span>
+            <span>{{ t('collection.ongoing') }}</span>
           </div>
         </div>
       </header>
 
-      <section class="catalog" aria-label="合集目录">
+      <section class="catalog" :aria-label="t('collection.catalogAria')">
         <div class="catalog-toolbar">
-          <span class="catalog-label">目录 · Catalog</span>
+          <span class="catalog-label">{{ t('collection.catalog') }}</span>
           <div class="sort-toggle" role="group" :aria-label="t('collection.sortAria')">
             <button
               type="button"
@@ -101,15 +101,15 @@ async function fetchCollection() {
   loadError.value = ''
   retrying.value = true
   try {
-    appStore.startLoading('加载合集数据...')
+    appStore.startLoading(t('collection.loading'))
     const response = await getBlogCollectionDetail(route.params.id, { order: sortMode.value })
     if (response?.code === 200 && response.data) {
       collection.value = response.data
-      document.title = `${collection.value.title}｜拾光｜时不语之间`
-    } else loadError.value = response?.message || '该合集不存在或已被删除'
+      document.title = `${collection.value.title}｜${t('nav.light')}｜${t('common.siteName')}`
+    } else loadError.value = response?.message || t('collection.notFoundMsg')
   } catch (error) {
     console.error('获取合集数据失败:', error)
-    loadError.value = error?.message || '网络异常，请稍后重试'
+    loadError.value = error?.message || t('collection.networkError')
   } finally {
     appStore.endLoading()
     retrying.value = false

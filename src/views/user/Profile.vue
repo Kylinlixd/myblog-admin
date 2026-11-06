@@ -3,8 +3,8 @@
     <div class="page-header">
       <div>
         <span class="eyebrow">ACCOUNT SETTINGS</span>
-        <h2 class="page-title">个人资料</h2>
-        <p class="page-subtitle">管理公开信息与登录安全设置</p>
+        <h2 class="page-title">{{ t('profile.title') }}</h2>
+        <p class="page-subtitle">{{ t('profile.subtitle') }}</p>
       </div>
     </div>
     
@@ -13,15 +13,15 @@
       <template #title>
         <div class="card-header">
           <div>
-            <strong>基本信息</strong>
-            <small class="card-hint">昵称和个人简介会展示在博客公开页面</small>
+            <strong>{{ t('profile.basicInfo') }}</strong>
+            <small class="card-hint">{{ t('profile.basicHint') }}</small>
           </div>
-          <span class="edit-state" :class="{ 'edit-state--dirty': profileDirty }">{{ profileDirty ? '有未保存修改' : '已保存' }}</span>
+          <span class="edit-state" :class="{ 'edit-state--dirty': profileDirty }">{{ profileDirty ? t('profile.dirty') : t('profile.saved') }}</span>
         </div>
       </template>
 
       <div class="profile-layout">
-        <aside class="profile-identity" aria-label="身份信息">
+        <aside class="profile-identity" :aria-label="t('profile.aria.identity')">
           <div class="identity-avatar-wrap">
             <UserAvatar class="identity-avatar" :size="80" :src="profileForm.avatar" :nickname="profileForm.nickname" :username="profileForm.username" tone="cool" />
             <a-upload
@@ -30,15 +30,15 @@
               :show-upload-list="false"
               :before-upload="beforeAvatarUpload"
             >
-              <a-button type="default" size="small">更换头像</a-button>
+              <a-button type="default" size="small">{{ t('profile.changeAvatar') }}</a-button>
             </a-upload>
           </div>
           <div class="identity-copy">
-            <strong>{{ profileForm.nickname || '未设置昵称' }}</strong>
-            <span>@{{ profileForm.username || '未设置用户名' }}</span>
+            <strong>{{ profileForm.nickname || t('profile.noNickname') }}</strong>
+            <span>@{{ profileForm.username || t('profile.noUsername') }}</span>
             <small>{{ roleLabel }}</small>
           </div>
-          <p class="identity-hint">JPG / PNG，小于 2MB<br />上传成功后立即生效</p>
+          <p class="identity-hint">{{ t('profile.identityHint') }}<br />{{ t('profile.avatarEffective') }}</p>
         </aside>
 
         <div class="profile-fields">
@@ -50,34 +50,34 @@
           layout="vertical"
           data-mobile-stack="true"
         >
-          <a-form-item class="profile-field profile-field--full" label="用户名" name="username">
-            <a-input v-model:value="profileForm.username" placeholder="请输入用户名" />
-            <template #extra>修改后请使用新用户名登录。</template>
+          <a-form-item class="profile-field profile-field--full" :label="t('profile.username')" name="username">
+            <a-input v-model:value="profileForm.username" :placeholder="t('profile.usernameRequired')" />
+            <template #extra>{{ t('profile.usernameExtra') }}</template>
           </a-form-item>
 
           <div class="profile-field-pair">
-          <a-form-item class="profile-field" label="昵称" name="nickname">
-            <a-input v-model:value="profileForm.nickname" placeholder="请输入昵称" />
+          <a-form-item class="profile-field" :label="t('profile.nickname')" name="nickname">
+            <a-input v-model:value="profileForm.nickname" :placeholder="t('profile.nicknamePlaceholder')" />
           </a-form-item>
           
-          <a-form-item class="profile-field" label="邮箱" name="email">
-            <a-input v-model:value="profileForm.email" placeholder="请输入邮箱" />
+          <a-form-item class="profile-field" :label="t('profile.email')" name="email">
+            <a-input v-model:value="profileForm.email" :placeholder="t('profile.emailPlaceholder')" />
           </a-form-item>
           </div>
           
-          <a-form-item class="profile-field profile-field--full" label="个人简介" name="bio">
+          <a-form-item class="profile-field profile-field--full" :label="t('profile.bio')" name="bio">
             <a-textarea
               v-model:value="profileForm.bio"
               :rows="4"
-              placeholder="请输入个人简介"
+              :placeholder="t('profile.bioPlaceholder')"
               show-count
               :maxlength="200"
             />
           </a-form-item>
           
           <div class="form-actions profile-actions">
-            <a-button @click="cancelProfileEdit">撤销修改</a-button>
-            <a-button data-testid="save-profile" type="primary" :disabled="!profileDirty" :loading="profileLoading" @click="handleProfileUpdate">保存资料</a-button>
+            <a-button @click="cancelProfileEdit">{{ t('profile.revertChanges') }}</a-button>
+            <a-button data-testid="save-profile" type="primary" :disabled="!profileDirty" :loading="profileLoading" @click="handleProfileUpdate">{{ t('profile.saveProfile') }}</a-button>
           </div>
           <p v-if="profileError" data-testid="profile-save-error" class="form-error" role="alert">{{ profileError }}</p>
         </a-form>
@@ -89,8 +89,8 @@
       <template #title>
         <div class="card-header">
           <div>
-            <strong>修改密码</strong>
-            <small class="card-hint">定期更新密码，保护管理账户安全</small>
+            <strong>{{ t('profile.securitySection') }}</strong>
+            <small class="card-hint">{{ t('profile.passwordHint') }}</small>
           </div>
         </div>
       </template>
@@ -106,37 +106,37 @@
           @submit.prevent="handlePasswordChange"
         >
         <div class="password-group password-group--current">
-          <a-form-item class="profile-field" label="原密码" name="oldPassword">
+          <a-form-item class="profile-field" :label="t('profile.oldPassword')" name="oldPassword">
             <a-input-password
               v-model:value="passwordForm.oldPassword"
               autocomplete="current-password"
-              placeholder="请输入原密码"
+              :placeholder="t('profile.oldPasswordPlaceholder')"
             />
           </a-form-item>
         </div>
 
         <div class="password-group password-group--new">
-          <a-form-item class="profile-field" label="新密码" name="newPassword">
+          <a-form-item class="profile-field" :label="t('profile.newPassword')" name="newPassword">
               <a-input-password
                 v-model:value="passwordForm.newPassword"
                 autocomplete="new-password"
-                placeholder="请输入新密码"
+                :placeholder="t('profile.newPasswordPlaceholder')"
               />
-              <template #extra>至少 8 位，需包含大小写字母和数字，可使用符号。</template>
+              <template #extra>{{ t('profile.newPasswordExtra') }}</template>
           </a-form-item>
 
-          <a-form-item class="profile-field" label="确认密码" name="confirmPassword">
+          <a-form-item class="profile-field" :label="t('profile.confirmPassword')" name="confirmPassword">
             <a-input-password
               v-model:value="passwordForm.confirmPassword"
               autocomplete="new-password"
-              placeholder="请再次输入新密码"
+              :placeholder="t('profile.confirmPlaceholder')"
             />
           </a-form-item>
         </div>
         
         <div class="form-actions password-actions">
-          <a-button class="password-reset-button" @click="resetForm">清空输入</a-button>
-          <a-button type="primary" :loading="loading" @click="handlePasswordChange">更新密码</a-button>
+          <a-button class="password-reset-button" @click="resetForm">{{ t('profile.clearInputs') }}</a-button>
+          <a-button type="primary" :loading="loading" @click="handlePasswordChange">{{ t('profile.updatePassword') }}</a-button>
         </div>
         <p v-if="passwordError" class="form-error" role="alert">{{ passwordError }}</p>
         </a-form>
@@ -152,6 +152,7 @@ import { message as AntMessage } from 'ant-design-vue'
 import { useUserStore } from '../../stores/user'
 import { changePassword, uploadAvatar } from '../../api/auth'
 import UserAvatar from '../../components/common/UserAvatar.vue'
+import { t, currentLocale } from '@/i18n'
 
 const userStore = useUserStore()
 const passwordFormRef = ref(null)
@@ -163,7 +164,7 @@ const passwordError = ref('')
 const savedProfile = ref({ username: '', nickname: '', email: '', bio: '', avatar: '' })
 
 const userInfo = computed(() => userStore.userInfo || {})
-const roleLabel = computed(() => ({ admin: '站点管理员', editor: '内容编辑', author: '内容作者' }[userInfo.value.role] || '内容管理成员'))
+const roleLabel = computed(() => t(`shell.role.${userInfo.value.role || 'default'}`))
 
 // 资料表单
 const profileForm = reactive({
@@ -203,9 +204,9 @@ const cancelProfileEdit = () => {
 
 // 格式化日期
 const formatDate = (dateString) => {
-  if (!dateString) return '未知'
+  if (!dateString) return t('profile.unknown')
   const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
+  return date.toLocaleString(currentLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -223,11 +224,11 @@ const beforeAvatarUpload = (file) => {
   const isLt2M = file.size / 1024 / 1024 < 2
 
   if (!isJPG && !isPNG) {
-    AntMessage.error('头像图片只能是 JPG 或 PNG 格式!')
+    AntMessage.error(t('profile.avatarOnlyImage'))
     return false
   }
   if (!isLt2M) {
-    AntMessage.error('头像图片大小不能超过 2MB!')
+    AntMessage.error(t('profile.avatarTooLarge'))
     return false
   }
   return true
@@ -239,10 +240,10 @@ const handleAvatarSuccess = (res) => {
   if (avatarUrl) {
     profileForm.avatar = avatarUrl
     savedProfile.value.avatar = avatarUrl
-    AntMessage.success('头像上传成功')
+    AntMessage.success(t('profile.avatarSuccess'))
     return true
   } else {
-    AntMessage.error(res?.message || '头像上传失败')
+    AntMessage.error(res?.message || t('profile.avatarFailed'))
     return false
   }
 }
@@ -251,13 +252,13 @@ const handleAvatarUpload = async ({ file, onSuccess, onError }) => {
   try {
     const result = await uploadAvatar(file)
     if (!handleAvatarSuccess(result)) {
-      onError?.(new TypeError('头像上传响应缺少可用 URL'))
+      onError?.(new TypeError(t('profile.avatarInvalidResponse')))
       return
     }
     userStore.syncAvatar?.(profileForm.avatar)
     onSuccess?.(result)
   } catch (error) {
-    AntMessage.error(error.message || '头像上传失败')
+    AntMessage.error(error.message || t('profile.avatarFailed'))
     onError?.(error)
   }
 }
@@ -285,12 +286,12 @@ const handleProfileUpdate = async () => {
     await userStore.updateProfile(profileData)
     await userStore.getUserInfo()
     
-    AntMessage.success('个人资料更新成功')
+    AntMessage.success(t('profile.updateSuccess'))
     initProfileForm()
   } catch (error) {
     console.error('更新个人资料失败:', error)
-    profileError.value = error.message || '更新个人资料失败'
-    AntMessage.error(error.message || '更新个人资料失败')
+    profileError.value = error.message || t('profile.updateFailed')
+    AntMessage.error(error.message || t('profile.updateFailed'))
   } finally {
     profileLoading.value = false
   }
@@ -299,37 +300,37 @@ const handleProfileUpdate = async () => {
 // 资料表单验证规则
 const profileRules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 4, max: 20, message: '用户名长度为 4-20 个字符', trigger: 'blur' },
-    { pattern: /^[\w.@+-]+$/, message: '用户名仅支持字母、数字及 . @ + - _', trigger: 'blur' }
+    { required: true, message: t('profile.usernameRequired'), trigger: 'blur' },
+    { min: 4, max: 20, message: t('profile.usernameLength'), trigger: 'blur' },
+    { pattern: /^[\w.@+-]+$/, message: t('profile.usernamePattern'), trigger: 'blur' }
   ],
   nickname: [
-    { max: 20, message: '昵称不能超过20个字符', trigger: 'blur' }
+    { max: 20, message: t('profile.nicknameMax'), trigger: 'blur' }
   ],
   email: [
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    { type: 'email', message: t('profile.emailInvalid'), trigger: 'blur' }
   ],
   bio: [
-    { max: 200, message: '个人简介不能超过200个字符', trigger: 'blur' }
+    { max: 200, message: t('profile.bioMax'), trigger: 'blur' }
   ]
 }
 
 // 密码表单验证规则
 const passwordRules = {
   oldPassword: [
-    { required: true, message: '请输入原密码', trigger: 'submit' }
+    { required: true, message: t('profile.oldPasswordRequired'), trigger: 'submit' }
   ],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'submit' },
-    { min: 8, message: '新密码长度不能少于8个字符', trigger: 'submit' },
+    { required: true, message: t('profile.newPasswordRequired'), trigger: 'submit' },
+    { min: 8, message: t('profile.newPasswordMin'), trigger: 'submit' },
     { 
       validator: (rule, value, callback) => {
         if (!value) {
           callback()
         } else if (value.length < 8) {
-          callback(new Error('密码长度不能少于8个字符'))
+          callback(new Error(t('profile.newPasswordMin')))
         } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)) {
-          callback(new Error('密码必须包含大小写字母和数字'))
+          callback(new Error(t('profile.passwordWeak')))
         } else {
           callback()
         }
@@ -338,13 +339,13 @@ const passwordRules = {
     }
   ],
   confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'submit' },
+    { required: true, message: t('profile.confirmRequired'), trigger: 'submit' },
     { 
       validator: (rule, value, callback) => {
         if (!value) {
           callback()
         } else if (value !== passwordForm.newPassword) {
-          callback(new Error('两次输入的密码不一致'))
+          callback(new Error(t('profile.passwordMismatch')))
         } else {
           callback()
         }
@@ -366,7 +367,7 @@ const handlePasswordChange = async () => {
       oldPassword: values.oldPassword,
       newPassword: values.newPassword
     })
-    AntMessage.success('密码修改成功')
+    AntMessage.success(t('profile.passwordChanged'))
     resetForm()
   } catch (error) {
     console.error('修改密码失败:', error)
@@ -376,7 +377,7 @@ const handlePasswordChange = async () => {
       return
     }
     
-    passwordError.value = error.message || '修改密码失败，请稍后重试'
+    passwordError.value = error.message || t('profile.passwordChangeFailed')
     AntMessage.error(passwordError.value)
   } finally {
     loading.value = false

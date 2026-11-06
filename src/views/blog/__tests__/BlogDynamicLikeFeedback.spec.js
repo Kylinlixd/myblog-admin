@@ -8,5 +8,5 @@ const source = fs.readFileSync(
 
 test('点赞失败兜底识别后端重复点赞状态并给出已点赞反馈', () => {
   expect(source).toContain('already_liked')
-  expect(source).toContain('你已点赞，无需重复操作')
+  expect(source).toContain("t('dynamic.alreadyLiked')")
 })

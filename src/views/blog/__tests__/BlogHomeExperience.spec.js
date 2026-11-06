@@ -19,7 +19,7 @@ describe('focused warm technology blog homepage', () => {
   })
 
   it('uses a text-first hero and article list without homepage images', () => {
-    expect(source).toContain('aria-label="探索技术，无限可能，开发、构建、应用"')
+    expect(source).toContain(':aria-label="[t(\'home.lead\')')
     expect(source).toContain('class="article-list"')
     expect(source).toContain('v-for="item in latest"')
     expect(source).not.toContain('<img')
@@ -94,8 +94,8 @@ describe('focused warm technology blog homepage', () => {
   })
 
   it('keeps the main title intact and appends a separate looping typewriter suffix', () => {
-    expect(source).toContain("const accent = '无限可能'")
-    expect(source).toContain("const trailWords = ['开发', '构建', '应用']")
+    expect(source).toContain("const accent = t('home.accent')")
+    expect(source).toContain("const trailWords = t('home.trailWords').split(',')")
     expect(source).toContain('typedTrail')
     expect(source).toContain('trailPhase')
     expect(source).toContain('scheduleTrailCycle')

@@ -1,15 +1,15 @@
 <template>
   <div class="dynamic-preview">
     <div class="preview-header">
-      <h2>动态预览</h2>
+      <h2>{{ t('dynamicMgr.previewPageTitle') }}</h2>
       <a-space>
         <a-button @click="handleEdit" type="primary">
           <template #icon><edit-outlined /></template>
-          编辑
+          {{ t('adminShared.edit') }}
         </a-button>
         <a-button @click="handleClose">
           <template #icon><close-outlined /></template>
-          关闭
+          {{ t('adminShared.close') }}
         </a-button>
       </a-space>
     </div>
@@ -18,7 +18,7 @@
       <template #extra>
         <a-space>
           <a-tag :color="dynamic.status === 'published' ? 'success' : 'default'">
-            {{ dynamic.status === 'published' ? '已发布' : '草稿' }}
+            {{ dynamic.status === 'published' ? t('dynamicMgr.status.published') : t('dynamicMgr.status.draft') }}
           </a-tag>
           <span class="preview-time">{{ formatDate(dynamic.createdAt) }}</span>
         </a-space>
@@ -31,11 +31,11 @@
         <!-- 媒体内容 -->
         <div v-if="mediaItems.length" class="media-content">
           <template v-for="item in mediaItems" :key="item.url">
-            <div v-if="isMediaUnavailable(item.url)" class="media-unavailable">该媒体已不可用</div>
-            <img v-else-if="item.type === 'image'" :src="item.url" :alt="item.name || '动态图片'" class="preview-image" @error="markMediaUnavailable(item.url)" />
-            <audio v-else-if="item.type === 'audio'" controls :src="item.url" class="audio-element" @error="markMediaUnavailable(item.url)">您的浏览器不支持音频播放</audio>
-            <video v-else-if="item.type === 'video'" controls :src="item.url" :poster="item.posterUrl || undefined" preload="metadata" playsinline class="video-element" @error="markMediaUnavailable(item.url)">您的浏览器不支持视频播放</video>
-            <a v-else :href="item.url" target="_blank" rel="noopener" @click.prevent="openMedia(item)">下载附件{{ item.name ? `：${item.name}` : '' }}</a>
+            <div v-if="isMediaUnavailable(item.url)" class="media-unavailable">{{ t('detail.mediaUnavailable') }}</div>
+            <img v-else-if="item.type === 'image'" :src="item.url" :alt="item.name || t('detail.dynamicImage')" class="preview-image" @error="markMediaUnavailable(item.url)" />
+            <audio v-else-if="item.type === 'audio'" controls :src="item.url" class="audio-element" @error="markMediaUnavailable(item.url)">{{ t('detail.audioNotSupported') }}</audio>
+            <video v-else-if="item.type === 'video'" controls :src="item.url" :poster="item.posterUrl || undefined" preload="metadata" playsinline class="video-element" @error="markMediaUnavailable(item.url)">{{ t('detail.videoNotSupported') }}</video>
+            <a v-else :href="item.url" target="_blank" rel="noopener" @click.prevent="openMedia(item)">{{ t('dynamicMgr.downloadAttachment', { name: item.name ? `：${item.name}` : '' }) }}</a>
           </template>
         </div>
       </div>
@@ -43,11 +43,11 @@
       <!-- 分类和标签 -->
       <div class="preview-meta">
         <div v-if="dynamic.categoryId" class="category">
-          <span class="label">分类：</span>
+          <span class="label">{{ t('dynamicMgr.categoryLabel') }}</span>
           <a-tag color="blue">{{ getCategoryName(dynamic.categoryId) }}</a-tag>
         </div>
         <div v-if="dynamic.tags && dynamic.tags.length" class="tags">
-          <span class="label">标签：</span>
+          <span class="label">{{ t('detail.tagLabel') }}</span>
           <a-space wrap :size="[4, 4]">
             <a-tag
               v-for="tag in dynamic.tags"
@@ -75,6 +75,7 @@ import DOMPurify from 'dompurify'
 import { createMarkdownRenderer } from '@/utils/markdownRenderer'
 import { bindCodeBlockInteractions } from '@/utils/blogCodeBlocks'
 import { enhanceBlogTables } from '@/utils/blogTables'
+import { t, currentLocale } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,10 +124,10 @@ const openMedia = async (item) => {
     if (response.ok) return popup.location.assign(item.url)
     popup.close()
     if (response.status === 404) markMediaUnavailable(item.url)
-    else message.error('媒体加载失败，请稍后重试')
+    else message.error(t('detail.mediaLoadFailed'))
   } catch {
     popup.close()
-    message.error('媒体加载失败，请稍后重试')
+    message.error(t('detail.mediaLoadFailed'))
   }
 }
 
@@ -156,7 +157,7 @@ const fetchDynamicDetail = async () => {
   if (route.params.id === 'draft') {
     const cachedPreview = localStorage.getItem('dynamicPreview')
     if (!cachedPreview) {
-      message.warning('预览内容不存在，请返回编辑页重新预览')
+      message.warning(t('dynamicMgr.previewMissing'))
       return
     }
 
@@ -165,7 +166,7 @@ const fetchDynamicDetail = async () => {
       return
     } catch (error) {
       console.error('读取预览内容失败:', error)
-      message.error('读取预览内容失败')
+      message.error(t('dynamicMgr.previewReadFailed'))
       return
     }
   }
@@ -175,11 +176,11 @@ const fetchDynamicDetail = async () => {
     if (data) {
       dynamic.value = normalizeDynamic(data)
     } else {
-      throw new Error('获取动态详情失败')
+      throw new Error(t('dynamicMgr.detailLoadFailed'))
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
-    message.error('获取动态详情失败: ' + (error.message || '未知错误'))
+    message.error(t('dynamicMgr.detailLoadFailed') + ': ' + (error.message || t('commentMgr.unknownError')))
   }
 }
 
@@ -190,7 +191,7 @@ const fetchCategories = async () => {
     categories.value = data.results || []
   } catch (error) {
     console.error('获取分类列表失败:', error)
-    message.error('获取分类列表失败')
+    message.error(t('dynamicMgr.categoryLoadFailed'))
   }
 }
 
@@ -198,14 +199,14 @@ const fetchCategories = async () => {
 const getCategoryName = (categoryId) => {
   if (dynamic.value.category?.name) return dynamic.value.category.name
   const category = categories.value.find(c => c.id === categoryId)
-  return category ? category.name : '未知分类'
+  return category ? category.name : t('dynamicMgr.unknownCategory')
 }
 
 // 格式化日期
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return date.toLocaleString('zh-CN', {
+  return date.toLocaleString(currentLocale.value, {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

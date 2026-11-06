@@ -11,7 +11,7 @@
     <transition name="loading-toast">
       <div v-if="appStore.isLoading" class="loading-toast" role="status" aria-live="polite">
         <span class="loading-toast__status" aria-hidden="true"><i /></span>
-        <span class="loading-toast__copy"><strong>正在处理</strong><span>{{ appStore.loadingText }}</span></span>
+        <span class="loading-toast__copy"><strong>{{ t('common.processing') }}</strong><span>{{ appStore.loadingText }}</span></span>
       </div>
     </transition>
   </a-config-provider>
@@ -19,21 +19,44 @@
 
 <script setup>
 import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAppStore } from '@/stores/app'
+import { currentLocale, t } from '@/i18n'
 
 const router = useRouter()
 const appStore = useAppStore()
 
-const antLocale = {
-  ...zhCN,
-  Pagination: {
-    ...zhCN.Pagination,
-    items_per_page: '/页'
-  }
+// antd 组件语言跟随应用语言：zh 内联（默认零开销），其余语言包按需加载并缓存，
+// 与 i18n 词典同一套加载策略——主包不因多语言而增重。
+const ANTD_LOCALES = {
+  en: () => import('ant-design-vue/es/locale/en_US'),
+  ja: () => import('ant-design-vue/es/locale/ja_JP'),
+  ko: () => import('ant-design-vue/es/locale/ko_KR'),
+  es: () => import('ant-design-vue/es/locale/es_ES'),
+  fr: () => import('ant-design-vue/es/locale/fr_FR')
 }
+const antLocale = ref(zhCN)
+const antLocaleCache = new Map([['zh', zhCN]])
+
+watch(currentLocale, async (code) => {
+  const cached = antLocaleCache.get(code)
+  if (cached) {
+    antLocale.value = cached
+    return
+  }
+  const loader = ANTD_LOCALES[code]
+  if (!loader) return
+  try {
+    const module = await loader()
+    antLocaleCache.set(code, module.default)
+    // 异步落地期间用户可能已切走，回填前校验仍是当前语言
+    if (currentLocale.value === code) antLocale.value = module.default
+  } catch (error) {
+    console.warn(`[i18n] antd 语言包 ${code} 加载失败，继续使用当前语言`, error)
+  }
+}, { immediate: true })
 
 const cachedViews = computed(() =>
   router

@@ -3,7 +3,7 @@
     <a-layout-sider v-if="!isMobile" v-model:collapsed="collapsed" :trigger="null" collapsible :width="232" :collapsed-width="76" class="admin-sidebar">
       <div class="admin-brand">
         <router-link class="admin-brand__link" to="/dashboard">
-          <span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><span v-if="!collapsed">时不语之间<small>内容工作台</small></span>
+          <span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><span v-if="!collapsed">{{ t('common.siteName') }}<small>{{ t('shell.brandSub') }}</small></span>
         </router-link>
       </div>
       <AdminNavigation />
@@ -11,11 +11,11 @@
 
     <a-drawer id="admin-mobile-navigation" v-model:open="mobileOpen" placement="left" :closable="false" :width="272" class="admin-drawer">
       <router-link class="admin-brand admin-brand--drawer" to="/dashboard" @click="mobileOpen = false">
-        <span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><span>时不语之间<small>内容工作台</small></span>
+        <span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><span>{{ t('common.siteName') }}<small>{{ t('shell.brandSub') }}</small></span>
       </router-link>
       <AdminNavigation @navigate="mobileOpen = false" />
       <router-link class="admin-mobile-blog-link" to="/blog" @click="mobileOpen = false">
-        <home-outlined /> 查看博客
+        <home-outlined /> {{ t('shell.viewBlog') }}
       </router-link>
     </a-drawer>
 
@@ -26,20 +26,31 @@
             v-if="!isMobile"
             type="button"
             class="sidebar-collapse-control workspace-sidebar-toggle"
-            :aria-label="collapsed ? '展开导航' : '折叠导航'"
+            :aria-label="collapsed ? t('shell.expandNav') : t('shell.collapseNav')"
             :aria-expanded="!collapsed"
-            :title="collapsed ? '展开导航' : '折叠导航'"
+            :title="collapsed ? t('shell.expandNav') : t('shell.collapseNav')"
             @click="toggleSidebar"
           >
             <menu-unfold-outlined v-if="collapsed" />
             <menu-fold-outlined v-else />
           </button>
-          <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? '关闭导航' : '打开导航'" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
+          <button v-if="isMobile" type="button" class="icon-button" :aria-label="mobileOpen ? t('shell.closeNav') : t('shell.openNav')" :aria-expanded="mobileOpen" aria-controls="admin-mobile-navigation" @click="toggleSidebar">
             <menu-unfold-outlined />
           </button>
           <Breadcrumb v-if="!isMobile" class="workspace-breadcrumb" />
         </div>
         <div class="header-actions">
+          <a-dropdown trigger="click" placement="bottomRight">
+            <button class="lang-button" type="button" :aria-label="t('nav.language')" :title="t('nav.language')">
+              <global-outlined />
+              <span class="lang-code">{{ currentLocale.toUpperCase() }}</span>
+            </button>
+            <template #overlay>
+              <a-menu :selected-keys="[currentLocale]" @click="onLocalePick">
+                <a-menu-item v-for="item in LOCALES" :key="item.code" @pointerenter="prefetchLocale(item.code)">{{ item.label }}</a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
           <ServiceStatus
             class="workspace-status"
             :state="serviceHealth.state.value"
@@ -48,18 +59,18 @@
             :error="serviceHealth.error.value"
             @check="serviceHealth.check"
           />
-          <router-link class="blog-link" to="/blog" :title="isMobile ? '查看博客' : undefined" aria-label="查看博客"><home-outlined /> <span v-if="isMobile">博客</span><span v-else>查看博客</span></router-link>
+          <router-link class="blog-link" to="/blog" :title="isMobile ? t('shell.viewBlog') : undefined" :aria-label="t('shell.viewBlog')"><home-outlined /> <span v-if="isMobile">{{ t('shell.viewBlogShort') }}</span><span v-else>{{ t('shell.viewBlog') }}</span></router-link>
           <a-dropdown trigger="click">
             <button class="user-button" type="button">
               <UserAvatar :src="userStore.avatar" :nickname="userStore.nickname" :username="userStore.username" :size="36" />
-              <span class="user-copy"><strong>{{ userStore.nickname || '管理员' }}</strong><small>{{ userRoleLabel }}</small></span>
+              <span class="user-copy"><strong>{{ userStore.nickname || t('dashboard.admin') }}</strong><small>{{ userRoleLabel }}</small></span>
               <down-outlined />
             </button>
             <template #overlay>
               <a-menu class="account-menu">
-                <a-menu-item @click="router.push('/dashboard/profile')"><user-outlined /> 个人资料</a-menu-item>
+                <a-menu-item @click="router.push('/dashboard/profile')"><user-outlined /> {{ t('shell.profile') }}</a-menu-item>
                 <a-menu-divider />
-                <a-menu-item danger @click="handleLogout"><logout-outlined /> 退出登录</a-menu-item>
+                <a-menu-item danger @click="handleLogout"><logout-outlined /> {{ t('shell.logout') }}</a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -78,7 +89,7 @@
 <script setup>
 import { computed, defineComponent, h, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BookOutlined, CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
+import { BookOutlined, CommentOutlined, DashboardOutlined, DownOutlined, FileOutlined, FolderOutlined, GlobalOutlined, HomeOutlined, LogoutOutlined, MenuFoldOutlined, MenuUnfoldOutlined, ReadOutlined, TagsOutlined, UserOutlined, HistoryOutlined } from '@ant-design/icons-vue'
 import { Modal } from 'ant-design-vue'
 import { adminMenu } from '@/config/adminMenu'
 import { useUserStore } from '@/stores/user'
@@ -87,6 +98,7 @@ import UserAvatar from '@/components/common/UserAvatar.vue'
 import ServiceStatus from '@/components/common/ServiceStatus.vue'
 import Breadcrumb from '@/components/Breadcrumb.vue'
 import { useServiceHealth } from '@/composables/useServiceHealth'
+import { LOCALES, currentLocale, setLocale, t, prefetchLocale } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -98,11 +110,11 @@ const isMobile = ref(window.innerWidth < 992)
 const mobileOpen = ref(false)
 const iconMap = { dashboard: DashboardOutlined, content: ReadOutlined, category: FolderOutlined, collections: BookOutlined, tags: TagsOutlined, comments: CommentOutlined, files: FileOutlined, logs: HistoryOutlined }
 const selectedKey = computed(() => [...adminMenu].sort((a, b) => b.path.length - a.path.length).find((item) => route.path === item.path || route.path.startsWith(`${item.path}/`))?.key || 'dashboard')
-const userRoleLabel = computed(() => ({ admin: '站点管理员', editor: '内容编辑', moderator: '内容审核员', author: '内容作者' }[userStore.userInfo?.role] || '内容管理成员'))
+const userRoleLabel = computed(() => t(`shell.role.${userStore.userInfo?.role || 'default'}`))
 const groupedMenu = computed(() => adminMenu.reduce((groups, item) => {
   const group = groups.find((entry) => entry.key === item.group)
   if (group) group.items.push(item)
-  else groups.push({ key: item.group, label: item.groupLabel, items: [item] })
+  else groups.push({ key: item.group, label: t(item.groupLabelKey), items: [item] })
   return groups
 }, []))
 
@@ -117,7 +129,7 @@ watch(() => userStore.isLoggedIn, (loggedIn) => {
 const AdminNavigation = defineComponent({
   emits: ['navigate'],
   setup(_, { emit }) {
-    return () => h('nav', { class: 'admin-navigation', 'aria-label': '管理导航' }, groupedMenu.value.map((group) =>
+    return () => h('nav', { class: 'admin-navigation', 'aria-label': t('shell.adminNavAria') }, groupedMenu.value.map((group) =>
       h('section', { class: 'nav-group', key: group.key }, [
         !collapsed.value || isMobile.value ? h('p', { class: 'nav-group__label' }, group.label) : null,
         ...group.items.map((item) =>
@@ -125,11 +137,11 @@ const AdminNavigation = defineComponent({
             type: 'button',
             class: ['nav-item', { 'nav-item--active': selectedKey.value === item.key }],
             'aria-current': selectedKey.value === item.key ? 'page' : undefined,
-            title: collapsed.value && !isMobile.value ? `${item.label} · ${item.description}` : undefined,
+            title: collapsed.value && !isMobile.value ? `${t(item.labelKey)} · ${t(item.descriptionKey)}` : undefined,
             onClick: () => { router.push(item.path); emit('navigate') }
           }, [
             h('span', { class: 'nav-item__icon' }, [h(iconMap[item.icon])]),
-            !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', item.label), h('small', item.description)]) : null
+            !collapsed.value || isMobile.value ? h('span', { class: 'nav-item__copy' }, [h('strong', t(item.labelKey)), h('small', t(item.descriptionKey))]) : null
           ])
         )
       ])
@@ -144,12 +156,16 @@ watch(() => route.fullPath, () => { mobileOpen.value = false })
 onMounted(() => window.addEventListener('resize', updateViewport))
 onBeforeUnmount(() => window.removeEventListener('resize', updateViewport))
 
+function onLocalePick({ key }) {
+  setLocale(key)
+}
+
 function handleLogout() {
   Modal.confirm({
-    title: '退出登录',
-    content: '当前管理会话会被清除，再次管理内容需要重新登录。',
-    okText: '确认退出',
-    cancelText: '继续停留',
+    title: t('shell.logout'),
+    content: t('shell.logoutContent'),
+    okText: t('shell.logoutOk'),
+    cancelText: t('shell.logoutCancel'),
     class: 'logout-confirm',
     okButtonProps: { danger: true },
     async onOk() { await userStore.logout(); await router.replace('/login') }
@@ -206,6 +222,9 @@ function handleLogout() {
 .icon-button { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); cursor: pointer; }
 .icon-button { position: relative; }
 .blog-link { gap: 7px; color: var(--color-text-secondary); font-size: 13px; font-weight: 650; }
+.lang-button { display: inline-flex; height: 36px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid var(--color-border); border-radius: 10px; background: white; color: var(--color-text-secondary); font-size: 12px; font-weight: 700; cursor: pointer; transition: color var(--transition-fast), border-color var(--transition-fast); }
+.lang-button:hover { color: var(--color-primary); border-color: var(--color-primary); }
+.lang-code { letter-spacing: .06em; }
 .user-button { min-height: 46px; gap: 10px; padding: 5px 7px; border: 0; border-radius: 12px; background: transparent; color: var(--color-text-secondary); cursor: pointer; }
 .user-button:hover { background: var(--color-surface-muted); }
 .user-copy { display: flex; align-items: flex-start; flex-direction: column; justify-content: center; gap: 2px; line-height: 1.1; }

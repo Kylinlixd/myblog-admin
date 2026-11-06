@@ -24,7 +24,7 @@ describe('Blog search filter interaction', () => {
     // 点一下内容类型就整页转圈，是这次要修掉的问题
     expect(source).not.toContain('@change="debouncedSearch"')
     expect(source).not.toMatch(/advancedOptions\.type"[\s\S]{0,80}@change/)
-    expect(source).toContain('筛选条件已更新，点「搜索」应用')
+    expect(source).toContain("t('search.filterUpdated')")
   })
 
   it('submits only through the explicit search actions', () => {
@@ -68,10 +68,10 @@ describe('Blog search filter-only mode', () => {
     expect(source).toMatch(/canSearch = computed\(\(\) => Boolean\(keyword\.value\.trim\(\)\) \|\| activeFilterCount\.value > 0\)/)
     expect(source).toContain('const browseByFilters = async ()')
     expect(source).toContain('collectAllPages(loadPage)')
-    expect(source).toContain('按筛选条件找到的内容')
+    expect(source).toContain("t('search.resultsWithFilters')")
     expect(source).toContain(':disabled="!canSearch"')
     // 没有关键词也没有条件时仍然要拦住
-    expect(source).toContain('请输入关键词，或至少选择一个筛选条件')
+    expect(source).toContain("t('search.noKeyword')")
   })
 
   it('refines both keyword and filter results with the same rules', () => {

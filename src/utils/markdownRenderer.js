@@ -1,4 +1,5 @@
 import MarkdownIt from 'markdown-it'
+import { t } from '@/i18n'
 
 const firstInfoWord = (info = '') => info.trim().split(/\s+/)[0] || 'text'
 
@@ -22,23 +23,23 @@ const renderCode = (md, token, options) => {
     : ''
   const codeHtml = highlighted || md.utils.escapeHtml(rawCode)
   const lines = Array.from({ length: codeLineCount(rawCode) }, (_, index) => index + 1).join('\n')
-  const escapedCollapseLabel = md.utils.escapeHtml(`折叠${language}代码`)
-  const escapedCopyLabel = md.utils.escapeHtml(`复制${language}代码`)
+  const escapedCollapseLabel = md.utils.escapeHtml(t('code.collapseCode', { language }))
+  const escapedCopyLabel = md.utils.escapeHtml(t('code.copyCode', { language }))
   const isRunnable = language === 'js' || language === 'html'
   const runButton = isRunnable
-    ? `<button type="button" class="blog-code-action blog-code-run" data-blog-code-action="run" data-blog-code-run-kind="${language}" aria-label="试运行${language}代码" title="试运行">${runIconMarkup}<span>试运行</span></button>`
+    ? `<button type="button" class="blog-code-action blog-code-run" data-blog-code-action="run" data-blog-code-run-kind="${language}" aria-label="${md.utils.escapeHtml(t('code.runCode', { language }))}" title="${md.utils.escapeHtml(t('code.run'))}">${runIconMarkup}<span>${md.utils.escapeHtml(t('code.run'))}</span></button>`
     : ''
   const runPanel = language === 'js'
-    ? '<div class="blog-code-run-panel blog-code-run-output-panel" data-blog-code-run-output hidden><div class="blog-code-run-panel-title">运行输出</div><div class="blog-code-run-output" role="log" aria-live="polite"></div></div>'
+    ? `<div class="blog-code-run-panel blog-code-run-output-panel" data-blog-code-run-output hidden><div class="blog-code-run-panel-title">${md.utils.escapeHtml(t('code.runOutput'))}</div><div class="blog-code-run-output" role="log" aria-live="polite"></div></div>`
     : language === 'html'
-      ? `<div class="blog-code-run-panel blog-code-run-preview-panel" data-blog-code-run-preview hidden><div class="blog-code-run-panel-header"><div class="blog-code-run-panel-title">预览</div><button type="button" class="blog-code-preview-collapse" data-blog-code-preview-collapse aria-expanded="true" aria-label="折叠预览" title="折叠预览">${collapseIconMarkup}</button></div><div class="blog-code-run-preview-target"></div></div>`
+      ? `<div class="blog-code-run-panel blog-code-run-preview-panel" data-blog-code-run-preview hidden><div class="blog-code-run-panel-header"><div class="blog-code-run-panel-title">${md.utils.escapeHtml(t('code.preview'))}</div><button type="button" class="blog-code-preview-collapse" data-blog-code-preview-collapse aria-expanded="true" aria-label="${md.utils.escapeHtml(t('code.collapsePreview'))}" title="${md.utils.escapeHtml(t('code.collapsePreview'))}">${collapseIconMarkup}</button></div><div class="blog-code-run-preview-target"></div></div>`
       : ''
 
   // Keep the wrapper's structural nodes adjacent. Whitespace text nodes inside
   // a <pre> are rendered as blank code lines and push the Mac header away from
   // the top edge of the window.
   const runFooter = isRunnable ? `<div class="blog-code-run-footer">${runButton}${runPanel}</div>` : ''
-  return `<pre class="blog-code-window" data-blog-code-window="true" data-language="${escapedLanguage}"><div class="blog-code-header"><span class="blog-code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="blog-code-language">${escapedLanguage}</span><span class="blog-code-actions"><button type="button" class="blog-code-action blog-code-collapse" data-blog-code-action="collapse" aria-expanded="true" aria-label="${escapedCollapseLabel}" title="${escapedCollapseLabel}">${collapseIconMarkup}</button><button type="button" class="blog-code-action blog-code-copy" data-blog-code-action="copy" aria-label="${escapedCopyLabel}" title="${escapedCopyLabel}">${copyIconMarkup}</button><span class="blog-code-copy-feedback" role="status" aria-live="polite">已复制</span></span></div><div class="blog-code-body"><span class="blog-code-lines" aria-hidden="true">${lines}</span><div class="blog-code-content"><code class="language-${escapedLanguage}">${codeHtml}</code></div></div>${runFooter}</pre>`
+  return `<pre class="blog-code-window" data-blog-code-window="true" data-language="${escapedLanguage}"><div class="blog-code-header"><span class="blog-code-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="blog-code-language">${escapedLanguage}</span><span class="blog-code-actions"><button type="button" class="blog-code-action blog-code-collapse" data-blog-code-action="collapse" aria-expanded="true" aria-label="${escapedCollapseLabel}" title="${escapedCollapseLabel}">${collapseIconMarkup}</button><button type="button" class="blog-code-action blog-code-copy" data-blog-code-action="copy" aria-label="${escapedCopyLabel}" title="${escapedCopyLabel}">${copyIconMarkup}</button><span class="blog-code-copy-feedback" role="status" aria-live="polite">${md.utils.escapeHtml(t('code.copied'))}</span></span></div><div class="blog-code-body"><span class="blog-code-lines" aria-hidden="true">${lines}</span><div class="blog-code-content"><code class="language-${escapedLanguage}">${codeHtml}</code></div></div>${runFooter}</pre>`
 }
 
 export function macCodeWindowPlugin(md, options = {}) {

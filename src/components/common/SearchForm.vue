@@ -5,10 +5,10 @@
       
       <div class="form-buttons">
         <a-button type="primary" @click="handleSearch" class="search-button">
-          <template #icon><search-outlined /></template>搜索
+          <template #icon><search-outlined /></template>{{ t('component.search') }}
         </a-button>
         <a-button @click="handleReset" class="reset-button">
-          <template #icon><reload-outlined /></template>重置
+          <template #icon><reload-outlined /></template>{{ t('component.reset') }}
         </a-button>
       </div>
     </a-form>
@@ -17,6 +17,7 @@
 
 <script setup>
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
+import { t } from '@/i18n'
 
 const props = defineProps({
   form: {

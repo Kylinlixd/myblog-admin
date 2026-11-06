@@ -1,5 +1,5 @@
 <template>
-  <nav class="breadcrumb" aria-label="面包屑导航">
+  <nav class="breadcrumb" :aria-label="t('shell.adminNavAria')">
     <div class="breadcrumb-item" v-for="(item, index) in breadcrumbs" :key="index">
       <span v-if="index === breadcrumbs.length - 1" class="current">{{ item.title }}</span>
       <router-link v-else :to="item.path">{{ item.title }}</router-link>
@@ -11,6 +11,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { t } from '@/i18n'
 
 const route = useRoute()
 
@@ -20,14 +21,15 @@ const breadcrumbs = computed(() => {
   
   items.push({
     path: '/dashboard',
-    title: '首页'
+    title: t('shell.home')
   })
   
   matched.forEach(item => {
     if (item.path === '/dashboard') return
     
     const path = item.path
-    const title = item.meta.title
+    // meta.title 已全部 i18n key 化：面包屑在此解析，随语言切换更新
+    const title = t(item.meta.title)
     
     items.push({
       path,

@@ -1,38 +1,38 @@
 <template>
   <div class="tag-list admin-page">
-    <PageHeader compact title="标签管理" subtitle="维护跨文章使用的主题标签。">
+    <PageHeader compact :title="t('shell.menu.tags')" :subtitle="t('tagMgr.subtitle')">
       <template #actions>
         <a-button type="primary" @click="handleAdd">
           <template #icon><PlusOutlined /></template>
-          新建标签
+          {{ t('tagMgr.create') }}
         </a-button>
       </template>
     </PageHeader>
 
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
-      <a-form-item label="名称">
-        <a-input v-model:value="searchForm.name" placeholder="搜索标签名称" allowClear />
+      <a-form-item :label="t('adminShared.nameLabel')">
+        <a-input v-model:value="searchForm.name" :placeholder="t('tagMgr.searchPlaceholder')" allowClear />
       </a-form-item>
-      <a-form-item label="状态">
+      <a-form-item :label="t('adminShared.status')">
         <a-select
           v-model:value="searchForm.status"
-          placeholder="选择状态"
+          :placeholder="t('dynamicMgr.statusPlaceholder')"
           allowClear
         >
-          <a-select-option value="active">启用</a-select-option>
-          <a-select-option value="inactive">禁用</a-select-option>
+          <a-select-option value="active">{{ t('adminShared.status.active') }}</a-select-option>
+          <a-select-option value="inactive">{{ t('adminShared.status.inactive') }}</a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item>
         <a-space>
           <a-button type="primary" @click="handleSearch">
             <template #icon><SearchOutlined /></template>
-            搜索
+            {{ t('component.search') }}
           </a-button>
           <a-button @click="resetSearch">
             <template #icon><ReloadOutlined /></template>
-            重置
+            {{ t('component.reset') }}
           </a-button>
         </a-space>
       </a-form-item>
@@ -42,9 +42,9 @@
     <div v-if="selectedRowKeys.length" class="table-operations admin-toolbar">
       <a-space>
         <a-popconfirm
-          title="确定要删除选中的标签吗？"
-          ok-text="确定"
-          cancel-text="取消"
+          :title="t('tagMgr.batchDeleteConfirm')"
+          :ok-text="t('adminShared.confirm')"
+          :cancel-text="t('adminShared.cancel')"
           @confirm="handleBatchDelete"
         >
           <a-button
@@ -53,7 +53,7 @@
             :disabled="!selectedRowKeys.length || batchDeleting"
           >
             <template #icon><DeleteOutlined /></template>
-            批量删除
+            {{ t('adminShared.batchDelete') }}
           </a-button>
         </a-popconfirm>
       </a-space>
@@ -66,8 +66,8 @@
       :loading="loading"
       :error="errorMessage"
       :empty="!loading && !errorMessage"
-      empty-title="暂无标签"
-      empty-description="创建一个标签来连接相关内容。"
+      :empty-title="t('tagMgr.empty')"
+      :empty-description="t('tagMgr.emptyHint')"
       @retry="fetchTags"
     />
 
@@ -96,15 +96,15 @@
 
         <!-- 描述列 -->
         <template v-else-if="column.dataIndex === 'description'">
-          <span class="tag-description" :title="record.description || '暂无描述'">
-            {{ record.description || '暂无描述' }}
+          <span class="tag-description" :title="record.description || t('adminShared.noDescription')">
+            {{ record.description || t('adminShared.noDescription') }}
           </span>
         </template>
 
         <!-- 状态列 -->
         <template v-else-if="column.dataIndex === 'status'">
           <a-tag :color="record.status === 'active' ? 'success' : 'default'">
-            {{ record.status === 'active' ? '启用' : '禁用' }}
+            {{ record.status === 'active' ? t('adminShared.status.active') : t('adminShared.status.inactive') }}
           </a-tag>
         </template>
 
@@ -123,12 +123,12 @@
           <a-space class="table-row-actions">
             <a-button type="text" size="small" class="row-action row-action--primary" @click="handleEdit(record)">
               <template #icon><EditOutlined /></template>
-              编辑
+              {{ t('adminShared.edit') }}
             </a-button>
             <a-popconfirm
-              title="确定要删除该标签吗？"
-              ok-text="确定"
-              cancel-text="取消"
+              :title="t('tagMgr.deleteConfirm')"
+              :ok-text="t('adminShared.confirm')"
+              :cancel-text="t('adminShared.cancel')"
               @confirm="handleDelete(record)"
             >
               <a-button
@@ -140,7 +140,7 @@
                 :disabled="isDeleting(record.id)"
               >
                 <template #icon><DeleteOutlined /></template>
-                删除
+                {{ t('adminShared.delete') }}
               </a-button>
             </a-popconfirm>
           </a-space>
@@ -152,7 +152,7 @@
     <!-- 标签编辑对话框 -->
     <a-modal
       v-model:open="dialogVisible"
-      :title="dialogType === 'create' ? '新建标签' : '编辑标签'"
+      :title="dialogType === 'create' ? t('tagMgr.createTitle') : t('tagMgr.editTitle')"
       wrap-class-name="admin-edit-modal"
       @ok="handleSubmit"
       :confirmLoading="formLoading"
@@ -165,22 +165,22 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-item label="标签名称" name="name">
-          <a-input v-model:value="tagForm.name" placeholder="请输入标签名称" />
+        <a-form-item :label="t('tagMgr.column.name')" name="name">
+          <a-input v-model:value="tagForm.name" :placeholder="t('tagMgr.nameRequired')" />
         </a-form-item>
         
-        <a-form-item label="描述" name="description">
+        <a-form-item :label="t('adminShared.description')" name="description">
           <a-textarea
             v-model:value="tagForm.description"
             :rows="3"
-            placeholder="请输入标签描述"
+            :placeholder="t('tagMgr.descPlaceholder')"
           />
         </a-form-item>
         
-        <a-form-item label="状态" name="status">
+        <a-form-item :label="t('adminShared.status')" name="status">
           <a-select v-model:value="tagForm.status">
-            <a-select-option value="active">启用</a-select-option>
-            <a-select-option value="inactive">禁用</a-select-option>
+            <a-select-option value="active">{{ t('adminShared.status.active') }}</a-select-option>
+            <a-select-option value="inactive">{{ t('adminShared.status.inactive') }}</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -189,46 +189,47 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { message, Popconfirm as APopconfirm, Modal as AModal, Form as AForm, Input as AInput, Textarea as ATextarea, Select as ASelect } from 'ant-design-vue'
 import { getTagList, createTag, updateTag, deleteTag } from '@/api/tag'
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons-vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import AsyncState from '@/components/common/AsyncState.vue'
 import { useResizableColumns } from '@/composables/useResizableColumns'
+import { t } from '@/i18n'
 
 // 表格列配置
-const columns = [
+const columns = computed(() => [
   {
-    title: '序号',
+    title: t('adminShared.serialNo'),
     dataIndex: 'serialNo',
     key: 'serialNo',
     width: 72,
     align: 'center'
   },
   {
-    title: '标签名称',
+    title: t('tagMgr.column.name'),
     dataIndex: 'name',
     key: 'name',
     width: 180,
     ellipsis: true,
   },
   {
-    title: '描述',
+    title: t('adminShared.description'),
     dataIndex: 'description',
     key: 'description',
     width: 280,
     ellipsis: true,
   },
   {
-    title: '状态',
+    title: t('adminShared.status'),
     dataIndex: 'status',
     key: 'status',
     width: 90,
     align: 'center',
   },
   {
-    title: '使用次数',
+    title: t('tagMgr.column.usage'),
     dataIndex: 'use_count',
     key: 'use_count',
     width: 100,
@@ -236,29 +237,29 @@ const columns = [
     sorter: (a, b) => Number(a.use_count || 0) - Number(b.use_count || 0),
   },
   {
-    title: '创建时间',
+    title: t('adminShared.createTime'),
     dataIndex: 'created_at',
     key: 'created_at',
     width: 160,
     sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
   },
   {
-    title: '更新时间',
+    title: t('adminShared.updateTime'),
     dataIndex: 'updated_at',
     key: 'updated_at',
     width: 160,
     sorter: (a, b) => new Date(a.updated_at) - new Date(b.updated_at),
   },
   {
-    title: '操作',
+    title: t('adminShared.actions'),
     dataIndex: 'action',
     key: 'action',
     width: 190,
     fixed: 'right',
   }
-]
+])
 
-const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('tags', columns)
+const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('tags', computed(() => columns.value))
 
 // 数据列表
 const tagList = ref([])
@@ -276,7 +277,7 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total) => `共 ${total} 条`,
+  showTotal: (total) => t('adminShared.totalItems', { n: total }),
   onChange: (page, nextPageSize) => {
     const sizeChanged = nextPageSize !== pagination.pageSize
     pagination.pageSize = nextPageSize
@@ -331,11 +332,11 @@ const tagForm = reactive({
 // 表单规则
 const rules = {
   name: [
-    { required: true, message: '请输入标签名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+    { required: true, message: t('tagMgr.nameRequired'), trigger: 'blur' },
+    { min: 2, max: 50, message: t('tagMgr.nameLength'), trigger: 'blur' }
   ],
   description: [
-    { max: 200, message: '长度不能超过 200 个字符', trigger: 'blur' }
+    { max: 200, message: t('tagMgr.descMax'), trigger: 'blur' }
   ]
 }
 
@@ -381,7 +382,7 @@ const fetchTags = async (allowPageReset = true) => {
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('获取标签列表失败:', error)
-    errorMessage.value = error.message || '获取标签列表失败'
+    errorMessage.value = error.message || t('tagMgr.loadFailed')
     tagList.value = []
     pagination.total = 0
   } finally {
@@ -425,10 +426,10 @@ const handleSubmit = async () => {
     
     if (dialogType.value === 'create') {
       await createTag(submitData)
-      message.success('标签创建成功')
+      message.success(t('tagMgr.createSuccess'))
     } else {
       await updateTag(submitData.id, submitData)
-      message.success('标签更新成功')
+      message.success(t('tagMgr.updateSuccess'))
     }
     
     // 刷新标签列表
@@ -436,7 +437,7 @@ const handleSubmit = async () => {
     dialogVisible.value = false
   } catch (error) {
     console.error('保存标签失败:', error)
-    message.error(error.message || '操作失败，请重试')
+    message.error(error.message || t('adminShared.operationFailed'))
   } finally {
     formLoading.value = false
   }
@@ -448,11 +449,11 @@ const handleDelete = async (record) => {
   deletingIds.add(record.id)
   try {
     await deleteTag(record.id)
-    message.success('标签删除成功')
+    message.success(t('tagMgr.deleteSuccess'))
     await fetchTags()
   } catch (error) {
     console.error('删除标签失败:', error)
-    message.error('删除失败，请重试')
+    message.error(t('adminShared.deleteFailed'))
   } finally {
     deletingIds.delete(record.id)
   }
@@ -464,7 +465,7 @@ const isDeleting = (id) => deletingIds.has(id)
 const handleBatchDelete = async () => {
   if (batchDeleting.value || !selectedRowKeys.value.length) {
     if (batchDeleting.value) return
-    message.warning('请选择要删除的标签')
+    message.warning(t('adminShared.selectToDelete', { item: t('tagMgr.name') }))
     return
   }
 
@@ -484,12 +485,12 @@ const handleBatchDelete = async () => {
     }, [])
     const skippedIds = selectedIds.filter((id) => !ids.includes(id))
     selectedRowKeys.value = [...skippedIds, ...failedIds]
-    if (failedIds.length) message.warning(`${failedIds.length} 个标签删除失败并保持选中`)
-    else message.success('批量删除成功')
+    if (failedIds.length) message.warning(t('adminShared.batchPartialFailed', { n: failedIds.length, item: t('tagMgr.name') }))
+    else message.success(t('adminShared.batchDeleteSuccess'))
     await fetchTags()
   } catch (error) {
     console.error('批量删除失败:', error)
-    message.error('批量删除失败，请重试')
+    message.error(t('adminShared.batchDeleteFailed'))
   } finally {
     ids.forEach((id) => deletingIds.delete(id))
     batchDeleting.value = false

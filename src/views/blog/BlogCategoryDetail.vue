@@ -1,36 +1,36 @@
 <template>
   <div class="category-detail-container cinematic-page">
     <div class="page-header cinematic-hero">
-      <router-link class="category-back" to="/blog/categories">← 返回拾光</router-link>
-      <span class="category-kicker">THEME ARCHIVE · 主题归档</span>
-      <h1 class="page-title">{{ category?.name || '加载中...' }}</h1>
-      <p class="page-subtitle">按主题沉淀与实践，持续更新内容脉络。</p>
+      <router-link class="category-back" to="/blog/categories">{{ t('categoryDetail.backToArchive') }}</router-link>
+      <span class="category-kicker">{{ t('categoryDetail.kicker') }}</span>
+      <h1 class="page-title">{{ category?.name || t('categoryDetail.loading') }}</h1>
+      <p class="page-subtitle">{{ t('categoryDetail.subtitle') }}</p>
       <p v-if="category?.description" class="page-desc">{{ category.description }}</p>
       <div class="category-meta">
-        <span>{{ total }} 篇文章</span>
-        <span>持续更新</span>
+        <span>{{ total }} {{ t('categoryDetail.articles') }}</span>
+        <span>{{ t('categoryDetail.ongoing') }}</span>
       </div>
     </div>
 
     <div class="dynamics-list">
       <div v-if="loading" class="loading-state">
         <a-spin />
-        <p>加载中...</p>
+        <p>{{ t('categoryDetail.loading') }}</p>
       </div>
 
       <div v-else-if="notFound" class="empty-state">
-        <p>该分类不存在或已被删除</p>
-        <router-link class="load-more-btn" to="/blog">返回首页</router-link>
+        <p>{{ t('categoryDetail.notFound') }}</p>
+        <router-link class="load-more-btn" to="/blog">{{ t('categoryDetail.returnHome') }}</router-link>
       </div>
 
       <div v-else-if="loadError" class="empty-state" role="alert">
-        <p>获取分类文章失败</p>
+        <p>{{ t('categoryDetail.loadFailed') }}</p>
         <p class="empty-state__desc">{{ loadError }}</p>
-        <button class="load-more-btn" type="button" @click="fetchCategoryDynamics">重试</button>
+        <button class="load-more-btn" type="button" @click="fetchCategoryDynamics">{{ t('categoryDetail.retry') }}</button>
       </div>
 
       <div v-else-if="dynamics.length === 0" class="empty-state">
-        <p>该分类下暂无文章</p>
+        <p>{{ t('categoryDetail.empty') }}</p>
       </div>
 
       <div v-else class="dynamics-grid">
@@ -41,7 +41,7 @@
               <p class="dynamic-summary">{{ dynamic.summary }}</p>
               <div class="dynamic-meta">
                 <span class="dynamic-date">{{ formatDate(dynamic.created_at) }}</span>
-                <span class="dynamic-views">{{ dynamic.views }} 阅读</span>
+                <span class="dynamic-views">{{ dynamic.views }} {{ t('categoryDetail.reading') }}</span>
               </div>
             </div>
           </router-link>
@@ -50,7 +50,7 @@
 
       <div v-if="!loading && hasMore" class="load-more-wrap">
         <button class="load-more-btn" type="button" :disabled="loadingMore" @click="loadMore">
-          {{ loadingMore ? '加载中...' : '加载更多' }}
+          {{ loadingMore ? t('categoryDetail.loadingMore') : t('categoryDetail.loadMore') }}
         </button>
       </div>
     </div>
@@ -62,6 +62,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getCategoryDynamics } from '@/api/blog'
 import { useAppStore } from '@/stores/app'
+import { t } from '@/i18n'
 import dayjs from 'dayjs'
 
 const PAGE_SIZE = 12
@@ -92,7 +93,7 @@ const fetchCategoryDynamics = async ({ append = false } = {}) => {
       loadingMore.value = true
     } else {
       loading.value = true
-      appStore.startLoading('加载分类文章...')
+      appStore.startLoading(t('categoryDetail.loadingArticles'))
     }
 
     const categoryId = route.params.id
@@ -100,7 +101,7 @@ const fetchCategoryDynamics = async ({ append = false } = {}) => {
 
     if (response?.code === 200 && response.data) {
       category.value = response.data.category
-      if (category.value?.name) document.title = `${category.value.name}｜拾光｜时不语之间`
+      if (category.value?.name) document.title = `${category.value.name}｜${t('nav.light')}｜${t('common.siteName')}`
       total.value = Number(response.data.total) || 0
       const list = response.data.items ?? response.data.dynamics ?? []
       dynamics.value = append ? [...dynamics.value, ...list] : list
@@ -109,14 +110,14 @@ const fetchCategoryDynamics = async ({ append = false } = {}) => {
       notFound.value = true
     } else {
       console.error('获取分类文章失败:', response?.message)
-      loadError.value = response?.message || '服务暂时不可用，请稍后重试'
+      loadError.value = response?.message || t('categoryDetail.serviceError')
     }
   } catch (error) {
     console.error('获取分类文章失败:', error)
     if (error?.status === 404 || error?.code === 404) {
       notFound.value = true
     } else {
-      loadError.value = error?.message || '网络异常，请稍后重试'
+      loadError.value = error?.message || t('categoryDetail.networkError')
     }
   } finally {
     loading.value = false

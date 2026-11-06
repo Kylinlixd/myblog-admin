@@ -2,22 +2,22 @@
   <div class="dashboard-page">
     <section class="dashboard-intro">
       <div class="intro-copy">
-        <span class="section-label">{{ currentDate }} · 内容运营台</span>
-        <h1>欢迎回来，{{ userStore.nickname || '管理员' }}</h1>
-        <p>看清内容节奏，处理读者反馈，然后继续今天的创作。</p>
+        <span class="section-label">{{ currentDate }} · {{ t('dashboard.workbench') }}</span>
+        <h1>{{ t('dashboard.welcome', { name: userStore.nickname || t('dashboard.admin') }) }}</h1>
+        <p>{{ t('dashboard.subtitle') }}</p>
       </div>
       <div class="intro-actions">
         <router-link class="create-button" to="/dashboard/dynamics/create">
-          <plus-outlined /> 新建内容
+          <plus-outlined /> {{ t('dashboard.create') }}
         </router-link>
       </div>
     </section>
 
     <a-alert v-if="error" type="error" show-icon :message="error" class="dashboard-alert">
-      <template #action><a-button size="small" aria-label="重试" @click="loadStats">重试</a-button></template>
+      <template #action><a-button size="small" :aria-label="t('common.retry')" @click="loadStats">{{ t('common.retry') }}</a-button></template>
     </a-alert>
 
-    <section class="metric-rail" aria-label="内容统计">
+    <section class="metric-rail" :aria-label="t('dashboard.aria.metrics')">
       <template v-if="loading">
         <a-skeleton v-for="item in 4" :key="item" active :paragraph="false" class="metric-skeleton" />
       </template>
@@ -26,120 +26,120 @@
         <span class="metric-label">{{ item.label }}</span>
         <span class="metric-value-wrap">
           <strong class="metric-value">{{ item.value }}</strong>
-          <i v-if="item.key === 'comments' && commentNotifications.hasUnread" class="metric-unread-dot" aria-label="有新评论" />
+          <i v-if="item.key === 'comments' && commentNotifications.hasUnread" class="metric-unread-dot" :aria-label="t('dashboard.aria.hasNewComments')" />
         </span>
       </router-link>
     </section>
 
-    <section class="access-overview" aria-label="访问概览">
-      <div><span>近七天接口访问</span><strong>{{ dashboardData.access.requests }}</strong><small>次</small></div>
-      <div><span>近七天独立 IP</span><strong>{{ dashboardData.access.uniqueIps }}</strong><small>个</small></div>
-      <router-link to="/dashboard/access-logs">查看访问日志 <right-outlined /></router-link>
+    <section class="access-overview" :aria-label="t('dashboard.aria.access')">
+      <div><span>{{ t('dashboard.access.requests7') }}</span><strong>{{ dashboardData.access.requests }}</strong><small>{{ t('dashboard.access.times') }}</small></div>
+      <div><span>{{ t('dashboard.access.uniqueIps7') }}</span><strong>{{ dashboardData.access.uniqueIps }}</strong><small>{{ t('dashboard.access.ips') }}</small></div>
+      <router-link to="/dashboard/access-logs">{{ t('dashboard.viewLogs') }} <right-outlined /></router-link>
     </section>
 
     <section class="operations-grid">
       <article class="workspace-panel content-pulse">
         <header class="panel-heading">
-          <div><span class="section-label">发布节奏</span><h2>近七天内容&访问趋势</h2><small class="panel-range">{{ rangeLabel }}</small></div>
-          <router-link to="/dashboard/dynamics">查看全部内容 &gt;</router-link>
+          <div><span class="section-label">{{ t('dashboard.section.publishing') }}</span><h2>{{ t('dashboard.section.trendTitle') }}</h2><small class="panel-range">{{ rangeLabel }}</small></div>
+          <router-link to="/dashboard/dynamics">{{ t('dashboard.viewAllContent') }} &gt;</router-link>
         </header>
 
-        <div class="trend-summary" aria-label="近七天发布统计">
-          <div><span>七天发布</span><strong>{{ summaryValue(totalDaily) }}</strong><small>篇</small></div>
-          <div><span>日均发布</span><strong>{{ summaryValue(averageDaily) }}</strong><small>篇/天</small></div>
-          <div><span>单日峰值</span><strong>{{ summaryValue(maxDaily) }}</strong><small>篇</small></div>
+        <div class="trend-summary" :aria-label="t('dashboard.aria.trend')">
+          <div><span>{{ t('dashboard.summary.published7') }}</span><strong>{{ summaryValue(totalDaily) }}</strong><small>{{ t('dashboard.unit.pieces') }}</small></div>
+          <div><span>{{ t('dashboard.summary.dailyAvg') }}</span><strong>{{ summaryValue(averageDaily) }}</strong><small>{{ t('dashboard.unit.perDay') }}</small></div>
+          <div><span>{{ t('dashboard.summary.peak') }}</span><strong>{{ summaryValue(maxDaily) }}</strong><small>{{ t('dashboard.unit.pieces') }}</small></div>
         </div>
 
-        <DashboardChart v-if="daily.length" class="trend-line-chart" :option="publishingOption(daily)" :label="`近七天内容与访问趋势，共发布 ${totalDaily} 篇，访问 ${dashboardData.visits.pv} PV`" />
+        <DashboardChart v-if="daily.length" class="trend-line-chart" :option="publishingOption(daily)" :label="t('dashboard.trendChartAria', { articles: totalDaily, pv: dashboardData.visits.pv })" />
         <div v-else-if="error" class="panel-empty panel-empty--error">
           <warning-outlined />
-          <strong>发布统计暂时不可用</strong>
-          <span>数据请求失败，请点击上方“重试”。</span>
+          <strong>{{ t('dashboard.publishStatsUnavailable') }}</strong>
+          <span>{{ t('dashboard.publishStatsRetryHint') }}</span>
         </div>
         <div v-else-if="!loading" class="panel-empty">
           <read-outlined />
-          <strong>最近还没有发布记录</strong>
-          <span>创建内容后，这里会呈现你的发布节奏。</span>
+          <strong>{{ t('dashboard.noPublishRecords') }}</strong>
+          <span>{{ t('dashboard.publishRhythmHint') }}</span>
         </div>
       </article>
 
       <aside class="operations-side">
         <section class="workspace-panel taxonomy-panel">
           <header class="panel-heading">
-            <div><span class="section-label">内容脉络</span><h2>主题阅读分布</h2></div>
-            <router-link to="/dashboard/category">管理 &gt;</router-link>
+            <div><span class="section-label">{{ t('dashboard.section.taxonomy') }}</span><h2>{{ t('dashboard.section.taxonomyTitle') }}</h2></div>
+            <router-link to="/dashboard/category">{{ t('dashboard.manage') }} &gt;</router-link>
           </header>
 
           <div v-if="hasTaxonomy" class="taxonomy-columns">
             <div v-if="dashboardData.categories.length" class="taxonomy-group">
-              <div class="taxonomy-title"><span>分类</span><router-link to="/dashboard/category">管理 &gt;</router-link></div>
+              <div class="taxonomy-title"><span>{{ t('dashboard.metric.categories') }}</span><router-link to="/dashboard/category">{{ t('dashboard.manage') }} &gt;</router-link></div>
               <div class="taxonomy-list">
                 <div v-for="item in dashboardData.categories" :key="`category-${item.name}`" class="taxonomy-item">
-                  <div><strong>{{ item.name }}</strong><span>{{ item.count }}篇 · 总阅读 {{ formatNumber(item.views) }}</span></div>
+                  <div><strong>{{ item.name }}</strong><span>{{ t('dashboard.pieceCount', { n: item.count, views: formatNumber(item.views) }) }}</span></div>
                   <i><span :style="{ width: `${taxonomyShare(item, dashboardData.categories)}%` }" /></i>
                 </div>
               </div>
             </div>
             <div v-if="dashboardData.tags.length" class="taxonomy-group">
-              <div class="taxonomy-title"><span>标签</span><router-link to="/dashboard/tags">管理 &gt;</router-link></div>
+              <div class="taxonomy-title"><span>{{ t('dashboard.metric.tags') }}</span><router-link to="/dashboard/tags">{{ t('dashboard.manage') }} &gt;</router-link></div>
               <div class="taxonomy-list">
                 <div v-for="item in dashboardData.tags" :key="`tag-${item.name}`" class="taxonomy-item">
-                  <div><strong>{{ item.name }}</strong><span>{{ item.count }}篇 · 总阅读 {{ formatNumber(item.views) }}</span></div>
+                  <div><strong>{{ item.name }}</strong><span>{{ t('dashboard.pieceCount', { n: item.count, views: formatNumber(item.views) }) }}</span></div>
                   <i><span :style="{ width: `${taxonomyShare(item, dashboardData.tags)}%` }" /></i>
                 </div>
               </div>
             </div>
           </div>
-          <div v-else-if="!loading" class="compact-empty">分类与标签的发布数据会显示在这里。</div>
+          <div v-else-if="!loading" class="compact-empty">{{ t('dashboard.taxonomyEmpty') }}</div>
         </section>
 
 
       </aside>
     </section>
-    <section class="insights-grid" aria-label="阅读与安全数据">
+    <section class="insights-grid" :aria-label="t('dashboard.aria.insights')">
       <article class="workspace-panel insight-card" id="visit-overview">
-        <header class="panel-heading"><div><span class="section-label">读者足迹</span><h2>7天访问总览</h2></div><router-link to="/dashboard/access-logs?view=visits">查看访问统计 &gt;</router-link></header>
+        <header class="panel-heading"><div><span class="section-label">{{ t('dashboard.section.footprints') }}</span><h2>{{ t('dashboard.section.visitsTitle') }}</h2></div><router-link to="/dashboard/access-logs?view=visits">{{ t('dashboard.viewVisitStats') }} &gt;</router-link></header>
         <div class="insight-kpis">
-          <div><span>7天总PV</span><strong>{{ formatNumber(dashboardData.visits.pv) }}</strong></div>
-          <div><span>7天UV</span><strong>{{ formatNumber(dashboardData.visits.uv) }}</strong></div>
-          <div><span>日均阅读</span><strong>{{ formatNumber(dashboardData.visits.average) }}</strong></div>
-          <div><span title="IP＋浏览器识别访客；间隔30分钟划分会话，单次阅读会话占比">跳出率 <small>估算</small></span><strong>{{ dashboardData.visits.bounceRate == null ? '—' : `${dashboardData.visits.bounceRate}%` }}</strong></div>
+          <div><span>{{ t('logMgr.pv7') }}</span><strong>{{ formatNumber(dashboardData.visits.pv) }}</strong></div>
+          <div><span>{{ t('logMgr.uv7') }}</span><strong>{{ formatNumber(dashboardData.visits.uv) }}</strong></div>
+          <div><span>{{ t('logMgr.dailyAvg') }}</span><strong>{{ formatNumber(dashboardData.visits.average) }}</strong></div>
+          <div><span :title="t('dashboard.bounceRateTip')">{{ t('dashboard.bounceRate') }} <small>{{ t('dashboard.estimated') }}</small></span><strong>{{ dashboardData.visits.bounceRate == null ? '—' : `${dashboardData.visits.bounceRate}%` }}</strong></div>
         </div>
-        <DashboardChart v-if="daily.length" class="mini-chart" :option="visitsOption(daily)" label="近七天每日文章访问 PV 趋势" />
-        <div v-else class="compact-empty">{{ loading ? '正在加载访问数据…' : '暂无访问数据' }}</div>
-        <p class="card-note">PV 按文章详情访问计 · UV 按 IP＋浏览器去重</p>
+        <DashboardChart v-if="daily.length" class="mini-chart" :option="visitsOption(daily)" :label="t('dashboard.visitsChartLabel')" />
+        <div v-else class="compact-empty">{{ loading ? t('dashboard.loadingVisits') : t('dashboard.noVisitsData') }}</div>
+        <p class="card-note">{{ t('dashboard.visitsNote') }}</p>
       </article>
       <article class="workspace-panel insight-card">
-        <header class="panel-heading"><div><span class="section-label">阅读焦点</span><h2>热门文章 TOP5</h2></div><router-link to="/dashboard/dynamics">查看全部文章 &gt;</router-link></header>
-        <div class="article-list-head"><span>文章标题</span><span>阅读 / 评论</span></div>
+        <header class="panel-heading"><div><span class="section-label">{{ t('dashboard.section.focus') }}</span><h2>{{ t('dashboard.section.hotTitle') }}</h2></div><router-link to="/dashboard/dynamics">{{ t('dashboard.viewAllArticles') }} &gt;</router-link></header>
+        <div class="article-list-head"><span>{{ t('dashboard.col.articleTitle') }}</span><span>{{ t('dashboard.col.readsComments') }}</span></div>
         <ol v-if="dashboardData.hotArticles.length" class="hot-articles">
           <li v-for="(article, index) in dashboardData.hotArticles" :key="article.id">
             <span class="article-rank" :class="{ 'article-rank--top': index < 3 }">{{ String(index + 1).padStart(2, '0') }}</span>
-            <router-link :to="`/dashboard/dynamics/edit/${article.id}`" :title="article.title">{{ article.title }}<span v-if="index < 3 && article.view_count > 0" aria-label="高热度"> 🔥</span></router-link>
-            <div class="article-counts"><strong>{{ formatNumber(article.view_count) }}</strong><span>{{ formatNumber(article.comment_count) }} 评论</span></div>
+            <router-link :to="`/dashboard/dynamics/edit/${article.id}`" :title="article.title">{{ article.title }}<span v-if="index < 3 && article.view_count > 0" :aria-label="t('dashboard.hotBadgeAria')"> 🔥</span></router-link>
+            <div class="article-counts"><strong>{{ formatNumber(article.view_count) }}</strong><span>{{ t('dashboard.commentCount', { n: formatNumber(article.comment_count) }) }}</span></div>
           </li>
         </ol>
-        <div v-else class="compact-empty">{{ loading ? '正在加载热门文章…' : '发布文章后，这里展示阅读排行。' }}</div>
-        <p class="card-note">按已发布文章累计阅读量排序</p>
+        <div v-else class="compact-empty">{{ loading ? t('dashboard.loadingHot') : t('dashboard.hotEmpty') }}</div>
+        <p class="card-note">{{ t('dashboard.hotNote') }}</p>
       </article>
       <article class="workspace-panel insight-card">
-        <header class="panel-heading"><div><span class="section-label">安全观察</span><h2>访问安全简报</h2></div><router-link to="/dashboard/access-logs">查看访问日志 &gt;</router-link></header>
+        <header class="panel-heading"><div><span class="section-label">{{ t('dashboard.section.security') }}</span><h2>{{ t('dashboard.section.securityTitle') }}</h2></div><router-link to="/dashboard/access-logs">{{ t('dashboard.viewLogs') }} &gt;</router-link></header>
         <div class="insight-kpis security-kpis">
-          <div><span>近7日独立IP</span><strong>{{ formatNumber(dashboardData.security.uniqueIps) }}</strong></div>
-          <div><span>中风险IP</span><strong class="risk-medium">{{ dashboardData.security.medium }}</strong></div>
-          <div><span>高风险IP</span><strong class="risk-high">{{ dashboardData.security.high }}</strong></div>
-          <div><span>严重风险IP</span><strong class="risk-critical">{{ dashboardData.security.critical }}</strong></div>
+          <div><span>{{ t('dashboard.security.uniqueIps7') }}</span><strong>{{ formatNumber(dashboardData.security.uniqueIps) }}</strong></div>
+          <div><span>{{ t('dashboard.security.mediumIps') }}</span><strong class="risk-medium">{{ dashboardData.security.medium }}</strong></div>
+          <div><span>{{ t('dashboard.security.highIps') }}</span><strong class="risk-high">{{ dashboardData.security.high }}</strong></div>
+          <div><span>{{ t('dashboard.security.criticalIps') }}</span><strong class="risk-critical">{{ dashboardData.security.critical }}</strong></div>
         </div>
-        <div class="risk-list-heading">TOP 3 风险来源</div>
+        <div class="risk-list-heading">{{ t('dashboard.riskSourcesTop3') }}</div>
         <ul v-if="dashboardData.security.topIps.length" class="risk-ip-list">
-          <li v-for="ip in dashboardData.security.topIps" :key="ip.ip_address"><span class="risk-ip-address" :title="ip.ip_address">{{ ip.ip_address }}</span><span class="risk-badge" :class="`risk-${ip.risk_level}`">{{ riskLabel(ip.risk_level) }}</span><strong>{{ formatNumber(ip.requests) }}<small> 次</small></strong></li>
+          <li v-for="ip in dashboardData.security.topIps" :key="ip.ip_address"><span class="risk-ip-address" :title="ip.ip_address">{{ ip.ip_address }}</span><span class="risk-badge" :class="`risk-${ip.risk_level}`">{{ riskLabel(ip.risk_level) }}</span><strong>{{ formatNumber(ip.requests) }}<small> {{ t('dashboard.access.times') }}</small></strong></li>
         </ul>
-        <div v-else class="compact-empty">{{ loading ? '正在加载安全数据…' : '近7日未发现中风险及以上 IP' }}</div>
-        <p class="card-note">已排除生效白名单 · 风险依据近7日请求</p>
+        <div v-else class="compact-empty">{{ loading ? t('dashboard.loadingSecurity') : t('dashboard.securityEmpty') }}</div>
+        <p class="card-note">{{ t('dashboard.securityNote') }}</p>
       </article>
     </section>
-        <section class="quick-actions" aria-label="快捷操作">
-          <div class="quick-heading"><span class="section-label">下一步</span><h2>快捷操作</h2></div>
+        <section class="quick-actions" :aria-label="t('dashboard.aria.quickActions')">
+          <div class="quick-heading"><span class="section-label">{{ t('dashboard.section.next') }}</span><h2>{{ t('dashboard.section.quickTitle') }}</h2></div>
           <router-link v-for="action in quickActions" :key="action.path" :to="action.path" class="quick-action">
             <component :is="action.icon" />
             <div><strong>{{ action.label }}</strong><span>{{ action.description }}</span></div>
@@ -168,23 +168,24 @@ import { useCommentNotificationsStore } from '@/stores/commentNotifications'
 import { mapDashboardData } from './dashboard/stats'
 import DashboardChart from './dashboard/DashboardChart.vue'
 import { publishingOption, visitsOption } from './dashboard/charts'
+import { t, currentLocale } from '@/i18n'
 
 const userStore = useUserStore()
 const commentNotifications = useCommentNotificationsStore()
-const currentDate = new Intl.DateTimeFormat('zh-CN', {
+const currentDate = computed(() => new Intl.DateTimeFormat(currentLocale.value, {
   month: 'long',
   day: 'numeric',
   weekday: 'long'
-}).format(new Date())
+}).format(new Date()))
 const loading = ref(true)
 const error = ref('')
 const dashboardData = ref(mapDashboardData())
 
 const metrics = computed(() => [
-  { key: 'dynamics', label: '内容', value: dashboardData.value.total.dynamics, path: '/dashboard/dynamics', icon: FileTextOutlined },
-  { key: 'categories', label: '分类', value: dashboardData.value.total.categories, path: '/dashboard/category', icon: FolderOutlined },
-  { key: 'tags', label: '标签', value: dashboardData.value.total.tags, path: '/dashboard/tags', icon: TagsOutlined },
-  { key: 'comments', label: '评论', value: dashboardData.value.total.comments, path: '/dashboard/comments', icon: CommentOutlined }
+  { key: 'dynamics', label: t('dashboard.metric.dynamics'), value: dashboardData.value.total.dynamics, path: '/dashboard/dynamics', icon: FileTextOutlined },
+  { key: 'categories', label: t('dashboard.metric.categories'), value: dashboardData.value.total.categories, path: '/dashboard/category', icon: FolderOutlined },
+  { key: 'tags', label: t('dashboard.metric.tags'), value: dashboardData.value.total.tags, path: '/dashboard/tags', icon: TagsOutlined },
+  { key: 'comments', label: t('dashboard.metric.comments'), value: dashboardData.value.total.comments, path: '/dashboard/comments', icon: CommentOutlined }
 ])
 const daily = computed(() => dashboardData.value.daily)
 const totalDaily = computed(() => daily.value.reduce((sum, item) => sum + item.count, 0))
@@ -196,16 +197,16 @@ const averageDaily = computed(() => {
 })
 const rangeLabel = computed(() => {
   const range = dashboardData.value.range
-  if (!range?.start || !range?.end) return '北京时间 · 近七天'
-  return `${range.start.slice(5)}—${range.end.slice(5)} · ${range.timezone === 'Asia/Shanghai' ? '北京时间' : range.timezone}`
+  if (!range?.start || !range?.end) return `${t('dashboard.beijingTime')} · ${t('dashboard.lastSevenDays')}`
+  return `${range.start.slice(5)}—${range.end.slice(5)} · ${range.timezone === 'Asia/Shanghai' ? t('dashboard.beijingTime') : range.timezone}`
 })
 const hasTaxonomy = computed(() => dashboardData.value.categories.length || dashboardData.value.tags.length)
 
-const quickActions = [
-  { label: '发布新内容', description: '进入编辑器继续创作', path: '/dashboard/dynamics/create', icon: PlusOutlined },
-  { label: '处理评论', description: '审核和维护读者讨论', path: '/dashboard/comments', icon: CommentOutlined },
-  { label: '整理内容结构', description: '维护分类与主题关系', path: '/dashboard/category', icon: FolderOutlined }
-]
+const quickActions = computed(() => [
+  { label: t('dashboard.quick.createLabel'), description: t('dashboard.quick.createDesc'), path: '/dashboard/dynamics/create', icon: PlusOutlined },
+  { label: t('dashboard.quick.commentsLabel'), description: t('dashboard.quick.commentsDesc'), path: '/dashboard/comments', icon: CommentOutlined },
+  { label: t('dashboard.quick.structureLabel'), description: t('dashboard.quick.structureDesc'), path: '/dashboard/category', icon: FolderOutlined }
+])
 
 async function acknowledgeCommentCount() {
   try {
@@ -220,9 +221,9 @@ function taxonomyShare(item, items) {
   return Math.round((item.views / peak) * 100)
 }
 
-const formatNumber = value => new Intl.NumberFormat('zh-CN').format(Number(value) || 0)
+const formatNumber = value => new Intl.NumberFormat(currentLocale.value).format(Number(value) || 0)
 const summaryValue = value => (loading.value || error.value ? '—' : value)
-const riskLabel = level => ({ medium: '中风险', high: '高风险', critical: '严重风险' }[level] || '低风险')
+const riskLabel = level => t(({ medium: 'adminShared.risk.medium', high: 'adminShared.risk.high', critical: 'adminShared.risk.critical' }[level]) || 'adminShared.risk.low')
 
 async function loadStats() {
   loading.value = true
@@ -230,7 +231,7 @@ async function loadStats() {
   try {
     dashboardData.value = mapDashboardData(await request.get('/api/stats/'))
   } catch (reason) {
-    error.value = reason?.message || '仪表盘数据加载失败'
+    error.value = reason?.message || t('dashboard.loadFailed')
   } finally {
     loading.value = false
   }

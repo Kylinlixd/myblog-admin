@@ -2,6 +2,7 @@ import request from '@/utils/request'
 import { normalizeCollectionResponse } from './collections'
 import { unwrapApiResponse } from './response'
 import { clearRequestCache } from '@/services/http/publicRequestCache'
+import { t } from '@/i18n'
 
 export function buildDynamicParams(params = {}) {
   const search = new URLSearchParams()
@@ -37,7 +38,7 @@ export function normalizeDynamicPayload(data = {}) {
 
 function validateDynamicPayload(payload) {
   if (payload.type !== 'text' && payload.mediaUrls.length === 0) {
-    throw new TypeError(`${payload.type} 类型的内容必须包含媒体文件`)
+    throw new TypeError(t('dynamicMgr.mediaRequired', { type: payload.type }))
   }
 }
 
@@ -52,10 +53,10 @@ export const getDynamicList = async (params) => {
 }
 
 export const getDynamicDetail = async (id) =>
-  unwrapApiResponse(await request.get(`/api/dynamics/${id}/`), '动态请求失败')
+  unwrapApiResponse(await request.get(`/api/dynamics/${id}/`), t('dynamicMgr.requestFailed'))
 
 export const deleteDynamic = async (id) => {
-  const result = await unwrapApiResponse(await request.delete(`/api/dynamics/${id}/`), '删除动态失败')
+  const result = await unwrapApiResponse(await request.delete(`/api/dynamics/${id}/`), t('dynamicMgr.deleteFailed'))
   invalidatePublicCache()
   return result
 }
@@ -63,7 +64,7 @@ export const deleteDynamic = async (id) => {
 export async function createDynamic(data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  const result = await unwrapApiResponse(await request.post('/api/dynamics/', payload), '动态请求失败')
+  const result = await unwrapApiResponse(await request.post('/api/dynamics/', payload), t('dynamicMgr.requestFailed'))
   invalidatePublicCache()
   return result
 }
@@ -71,7 +72,7 @@ export async function createDynamic(data) {
 export async function updateDynamic(id, data) {
   const payload = normalizeDynamicPayload(data)
   validateDynamicPayload(payload)
-  const result = await unwrapApiResponse(await request.put(`/api/dynamics/${id}/`, payload), '动态请求失败')
+  const result = await unwrapApiResponse(await request.put(`/api/dynamics/${id}/`, payload), t('dynamicMgr.requestFailed'))
   invalidatePublicCache()
   return result
 }

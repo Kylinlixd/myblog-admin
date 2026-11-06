@@ -2,15 +2,15 @@
   <div class="collection-edit admin-page">
     <PageHeader
       compact
-      :title="isEdit ? '编辑合集' : '新建合集'"
-      :subtitle="isEdit ? '调整合集信息与章节顺序；文章本身的内容不受影响。' : '先建合集，再把相关文章按阅读顺序加进来。'"
+      :title="isEdit ? t('collectionMgr.editTitle') : t('collectionMgr.createTitle')"
+      :subtitle="isEdit ? t('collectionMgr.editSubtitle') : t('collectionMgr.createSubtitle')"
     >
       <template #actions>
         <a-space>
-          <a-button @click="goBack">取消</a-button>
+          <a-button @click="goBack">{{ t('adminShared.cancel') }}</a-button>
           <a-button type="primary" :loading="saving" @click="handleSave">
             <template #icon><SaveOutlined /></template>
-            保存
+            {{ t('adminShared.save') }}
           </a-button>
         </a-space>
       </template>
@@ -18,50 +18,50 @@
 
     <a-spin :spinning="loading">
       <div class="collection-edit__layout">
-        <a-card class="collection-edit__form admin-table-card" title="合集信息">
+        <a-card class="collection-edit__form admin-table-card" :title="t('collectionMgr.formTitle')">
           <a-form layout="vertical">
-            <a-form-item label="标题" required>
-              <a-input v-model:value="form.title" :maxlength="100" placeholder="例如：Java 技术文章合集" show-count />
+            <a-form-item :label="t('adminShared.title')" required>
+              <a-input v-model:value="form.title" :maxlength="100" :placeholder="t('collectionMgr.titlePlaceholder')" show-count />
             </a-form-item>
 
-            <a-form-item label="简介">
+            <a-form-item :label="t('collectionMgr.introLabel')">
               <a-textarea
                 v-model:value="form.description"
                 :rows="3"
                 :maxlength="300"
                 show-count
-                placeholder="一两句话说明这条阅读路径解决什么问题"
+                :placeholder="t('collectionMgr.introPlaceholder')"
               />
             </a-form-item>
 
-            <a-form-item label="系列">
-              <a-input v-model:value="form.series" :disabled="seriesLocked" :maxlength="50" placeholder="例如：Java与Spring" />
+            <a-form-item :label="t('collectionMgr.column.series')">
+              <a-input v-model:value="form.series" :disabled="seriesLocked" :maxlength="50" placeholder="Java · Spring" />
               <template #extra>
-                <span v-if="seriesLocked">系列名由发布器自动维护，改名后发布器可能找不到这个合集。</span>
-                <span v-else>可选；填写后发布器会按系列把新文章追加到合集末尾。</span>
+                <span v-if="seriesLocked">{{ t('collectionMgr.seriesLockedHint') }}</span>
+                <span v-else>{{ t('collectionMgr.seriesHint') }}</span>
               </template>
             </a-form-item>
 
             <div class="collection-edit__row">
-              <a-form-item label="排序">
+              <a-form-item :label="t('categoryMgr.column.sort')">
                 <a-input-number v-model:value="form.sort" :min="0" :step="1" style="width: 100%" />
               </a-form-item>
-              <a-form-item label="状态">
+              <a-form-item :label="t('adminShared.status')">
                 <a-select v-model:value="form.status">
-                  <a-select-option value="active">启用</a-select-option>
-                  <a-select-option value="hidden">隐藏</a-select-option>
+                  <a-select-option value="active">{{ t('adminShared.status.active') }}</a-select-option>
+                  <a-select-option value="hidden">{{ t('adminShared.status.hidden') }}</a-select-option>
                 </a-select>
               </a-form-item>
             </div>
 
-            <a-form-item label="封面">
+            <a-form-item :label="t('collectionMgr.coverLabel')">
               <div class="collection-cover-editor">
                 <div class="collection-cover-preview">
-                  <img v-if="form.cover" :src="assetUrl(form.cover)" alt="合集封面预览" />
-                  <span v-else>暂无封面</span>
+                  <img v-if="form.cover" :src="assetUrl(form.cover)" :alt="t('collectionMgr.coverPreviewAlt')" />
+                  <span v-else>{{ t('collectionMgr.noCoverYet') }}</span>
                 </div>
                 <div class="collection-cover-actions">
-                  <a-input v-model:value="form.cover" placeholder="/media/images/... 或完整地址" />
+                  <a-input v-model:value="form.cover" :placeholder="t('collectionMgr.coverPlaceholder')" />
                   <a-upload
                     :show-upload-list="false"
                     accept="image/*"
@@ -69,7 +69,7 @@
                   >
                     <a-button :loading="uploadingCover" size="small">
                       <template #icon><UploadOutlined /></template>
-                      上传图片
+                      {{ t('collectionMgr.uploadCover') }}
                     </a-button>
                   </a-upload>
                 </div>
@@ -81,21 +81,21 @@
         <a-card class="collection-edit__items admin-table-card">
           <template #title>
             <div class="collection-items__title">
-              <span>章节</span>
-              <span class="collection-items__count">{{ items.length }} 篇</span>
+              <span>{{ t('collectionMgr.sectionChapters') }}</span>
+              <span class="collection-items__count">{{ items.length }} {{ t('dashboard.unit.pieces') }}</span>
             </div>
           </template>
 
           <div class="collection-items__search">
             <a-input
               v-model:value="searchKeyword"
-              placeholder="按标题搜索已发布文章"
+              :placeholder="t('collectionMgr.searchArticles')"
               allowClear
               @pressEnter="searchArticles"
             />
             <a-button type="primary" :loading="searching" @click="searchArticles">
               <template #icon><SearchOutlined /></template>
-              搜索
+              {{ t('component.search') }}
             </a-button>
           </div>
 
@@ -104,18 +104,18 @@
               <div class="collection-search-item__copy">
                 <strong>{{ article.title }}</strong>
                 <span>
-                  {{ article.status === 'published' ? '已发布' : '草稿' }}
+                  {{ article.status === 'published' ? t('dynamicMgr.status.published') : t('dynamicMgr.status.draft') }}
                   <template v-if="article.category?.name"> · {{ article.category.name }}</template>
                 </span>
               </div>
               <a-button size="small" :disabled="hasItem(article.id)" @click="addItem(article)">
-                {{ hasItem(article.id) ? '已添加' : '添加' }}
+                {{ hasItem(article.id) ? t('collectionMgr.added') : t('collectionMgr.add') }}
               </a-button>
             </div>
           </div>
 
           <div v-if="!items.length" class="collection-items__empty">
-            还没有章节。搜索文章并添加，顺序就是读者的阅读顺序。
+            {{ t('collectionMgr.chaptersEmpty') }}
           </div>
 
           <ol v-else class="collection-item-list">
@@ -123,16 +123,16 @@
               <span class="collection-item__index">{{ String(index + 1).padStart(2, '0') }}</span>
               <div class="collection-item__copy">
                 <strong>{{ item.title }}</strong>
-                <span>{{ item.status === 'published' ? '已发布' : '草稿' }}</span>
+                <span>{{ item.status === 'published' ? t('dynamicMgr.status.published') : t('dynamicMgr.status.draft') }}</span>
               </div>
               <div class="collection-item__actions">
-                <a-button type="text" size="small" :disabled="index === 0" title="上移" @click="moveItem(index, -1)">
+                <a-button type="text" size="small" :disabled="index === 0" :title="t('collectionMgr.moveUp')" @click="moveItem(index, -1)">
                   <template #icon><ArrowUpOutlined /></template>
                 </a-button>
-                <a-button type="text" size="small" :disabled="index === items.length - 1" title="下移" @click="moveItem(index, 1)">
+                <a-button type="text" size="small" :disabled="index === items.length - 1" :title="t('collectionMgr.moveDown')" @click="moveItem(index, 1)">
                   <template #icon><ArrowDownOutlined /></template>
                 </a-button>
-                <a-button type="text" size="small" danger title="移除" @click="removeItem(index)">
+                <a-button type="text" size="small" danger :title="t('collectionMgr.remove')" @click="removeItem(index)">
                   <template #icon><DeleteOutlined /></template>
                 </a-button>
               </div>
@@ -167,6 +167,7 @@ import {
 import { getDynamicList } from '@/api/dynamic'
 import { buildApiUrl } from '@/utils/apiBaseUrl'
 import { uploadImage } from '@/utils/upload'
+import { t } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -228,7 +229,7 @@ async function searchArticles() {
     })
     searchResults.value = results.filter((article) => article.status !== 'trash')
   } catch (error) {
-    message.error(error?.message || '文章搜索失败')
+    message.error(error?.message || t('collectionMgr.articleSearchFailed'))
   } finally {
     searching.value = false
   }
@@ -239,9 +240,9 @@ async function handleCoverUpload(file) {
   try {
     const result = await uploadImage(file)
     form.cover = result?.url || result?.fileUrl || ''
-    message.success('封面上传成功')
+    message.success(t('collectionMgr.coverUploadSuccess'))
   } catch (error) {
-    message.error(error?.message || '封面上传失败')
+    message.error(error?.message || t('collectionMgr.coverUploadFailed'))
   } finally {
     uploadingCover.value = false
   }
@@ -269,7 +270,7 @@ async function loadCollection(id) {
       sort: item.sort ?? index + 1
     }))
   } catch (error) {
-    message.error(error?.message || '合集加载失败')
+    message.error(error?.message || t('collectionMgr.loadFailed'))
     router.replace('/dashboard/collections')
   } finally {
     loading.value = false
@@ -278,7 +279,7 @@ async function loadCollection(id) {
 
 function validate() {
   if (!form.title.trim()) {
-    message.warning('请填写合集标题')
+    message.warning(t('collectionMgr.titleRequired'))
     return false
   }
   return true
@@ -303,16 +304,16 @@ async function handleSave() {
       const created = await createCollection(payload)
       collectionId = created?.id
     }
-    if (!collectionId) throw new Error('合集保存失败：缺少合集 ID')
+    if (!collectionId) throw new Error(t('collectionMgr.saveMissingId'))
 
     await saveCollectionItems(
       collectionId,
       items.value.map((item) => ({ dynamicId: item.id }))
     )
-    message.success('合集已保存')
+    message.success(t('collectionMgr.saved'))
     router.push('/dashboard/collections')
   } catch (error) {
-    message.error(error?.message || '合集保存失败')
+    message.error(error?.message || t('collectionMgr.saveFailed'))
   } finally {
     saving.value = false
   }

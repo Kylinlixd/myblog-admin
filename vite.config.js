@@ -41,6 +41,10 @@ export default defineConfig(({ mode }) => {
     define: {
       'process.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL || '')
     },
+    // JSON（语言包 chunk）编译为 JSON.parse("...")：解析速度远快于 JS 对象字面量求值。
+    // 注意：Vite 6.4 的 json 插件里 namedExports 分支在 stringify 之前提前 return，
+    // 必须同时关掉 namedExports，stringify 才会生效（本项目 key 含 "." 本就不可能命名导出）。
+    json: { namedExports: false, stringify: true },
     resolve: {
       alias: { '@': path.resolve(__dirname, 'src') }
     },

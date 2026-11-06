@@ -58,7 +58,7 @@ describe('Dashboard operations workspace', () => {
     const source = readDashboard()
 
     expect(source).toContain('class="metric-unread-dot"')
-    expect(source).toContain('aria-label="有新评论"')
+    expect(source).toContain("t('dashboard.aria.hasNewComments')")
     expect(source).not.toContain('新评论 {{ commentNotifications.unreadCount }}')
   })
 })

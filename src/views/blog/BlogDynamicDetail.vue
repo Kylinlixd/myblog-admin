@@ -2,12 +2,12 @@
   <div class="dynamic-detail-container cinematic-page">
     <div v-if="loading" class="loading-state">
       <a-spin />
-      <p>加载中...</p>
+      <p>{{ t('detail.loading') }}</p>
     </div>
     
     <div v-else-if="!dynamic" class="error-state">
-      <p>{{ detailErrorKind === 'not-found' ? '文章不存在或已被删除' : '文章加载失败，请稍后重试' }}</p>
-      <a-button v-if="detailErrorKind !== 'not-found'" type="primary" @click="fetchDynamicDetail(route.params.id)">重试</a-button>
+      <p>{{ detailErrorKind === 'not-found' ? t('detail.articleNotFound') : t('detail.articleLoadFailed') }}</p>
+      <a-button v-if="detailErrorKind !== 'not-found'" type="primary" @click="fetchDynamicDetail(route.params.id)">{{ t('common.retry') }}</a-button>
     </div>
     
     <div v-else class="article-reading-shell">
@@ -22,8 +22,8 @@
         <p v-if="dynamic.summary || dynamic.excerpt" class="article-summary">{{ dynamic.summary || dynamic.excerpt }}</p>
         <div class="dynamic-meta">
           <span class="dynamic-date">{{ formatDate(dynamic.created_at) }}</span>
-          <span>{{ dynamic.views || 0 }} 阅读</span>
-          <span aria-label="阅读时长">{{ readingMinutes }} 分钟阅读</span>
+          <span>{{ dynamic.views || 0 }} {{ t('categoryDetail.reading') }}</span>
+          <span >{{ t('detail.readingTime', { n: readingMinutes }) }}</span>
           <span v-if="dynamic.category?.name">{{ dynamic.category.name }}</span>
         </div>
         <div v-if="translationBanner" class="mt-banner" :class="`mt-banner--${translationBanner.kind}`" role="status">
@@ -37,17 +37,17 @@
 
       <div v-if="seriesNav" class="article-series">
         <router-link class="article-series__title" :to="`/blog/collections/${seriesNav.id}`">
-          <span class="article-series__eyebrow">系列</span>
+          <span class="article-series__eyebrow">{{ t('detail.series') }}</span>
           <strong>{{ seriesNav.title }}</strong>
-          <span class="article-series__position">第 {{ seriesNav.index }} / {{ seriesNav.total }} 篇</span>
+          <span class="article-series__position">{{ t('detail.seriesPosition', { index: seriesNav.index, total: seriesNav.total }) }}</span>
         </router-link>
-        <nav v-if="seriesNav.prev || seriesNav.next" class="article-series__pager" aria-label="系列内文章导航">
+        <nav v-if="seriesNav.prev || seriesNav.next" class="article-series__pager" :aria-label="t('detail.seriesNavAria')">
           <router-link
             v-if="seriesNav.prev"
             class="article-series__link"
             :to="{ path: `/blog/dynamics/${seriesNav.prev.id}`, query: contextQuery }"
           >
-            <span class="article-series__direction">← 系列上一篇</span>
+            <span class="article-series__direction">{{ t('detail.seriesPrev') }}</span>
             <span class="article-series__name">{{ seriesNav.prev.title }}</span>
           </router-link>
           <router-link
@@ -55,7 +55,7 @@
             class="article-series__link article-series__link--next"
             :to="{ path: `/blog/dynamics/${seriesNav.next.id}`, query: contextQuery }"
           >
-            <span class="article-series__direction">系列下一篇 →</span>
+            <span class="article-series__direction">{{ t('detail.seriesNext') }}</span>
             <span class="article-series__name">{{ seriesNav.next.title }}</span>
           </router-link>
         </nav>
@@ -63,9 +63,9 @@
 
       <div v-if="tocItems.length" class="mobile-toc-panel">
         <button class="mobile-toc-trigger" type="button" :aria-expanded="tocOpen" aria-controls="mobile-article-toc" @click="tocOpen = !tocOpen">
-          <span>目录</span><span>{{ tocOpen ? '收起' : `${tocItems.length} 个章节` }}</span>
+          <span>{{ t('detail.toc') }}</span><span>{{ tocOpen ? t('detail.tocCollapse') : t('detail.tocChapters', { n: tocItems.length }) }}</span>
         </button>
-        <nav v-if="tocOpen" id="mobile-article-toc" class="mobile-toc-list" aria-label="文章目录">
+        <nav v-if="tocOpen" id="mobile-article-toc" class="mobile-toc-list" :aria-label="t('detail.tocAria')">
           <button v-for="item in tocItems" :key="item.id" type="button" :class="[`toc-level-${item.level}`, { 'is-active': activeTocId === item.id }]" :aria-current="activeTocId === item.id ? 'location' : undefined" @click="scrollToHeading(item.id)">{{ item.text }}</button>
         </nav>
       </div>
@@ -78,17 +78,17 @@
         >
           <div v-if="topMediaItems.length" class="dynamic-media">
             <template v-for="item in topMediaItems" :key="item.url">
-              <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">该媒体已不可用</div>
-              <img v-else-if="item.type === 'image'" class="dynamic-media__image" :src="item.url" :alt="item.name || '动态图片'" loading="lazy" decoding="async" @error="markMediaUnavailable(item.url)" />
-              <audio v-else-if="item.type === 'audio'" class="dynamic-media__audio" controls preload="metadata" :src="item.url" @error="markMediaUnavailable(item.url)">您的浏览器不支持音频播放</audio>
-              <video v-else-if="item.type === 'video'" class="dynamic-media__video" controls preload="metadata" :src="item.url" :poster="item.posterUrl || undefined" playsinline @error="markMediaUnavailable(item.url)">您的浏览器不支持视频播放</video>
+              <div v-if="isMediaUnavailable(item.url)" class="media-unavailable" role="status">{{ t('detail.mediaUnavailable') }}</div>
+              <img v-else-if="item.type === 'image'" class="dynamic-media__image" :src="item.url" :alt="item.name || t('detail.dynamicImage')" loading="lazy" decoding="async" @error="markMediaUnavailable(item.url)" />
+              <audio v-else-if="item.type === 'audio'" class="dynamic-media__audio" controls preload="metadata" :src="item.url" @error="markMediaUnavailable(item.url)">{{ t('detail.audioNotSupported') }}</audio>
+              <video v-else-if="item.type === 'video'" class="dynamic-media__video" controls preload="metadata" :src="item.url" :poster="item.posterUrl || undefined" playsinline @error="markMediaUnavailable(item.url)">{{ t('detail.videoNotSupported') }}</video>
             </template>
           </div>
           <div ref="articleBodyRef" class="dynamic-body markdown-body reading-frame" v-html="renderedArticleContent"></div>
 
           <section v-if="attachmentItems.length" class="dynamic-attachments" aria-labelledby="article-attachments-title">
             <h2 id="article-attachments-title" class="dynamic-attachments__title">
-              附件
+              {{ t('detail.attachments') }}
               <span>{{ attachmentItems.length }}</span>
             </h2>
             <ul class="dynamic-attachments__list">
@@ -125,7 +125,7 @@
               {{ t('tools.openArticle') }}
             </a>
             <div class="dynamic-tags" v-if="dynamic.tags && dynamic.tags.length">
-              <span class="tag-label">标签：</span>
+              <span class="tag-label">{{ t('detail.tagLabel') }}</span>
               <router-link 
                 v-for="tag in dynamic.tags" 
                 :key="tag.id"
@@ -136,15 +136,15 @@
               </router-link>
             </div>
           </div>
-          <nav v-if="adjacent.prev || adjacent.next" class="article-adjacent" aria-label="文章导航">
+          <nav v-if="adjacent.prev || adjacent.next" class="article-adjacent" :aria-label="t('detail.articleNavAria')">
             <router-link
               v-if="adjacent.prev"
               :to="{ path: `/blog/dynamics/${adjacent.prev.id}`, query: contextQuery }"
               class="article-adjacent__item article-adjacent__item--prev"
             >
-              <span class="article-adjacent__direction"><left-outlined /> 上一篇</span>
+              <span class="article-adjacent__direction"><left-outlined /> {{ t('detail.prevArticle') }}</span>
               <strong>{{ adjacent.prev.title }}</strong>
-              <small>{{ adjacent.prev.category?.name || '继续阅读' }}</small>
+              <small>{{ adjacent.prev.category?.name || t('detail.continueReading') }}</small>
             </router-link>
             <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
             <router-link
@@ -152,9 +152,9 @@
               :to="{ path: `/blog/dynamics/${adjacent.next.id}`, query: contextQuery }"
               class="article-adjacent__item article-adjacent__item--next"
             >
-              <span class="article-adjacent__direction">下一篇 <right-outlined /></span>
+              <span class="article-adjacent__direction">{{ t('detail.nextArticle') }} <right-outlined /></span>
               <strong>{{ adjacent.next.title }}</strong>
-              <small>{{ adjacent.next.category?.name || '继续阅读' }}</small>
+              <small>{{ adjacent.next.category?.name || t('detail.continueReading') }}</small>
             </router-link>
             <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
           </nav>
@@ -181,11 +181,11 @@
                   <template #reply-editor="{ comment: target }">
                     <div v-if="replyingTo?.id === target.id" class="reply-editor reply-editor--inline">
                       <div class="reply-editor__meta">
-                        <span>回复 @{{ target.nickname || '匿名用户' }}</span>
-                        <button class="reply-editor__cancel" type="button" @click="cancelReply">取消</button>
+                        <span>{{ t('detail.replyTo', { name: target.nickname || t('detail.anonymousUser') }) }}</span>
+                        <button class="reply-editor__cancel" type="button" @click="cancelReply">{{ t('detail.cancelReply') }}</button>
                       </div>
                       <a-textarea v-model:value="replyContent" :rows="3" :max-length="500" show-count :placeholder="t('detail.replyPlaceholder')" />
-                      <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">提交回复</a-button>
+                      <a-button type="primary" :loading="isSubmittingComment" @click="submitReply">{{ t('detail.submitReply') }}</a-button>
                     </div>
                   </template>
                 </CommentThread>
@@ -207,8 +207,8 @@
         <aside v-if="tocItems.length" class="article-side-column" :style="{ top: `${tocTop}px` }">
           <div class="article-toc">
             <span class="article-toc__cursor" aria-hidden="true"></span>
-            <div class="article-toc__title">目录</div>
-            <nav aria-label="文章目录">
+            <div class="article-toc__title">{{ t('detail.toc') }}</div>
+            <nav :aria-label="t('detail.tocAria')">
               <button v-for="item in tocItems" :key="item.id" type="button" :class="[`toc-level-${item.level}`, { 'is-active': activeTocId === item.id }]" :aria-current="activeTocId === item.id ? 'location' : undefined" @click="scrollToHeading(item.id)">{{ item.text }}</button>
             </nav>
           </div>
@@ -336,8 +336,8 @@ const seriesNav = ref(null)
 const isLightContext = computed(() => route.query.from === 'light')
 const contextQuery = computed(() => (isLightContext.value ? { from: 'light' } : {}))
 const readingOrigin = computed(() => (isLightContext.value
-  ? { to: '/blog/categories', label: '← 返回拾光' }
-  : { to: '/blog/blogdynamic', label: '← 返回书遇' }))
+  ? { to: '/blog/categories', label: t('detail.backToLight') }
+  : { to: '/blog/blogdynamic', label: t('detail.backToBook') }))
 
 const contentContainsMedia = (url) => {
   const content = dynamic.value?.content || ''
@@ -376,22 +376,22 @@ const ATTACHMENT_ICONS = {
   code: FileTextOutlined,
   file: FileOutlined
 }
-const ATTACHMENT_LABELS = {
-  pdf: 'PDF',
-  word: 'Word',
-  excel: 'Excel',
-  slide: '幻灯片',
-  archive: '压缩包',
-  code: '文本',
-  file: '文件'
+const ATTACHMENT_LABEL_KEYS = {
+  pdf: 'attachment.pdf',
+  word: 'attachment.word',
+  excel: 'attachment.excel',
+  slide: 'attachment.slide',
+  archive: 'attachment.archive',
+  code: 'attachment.code',
+  file: 'attachment.file'
 }
 const attachmentIcon = (item) => ATTACHMENT_ICONS[attachmentKind(item.url)] || FileOutlined
 const attachmentMeta = (item) => {
   const kind = attachmentKind(item.url)
-  return [ATTACHMENT_LABELS[kind] || '文件', formatFileSize(item.size)].filter(Boolean).join(' · ')
+  return [t(ATTACHMENT_LABEL_KEYS[kind] || 'attachment.file'), formatFileSize(item.size)].filter(Boolean).join(' · ')
 }
 // PDF 与文本类在浏览器里看比下载更顺手，压缩包等二进制文件则直接下载。
-const attachmentAction = (item) => (['pdf', 'code'].includes(attachmentKind(item.url)) ? '打开' : '下载')
+const attachmentAction = (item) => (['pdf', 'code'].includes(attachmentKind(item.url)) ? t('attachment.open') : t('attachment.download'))
 const markMediaUnavailable = (url) => unavailableMediaUrls.value.add(url)
 const isMediaUnavailable = (url) => unavailableMediaUrls.value.has(url)
 const openMedia = async (item) => {
@@ -403,10 +403,10 @@ const openMedia = async (item) => {
     if (response.ok) return popup.location.assign(item.url)
     popup.close()
     if (response.status === 404) markMediaUnavailable(item.url)
-    else message.error('媒体加载失败，请稍后重试')
+    else message.error(t('detail.mediaLoadFailed'))
   } catch {
     popup.close()
-    message.error('媒体加载失败，请稍后重试')
+    message.error(t('detail.mediaLoadFailed'))
   }
 }
 const loading = ref(true)
@@ -474,7 +474,7 @@ const decorateArticleImages = () => {
     if (!isViewableImage(image)) return
     image.tabIndex = 0
     image.setAttribute('role', 'button')
-    image.setAttribute('aria-label', `查看大图${image.alt ? `：${image.alt}` : ''}`)
+    image.setAttribute('aria-label', t('detail.viewLargeImage', { alt: image.alt ? `：${image.alt}` : '' }))
   })
 }
 
@@ -532,13 +532,15 @@ const syncArticleNavigation = async () => {
 // The article body is rendered only after the loading branch is removed. Bind
 // once per article after that Vue update so controls attach to the final
 // v-html DOM. 滚动进度等状态更新同样会触发 update：绑定类操作按文章 id
-// 做一次性标记，避免每帧全量 querySelectorAll。
+// 做一次性标记，避免每帧全量 querySelectorAll。标记里带上语言代码：
+// 切换语言后代码块按钮的文案/aria-label 需要按新语言重新绑定。
 onUpdated(() => {
   const body = articleBodyRef.value
   const articleId = dynamic.value?.id
   if (!body || articleId == null) return
-  if (body.dataset.blogEnhanced === String(articleId)) return
-  body.dataset.blogEnhanced = String(articleId)
+  const enhancedKey = `${articleId}:${currentLocale.value}`
+  if (body.dataset.blogEnhanced === enhancedKey) return
+  body.dataset.blogEnhanced = enhancedKey
   bindCodeBlockInteractions(body)
   enhanceBlogTables(body)
   decorateArticleImages()
@@ -630,12 +632,12 @@ const fetchComments = async (requestedId = dynamic.value?.id) => {
       commentPageSize.value = result.data.pageSize || 10
     } else {
       console.error('获取评论列表失败:', result?.message)
-      message.error('获取评论列表失败')
+      message.error(t('detail.loadCommentsFailed'))
     }
   } catch (error) {
     if (sequence !== commentRequestSequence) return
     console.error('获取评论失败:', error)
-    message.error('获取评论失败')
+    message.error(t('detail.loadCommentFailed'))
   }
 }
 
@@ -699,9 +701,9 @@ const submitComment = async (payload = {}) => {
     
     if (result && result.code === 200) {
       if (result.data?.status === 'pending') {
-        message.info('评论已提交，需人工审核后展示，请耐心等待')
+        message.info(t('detail.commentPendingReview'))
       } else {
-        message.success('评论已发布')
+        message.success(t('detail.commentPublished'))
       }
       commentContent.value = ''
       nickname.value = ''
@@ -713,14 +715,14 @@ const submitComment = async (payload = {}) => {
       commentPage.value = 1
       await fetchComments()
     } else {
-      message.error(result?.message || '评论失败')
+      message.error(result?.message || t('detail.commentFailed'))
     }
   } catch (error) {
     if (error?.errorFields) {
-      message.error('请检查评论内容')
+      message.error(t('detail.commentCheckContent'))
     } else {
       console.error('评论失败:', error)
-      message.error(error.message || '评论失败，请稍后重试')
+      message.error(error.message || t('detail.commentRetryLater'))
     }
   } finally {
     isSubmittingComment.value = false
@@ -773,11 +775,11 @@ const loadMoreReplies = async (rootComment) => {
       .map(hydrateCurrentUserAvatar)
     const target = commentList.value.find((item) => String(item.id) === String(rootComment.id))
     if (target) target.replies_preview = replies
-    else message.error('回复加载失败')
+    else message.error(t('detail.replyLoadFailed'))
   } catch (error) {
     if (String(route.params.id) !== String(dynamicId)) return
     console.error('回复加载失败:', error)
-    message.error('回复加载失败')
+    message.error(t('detail.replyLoadFailed'))
   } finally {
     loadingMoreReplies.value = loadingMoreReplies.value.filter((id) => String(id) !== String(rootComment.id))
   }
@@ -804,10 +806,10 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
 
   try {
     loading.value = true
-    appStore.startLoading('加载文章内容...')
+    appStore.startLoading(t('detail.loadArticleLoading'))
 
     if (!dynamicId) {
-      const error = new Error('缺少文章 ID')
+      const error = new Error(t('detail.missingArticleId'))
       error.status = 404
       throw error
     }
@@ -816,13 +818,13 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     if (requestSequence !== detailRequestSequence) return
 
     if (response?.code !== 200 || !response.data) {
-      const error = new Error(response?.message || '获取文章详情失败')
+      const error = new Error(response?.message || t('detail.loadArticleFailed'))
       error.status = Number(response?.code) || 0
       throw error
     }
 
     dynamic.value = response.data
-    document.title = `${dynamic.value.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
+    document.title = `${dynamic.value.title}｜${isLightContext.value ? t('nav.light') : t('nav.book')}｜${t('common.siteName')}`
     applyArticleSeoMeta({
       title: dynamic.value.title,
       description: excerptFromMarkdown(dynamic.value.content),
@@ -847,7 +849,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     console.error('获取文章详情失败:', error)
     detailErrorKind.value = isNotFoundError(error) ? 'not-found' : 'load-error'
     appStore.setLoadingError(
-      detailErrorKind.value === 'not-found' ? '文章不存在或已被删除' : '文章加载失败，请稍后重试'
+      detailErrorKind.value === 'not-found' ? t('detail.articleNotFound') : t('detail.articleLoadFailed')
     )
   } finally {
     if (requestSequence !== detailRequestSequence) return
@@ -879,7 +881,7 @@ async function fetchTranslation() {
     if (requestSequence !== translationRequestSequence) return
     if (response?.code === 200 && response.data) {
       translationState.value = { status: 'ready', data: response.data }
-      document.title = `${response.data.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
+      document.title = `${response.data.title}｜${isLightContext.value ? t('nav.light') : t('nav.book')}｜${t('common.siteName')}`
     } else {
       translationState.value = { status: 'failed', data: null }
     }
@@ -894,7 +896,7 @@ watch([currentLocale, () => dynamic.value?.id], () => {
   if (!dynamic.value) return
   if (isZhLocale.value) {
     translationState.value = { status: 'idle', data: null }
-    document.title = `${dynamic.value.title}｜${isLightContext.value ? '拾光' : '书遇'}｜时不语之间`
+    document.title = `${dynamic.value.title}｜${isLightContext.value ? t('nav.light') : t('nav.book')}｜${t('common.siteName')}`
     return
   }
   fetchTranslation()

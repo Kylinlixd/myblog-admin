@@ -1,9 +1,9 @@
 <template>
   <div class="dynamic-list admin-page">
-    <PageHeader compact title="内容管理" subtitle="发布、筛选并维护数字花园中的文章。">
+    <PageHeader compact :title="t('shell.menu.dynamics')" :subtitle="t('dynamicMgr.subtitle')">
       <template #actions>
         <a-button type="primary" @click="navigateToCreate">
-          <PlusOutlined /> 新建动态
+          <PlusOutlined /> {{ t('dynamicMgr.create') }}
         </a-button>
       </template>
     </PageHeader>
@@ -11,24 +11,24 @@
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
-        <a-form-item label="标题">
+        <a-form-item :label="t('adminShared.title')">
           <a-input
             v-model:value="searchForm.title"
-            placeholder="搜索标题"
+            :placeholder="t('dynamicMgr.searchTitlePlaceholder')"
             allowClear
           />
         </a-form-item>
-        <a-form-item label="内容">
+        <a-form-item :label="t('dynamicMgr.contentLabel')">
           <a-input
             v-model:value="searchForm.content"
-            placeholder="搜索内容"
+            :placeholder="t('dynamicMgr.searchContentPlaceholder')"
             allowClear
           />
         </a-form-item>
-        <a-form-item label="分类">
+        <a-form-item :label="t('adminShared.category')">
           <a-select
             v-model:value="searchForm.categoryId"
-            placeholder="选择分类"
+            :placeholder="t('dynamicMgr.categoryPlaceholder')"
             allowClear
           >
             <a-select-option v-for="category in categories" :key="category.id" :value="category.id">
@@ -36,10 +36,10 @@
             </a-select-option>
           </a-select>
         </a-form-item>
-        <a-form-item label="标签">
+        <a-form-item :label="t('adminShared.tags')">
           <a-select
             v-model:value="searchForm.tagIds"
-            placeholder="选择标签"
+            :placeholder="t('dynamicMgr.tagPlaceholder')"
             mode="multiple"
             allowClear
           >
@@ -50,25 +50,25 @@
         </a-form-item>
       </div>
       <div class="search-form-right">
-        <a-form-item label="状态">
+        <a-form-item :label="t('adminShared.status')">
           <a-select
             v-model:value="searchForm.status"
-            placeholder="选择状态"
+            :placeholder="t('dynamicMgr.statusPlaceholder')"
             allowClear
           >
-            <a-select-option value="published">已发布</a-select-option>
-            <a-select-option value="draft">草稿</a-select-option>
+            <a-select-option value="published">{{ t('dynamicMgr.status.published') }}</a-select-option>
+            <a-select-option value="draft">{{ t('dynamicMgr.status.draft') }}</a-select-option>
           </a-select>
         </a-form-item>
         <a-form-item>
           <a-space size="middle">
             <a-button type="primary" @click="handleSearch">
               <SearchOutlined />
-              搜索
+              {{ t('component.search') }}
             </a-button>
             <a-button @click="resetSearch">
               <ReloadOutlined />
-              重置
+              {{ t('component.reset') }}
             </a-button>
           </a-space>
         </a-form-item>
@@ -80,24 +80,24 @@
       <a-space size="middle">
         <a-button danger :disabled="!selectedRowKeys.length || deleting" :loading="deleting" @click="handleBatchDelete">
           <DeleteOutlined />
-          批量删除
+          {{ t('adminShared.batchDelete') }}
         </a-button>
       </a-space>
     </div>
 
     <a-card class="data-card admin-table-card">
       <div v-if="requestError" class="dynamic-error" role="alert">
-        <strong>内容加载失败</strong>
-        <span>请检查网络后重试。</span>
-        <a-button type="primary" aria-label="重试" @click="fetchDynamics">
-          <ReloadOutlined /> 重试
+        <strong>{{ t('dynamicMgr.loadFailedTitle') }}</strong>
+        <span>{{ t('dynamicMgr.loadFailedHint') }}</span>
+        <a-button type="primary" :aria-label="t('common.retry')" @click="fetchDynamics">
+          <ReloadOutlined /> {{ t('common.retry') }}
         </a-button>
       </div>
       <div v-else-if="!loading && !dynamicList.length" class="dynamic-empty">
-        <strong>还没有内容</strong>
-        <span>创建第一条动态，开始整理你的内容。</span>
-        <a-button type="primary" aria-label="新建动态" @click="navigateToCreate">
-          <PlusOutlined /> 新建动态
+        <strong>{{ t('dynamicMgr.emptyTitle') }}</strong>
+        <span>{{ t('dynamicMgr.emptyHint') }}</span>
+        <a-button type="primary" :aria-label="t('dynamicMgr.create')" @click="navigateToCreate">
+          <PlusOutlined /> {{ t('dynamicMgr.create') }}
         </a-button>
       </div>
       <div v-else class="content-table-scroll">
@@ -121,7 +121,7 @@
           <!-- 分类列 -->
           <template v-if="column.dataIndex === 'category'">
             <a-tag color="blue">
-              {{ record.category?.name || '未分类' }}
+              {{ record.category?.name || t('dynamicMgr.uncategorized') }}
             </a-tag>
           </template>
           
@@ -139,7 +139,7 @@
               </a-space>
             </template>
             <template v-else>
-              <span class="text-muted">无标签</span>
+              <span class="text-muted">{{ t('dynamicMgr.noTags') }}</span>
             </template>
           </template>
           
@@ -151,7 +151,7 @@
           <!-- 状态列 -->
           <template v-if="column.dataIndex === 'status'">
             <a-tag :color="record.status === 'published' ? 'success' : 'default'">
-              {{ record.status === 'published' ? '已发布' : '草稿' }}
+              {{ record.status === 'published' ? t('dynamicMgr.status.published') : t('dynamicMgr.status.draft') }}
             </a-tag>
           </template>
           
@@ -170,21 +170,21 @@
             <a-space class="table-row-actions">
               <a-button type="text" size="small" class="row-action row-action--primary" @click="editDynamic(record)">
                 <EditOutlined />
-                编辑
+                {{ t('adminShared.edit') }}
               </a-button>
               <a-button type="text" size="small" class="row-action" @click="viewDetail(record)">
                 <EyeOutlined />
-                查看
+                {{ t('component.viewMoreReplies') }}
               </a-button>
               <a-popconfirm
-                title="确定要删除这条动态吗？"
-                ok-text="确定"
-                cancel-text="取消"
+                :title="t('dynamicMgr.deleteConfirm')"
+                :ok-text="t('adminShared.confirm')"
+                :cancel-text="t('adminShared.cancel')"
                 @confirm="handleDelete(record.id)"
               >
                 <a-button type="text" danger size="small" class="row-action row-action--danger">
                   <DeleteOutlined />
-                  删除
+                  {{ t('adminShared.delete') }}
                 </a-button>
               </a-popconfirm>
             </a-space>
@@ -215,6 +215,7 @@ import { getTagList } from '@/api/tag'
 import { collectAllPages } from '@/api/collections'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useResizableColumns } from '@/composables/useResizableColumns'
+import { t } from '@/i18n'
 
 const router = useRouter()
 const loading = ref(false)
@@ -284,7 +285,7 @@ const fetchDynamics = async (allowPageReset = true) => {
       mediaUrls: item.mediaUrls || [],
       category: item.category || null,
       like_count: item.like_count ?? item.likes ?? 0,
-      title: item.title || '无标题'
+      title: item.title || t('dynamicMgr.untitled')
     }))
     total.value = count
   } catch (error) {
@@ -294,7 +295,7 @@ const fetchDynamics = async (allowPageReset = true) => {
     total.value = 0;
     selectedRowKeys.value = [];
     requestError.value = true;
-    message.error('获取动态列表失败');
+    message.error(t('dynamicMgr.loadFailed'));
   } finally {
     if (generation === requestGeneration) loading.value = false;
   }
@@ -327,7 +328,7 @@ const resetSearch = () => {
 // 处理批量删除
 const handleBatchDelete = async () => {
   if (!selectedRowKeys.value.length) {
-    message.warning('请选择要删除的动态')
+    message.warning(t('adminShared.selectToDelete', { item: t('dynamicMgr.name') }))
     return
   }
 
@@ -338,53 +339,53 @@ const handleBatchDelete = async () => {
     const failedIds = selectedIds.filter((_, index) => results[index].status === 'rejected')
 
     if (failedIds.length) {
-      message.error('批量删除失败，请重试')
+      message.error(t('adminShared.batchDeleteFailed'))
     } else {
-      message.success('批量删除成功')
+      message.success(t('adminShared.batchDeleteSuccess'))
     }
 
     await fetchDynamics()
     selectedRowKeys.value = failedIds
   } catch (error) {
     console.error('批量删除失败:', error)
-    message.error('批量删除失败，请重试')
+    message.error(t('adminShared.batchDeleteFailed'))
   } finally {
     deleting.value = false
   }
 }
 
 // 表格列定义
-const columns = [
+const columns = computed(() => [
   {
-    title: '序号',
+    title: t('adminShared.serialNo'),
     dataIndex: 'serialNo',
     key: 'serialNo',
     width: 60,
     align: 'center'
   },
   {
-    title: '标题',
+    title: t('dynamicMgr.column.title'),
     dataIndex: 'title',
     key: 'title',
     width: 200,
     ellipsis: true,
-    customRender: ({ text }) => text || '无标题'
+    customRender: ({ text }) => text || t('dynamicMgr.untitled')
   },
   {
-    title: '分类',
+    title: t('adminShared.category'),
     dataIndex: 'category',
     key: 'category',
     width: 120,
     align: 'center'
   },
   {
-    title: '标签',
+    title: t('adminShared.tags'),
     dataIndex: 'tags',
     key: 'tags',
     width: 200
   },
   {
-    title: '点赞数',
+    title: t('dynamicMgr.column.likes'),
     dataIndex: 'like_count',
     key: 'like_count',
     width: 100,
@@ -392,19 +393,19 @@ const columns = [
     sorter: (a, b) => a.like_count - b.like_count
   },
   {
-    title: '状态',
+    title: t('adminShared.status'),
     dataIndex: 'status',
     key: 'status',
     width: 100,
     align: 'center',
     filters: [
-      { text: '草稿', value: 'draft' },
-      { text: '已发布', value: 'published' }
+      { text: t('dynamicMgr.status.draft'), value: 'draft' },
+      { text: t('dynamicMgr.status.published'), value: 'published' }
     ],
     onFilter: (value, record) => record.status === value
   },
   {
-    title: '创建时间',
+    title: t('adminShared.createTime'),
     dataIndex: 'created_at',
     key: 'created_at',
     width: 160,
@@ -412,7 +413,7 @@ const columns = [
     sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at)
   },
   {
-    title: '更新时间',
+    title: t('adminShared.updateTime'),
     dataIndex: 'updated_at',
     key: 'updated_at',
     width: 160,
@@ -420,57 +421,57 @@ const columns = [
     sorter: (a, b) => new Date(a.updated_at) - new Date(b.updated_at)
   },
   {
-    title: '操作',
+    title: t('adminShared.actions'),
     dataIndex: 'action',
     key: 'action',
     width: 200,
     fixed: 'right',
     align: 'center'
   }
-]
+])
 
 // 移动端优化的列定义
-const columnsForMobile = [
+const columnsForMobile = computed(() => [
   {
-    title: '序号',
+    title: t('adminShared.serialNo'),
     dataIndex: 'serialNo',
     key: 'serialNo',
     width: 60,
     align: 'center'
   },
   {
-    title: '标题',
+    title: t('dynamicMgr.column.title'),
     dataIndex: 'title',
     key: 'title',
     width: 180,
     ellipsis: true,
-    customRender: ({ text }) => text || '无标题'
+    customRender: ({ text }) => text || t('dynamicMgr.untitled')
   },
   {
-    title: '分类',
+    title: t('adminShared.category'),
     dataIndex: 'category',
     key: 'category',
     width: 110,
     align: 'center'
   },
   {
-    title: '状态',
+    title: t('adminShared.status'),
     dataIndex: 'status',
     key: 'status',
     width: 95,
     align: 'center'
   },
   {
-    title: '操作',
+    title: t('adminShared.actions'),
     dataIndex: 'action',
     key: 'action',
     fixed: 'right',
     width: 120,
     align: 'center'
   }
-]
+])
 
-const activeColumns = computed(() => responsive.value ? columnsForMobile : columns)
+const activeColumns = computed(() => (responsive.value ? columnsForMobile.value : columns.value))
 const { columns: resizableColumns, handleResizeColumn } = useResizableColumns('dynamics', activeColumns)
 
 // 分页配置
@@ -480,9 +481,9 @@ const paginationConfig = computed(() => ({
   total: total.value,
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50', '100'],
-  buildOptionText: ({ value }) => `${value}/页`,
+  
   showQuickJumper: true,
-  showTotal: (total) => `共 ${total} 条`,
+  showTotal: (total) => t('adminShared.totalItems', { n: total }),
   onChange: (page, nextPageSize) => {
     const sizeChanged = nextPageSize !== pageSize.value
     pageSize.value = nextPageSize
@@ -505,7 +506,7 @@ const fetchCategories = async () => {
     categories.value = results
   } catch (error) {
     console.error('获取分类列表失败:', error)
-    message.error('获取分类列表失败')
+    message.error(t('dynamicMgr.categoryLoadFailed'))
     categories.value = []
   }
 }
@@ -532,7 +533,7 @@ const fetchTags = async () => {
     tags.value = results
   } catch (error) {
     console.error('获取标签列表失败:', error)
-    message.error('获取标签列表失败')
+    message.error(t('dynamicMgr.tagLoadFailed'))
     tags.value = []
   }
 }
@@ -540,7 +541,7 @@ const fetchTags = async () => {
 // 跳转到创建动态页面
 const navigateToCreate = () => {
   router.push({ name: 'CreateDynamic' }).catch(() => {
-    message.error('页面跳转失败，请稍后重试')
+    message.error(t('dynamicMgr.jumpFailed'))
   })
 }
 
@@ -563,12 +564,12 @@ const handleDelete = async (id) => {
   try {
     deleting.value = true
     await deleteAdminDynamic(id)
-    message.success('删除成功')
+    message.success(t('adminShared.deleteSuccess'))
     selectedRowKeys.value = selectedRowKeys.value.filter((key) => key !== id)
     await fetchDynamics()
   } catch (error) {
     console.error('删除动态失败:', error)
-    message.error('删除失败，请重试')
+    message.error(t('adminShared.deleteFailed'))
   } finally {
     deleting.value = false
   }

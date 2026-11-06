@@ -58,8 +58,8 @@ describe('dynamic preview workflow', () => {
     expect(workspaceStyles).toContain('--admin-filter-control-height: 36px')
     expect(workspaceStyles).toContain('.admin-filter .ant-input-affix-wrapper .ant-input')
     expect(workspaceStyles).toContain('background: transparent !important')
-    expect(listView).toContain('buildOptionText')
-    expect(listView).toContain('${value}/页')
+    expect(listView).not.toContain('buildOptionText')
+    expect(listView).not.toContain('${value}/页')
   })
 
   it('keeps dynamic list request errors readable on narrow screens', () => {

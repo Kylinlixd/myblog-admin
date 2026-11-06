@@ -1,30 +1,30 @@
 <template>
   <a-modal
     :open="open"
-    :title="file?.name || 'PDF 预览'"
+    :title="file?.name || t('fileMgr.previewMask')"
     :footer="null"
     class="pdf-preview-modal"
     :width="'min(1120px, calc(100vw - 32px))'"
     @cancel="close"
   >
     <div class="pdf-preview">
-      <div class="pdf-preview__toolbar" role="toolbar" aria-label="PDF 阅读工具">
+      <div class="pdf-preview__toolbar" role="toolbar" :aria-label="t('fileMgr.previewMask')">
         <a-space>
-          <a-button size="small" :disabled="loading || pageNumber <= 1" @click="goToPage(pageNumber - 1)">上一页</a-button>
+          <a-button size="small" :disabled="loading || pageNumber <= 1" @click="goToPage(pageNumber - 1)">{{ t('detail.prevArticle') }}</a-button>
           <label class="pdf-preview__page-control">
-            <span>第</span>
-            <input v-model.number="pageInput" type="number" min="1" :max="pageCount" aria-label="页码" @change="commitPage" />
-            <span>/ {{ pageCount || '-' }} 页</span>
+            
+            <input v-model.number="pageInput" type="number" min="1" :max="pageCount" :aria-label="t('common.pageNumber')" @change="commitPage" />
+            
           </label>
-          <a-button size="small" :disabled="loading || pageNumber >= pageCount" @click="goToPage(pageNumber + 1)">下一页</a-button>
-          <a-button size="small" :disabled="loading" @click="changeScale(-0.1)">缩小</a-button>
+          <a-button size="small" :disabled="loading || pageNumber >= pageCount" @click="goToPage(pageNumber + 1)">{{ t('detail.nextArticle') }}</a-button>
+          <a-button size="small" :disabled="loading" @click="changeScale(-0.1)">{{ t('lightbox.zoomOut') }}</a-button>
           <span class="pdf-preview__scale">{{ Math.round(scale * 100) }}%</span>
-          <a-button size="small" :disabled="loading" @click="changeScale(0.1)">放大</a-button>
-          <a-button size="small" :disabled="loading" @click="fitWidth">适应宽度</a-button>
+          <a-button size="small" :disabled="loading" @click="changeScale(0.1)">{{ t('lightbox.zoomIn') }}</a-button>
+          <a-button size="small" :disabled="loading" @click="fitWidth">{{ t('lightbox.fit') }}</a-button>
         </a-space>
         <a-space>
-          <a-button size="small" @click="$emit('download', file)">下载</a-button>
-          <a-button size="small" @click="close">关闭</a-button>
+          <a-button size="small" @click="$emit('download', file)">{{ t('attachment.download') }}</a-button>
+          <a-button size="small" @click="close">{{ t('adminShared.close') }}</a-button>
         </a-space>
       </div>
 
@@ -38,8 +38,8 @@
       </div>
       <div v-else class="pdf-preview__stage" ref="stageRef">
         <div class="pdf-preview__page" :style="pageStyle">
-          <canvas ref="canvasRef" aria-label="PDF 页面"></canvas>
-          <div class="pdf-preview__text-layer" aria-label="PDF 文本层">
+          <canvas ref="canvasRef" :aria-label="t('fileMgr.previewMask')"></canvas>
+          <div class="pdf-preview__text-layer" :aria-label="t('fileMgr.previewMask')">
             <span
               v-for="(item, index) in textItems"
               :key="index"
@@ -56,6 +56,7 @@
 <script setup>
 import { computed, markRaw, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { previewPdf } from '@/api/file'
+import { t } from '@/i18n'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -74,7 +75,7 @@ const scale = ref(1)
 const pageSize = ref({ width: 0, height: 0 })
 const textItems = ref([])
 const loading = ref(false)
-const loadingLabel = ref('正在读取 PDF')
+const loadingLabel = ref(t('fileMgr.stage.processing'))
 const errorMessage = ref('')
 const downloadProgress = ref(null)
 let abortController
@@ -164,7 +165,7 @@ const loadPdf = async () => {
   abortController?.abort()
   abortController = new AbortController()
   loading.value = true
-  loadingLabel.value = '正在读取 PDF'
+  loadingLabel.value = t('fileMgr.stage.processing')
   errorMessage.value = ''
   downloadProgress.value = null
   await clearDocument()
@@ -176,7 +177,7 @@ const loadPdf = async () => {
       }
     })
     if (currentRequest !== requestId || !props.open) return
-    loadingLabel.value = '正在解析 PDF'
+    loadingLabel.value = t('fileMgr.stage.processing')
     const engine = await loadPdfEngine()
     pdfDocument.value = markRaw(await engine.getDocument({
       data: new Uint8Array(data),
@@ -190,7 +191,7 @@ const loadPdf = async () => {
     await renderWhenReady()
   } catch (error) {
     if (error?.name === 'AbortError' || error?.code === 'ERR_CANCELED' || currentRequest !== requestId) return
-    errorMessage.value = error?.message || 'PDF 预览失败，请下载后查看'
+    errorMessage.value = error?.message || t('fileMgr.mediaLoadFailed')
   } finally {
     if (currentRequest === requestId) loading.value = false
   }

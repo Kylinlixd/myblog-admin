@@ -1,5 +1,7 @@
 import { message } from 'ant-design-vue'
 
+import { t } from '@/i18n'
+
 // 防抖函数
 export function debounce(fn, delay = 300) {
   let timer = null
@@ -12,7 +14,7 @@ export function debounce(fn, delay = 300) {
 }
 
 // 统一错误提示
-export function showError(error, defaultMsg = '操作失败，请稍后重试') {
+export function showError(error, defaultMsg = t('common.operationFailed')) {
   let msg = defaultMsg
   if (typeof error === 'string') {
     msg = error

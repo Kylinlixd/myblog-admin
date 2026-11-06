@@ -1,36 +1,36 @@
 <template>
   <main class="login-page">
-    <section class="login-intro" aria-label="产品介绍">
-      <router-link class="login-brand" to="/blog"><span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><strong>时不语之间</strong></router-link>
+    <section class="login-intro" :aria-label="t('login.ariaIntro')">
+      <router-link class="login-brand" to="/blog"><span class="brand-mark"><img src="/logo-coffee-code-white.svg" alt="" aria-hidden="true" /></span><strong>{{ t('common.siteName') }}</strong></router-link>
       <div>
         <span class="login-kicker">CONTENT WORKSPACE</span>
-        <h1>让创作保持专注，<br />让管理回归简单。</h1>
-        <p>在一个清晰、可靠的工作台中管理文章、分类、标签与读者评论。</p>
+        <h1>{{ t('login.heroTitle1') }}<br />{{ t('login.heroTitle2') }}</h1>
+        <p>{{ t('login.heroDesc') }}</p>
       </div>
-      <small>© {{ year }} 时不语之间 · Personal Blog</small>
+      <small>© {{ year }} {{ t('common.siteName') }} · Personal Blog</small>
     </section>
 
     <section class="login-panel">
       <div class="login-card">
-        <header><span class="login-kicker">WELCOME BACK</span><h2>登录管理后台</h2><p>使用你的管理员账号继续创作。</p></header>
+        <header><span class="login-kicker">WELCOME BACK</span><h2>{{ t('login.title') }}</h2><p>{{ t('login.subtitle') }}</p></header>
 
         <a-alert v-if="loginError" :message="loginError" type="error" show-icon class="login-alert" />
 
         <a-form :model="form" layout="vertical" @finish="handleLogin">
-          <a-form-item label="用户名" name="username" :rules="[{ required: true, message: '请输入用户名' }]">
-            <a-input v-model:value="form.username" size="large" autocomplete="username" placeholder="请输入用户名">
+          <a-form-item :label="t('login.username')" name="username" :rules="[{ required: true, message: t('login.usernameRequired') }]">
+            <a-input v-model:value="form.username" size="large" autocomplete="username" :placeholder="t('login.usernameRequired')">
               <template #prefix><user-outlined /></template>
             </a-input>
           </a-form-item>
-          <a-form-item label="密码" name="password" :rules="[{ required: true, message: '请输入密码' }]">
-            <a-input-password v-model:value="form.password" size="large" autocomplete="current-password" placeholder="请输入密码">
+          <a-form-item :label="t('login.password')" name="password" :rules="[{ required: true, message: t('login.passwordRequired') }]">
+            <a-input-password v-model:value="form.password" size="large" autocomplete="current-password" :placeholder="t('login.passwordRequired')">
               <template #prefix><lock-outlined /></template>
             </a-input-password>
           </a-form-item>
-          <a-button type="primary" html-type="submit" size="large" block :loading="loading">登录</a-button>
+          <a-button type="primary" html-type="submit" size="large" block :loading="loading">{{ t('login.submit') }}</a-button>
         </a-form>
 
-        <footer><span>仅限站点管理员登录</span><router-link to="/blog">返回博客</router-link></footer>
+        <footer><span>{{ t('login.adminOnly') }}</span><router-link to="/blog">{{ t('login.backToBlog') }}</router-link></footer>
       </div>
     </section>
   </main>
@@ -42,6 +42,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { LockOutlined, UserOutlined } from '@ant-design/icons-vue'
 
 import { useUserStore } from '@/stores/user'
+import { t } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -57,14 +58,14 @@ async function handleLogin() {
   try {
     const success = await userStore.login(form.username, form.password)
     if (!success) {
-      loginError.value = '用户名或密码错误'
+      loginError.value = t('login.invalidCredentials')
       return
     }
 
     const requested = typeof route.query.redirect === 'string' ? route.query.redirect : ''
     await router.replace(requested.startsWith('/') ? requested : '/dashboard')
   } catch (error) {
-    loginError.value = error?.message || '登录失败，请稍后重试'
+    loginError.value = error?.message || t('login.failedRetry')
   } finally {
     loading.value = false
   }

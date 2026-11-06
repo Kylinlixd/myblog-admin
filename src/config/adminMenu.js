@@ -1,68 +1,68 @@
 export const adminMenu = [
   {
     key: 'dashboard',
-    label: '仪表盘',
-    description: '数据概览与运营状态',
+    labelKey: 'shell.menu.dashboard',
+    descriptionKey: 'shell.menu.dashboardDesc',
     path: '/dashboard',
     icon: 'dashboard',
     group: 'overview',
-    groupLabel: '总览'
+    groupLabelKey: 'shell.group.overview'
   },
   {
     key: 'dynamics',
-    label: '内容管理',
-    description: '文章、动态与发布状态',
+    labelKey: 'shell.menu.dynamics',
+    descriptionKey: 'shell.menu.dynamicsDesc',
     path: '/dashboard/dynamics',
     icon: 'content',
     group: 'content',
-    groupLabel: '内容'
+    groupLabelKey: 'shell.group.content'
   },
   {
     key: 'category',
-    label: '分类管理',
-    description: '归档结构与栏目',
+    labelKey: 'shell.menu.category',
+    descriptionKey: 'shell.menu.categoryDesc',
     path: '/dashboard/category',
     icon: 'category',
     group: 'content',
-    groupLabel: '内容'
+    groupLabelKey: 'shell.group.content'
   },
   {
     key: 'collections',
-    label: '合集管理',
-    description: '系列合集与章节顺序',
+    labelKey: 'shell.menu.collections',
+    descriptionKey: 'shell.menu.collectionsDesc',
     path: '/dashboard/collections',
     icon: 'collections',
     group: 'content',
-    groupLabel: '内容'
+    groupLabelKey: 'shell.group.content'
   },
   {
     key: 'tags',
-    label: '标签管理',
-    description: '主题标签与检索',
+    labelKey: 'shell.menu.tags',
+    descriptionKey: 'shell.menu.tagsDesc',
     path: '/dashboard/tags',
     icon: 'tags',
     group: 'content',
-    groupLabel: '内容'
+    groupLabelKey: 'shell.group.content'
   },
   {
     key: 'comments',
-    label: '评论管理',
-    description: '读者互动与审核',
+    labelKey: 'shell.menu.comments',
+    descriptionKey: 'shell.menu.commentsDesc',
     path: '/dashboard/comments',
     icon: 'comments',
     group: 'community',
-    groupLabel: '互动'
+    groupLabelKey: 'shell.group.community'
   },
   {
     key: 'files',
-    label: '文件管理',
-    description: '图片、附件与下载',
+    labelKey: 'shell.menu.files',
+    descriptionKey: 'shell.menu.filesDesc',
     path: '/dashboard/files',
     icon: 'files',
     group: 'system',
-    groupLabel: '资源'
+    groupLabelKey: 'shell.group.system'
   },
   {
-    key: 'access-logs', label: '访问日志', description: 'IP 与接口访问记录', path: '/dashboard/access-logs', icon: 'logs', group: 'system', groupLabel: '资源'
+    key: 'access-logs', labelKey: 'shell.menu.logs', descriptionKey: 'shell.menu.logsDesc', path: '/dashboard/access-logs', icon: 'logs', group: 'system', groupLabelKey: 'shell.group.system'
   }
 ]

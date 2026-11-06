@@ -1,3 +1,5 @@
+import { t } from '@/i18n'
+
 const slugifyHeading = (text) => String(text || '')
   .trim()
   .toLocaleLowerCase()
@@ -8,7 +10,7 @@ export function collectArticleHeadings(root) {
   if (!root?.querySelectorAll) return []
   const seen = new Map()
   return [...root.querySelectorAll('h2, h3, h4')].map((heading, index) => {
-    const text = heading.textContent?.trim() || `章节 ${index + 1}`
+    const text = heading.textContent?.trim() || t('code.section', { index: index + 1 })
     const base = slugifyHeading(text) || `section-${index + 1}`
     const count = (seen.get(base) || 0) + 1
     seen.set(base, count)

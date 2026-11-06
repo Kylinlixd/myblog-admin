@@ -26,6 +26,6 @@ describe('adminMenu', () => {
       'system',
       'system'
     ])
-    expect(adminMenu.every((item) => item.description && item.groupLabel)).toBe(true)
+    expect(adminMenu.every((item) => item.descriptionKey && item.groupLabelKey)).toBe(true)
   })
 })

@@ -1,10 +1,10 @@
 <template>
   <div class="file-list admin-page">
-    <PageHeader compact title="文件管理" subtitle="上传、筛选并管理内容资源。">
+    <PageHeader compact :title="t('shell.menu.files')" :subtitle="t('fileMgr.subtitle')">
       <template #actions>
         <a-space>
           <a-button @click="openTutorial">
-            <QuestionCircleOutlined /> 使用教程
+            <QuestionCircleOutlined /> {{ t('fileMgr.tutorial') }}
           </a-button>
           <a-upload
             :customRequest="handleCustomUpload"
@@ -12,26 +12,26 @@
             :beforeUpload="beforeUpload"
           >
             <a-button type="primary">
-              <UploadOutlined /> 上传文件
+              <UploadOutlined /> {{ t('fileMgr.uploadFile') }}
             </a-button>
           </a-upload>
         </a-space>
       </template>
     </PageHeader>
 
-    <section class="storage-brief" aria-label="文件存储概况">
+    <section class="storage-brief" :aria-label="t('fileMgr.storageAria')">
       <div class="storage-brief__copy">
-        <span class="storage-eyebrow"><CloudServerOutlined /> 资源存储</span>
+        <span class="storage-eyebrow"><CloudServerOutlined /> {{ t('fileMgr.storageEyebrow') }}</span>
         <strong>{{ backendSummary.label }}</strong>
         <p>{{ backendSummary.description }}</p>
       </div>
       <dl class="storage-metrics">
         <div>
-          <dt>当前结果</dt>
+          <dt>{{ t('fileMgr.currentResult') }}</dt>
           <dd>{{ total }}</dd>
         </div>
         <div>
-          <dt>已托管</dt>
+          <dt>{{ t('fileMgr.hosted') }}</dt>
           <dd>{{ formatFileSize(totalBytes) }}</dd>
         </div>
       </dl>
@@ -41,11 +41,11 @@
         class="tutorial-hint"
         @click="openTutorial"
       >
-        第一次使用？查看 5 步教程
+        {{ t('fileMgr.firstTimeHint') }}
       </button>
     </section>
 
-    <section class="upload-zone" aria-label="上传文件">
+    <section class="upload-zone" :aria-label="t('fileMgr.uploadFile')">
       <a-upload-dragger
         :customRequest="handleCustomUpload"
         :showUploadList="false"
@@ -55,8 +55,8 @@
         <div class="upload-zone__inner">
           <span class="upload-zone__icon"><UploadOutlined /></span>
           <div>
-            <strong>拖拽文件到这里，或点击选择</strong>
-            <p>自动识别图片、PDF、Word、Excel、音视频；单个文件不超过 1 GB。</p>
+            <strong>{{ t('fileMgr.dropHere') }}</strong>
+            <p>{{ t('fileMgr.dropHint') }}</p>
           </div>
         </div>
       </a-upload-dragger>
@@ -72,12 +72,12 @@
           size="small"
         />
         <small v-if="uploadDetails.lengthComputable && uploadStage === 'uploading'">
-          已发送 {{ formatFileSize(uploadDetails.loaded) }} / {{ formatFileSize(uploadDetails.total) }}
+          {{ t('fileMgr.sentProgress', { loaded: formatFileSize(uploadDetails.loaded), total: formatFileSize(uploadDetails.total) }) }}
         </small>
-        <small v-else-if="uploadStage === 'processing'">传输完成，服务器正在处理文件</small>
+        <small v-else-if="uploadStage === 'processing'">{{ t('fileMgr.processingServer') }}</small>
         <small v-else-if="uploadStage === 'error'">{{ uploadErrorMessage }}</small>
         <a-button v-if="uploadRefreshFailed" type="link" size="small" @click="retryUploadRefresh">
-          刷新列表
+          {{ t('fileMgr.refreshList') }}
         </a-button>
       </div>
     </section>
@@ -85,20 +85,20 @@
     <!-- 搜索表单 -->
     <a-form layout="inline" class="search-form admin-filter">
       <div class="search-form-left">
-        <a-form-item label="文件名">
-          <a-input v-model:value="searchForm.name" placeholder="搜索文件名" allowClear />
+        <a-form-item :label="t('fileMgr.column.name')">
+          <a-input v-model:value="searchForm.name" :placeholder="t('fileMgr.namePlaceholder')" allowClear />
         </a-form-item>
-        <a-form-item label="类型">
+        <a-form-item :label="t('fileMgr.column.type')">
           <a-select
             v-model:value="searchForm.type"
-            placeholder="选择类型"
+            :placeholder="t('dynamicMgr.statusPlaceholder')"
             allowClear
           >
-            <a-select-option value="image">图片</a-select-option>
-            <a-select-option value="audio">音频</a-select-option>
-            <a-select-option value="video">视频</a-select-option>
-            <a-select-option value="document">文档</a-select-option>
-            <a-select-option value="other">其他</a-select-option>
+            <a-select-option value="image">{{ t('fileMgr.type.image') }}</a-select-option>
+            <a-select-option value="audio">{{ t('fileMgr.type.audio') }}</a-select-option>
+            <a-select-option value="video">{{ t('fileMgr.type.video') }}</a-select-option>
+            <a-select-option value="document">{{ t('fileMgr.type.document') }}</a-select-option>
+            <a-select-option value="other">{{ t('fileMgr.type.other') }}</a-select-option>
           </a-select>
         </a-form-item>
       </div>
@@ -107,11 +107,11 @@
           <a-space>
             <a-button type="primary" @click="handleSearch">
               <SearchOutlined />
-              搜索
+              {{ t('component.search') }}
             </a-button>
             <a-button @click="resetSearch">
               <ReloadOutlined />
-              重置
+              {{ t('component.reset') }}
             </a-button>
           </a-space>
         </a-form-item>
@@ -128,7 +128,7 @@
           @click="handleBatchDelete"
         >
           <DeleteOutlined />
-          批量删除
+          {{ t('adminShared.batchDelete') }}
         </a-button>
       </a-space>
     </div>
@@ -139,14 +139,14 @@
       :loading="loading"
       :error="errorMessage"
       :empty="!loading && !errorMessage"
-      empty-title="暂无文件"
-      empty-description="上传一个文件来开始管理资源。"
+      :empty-title="t('fileMgr.name')"
+      :empty-description="t('fileMgr.dropHere')"
       @retry="fetchFiles"
     />
 
     <div v-if="errorMessage && fileList.length" class="file-list-refresh-error" role="alert">
-      <span>{{ errorMessage }}，当前仍显示上一次结果。</span>
-      <a-button type="link" size="small" @click="fetchFiles">刷新列表</a-button>
+      <span>{{ errorMessage }}, {{ t('fileMgr.refreshFailed') }}</span>
+      <a-button type="link" size="small" @click="fetchFiles">{{ t('fileMgr.refreshList') }}</a-button>
     </div>
 
     <a-card v-else class="data-card admin-table-card">
@@ -168,12 +168,12 @@
               <!-- 加载失败过一次就不再挂 a-image：避免反复请求，也避免点开一个必然失败的预览弹窗 -->
               <div v-if="isImageUnavailable(record)" class="image-preview-container preview-frame--stable is-unavailable" :title="unavailableImageHint">
                 <PictureOutlined />
-                <span>暂不可用</span>
+                <span>{{ t('fileMgr.previewUnavailable') }}</span>
               </div>
               <div v-else class="image-preview-container preview-frame--stable">
                 <a-image
                   :src="record.url"
-                  :alt="`预览：${record.name}`"
+                  :alt="t('fileMgr.previewAlt', { name: record.name })"
                   :width="60"
                   :height="60"
                   fit="cover"
@@ -185,7 +185,7 @@
                   @error="(e) => handleImageError(e, record)"
                 >
                   <template #preview-mask>
-                    <div class="preview-mask-text">预览</div>
+                    <div class="preview-mask-text">{{ t('fileMgr.previewMask') }}</div>
                   </template>
                   <template #placeholder>
                     <div class="image-placeholder">
@@ -197,22 +197,22 @@
             </template>
             <template v-else-if="record.type === 'audio'">
               <a-button type="link" size="small" @click="previewMedia('audio', record.url)">
-                <SoundOutlined /> 音频
+                <SoundOutlined /> {{ t('fileMgr.type.audio') }}
               </a-button>
             </template>
             <template v-else-if="record.type === 'video'">
               <a-button type="link" size="small" @click="previewMedia('video', record.url)">
-                <VideoCameraOutlined /> 视频
+                <VideoCameraOutlined /> {{ t('fileMgr.type.video') }}
               </a-button>
             </template>
             <template v-else-if="isPdfFile(record)">
               <a-button type="link" size="small" @click="previewPdfFile(record)">
-                <FileTextOutlined /> 预览
+                <FileTextOutlined /> {{ t('fileMgr.previewMask') }}
               </a-button>
             </template>
             <template v-else>
               <a-button type="link" size="small" @click="handleDownload(record)">
-                <DownloadOutlined /> 下载
+                <DownloadOutlined /> {{ t('attachment.download') }}
               </a-button>
             </template>
           </template>
@@ -239,16 +239,16 @@
             <a-space class="table-row-actions">
               <a-button type="text" size="small" class="row-action row-action--primary" @click="handleDownload(record)">
                 <DownloadOutlined />
-                下载
+                {{ t('adminShared.delete') }}
               </a-button>
               <a-button type="text" size="small" class="row-action" @click="copyFileUrl(record.url)">
                 <CopyOutlined />
-                复制链接
+                {{ t('fileMgr.copyLink') }}
               </a-button>
               <a-popconfirm
-                title="确定要删除这个文件吗？"
-                ok-text="确定"
-                cancel-text="取消"
+                :title="t('fileMgr.deleteConfirm')"
+                :ok-text="t('adminShared.confirm')"
+                :cancel-text="t('adminShared.cancel')"
                 @confirm="handleDelete(record.id)"
               >
                 <a-button
@@ -260,7 +260,7 @@
                   :disabled="isDeleting(record.id)"
                 >
                   <DeleteOutlined />
-                  删除
+                  {{ t('adminShared.delete') }}
                 </a-button>
               </a-popconfirm>
             </a-space>
@@ -269,7 +269,7 @@
       </a-table>
     </a-card>
 
-    <section v-if="fileList.length" class="file-mobile-grid" aria-label="移动端文件列表">
+    <section v-if="fileList.length" class="file-mobile-grid" :aria-label="t('fileMgr.mobileList')">
       <article v-for="record in fileList" :key="record.id" class="file-mobile-row">
         <div class="file-mobile-row__identity">
           <span class="file-kind"><FileTextOutlined /></span>
@@ -279,16 +279,16 @@
           </div>
         </div>
         <div class="file-mobile-row__actions">
-          <a-button v-if="isPdfFile(record)" type="text" size="small" @click="previewPdfFile(record)">预览</a-button>
-          <a-button type="text" size="small" @click="handleDownload(record)">下载</a-button>
-          <a-button type="text" size="small" @click="copyFileUrl(record.url)">复制链接</a-button>
+          <a-button v-if="isPdfFile(record)" type="text" size="small" @click="previewPdfFile(record)">{{ t('fileMgr.previewMask') }}</a-button>
+          <a-button type="text" size="small" @click="handleDownload(record)">{{ t('attachment.download') }}</a-button>
+          <a-button type="text" size="small" @click="copyFileUrl(record.url)">{{ t('fileMgr.copyLink') }}</a-button>
           <a-popconfirm
-            title="确定要删除这个文件吗？"
-            ok-text="确定"
-            cancel-text="取消"
+            :title="t('fileMgr.deleteConfirm')"
+            :ok-text="t('adminShared.confirm')"
+            :cancel-text="t('adminShared.cancel')"
             @confirm="handleDelete(record.id)"
           >
-            <a-button type="text" danger size="small">删除</a-button>
+            <a-button type="text" danger size="small">{{ t('adminShared.delete') }}</a-button>
           </a-popconfirm>
         </div>
       </article>
@@ -301,7 +301,7 @@
         :total="total"
         :show-size-changer="false"
         simple
-        :show-total="(count) => `共 ${count} 条`"
+        :show-total="(count) => t('adminShared.totalItems', { n: count })"
         @change="handleFileMobilePageChange"
       />
     </section>
@@ -369,6 +369,7 @@ import AsyncState from '@/components/common/AsyncState.vue'
 import FileTutorialDrawer from './FileTutorialDrawer.vue'
 import PdfPreviewModal from '@/components/files/PdfPreviewModal.vue'
 import { useResizableColumns } from '@/composables/useResizableColumns'
+import { t, currentLocale } from '@/i18n'
 
 const loading = ref(false)
 const errorMessage = ref('')
@@ -405,7 +406,7 @@ const previewType = ref('')
 
 // 图片预览失败的文件：多为文件服务/存储接口异常，记下来避免反复请求与误导性提示
 const unavailableImageIds = ref(new Set())
-const unavailableImageHint = '文件服务暂时不可用，缩略图与预览稍后重试；文件本身仍在，可先下载查看'
+const unavailableImageHint = t('fileMgr.unavailableHint')
 
 const isImageUnavailable = (record) => record?.id != null && unavailableImageIds.value.has(record.id)
 
@@ -425,55 +426,55 @@ const backendSummary = computed(() => {
   const xionCount = fileList.value.filter((file) => file.storageBackend === 'xion').length
   if (xionCount > 0) {
     return {
-      label: 'AstraStoreXion 正在托管新资源',
-      description: `当前页面有 ${xionCount} 个 Xion 文件；历史本地文件继续兼容。`
+      label: t('fileMgr.xionHosting'),
+      description: t('fileMgr.xionDesc', { n: xionCount })
     }
   }
   return {
-    label: '本地媒体兼容模式',
-    description: '现有文件保持可用，新上传会按服务器配置选择存储后端。'
+    label: t('fileMgr.localCompat'),
+    description: t('fileMgr.localCompatDesc'),
   }
 })
 
 const uploadStageLabel = computed(() => {
-  if (uploadStage.value === 'processing') return '服务器处理中'
-  if (uploadStage.value === 'success') return '上传成功'
-  if (uploadStage.value === 'error') return '上传失败'
-  return '正在上传'
+  if (uploadStage.value === 'processing') return t('fileMgr.stage.processing')
+  if (uploadStage.value === 'success') return t('adminShared.uploadSuccess')
+  if (uploadStage.value === 'error') return t('adminShared.uploadFailed')
+  return t('fileMgr.stage.uploading')
 })
 
 // 表格列定义
 const columns = [
   {
-    title: '预览',
+    title: t('fileMgr.column.preview'),
     dataIndex: 'preview',
     key: 'preview',
     width: 100,
     align: 'center'
   },
   {
-    title: '文件名',
+    title: t('fileMgr.column.name'),
     dataIndex: 'name',
     key: 'name',
     width: 200
   },
   {
-    title: '类型',
+    title: t('fileMgr.column.type'),
     dataIndex: 'type',
     key: 'type',
     width: 100,
     align: 'center',
     filters: [
-      { text: '图片', value: 'image' },
-      { text: '音频', value: 'audio' },
-      { text: '视频', value: 'video' },
-      { text: '文档', value: 'document' },
-      { text: '其他', value: 'other' }
+      { text: t('fileMgr.type.image'), value: 'image' },
+      { text: t('fileMgr.type.audio'), value: 'audio' },
+      { text: t('fileMgr.type.video'), value: 'video' },
+      { text: t('fileMgr.type.document'), value: 'document' },
+      { text: t('fileMgr.type.other'), value: 'other' }
     ],
     onFilter: (value, record) => record.type === value
   },
   {
-    title: '大小',
+    title: t('fileMgr.column.size'),
     dataIndex: 'size',
     key: 'size',
     width: 100,
@@ -481,7 +482,7 @@ const columns = [
     sorter: (a, b) => a.size - b.size
   },
   {
-    title: '上传者',
+    title: t('fileMgr.column.uploader'),
     dataIndex: 'uploader',
     key: 'uploader',
     width: 120,
@@ -489,7 +490,7 @@ const columns = [
     customRender: ({ text }) => text?.nickname || text?.username || '-'
   },
   {
-    title: '下载次数',
+    title: t('fileMgr.column.downloads'),
     dataIndex: 'downloadCount',
     key: 'downloadCount',
     width: 100,
@@ -497,7 +498,7 @@ const columns = [
     sorter: (a, b) => a.downloadCount - b.downloadCount
   },
   {
-    title: '上传时间',
+    title: t('fileMgr.column.uploadedAt'),
     dataIndex: 'createdAt',
     key: 'createdAt',
     width: 160,
@@ -505,7 +506,7 @@ const columns = [
     sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
   },
   {
-    title: '操作',
+    title: t('adminShared.actions'),
     dataIndex: 'action',
     key: 'action',
     width: 200,
@@ -524,7 +525,7 @@ const paginationConfig = computed(() => ({
   showSizeChanger: true,
   pageSizeOptions: ['10', '20', '50', '100'],
   showQuickJumper: true,
-  showTotal: (total) => `共 ${total} 条`,
+  showTotal: (total) => t('adminShared.totalItems', { n: total }),
   onChange: (page, size) => {
     currentPage.value = page
     if (size) pageSize.value = size
@@ -609,12 +610,12 @@ const fetchFiles = async (allowPageReset = true) => {
   } catch (error) {
     if (generation !== requestGeneration) return
     console.error('获取文件列表异常:', error)
-    errorMessage.value = error.message || '获取文件列表失败'
+    errorMessage.value = error.message || t('fileMgr.loadFailed')
     if (!fileList.value.length) {
       fileList.value = []
       total.value = 0
     }
-    message.error(error.message || '获取文件列表失败')
+    message.error(error.message || t('fileMgr.loadFailed'))
     return false
   } finally {
     if (generation === requestGeneration) loading.value = false
@@ -647,7 +648,7 @@ const onSelectChange = (keys) => {
 const handleBatchDelete = async () => {
   if (batchDeleting.value || !selectedRowKeys.value.length) {
     if (batchDeleting.value) return
-    message.warning('请选择要删除的文件')
+    message.warning(t('adminShared.selectToDelete', { item: t('fileMgr.name') }))
     return
   }
 
@@ -667,12 +668,12 @@ const handleBatchDelete = async () => {
     }, [])
     const skippedIds = selectedIds.filter((id) => !ids.includes(id))
     selectedRowKeys.value = [...skippedIds, ...failedIds]
-    if (failedIds.length) message.warning(`${failedIds.length} 个文件删除失败并保持选中`)
-    else message.success('批量删除成功')
+    if (failedIds.length) message.warning(t('adminShared.batchPartialFailed', { n: failedIds.length, item: t('fileMgr.name') }))
+    else message.success(t('adminShared.batchDeleteSuccess'))
     await fetchFiles()
   } catch (error) {
     console.error('批量删除失败:', error)
-    message.error('批量删除失败')
+    message.error(t('adminShared.batchDeleteFailed'))
   } finally {
     ids.forEach((id) => deletingIds.delete(id))
     batchDeleting.value = false
@@ -685,11 +686,11 @@ const handleDelete = async (id) => {
   deletingIds.add(id)
   try {
     await deleteFile(id)
-    message.success('删除成功')
+    message.success(t('adminShared.deleteSuccess'))
     await fetchFiles()
   } catch (error) {
     console.error('删除文件失败:', error)
-    message.error(error.message || '删除失败')
+    message.error(error.message || t('adminShared.deleteFailed'))
   } finally {
     deletingIds.delete(id)
   }
@@ -713,7 +714,7 @@ const inferFileType = (file) => {
 // 上传前检查
 const beforeUpload = (file) => {
   if (file.size > MAX_UPLOAD_BYTES) {
-    message.error('文件大小不能超过 1 GB')
+    message.error(t('fileMgr.tooLarge1GB'))
     return false
   }
   return true
@@ -722,7 +723,7 @@ const beforeUpload = (file) => {
 // 处理自定义上传
 const handleCustomUpload = async ({ file, onSuccess, onError }) => {
   if (uploadStage.value === 'uploading' || uploadStage.value === 'processing') {
-    const error = new Error('已有文件正在上传，请稍候')
+    const error = new Error(t('fileMgr.uploadInProgress'))
     onError?.(error)
     return
   }
@@ -754,14 +755,14 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
     if (result && typeof result === 'object') {
       uploadProgress.value = 100
       uploadStage.value = 'success'
-      message.success('上传成功')
+      message.success(t('adminShared.uploadSuccess'))
       onSuccess?.(result)
       currentPage.value = 1
       const refreshed = await fetchFiles()
       uploadRefreshFailed.value = refreshed === false
-      if (uploadRefreshFailed.value) message.warning('文件已上传，列表刷新失败')
+      if (uploadRefreshFailed.value) message.warning(t('fileMgr.refreshFailed'))
     } else {
-      const error = new Error('上传失败')
+      const error = new Error(t('adminShared.uploadFailed'))
       uploadStage.value = 'error'
       uploadErrorMessage.value = error.message
       message.error(error.message)
@@ -770,8 +771,8 @@ const handleCustomUpload = async ({ file, onSuccess, onError }) => {
   } catch (error) {
     console.error('上传失败:', error)
     uploadStage.value = 'error'
-    uploadErrorMessage.value = error.message || '上传失败'
-    message.error(error.message || '上传失败')
+    uploadErrorMessage.value = error.message || t('adminShared.uploadFailed')
+    message.error(error.message || t('adminShared.uploadFailed'))
     onError?.(error)
   } finally {
     uploadingName.value = ''
@@ -818,7 +819,7 @@ const handlePreviewError = (e, record) => {
 // 处理媒体文件错误
 const handleMediaError = (e) => {
   console.error('媒体文件加载失败:', e)
-  message.error('媒体文件加载失败，请检查文件是否存在');
+  message.error(t('fileMgr.mediaLoadFailed'));
 }
 
 // 修改预览媒体文件函数
@@ -827,13 +828,13 @@ const previewMedia = (type, url) => {
   
   // 验证URL
   if (!fullUrl) {
-    message.error('无效的文件URL');
+    message.error(t('fileMgr.invalidUrl'));
     return;
   }
   
   previewType.value = type;
   previewUrl.value = fullUrl;
-  previewTitle.value = type === 'audio' ? '音频预览' : '视频预览';
+  previewTitle.value = type === 'audio' ? t('fileMgr.audioPreview') : t('fileMgr.videoPreview');
   previewVisible.value = true;
 }
 
@@ -850,13 +851,13 @@ const previewPdfFile = async (file) => {
 // 复制文件链接
 const copyFileUrl = async (url) => {
   if (!url) {
-    message.error('无效的文件链接');
+    message.error(t('fileMgr.invalidLink'));
     return;
   }
 
   const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : undefined
   if (!clipboard || typeof clipboard.writeText !== 'function') {
-    message.error('复制失败，请手动复制')
+    message.error(t('fileMgr.copyFailed'))
     return
   }
 
@@ -866,20 +867,20 @@ const copyFileUrl = async (url) => {
       ? new URL(resolvedUrl, window.location.origin).toString()
       : resolvedUrl
     await clipboard.writeText(publicUrl)
-    message.success('链接已复制到剪贴板');
+    message.success(t('fileMgr.copySuccess'));
   } catch {
-    message.error('复制失败，请手动复制');
+    message.error(t('fileMgr.copyFailed'));
   }
 }
 
 // 获取类型名称
 const getTypeName = (type) => {
   const typeMap = {
-    image: '图片',
-    audio: '音频',
-    video: '视频',
-    document: '文档',
-    other: '其他'
+    image: t('fileMgr.type.image'),
+    audio: t('fileMgr.type.audio'),
+    video: t('fileMgr.type.video'),
+    document: t('fileMgr.type.document'),
+    other: t('fileMgr.type.other')
   }
   return typeMap[type] || type
 }
@@ -922,7 +923,7 @@ const formatDate = (dateString) => {
   })
 }
 
-// 处理文件下载
+// 处理文件{{ t('adminShared.delete') }}
 const handleDownload = async (file) => {
   try {
     loading.value = true
@@ -938,10 +939,10 @@ const handleDownload = async (file) => {
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
     
-    message.success('下载成功')
+    message.success(t('fileMgr.downloadSuccess'))
   } catch (error) {
     console.error('下载文件失败:', error)
-    message.error('下载失败')
+    message.error(t('fileMgr.downloadFailed'))
   } finally {
     loading.value = false
   }

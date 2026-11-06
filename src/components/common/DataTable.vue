@@ -16,7 +16,7 @@
             <th v-if="selectable" class="selection-cell">
               <input
                 type="checkbox"
-                aria-label="选择当前页全部数据"
+                :aria-label="t('component.selectAll')"
                 :checked="allVisibleSelected"
                 :indeterminate="someVisibleSelected"
                 :disabled="!data.length"
@@ -30,7 +30,7 @@
                 :class="{ 'is-resizing': activeResizeColumnId === getColumnId(column) }"
                 role="separator"
                 aria-orientation="vertical"
-                :aria-label="`调整${column.label}列宽`"
+                :aria-label="t('component.resizeColumn', { label: column.label })"
                 :aria-valuemin="MIN_COLUMN_WIDTH"
                 :aria-valuenow="getColumnAriaValue(column)"
                 :aria-valuemax="ARIA_VALUE_MAX"
@@ -49,7 +49,7 @@
               <td v-if="selectable" class="selection-cell">
                 <input
                   type="checkbox"
-                  :aria-label="`选择第 ${rowIndex + 1} 行`"
+                  :aria-label="t('component.selectRow', { index: rowIndex + 1 })"
                   :checked="isSelected(row, rowIndex)"
                   @change="toggleRow(row, rowIndex, $event)"
                 />
@@ -71,13 +71,13 @@
             <td :colspan="resizableColumns.length + (selectable ? 1 : 0)" class="empty-cell">
               <div class="empty-data">
                 <i class="icon-empty"></i>
-                <span>{{ emptyText }}</span>
+                <span>{{ emptyText || t('common.noData') }}</span>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-      <div v-if="loading" class="loading-overlay" role="status" aria-label="正在加载内容">
+      <div v-if="loading" class="loading-overlay" role="status" :aria-label="t('component.loadingContent')">
         <div class="loading-skeleton" aria-hidden="true"><i /><i /><i /></div>
       </div>
     </div>
@@ -87,6 +87,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { getColumnId, MIN_COLUMN_WIDTH, useResizableColumns } from '@/composables/useResizableColumns'
+import { t } from '@/i18n'
 
 const KEYBOARD_RESIZE_STEP = 16
 const ARIA_VALUE_MAX = 10000
@@ -110,7 +111,7 @@ const props = defineProps({
   },
   emptyText: {
     type: String,
-    default: '暂无数据'
+    default: ''
   },
   selectable: {
     type: Boolean,

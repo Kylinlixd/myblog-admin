@@ -1,16 +1,16 @@
 <template>
   <div class="dynamic-edit">
     <div class="edit-header">
-      <h2>{{ isEdit ? '编辑动态' : '新建动态' }}</h2>
+      <h2>{{ isEdit ? t('dynamicMgr.editTitle') : t('dynamicMgr.createTitle') }}</h2>
       <div class="header-actions">
-        <a-button aria-label="预览" :disabled="!form.content.trim()" @click="handlePreview">
-          <template #icon><eye-outlined /></template>预览
+        <a-button :aria-label="t('dynamicMgr.previewAria')" :disabled="!form.content.trim()" @click="handlePreview">
+          <template #icon><eye-outlined /></template>{{ t('dynamicMgr.preview') }}
         </a-button>
         <a-button @click="handleSave" type="primary" :loading="saving" :disabled="saving">
-          <template #icon><check-outlined /></template>保存
+          <template #icon><check-outlined /></template>{{ t('adminShared.save') }}
         </a-button>
         <a-button @click="handleCancel">
-          <template #icon><close-outlined /></template>取消
+          <template #icon><close-outlined /></template>{{ t('adminShared.cancel') }}
         </a-button>
       </div>
     </div>
@@ -23,74 +23,74 @@
       class="edit-form"
     >
       <!-- 编辑模块平铺在内容编辑器上方：先确认元信息与附件，再专注写正文 -->
-      <section class="editor-tiles" aria-label="动态设置">
+      <section class="editor-tiles" :aria-label="t('dynamicMgr.settingsAria')">
         <!-- 标题输入框 -->
-        <a-form-item class="editor-title-field editor-tile" label="标题" name="title" :rules="rules.title">
+        <a-form-item class="editor-title-field editor-tile" :label="t('adminShared.title')" name="title" :rules="rules.title">
           <a-input
             v-model:value="form.title"
-            placeholder="请输入动态标题"
+            :placeholder="t('dynamicMgr.titlePlaceholder')"
             :maxLength="100"
             show-count
           />
         </a-form-item>
 
-        <a-form-item class="editor-settings-field editor-tile" label="分类" name="categoryId">
+        <a-form-item class="editor-settings-field editor-tile" :label="t('adminShared.category')" name="categoryId">
           <div class="taxonomy-control">
             <a-select
               v-model:value="form.categoryId"
               show-search
               :filter-option="false"
-              placeholder="请选择分类"
+              :placeholder="t('dynamicMgr.categoryPlaceholder')"
               :loading="categoriesLoading"
               :options="categorySelectOptions"
               @search="handleCategorySearch"
               @change="handleCategoryChange"
             />
-            <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('category')">+ 新建</a-button>
+            <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('category')">{{ t('dynamicMgr.createNew') }}</a-button>
           </div>
         </a-form-item>
 
-        <a-form-item class="editor-settings-field editor-tile" label="标签" name="tags">
+        <a-form-item class="editor-settings-field editor-tile" :label="t('adminShared.tags')" name="tags">
           <div class="taxonomy-control">
             <a-select
               v-model:value="form.tags"
               mode="multiple"
               show-search
               :filter-option="false"
-              placeholder="请选择标签"
+              :placeholder="t('dynamicMgr.tagPlaceholder')"
               :loading="tagsLoading"
               :options="tagSelectOptions"
               @search="handleTagSearch"
               @change="handleTagsChange"
             />
-            <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('tag')">+ 新建</a-button>
+            <a-button type="link" class="taxonomy-add" @click="openTaxonomyModal('tag')">{{ t('dynamicMgr.createNew') }}</a-button>
           </div>
         </a-form-item>
 
-        <a-form-item class="editor-settings-field editor-tile" label="合集" name="collectionIds">
+        <a-form-item class="editor-settings-field editor-tile" :label="t('shell.menu.collections')" name="collectionIds">
           <div class="taxonomy-control">
             <a-select
               v-model:value="form.collectionIds"
               mode="multiple"
               show-search
               option-filter-prop="label"
-              placeholder="选填，可加入多个合集"
+              placeholder="AstraStoreXion"
               :loading="collectionsLoading"
               :options="collectionSelectOptions"
             />
-            <a class="taxonomy-add" href="/dashboard/collections" target="_blank" rel="noopener">+ 管理</a>
+            <a class="taxonomy-add" href="/dashboard/collections" target="_blank" rel="noopener">{{ t('dynamicMgr.manageLink') }}</a>
           </div>
-          <template #extra>合集只决定阅读顺序，不影响文章本身的分类与标签。</template>
+          <template #extra>{{ t('dynamicMgr.collectionsExtra') }}</template>
         </a-form-item>
 
-        <a-form-item class="editor-settings-field editor-tile" label="状态" name="status">
+        <a-form-item class="editor-settings-field editor-tile" :label="t('adminShared.status')" name="status">
           <a-radio-group v-model:value="form.status">
-            <a-radio value="draft">草稿</a-radio>
-            <a-radio value="published">发布</a-radio>
+            <a-radio value="draft">{{ t('dynamicMgr.status.draft') }}</a-radio>
+            <a-radio value="published">{{ t('dynamicMgr.statusPublish') }}</a-radio>
           </a-radio-group>
         </a-form-item>
 
-        <a-form-item class="editor-settings-field media-upload-field editor-tile editor-tile--wide" label="附件" name="mediaUrls">
+        <a-form-item class="editor-settings-field media-upload-field editor-tile editor-tile--wide" :label="t('dynamicMgr.attachmentsLabel')" name="mediaUrls">
           <div class="media-upload-container">
             <a-upload
               :file-list="fileList"
@@ -102,12 +102,12 @@
             >
               <a-button type="primary" class="media-add-button">
                 <template #icon><upload-outlined /></template>
-                添加附件
+                {{ t('dynamicMgr.addAttachment') }}
               </a-button>
             </a-upload>
             <a-button type="primary" class="media-pick-button" @click="showFileSelector">
               <template #icon><folder-outlined /></template>
-              从文件库选择
+              {{ t('dynamicMgr.fromLibrary') }}
             </a-button>
           </div>
           <!-- 附件列表自己渲染：a-upload 内置列表会把「添加附件」和列表包成一块，两个按钮就没法排在同一行 -->
@@ -125,26 +125,26 @@
               <button
                 type="button"
                 class="media-attachment-remove"
-                :aria-label="`移除 ${file.name}`"
+                :aria-label="t('dynamicMgr.removeAria', { name: file.name })"
                 @click="handleMediaRemove(file)"
               >
                 <close-outlined />
               </button>
             </li>
           </ul>
-          <div class="upload-tip">可混合添加图片、音频、视频、文档和其他文件，单个文件不超过 1GB</div>
+          <div class="upload-tip">{{ t('dynamicMgr.uploadTip') }}</div>
           <div class="media-upload-status" :class="`is-${uploadState.stage}`">
-            <strong>视频会自动生成网页可播放版本和封面</strong>
-            <span v-if="uploadState.stage === 'uploading'">正在上传 {{ uploadState.progress }}%</span>
-            <span v-else-if="uploadState.stage === 'processing'">正在优化视频，完成后会自动生成封面</span>
+            <strong>{{ t('dynamicMgr.videoAutoTip') }}</strong>
+            <span v-if="uploadState.stage === 'uploading'">{{ t('dynamicMgr.uploadingProgress', { n: uploadState.progress }) }}</span>
+            <span v-else-if="uploadState.stage === 'processing'">{{ t('dynamicMgr.processingVideo') }}</span>
             <span v-else-if="uploadState.stage === 'success'">{{ uploadState.message }}</span>
             <span v-else-if="uploadState.stage === 'error'">{{ uploadState.message }}</span>
-            <span v-else>附件类型由文件自动识别，无需手动选择</span>
+            <span v-else>{{ t('dynamicMgr.autoDetectHint') }}</span>
           </div>
         </a-form-item>
       </section>
 
-      <a-form-item class="editor-content-field" label="内容" name="content">
+      <a-form-item class="editor-content-field" :label="t('dynamicMgr.contentLabel')" name="content">
         <markdown-editor
           ref="markdownEditorRef"
           v-model="form.content"
@@ -152,15 +152,15 @@
           :theme="'light'"
           :preview-theme="'default'"
           :code-theme="'atom-one-light'"
-          :language="'zh-CN'"
+          :language="editorLocale"
           @onSave="handleSave"
           @on-image-uploaded="handleEditorImageUploaded"
         />
       </a-form-item>
 
       <a-form-item class="editor-form-actions" :wrapper-col="{ span: 24 }">
-        <a-button type="primary" @click="handleSave" :loading="saving" :disabled="saving">保存</a-button>
-        <a-button style="margin-left: 10px" @click="handleCancel">取消</a-button>
+        <a-button type="primary" @click="handleSave" :loading="saving" :disabled="saving">{{ t('adminShared.save') }}</a-button>
+        <a-button style="margin-left: 10px" @click="handleCancel">{{ t('adminShared.cancel') }}</a-button>
       </a-form-item>
     </a-form>
     
@@ -170,7 +170,7 @@
       :footer="null"
       width="800px"
     >
-      <img v-if="previewType === 'image'" alt="预览" style="width: 100%" :src="previewUrl" />
+      <img v-if="previewType === 'image'" :alt="t('dynamicMgr.previewAlt')" style="width: 100%" :src="previewUrl" />
       <audio v-if="previewType === 'audio'" controls style="width: 100%" :src="previewUrl"></audio>
       <video v-if="previewType === 'video'" controls preload="metadata" playsinline style="width: 100%" :src="previewUrl" :poster="previewPosterUrl || undefined"></video>
     </a-modal>
@@ -178,7 +178,7 @@
     <!-- 文件选择器弹窗 -->
     <a-modal
       v-model:open="fileSelectorVisible"
-      title="选择文件"
+      :title="t('dynamicMgr.fileSelectorTitle')"
       width="860px"
       :footer="null"
       @cancel="closeFileSelector"
@@ -188,7 +188,7 @@
           <a-input-search
             class="file-search"
             v-model:value="fileSearchKeyword"
-            placeholder="搜索文件"
+            :placeholder="t('dynamicMgr.searchFilesPlaceholder')"
             style="width: 280px; max-width: 100%"
             @search="handleFileSearch"
             :loading="fileListLoading"
@@ -200,10 +200,10 @@
             @change="handleFileTypeChange"
             :loading="fileListLoading"
           >
-            <a-select-option value="all">全部类型</a-select-option>
-            <a-select-option value="image">图片</a-select-option>
-            <a-select-option value="audio">音频</a-select-option>
-            <a-select-option value="video">视频</a-select-option>
+            <a-select-option value="all">{{ t('dynamicMgr.allTypes') }}</a-select-option>
+            <a-select-option value="image">{{ t('fileMgr.type.image') }}</a-select-option>
+            <a-select-option value="audio">{{ t('fileMgr.type.audio') }}</a-select-option>
+            <a-select-option value="video">{{ t('fileMgr.type.video') }}</a-select-option>
           </a-select>
         </div>
         
@@ -273,38 +273,38 @@
         <div class="file-selector-footer">
           <div class="selected-summary">
             <div class="selected-info" v-if="selectedFiles.length > 0">
-              已选择 {{ selectedFiles.length }} 个文件：{{ selectedFiles.map(file => file.name).join('、') }}
+              {{ t('dynamicMgr.selectedFilesSummary', { n: selectedFiles.length, names: selectedFiles.map(file => file.name).join('、') }) }}
             </div>
             <p class="file-selector-hint">
-              仅关联媒体：把文件挂成动态附件，正文一个字都不改；插入正文：在附件之外，再把媒体引用写到光标处。
+              {{ t('dynamicMgr.attachHint') }}
             </p>
           </div>
           <div class="file-selector-actions">
-            <a-button @click="closeFileSelector">取消</a-button>
+            <a-button @click="closeFileSelector">{{ t('adminShared.cancel') }}</a-button>
             <a-button
-              title="只把所选文件挂成动态附件，不改动正文"
+              :title="t('dynamicMgr.linkOnlyTitle')"
               :disabled="selectedFiles.length === 0"
               @click="handleFileConfirm"
             >
-              仅关联媒体
+              {{ t('dynamicMgr.linkOnly') }}
             </a-button>
             <a-button
               type="primary"
-              title="挂成动态附件，并把媒体引用插入正文光标处"
+              :title="t('dynamicMgr.insertOnlyTitle')"
               :disabled="selectedFiles.length === 0"
               @click="handleFileInsert"
             >
-              插入正文
+              {{ t('dynamicMgr.insertTitle') }}
             </a-button>
           </div>
         </div>
       </div>
     </a-modal>
 
-    <a-modal v-model:open="taxonomyModalVisible" :title="taxonomyModalType === 'category' ? '新建分类' : '新建标签'" :confirm-loading="taxonomySaving" ok-text="创建" cancel-text="取消" @ok="createTaxonomy">
+    <a-modal v-model:open="taxonomyModalVisible" :title="taxonomyModalType === 'category' ? t('dynamicMgr.newCategory', { keyword: '' }).replace('「」', '') : t('dynamicMgr.newTag', { keyword: '' }).replace('「」', '')" :confirm-loading="taxonomySaving" ok-text="创建" cancel-text="取消" @ok="createTaxonomy">
       <a-form layout="vertical">
-        <a-form-item :label="taxonomyModalType === 'category' ? '分类名称' : '标签名称'" required>
-          <a-input v-model:value="taxonomyName" :maxlength="30" show-count :placeholder="taxonomyModalType === 'category' ? '例如：前端工程' : '例如：Vue'" @press-enter="createTaxonomy" />
+        <a-form-item :label="taxonomyModalType === 'category' ? t('categoryMgr.column.name') : t('tagMgr.column.name')" required>
+          <a-input v-model:value="taxonomyName" :maxlength="30" show-count :placeholder="taxonomyModalType === 'category' ? t('dynamicMgr.categoryPlaceholderExample') : t('dynamicMgr.tagPlaceholderExample')" @press-enter="createTaxonomy" />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -334,6 +334,11 @@ import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { buildApiUrl, stripApiBaseUrl } from '@/utils/apiBaseUrl'
 import { clearEditorDraft, loadEditorDraft, saveEditorDraft } from './editorDraft'
 import { buildMediaReferences, filterUnreferencedFiles } from './mediaReference'
+import { t, currentLocale } from '@/i18n'
+
+// md-editor-v3 界面语言跟随应用语言（无对应包时回退 en-US）
+const EDITOR_LOCALES = { zh: 'zh-CN', en: 'en-US' }
+const editorLocale = computed(() => EDITOR_LOCALES[currentLocale.value] || 'en-US')
 
 const route = useRoute()
 const router = useRouter()
@@ -458,7 +463,7 @@ const tagSelectOptions = computed(() => {
 
   // 输入了库里还没有的名字时，给一条「新建标签」选项，回车即可创建并选中
   return keyword && !exists
-    ? [...matched, { value: NEW_TAG_SENTINEL, label: `新建标签「${keyword}」` }]
+    ? [...matched, { value: NEW_TAG_SENTINEL, label: t('dynamicMgr.newTag', { keyword }) }]
     : matched
 })
 
@@ -497,7 +502,7 @@ const categorySelectOptions = computed(() => {
   const exists = categoryOptions.value.some(option => String(option.label).toLowerCase() === lowered)
 
   return keyword && !exists
-    ? [...matched, { value: NEW_CATEGORY_SENTINEL, label: `新建分类「${keyword}」` }]
+    ? [...matched, { value: NEW_CATEGORY_SENTINEL, label: t('dynamicMgr.newCategory', { keyword }) }]
     : matched
 })
 
@@ -535,7 +540,7 @@ const createTagFromSearch = async (name) => {
     const id = created?.id ?? tags.value.find(item => item?.name === keyword)?.id
     if (id != null) {
       form.value.tags = [...new Set([...(form.value.tags || []), id])]
-      message.success(`已创建标签「${keyword}」`)
+      message.success(t('dynamicMgr.tagCreated', { keyword }))
     }
   } catch (error) {
     // 并发创建同名标签时会命中唯一约束，优先复用已有标签
@@ -543,7 +548,7 @@ const createTagFromSearch = async (name) => {
     if (existing?.id != null) {
       form.value.tags = [...new Set([...(form.value.tags || []), existing.id])]
     } else {
-      message.error(error?.message || '标签创建失败，请稍后重试')
+      message.error(error?.message || t('dynamicMgr.tagCreateFailed'))
     }
   } finally {
     tagSearchKeyword.value = ''
@@ -562,7 +567,7 @@ const handleTagsChange = (values) => {
 const createTaxonomy = async () => {
   const name = taxonomyName.value.trim()
   if (!name) {
-    message.warning(`请输入${taxonomyModalType.value === 'category' ? '分类' : '标签'}名称`)
+    message.warning(t('dynamicMgr.nameRequired', { item: taxonomyModalType.value === 'category' ? t('adminShared.category') : t('adminShared.tags') }))
     return
   }
   taxonomySaving.value = true
@@ -583,9 +588,9 @@ const createTaxonomy = async () => {
     taxonomyModalVisible.value = false
     if (taxonomyModalType.value === 'tag') tagSearchKeyword.value = ''
     else categorySearchKeyword.value = ''
-    message.success('创建成功')
+    message.success(t('dynamicMgr.createSuccess'))
   } catch (error) {
-    message.error(error?.message || '创建失败，请稍后重试')
+    message.error(error?.message || t('dynamicMgr.createFailed'))
   } finally {
     taxonomySaving.value = false
   }
@@ -594,10 +599,10 @@ const createTaxonomy = async () => {
 // 表单验证规则
 const rules = {
   title: [
-    { required: true, message: '请输入标题' },
-    { max: 100, message: '标题不能超过100个字符' }
+    { required: true, message: t('dynamicMgr.titleRequired') },
+    { max: 100, message: t('dynamicMgr.titleMax') }
   ],
-  content: [{ required: true, message: '请输入内容', trigger: ['blur', 'change'] }]
+  content: [{ required: true, message: t('dynamicMgr.contentRequired'), trigger: ['blur', 'change'] }]
 }
 
 // 获取标签列表
@@ -609,7 +614,7 @@ const fetchTags = async () => {
     mergeTags(results)
   } catch (error) {
     console.error('获取标签列表失败:', error)
-    message.error('获取标签列表失败')
+    message.error(t('dynamicMgr.tagLoadFailed'))
     tags.value = []
   } finally {
     tagsLoading.value = false
@@ -624,7 +629,7 @@ const fetchCategories = async () => {
     categories.value = results
   } catch (error) {
     console.error('获取分类列表失败:', error)
-    message.error('获取分类列表失败')
+    message.error(t('dynamicMgr.categoryLoadFailed'))
     categories.value = []
   } finally {
     categoriesLoading.value = false
@@ -681,11 +686,11 @@ const fetchDynamicDetail = async () => {
       draftTimer = undefined
       dirty.value = false
     } else {
-      message.error('获取动态详情失败')
+      message.error(t('dynamicMgr.detailLoadFailed'))
     }
   } catch (error) {
     console.error('获取动态详情失败:', error)
-    message.error('获取动态详情失败')
+    message.error(t('dynamicMgr.detailLoadFailed'))
   } finally {
     isHydrating = false
   }
@@ -764,7 +769,7 @@ const handleSave = async () => {
     window.clearTimeout(draftTimer)
     clearEditorDraft(draftId.value)
     dirty.value = false
-    message.success(isEdit.value ? '动态更新成功' : '动态创建成功');
+    message.success(isEdit.value ? t('dynamicMgr.updateSuccess') : t('dynamicMgr.createArticleSuccess'));
     router.push('/dashboard/dynamics');
   } catch (error) {
     console.error('表单验证或保存过程中出错:', error);
@@ -773,10 +778,10 @@ const handleSave = async () => {
     if (error.errorFields) {
       // 表单验证错误
       const firstError = error.errorFields[0];
-      message.error(firstError.errors[0] || '表单数据不完整，请检查');
+      message.error(firstError.errors[0] || t('dynamicMgr.formIncomplete'));
     } else {
       // API或其他错误
-      message.error(error.message || '保存失败，请稍后重试');
+      message.error(error.message || t('dynamicMgr.saveFailed'));
     }
   } finally {
     saving.value = false
@@ -786,7 +791,7 @@ const handleSave = async () => {
 // 预览
 const handlePreview = () => {
   if (!form.value.content.trim()) {
-    message.warning('请先输入内容')
+    message.warning(t('dynamicMgr.contentRequiredToast'))
     return
   }
   
@@ -812,10 +817,10 @@ const handlePreview = () => {
 // 取消
 const handleCancel = () => {
   Modal.confirm({
-    title: '确认取消',
-    content: '未保存的内容将会丢失，确认要取消吗？',
-    okText: '确定',
-    cancelText: '取消',
+    title: t('dynamicMgr.confirmCancelTitle'),
+    content: t('dynamicMgr.confirmCancelContent'),
+    okText: t('adminShared.confirm'),
+    cancelText: t('adminShared.cancel'),
     onOk: () => {
       router.push('/dashboard/dynamics')
     }
@@ -829,7 +834,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
     uploadState.value = {
       stage: progress >= 100 ? 'processing' : 'uploading',
       progress,
-      message: progress >= 100 ? '正在优化视频' : ''
+      message: progress >= 100 ? t('dynamicMgr.optimizingVideo') : ''
     }
     onProgress?.({ percent: progress })
   }
@@ -837,7 +842,7 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
   uploadState.value = { stage: 'uploading', progress: 0, message: '' }
   try {
     if (!file || !(file instanceof File)) {
-      throw new Error('无效的文件对象')
+      throw new Error(t('upload.invalidFile'))
     }
 
     const fileType = detectMediaType(file)
@@ -846,17 +851,17 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
       result = await uploadFile(file, fileType, reportProgress)
     } catch (uploadError) {
       console.error('文件上传失败:', uploadError)
-      uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: uploadError.message || '文件上传失败' }
-      message.error(uploadError.message || '文件上传失败')
+      uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: uploadError.message || t('adminShared.fileUploadFailed') }
+      message.error(uploadError.message || t('adminShared.fileUploadFailed'))
       onError(uploadError)
       return
     }
     
     if (!result || !result.url) {
-      const error = new Error('上传结果无效')
+      const error = new Error(t('dynamicMgr.invalidUploadResult'))
       console.error('上传结果无效:', result)
-      uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: '服务器返回数据无效' }
-      message.error('上传失败：服务器返回数据无效')
+      uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: t('dynamicMgr.serverDataInvalid') }
+      message.error(t('dynamicMgr.uploadFailedServer'))
       onError(error)
       return
     }
@@ -894,12 +899,12 @@ const handleCustomUpload = async ({ file, onSuccess, onError, onProgress }) => {
     formRef.value?.validateFields(['mediaUrls'])
     
     onSuccess(result)
-    uploadState.value = { stage: 'success', progress: 100, message: '上传完成，媒体已优化' }
-    message.success('上传成功')
+    uploadState.value = { stage: 'success', progress: 100, message: t('adminShared.uploadSuccess') }
+    message.success(t('adminShared.uploadSuccess'))
   } catch (error) {
     console.error('上传处理失败:', error)
-    uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: error.message || '上传失败' }
-    message.error(error.message || '上传失败')
+    uploadState.value = { stage: 'error', progress: uploadState.value.progress, message: error.message || t('adminShared.uploadFailed') }
+    message.error(error.message || t('adminShared.uploadFailed'))
     onError(error)
   }
 }
@@ -955,7 +960,7 @@ const handlePreviewMedia = (file) => {
   previewUrl.value = buildApiUrl(url)
   previewPosterUrl.value = file.posterUrl ? buildApiUrl(file.posterUrl) : ''
   previewVisible.value = true
-  previewTitle.value = file.name || '预览'
+  previewTitle.value = file.name || t('dynamicMgr.preview')
   previewType.value = file.type || form.value.type
 }
 
@@ -1009,7 +1014,7 @@ const loadFileLibrary = async ({ resetPage = false } = {}) => {
     applyFileListResponse(response)
   } catch (error) {
     console.error('获取文件列表失败:', error)
-    message.error('获取文件列表失败')
+    message.error(t('dynamicMgr.fileListLoadFailed'))
     fileListData.value = []
     fileTotal.value = 0
   } finally {
@@ -1045,16 +1050,16 @@ const handleFileSelect = (file) => {
   const index = selectedFiles.value.findIndex(f => f.id === file.id)
   if (index === -1) {
     selectedFiles.value.push(file)
-    message.success(`已选择 ${selectedFiles.value.length} 个附件`)
+    message.success(t('dynamicMgr.attachmentsSelected', { n: selectedFiles.value.length }))
   } else {
     selectedFiles.value.splice(index, 1)
-    message.info('已取消选择')
+    message.info(t('dynamicMgr.selectionCanceled'))
   }
 }
 
 const validateSelectedFiles = () => {
   if (selectedFiles.value.length === 0) {
-    message.warning('请选择文件')
+    message.warning(t('dynamicMgr.pleaseSelectFiles'))
     return false
   }
 
@@ -1100,14 +1105,14 @@ const handleFileConfirm = async () => {
   // 触发表单验证
   formRef.value?.validateFields(['mediaUrls'])
   await loadFileLibrary()
-  message.success(`已关联 ${picked} 个附件，正文未改动`)
+  message.success(t('dynamicMgr.attachedCount', { n: picked }))
 }
 
 // 将选中文件插入当前光标位置，同时保留媒体关联。
 const handleFileInsert = async () => {
   if (!validateSelectedFiles()) return
   if (!markdownEditorRef.value?.insertContent) {
-    message.error('编辑器暂不可用，请刷新页面后重试')
+    message.error(t('dynamicMgr.editorUnavailable'))
     return
   }
 
@@ -1121,7 +1126,7 @@ const handleFileInsert = async () => {
     const references = buildMediaReferences(pending).join('\n\n')
     const inserted = markdownEditorRef.value.insertContent(references)
     if (inserted === false) {
-      message.error('插入正文失败，请重试')
+      message.error(t('dynamicMgr.insertFailed'))
       return
     }
   }
@@ -1132,11 +1137,11 @@ const handleFileInsert = async () => {
   nextTick(() => markdownEditorRef.value?.focus?.())
 
   if (!pending.length) {
-    message.info('所选文件都已在正文中，仅更新了附件关联')
+    message.info(t('dynamicMgr.allInserted'))
   } else if (skipped) {
-    message.success(`已插入 ${pending.length} 条引用，${skipped} 个文件已在正文中，只更新附件关联`)
+    message.success(t('dynamicMgr.insertPartial', { n: pending.length, skipped }))
   } else {
-    message.success(`已插入 ${pending.length} 条媒体引用并关联附件`)
+    message.success(t('dynamicMgr.inserted', { n: pending.length }))
   }
 }
 
@@ -1166,7 +1171,7 @@ function restoreLocalDraft() {
     Object.assign(form.value, draft)
     updateFileList()
     syncDynamicType()
-    message.info('已恢复本机保存的草稿')
+    message.info(t('dynamicMgr.draftRestored'))
   } finally {
     isHydrating = false
     window.clearTimeout(draftTimer)
@@ -1186,7 +1191,7 @@ async function fetchCollections() {
   try {
     collectionOptions.value = (await getCollectionOptions()) || []
   } catch (error) {
-    message.error(error?.message || '合集选项加载失败')
+    message.error(error?.message || t('collectionMgr.optionsLoadFailed'))
   } finally {
     collectionsLoading.value = false
   }

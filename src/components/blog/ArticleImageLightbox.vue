@@ -7,7 +7,7 @@
       :class="{ 'is-dragging': dragging, 'is-zoomed': scale > 1 }"
       role="dialog"
       aria-modal="true"
-      aria-label="图片预览"
+      :aria-label="t('lightbox.preview')"
       @keydown="handleKeydown"
     >
       <div
@@ -28,44 +28,44 @@
           ref="imageRef"
           class="image-lightbox__image"
           :src="current.src"
-          :alt="current.alt || `图 ${index + 1}`"
+          :alt="current.alt || `${t('lightbox.image')} ${index + 1}`"
           :style="imageStyle"
           draggable="false"
           decoding="async"
           @load="handleImageLoad"
           @error="handleImageError"
         />
-        <div v-if="loading && !failed" class="image-lightbox__status" role="status">加载中…</div>
+        <div v-if="loading && !failed" class="image-lightbox__status" role="status">{{ t('common.loading') }}</div>
         <div v-else-if="failed" class="image-lightbox__status" role="status">
-          <p>图片加载失败</p>
-          <button type="button" class="image-lightbox__retry" @click.stop="retry">重试</button>
+          <p>{{ t('lightbox.loadFailed') }}</p>
+          <button type="button" class="image-lightbox__retry" @click.stop="retry">{{ t('common.retry') }}</button>
         </div>
       </div>
 
       <div class="image-lightbox__topbar">
         <span v-if="images.length > 1" class="image-lightbox__counter" aria-live="polite">{{ index + 1 }} / {{ images.length }}</span>
-        <button ref="closeRef" type="button" class="image-lightbox__circle" aria-label="关闭图片预览" @click="requestClose">×</button>
+        <button ref="closeRef" type="button" class="image-lightbox__circle" :aria-label="t('lightbox.close')" @click="requestClose">×</button>
       </div>
 
       <div class="image-lightbox__footer">
         <p v-if="caption" class="image-lightbox__caption">{{ caption }}</p>
-        <div class="image-lightbox__toolbar" role="toolbar" aria-label="图片操作">
+        <div class="image-lightbox__toolbar" role="toolbar" :aria-label="t('lightbox.toolbar')">
           <button
             v-if="images.length > 1"
             type="button"
             class="image-lightbox__circle"
-            aria-label="上一张"
+            :aria-label="t('lightbox.prev')"
             :disabled="index === 0"
             @click="go(-1)"
           >‹</button>
-          <button type="button" class="image-lightbox__circle" aria-label="缩小" :disabled="scale <= 1" @click="zoomBy(1 / 1.35)">−</button>
-          <button type="button" class="image-lightbox__circle" aria-label="放大" :disabled="scale >= 4" @click="zoomBy(1.35)">+</button>
-          <button type="button" class="image-lightbox__pill" @click="resetView">适应</button>
+          <button type="button" class="image-lightbox__circle" :aria-label="t('lightbox.zoomOut')" :disabled="scale <= 1" @click="zoomBy(1 / 1.35)">−</button>
+          <button type="button" class="image-lightbox__circle" :aria-label="t('lightbox.zoomIn')" :disabled="scale >= 4" @click="zoomBy(1.35)">+</button>
+          <button type="button" class="image-lightbox__pill" @click="resetView">{{ t('lightbox.fit') }}</button>
           <button
             v-if="images.length > 1"
             type="button"
             class="image-lightbox__circle"
-            aria-label="下一张"
+            :aria-label="t('lightbox.next')"
             :disabled="index === images.length - 1"
             @click="go(1)"
           >›</button>
@@ -78,6 +78,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { clamp, clampOffset, clampScale, MAX_SCALE, MIN_SCALE, resolveSwipeAction, zoomAtPoint } from '@/utils/imageZoom'
+import { t } from '@/i18n'
 
 const props = defineProps({
   open: { type: Boolean, default: false },

@@ -1,4 +1,5 @@
 import { buildApiUrl } from './apiBaseUrl'
+import { t } from '@/i18n'
 
 // 媒体 = 图片 / 音频 / 视频，正文里内联展示；其余类型一律按“附件”处理，
 // 只在文章末尾提供下载。类型缺失或后端给了 other 时，按扩展名兜底。
@@ -98,5 +99,5 @@ export const attachmentLabel = (item) => {
   if (item?.name) return item.name
   const clean = String(item?.url || '').split(/[?#]/)[0]
   const last = clean.split('/').filter(Boolean).pop()
-  return last || '附件'
+  return last || t('attachment.fallback')
 }

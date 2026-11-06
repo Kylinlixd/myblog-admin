@@ -131,7 +131,7 @@ describe('DynamicPreview mounted interactions', () => {
     )
 
     expect(source).toContain('markMediaUnavailable')
-    expect(source).toContain('该媒体已不可用')
+    expect(source).toContain("t('detail.mediaUnavailable')")
   })
 
   it('replaces a failed image with an unavailable state', async () => {
