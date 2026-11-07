@@ -19,6 +19,7 @@
           <nav class="dynamic-timeline__nav">
             <button
               type="button"
+              class="timeline-all"
               :class="{ 'is-active': !activeTimeline }"
               @click="selectTimelinePeriod('')"
             >
@@ -29,6 +30,7 @@
               v-for="yearGroup in timelineYears"
               :key="yearGroup.year"
               class="timeline-group"
+              :class="{ 'is-collapsed': collapsedYears.has(yearGroup.year) }"
             >
               <button
                 type="button"
@@ -37,11 +39,11 @@
                 :aria-expanded="!collapsedYears.has(yearGroup.year)"
                 @click="toggleYear(yearGroup.year)"
               >
+                <span class="year">{{ yearGroup.year }}</span>
                 <caret-down-outlined class="caret" :class="{ 'is-collapsed': collapsedYears.has(yearGroup.year) }" />
-                <span>{{ yearGroup.year }}</span>
                 <small class="year-total">{{ t("dynamic.articles", { n: yearGroup.total }) }}</small>
               </button>
-              <template v-if="!collapsedYears.has(yearGroup.year)">
+              <div v-show="!collapsedYears.has(yearGroup.year)" class="timeline-months">
                 <button
                   v-for="group in yearGroup.months"
                   :key="group.key"
@@ -53,7 +55,7 @@
                   <strong>{{ group.monthText }}</strong>
                   <small>{{ t("dynamic.articles", { n: group.count }) }}</small>
                 </button>
-              </template>
+              </div>
             </div>
           </nav>
         </aside>
@@ -570,7 +572,7 @@ onActivated(() => {
 }
 
 .dynamic-timeline__label {
-  color: #4f46e5;
+  color: var(--blog-accent);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: .14em;
@@ -578,106 +580,154 @@ onActivated(() => {
 
 .dynamic-timeline__intro {
   margin: 8px 0 0;
-  color: #94a3b8;
+  color: var(--blog-text-muted);
   font-size: 12px;
   line-height: 1.6;
 }
 
+/* 布局：年份列（导轨左）| 导轨 | 月份列（导轨右）。
+   年份列固定宽，导轨线与圆点都用固定偏移对齐到同一条竖线。 */
 .dynamic-timeline__nav {
   position: relative;
-  display: grid;
-  gap: 15px;
+  display: block;
   margin-top: 22px;
 }
 
+/* 导轨竖线：夹在年份列（左）与月份列（右）之间 */
 .dynamic-timeline__nav::before {
   position: absolute;
-  top: 7px;
-  bottom: 7px;
-  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  left: 66px;
   width: 1px;
-  background: linear-gradient(#c7d2fe, rgb(148 163 184 / 22%));
+  background: linear-gradient(var(--blog-line-strong), var(--blog-line));
   content: '';
 }
 
 .dynamic-timeline__nav button {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 2px 10px;
-  padding: 0 0 0 22px;
   border: 0;
   background: transparent;
-  color: #475569;
+  color: var(--blog-text-soft);
   cursor: pointer;
   text-align: left;
   transition: color .2s ease, transform .2s ease;
 }
 
-.dynamic-timeline__nav button::before {
-  position: absolute;
-  top: 5px;
-  left: 1px;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #818cf8;
-  border-radius: 50%;
-  background: #f8fafc;
-  content: '';
-  box-sizing: border-box;
-}
-
 .dynamic-timeline__nav button:hover {
-  color: #4f46e5;
+  color: var(--blog-accent-strong);
   transform: translateX(3px);
 }
 
-.dynamic-timeline__nav button.is-active {
-  color: #4338ca;
+/* 全部：占满整行，圆点落在导轨上 */
+.dynamic-timeline__nav .timeline-all {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 0 0 6px 80px;
 }
-
-.dynamic-timeline__nav button.is-active::before {
-  border-color: #4f46e5;
-  background: #4f46e5;
-  box-shadow: 0 0 0 4px rgb(99 102 241 / 12%);
+.dynamic-timeline__nav .timeline-all::before {
+  position: absolute;
+  top: 6px;
+  left: 62px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--blog-line-strong);
+  border-radius: 50%;
+  background: var(--blog-bg);
+  content: '';
+  box-sizing: border-box;
 }
-
-/* 年份分组：年份行可点击折叠，月份缩进在年份之下 */
-.timeline-group { display: grid; gap: 2px; }
-.dynamic-timeline__nav .timeline-group + .timeline-group { margin-top: 12px; }
-
-.timeline-year-toggle {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 0 5px 22px;
-  border: 0;
-  background: transparent;
-  color: #94a3b8;
-  cursor: pointer;
-  font-size: 13px;
+.dynamic-timeline__nav .timeline-all strong {
+  color: inherit;
+  font-size: 15px;
   font-weight: 750;
-  text-align: left;
-  transition: color .2s ease;
+  line-height: 1.3;
 }
-.timeline-year-toggle:hover { color: #4f46e5; }
-.timeline-year-toggle.is-filtered { color: #4338ca; }
-.timeline-year-toggle .caret { font-size: 10px; transition: transform .2s ease; }
+.dynamic-timeline__nav .timeline-all.is-active::before {
+  border-color: var(--blog-accent);
+  background: var(--blog-accent);
+  box-shadow: 0 0 0 4px rgb(200 111 55 / 12%);
+}
+
+/* 年份分组：年份列固定 56px（导轨左侧，右对齐贴近导轨），月份列在导轨右侧 */
+.timeline-group {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  column-gap: 20px;
+  align-items: start;
+}
+
+.timeline-group + .timeline-group { margin-top: 16px; }
+
+/* 年份行占满组宽、使用与组相同的双列模板：
+   年份在左列（导轨左侧加粗），折叠箭头在右列——展开后正好与月份文字上下对齐 */
+.timeline-year-toggle {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  column-gap: 20px;
+  align-items: center;
+  padding: 2px 0;
+  font-weight: 800;
+}
+.timeline-year-toggle .year {
+  grid-column: 1;
+  justify-self: end;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  font-variant-numeric: tabular-nums;
+}
+.timeline-year-toggle .caret {
+  grid-column: 2;
+  justify-self: start;
+  margin-left: 24px;
+  font-size: 10px;
+  transition: transform .2s ease;
+}
 .timeline-year-toggle .caret.is-collapsed { transform: rotate(-90deg); }
-.timeline-year-toggle::before { display: none; }
-.timeline-year-toggle .year-total { margin-left: auto; font-size: 11px; font-weight: 500; color: #94a3b8; }
+.timeline-year-toggle .year-total {
+  grid-column: 2;
+  justify-self: end;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--blog-text-muted);
+  white-space: nowrap;
+}
+.timeline-year-toggle.is-filtered .year { color: var(--blog-accent-strong); }
+
+/* 月份列：圆点落在导轨上（相对月份按钮负偏移） */
+.timeline-months {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  gap: 14px;
+  padding: 2px 0;
+}
 
 .dynamic-timeline__nav .timeline-month {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2px 10px;
-  padding: 0 0 0 22px;
-  border: 0;
-  background: transparent;
-  color: #475569;
-  cursor: pointer;
-  text-align: left;
-  transition: color .2s ease, transform .2s ease;
+  padding: 0 0 0 24px;
+}
+.dynamic-timeline__nav .timeline-month::before {
+  position: absolute;
+  top: 4px;
+  left: -14px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--blog-line-strong);
+  border-radius: 50%;
+  background: var(--blog-bg);
+  content: '';
+  box-sizing: border-box;
+}
+.dynamic-timeline__nav .timeline-month.is-active::before {
+  border-color: var(--blog-accent);
+  background: var(--blog-accent);
+  box-shadow: 0 0 0 4px rgb(200 111 55 / 12%);
 }
 .dynamic-timeline__nav .timeline-month strong {
   grid-column: 1;
@@ -690,28 +740,8 @@ onActivated(() => {
   grid-column: 2;
   grid-row: 1 / 3;
   align-self: center;
-  color: #94a3b8;
+  color: var(--blog-text-muted);
   font-size: 11px;
-}
-
-.dynamic-timeline__nav strong {
-  grid-column: 1;
-  color: inherit;
-  font-size: 15px;
-  font-weight: 750;
-  line-height: 1.3;
-}
-
-.dynamic-timeline__nav small {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  align-self: center;
-  color: #94a3b8;
-  font-size: 11px;
-}
-
-.dynamic-timeline__nav button:hover small {
-  color: #6366f1;
 }
 
 .dynamic-item {
@@ -1009,7 +1039,13 @@ onActivated(() => {
 
   /* 折叠分组在 pill 流里摊平：年份 pill + 该年月份 pill 依次排列 */
   .timeline-group { display: contents; }
-  .timeline-year-toggle { padding: 8px 11px; }
+  .timeline-months { display: contents; }
+  .timeline-year-toggle {
+    flex-direction: row;
+    align-items: center;
+    padding: 8px 11px;
+  }
+  .timeline-year-toggle .year { font-size: 13px; }
   .timeline-year-toggle .year-total { display: none; }
   .timeline-month { padding: 8px 11px; }
 
