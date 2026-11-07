@@ -1024,5 +1024,7 @@
   "tools.md-convert.name": "Convertisseur Markdown",
   "tools.md-convert.desc": "Aperçu en direct et export HTML, Word ou PDF.",
   "tools.xlsx-convert.name": "Convertisseur de tableaux",
-  "tools.xlsx-convert.desc": "Convertissez Excel/CSV/JSON en glissant des fichiers ou en collant du texte."
+  "tools.xlsx-convert.desc": "Convertissez Excel/CSV/JSON en glissant des fichiers ou en collant du texte.",
+  "tools.media-convert.name": "Convertisseur multimédia",
+  "tools.media-convert.desc": "Convertissez vidéo/audio avec ffmpeg.wasm en local; cœur de ~25 Mo au premier usage."
 }

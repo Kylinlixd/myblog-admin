@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>media-convert · 音视频转换</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23714a9e'/%3E%3Ctext x='50' y='62' font-size='34' text-anchor='middle' fill='%23fffaf2'%3E▶%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;--accent:#714a9e;--accent-strong:#5a3a80;--ok:#3f7a52;--radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#151017;--paper:#221b26;--line:#3d3344;--ink:#ece4d6;--muted:#9a9184;--accent:#9b6fc4;--accent-strong:#b48ad4;--ok:#6fae86}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:30px;text-align:center;color:var(--muted);cursor:pointer}
+.drop.over{border-color:var(--accent);background:rgba(113,74,158,.06)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 16px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+select{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.meta{font:12px var(--mono);color:var(--muted)}
+.bar{height:8px;border-radius:999px;background:var(--bg);overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-strong));transition:width .3s}
+.log{font:11px/1.7 var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;max-height:200px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+.note{font-size:12px;color:var(--muted);margin:8px 0 0}
+.ok{color:var(--ok);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">media-convert<small>音视频格式转换 · ffmpeg.wasm 本地运行</small></div>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop">拖入 <strong>视频 / 音频</strong> 文件（mp4 · mov · webm · mp3 · wav …）</div>
+    <input type="file" id="file" hidden>
+    <div class="row">
+      <span class="meta" id="meta">未选择文件</span>
+    </div>
+    <div class="row">
+      <label class="meta">转换为
+        <select id="target"></select>
+      </label>
+      <button class="primary" id="runBtn" disabled>开始转换</button>
+      <span class="meta" id="status"></span>
+    </div>
+    <div class="bar" id="bar" hidden><i id="barFill"></i></div>
+    <div class="log" id="log" hidden>ffmpeg 日志</div>
+  </div>
+
+  <div class="card" id="resultCard" hidden>
+    <div class="row">
+      <span class="ok" id="resultMeta"></span>
+      <button class="primary" id="dlBtn">下载结果</button>
+    </div>
+  </div>
+
+  <p class="note">首次转换需下载 ffmpeg 核心（约 25 MB，之后走浏览器缓存）。转码完全在你的设备上进行；大文件和慢设备请耐心等待。单线程核心无需特殊响应头，但速度慢于原生 ffmpeg。</p>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+const CDN = 'https://cdn.jsdelivr.net/npm'
+const FF_VER = '0.12.10', CORE_VER = '0.12.6'
+const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' MB' : (n / 1048576).toFixed(2) + ' MB'
+
+let file = null
+let ffmpeg = null
+let coreLoaded = false
+let result = null
+
+const fmtBytes2 = fmtBytes
+
+/* ---------- 目标格式：按输入类型给出可转换集合 ---------- */
+let currentKind = null // 'video' | 'audio'
+const TARGETS = {
+  video: [
+    ['mp4', 'MP4（H.264 重编码）'],
+    ['webm', 'WebM（VP8/Vorbis）'],
+    ['gif', 'GIF 动图（480p · 10fps）'],
+    ['mp3', '仅提取音轨 → MP3']
+  ],
+  audio: [
+    ['mp3', 'MP3'],
+    ['wav', 'WAV（无压缩）'],
+    ['ogg', 'OGG（Vorbis）']
+  ]
+}
+
+function setFile(f) {
+  if (!f) return
+  file = f
+  currentKind = f.type.startsWith('video/') ? 'video' : f.type.startsWith('audio/') ? 'audio' : (/\.(mp4|mov|webm|mkv|avi)$/i.test(f.name) ? 'video' : /\.(mp3|wav|ogg|m4a|flac)$/i.test(f.name) ? 'audio' : null)
+  if (!currentKind) { $('meta').textContent = '⚠ 无法识别的媒体类型：' + f.name; $('runBtn').disabled = true; return }
+  $('meta').textContent = `${f.name} · ${fmtBytes(f.size)}`
+  const select = $('target')
+  select.innerHTML = ''
+  TARGETS[currentKind].forEach(([value, label]) => {
+    const opt = document.createElement('option')
+    opt.value = value
+    opt.textContent = label
+    select.append(opt)
+  })
+  $('runBtn').disabled = false
+  $('resultCard').hidden = true
+}
+
+$('drop').addEventListener('click', () => $('file').click())
+$('file').addEventListener('change', e => setFile(e.target.files[0]))
+;['dragover', 'dragenter'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over') }))
+;['dragleave', 'drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over') }))
+$('drop').addEventListener('drop', e => setFile(e.dataTransfer.files[0]))
+
+/* ---------- ffmpeg 加载（UMD + 单线程核心，全部 CDN，blob 隔离） ---------- */
+async function ensureFfmpeg() {
+  if (ffmpeg && coreLoaded) return ffmpeg
+  $('status').textContent = '加载 ffmpeg 核心…（首次约 25 MB）'
+  $('bar').hidden = false
+  $('barFill').style.width = '10%'
+  if (!ffmpeg) {
+    await loadScript(`${CDN}/@ffmpeg/ffmpeg@${FF_VER}/dist/umd/ffmpeg.js`)
+    await loadScript(`${CDN}/@ffmpeg/util@0.12.1/dist/umd/index.js`)
+    const { FFmpeg } = FFmpegWASM
+    const { toBlobURL, fetchFile } = FFmpegUtil
+    ffmpeg = new FFmpeg()
+    ffmpeg.on('progress', ({ progress }) => {
+      // progress 为 0~1（-1 表示不可估计）
+      if (progress >= 0) $('barFill').style.width = `${Math.min(100, Math.round(progress * 100))}%`
+    })
+    ffmpeg.on('log', ({ message }) => { if ($('log').hidden === false) appendLog(message) })
+    const classWorkerURL = await toBlobURL(`${CDN}/@ffmpeg/ffmpeg@${FF_VER}/dist/umd/814.ffmpeg.js`, 'text/javascript')
+    const coreURL = await toBlobURL(`${CDN}/unpkg/@ffmpeg/core@${CORE_VER}/dist/umd/ffmpeg-core.js`, 'text/javascript')
+    const wasmURL = await toBlobURL(`${CDN}/unpkg/@ffmpeg/core@${CORE_VER}/dist/umd/ffmpeg-core.wasm`, 'application/wasm')
+    $('barFill').style.width = '45%'
+    await ffmpeg.load({ coreURL, wasmURL, classWorkerURL })
+    coreLoaded = true
+    window.__fetchFile = fetchFile
+  }
+  $('status').textContent = ''
+  $('bar').hidden = true
+  return ffmpeg
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script')
+    s.src = src
+    s.onload = resolve
+    s.onerror = () => reject(new Error('CDN 脚本加载失败：' + src))
+    document.head.append(s)
+  })
+}
+
+function appendLog(line) {
+  const log = $('log')
+  log.textContent += line + '\n'
+  log.scrollTop = log.scrollHeight
+}
+
+/* ---------- 转换命令 ---------- */
+function buildArgs(inputName, target) {
+  const out = `output.${target}`
+  if (currentKind === 'video') {
+    if (target === 'gif') return ['-i', inputName, '-vf', 'fps=10,scale=480:-1:flags=lanczos', '-loop', '0', out]
+    if (target === 'mp3') return ['-i', inputName, '-vn', '-c:a', 'libmp3lame', '-b:a', '128k', out]
+    if (target === 'webm') return ['-i', inputName, '-c:v', 'libvpx', '-b:v', '1M', '-c:a', 'libvorbis', out]
+    return ['-i', inputName, '-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '26', '-c:a', 'aac', out]
+  }
+  if (target === 'wav') return ['-i', inputName, out]
+  if (target === 'mp3') return ['-i', inputName, '-c:a', 'libmp3lame', '-b:a', '192k', out]
+  return ['-i', inputName, '-c:a', 'libvorbis', '-q:a', '5', out]
+}
+
+$('runBtn').addEventListener('click', async () => {
+  if (!file) return
+  $('runBtn').disabled = true
+  $('log').hidden = false
+  $('log').textContent = ''
+  result = null
+  $('resultCard').hidden = true
+  try {
+    const ff = await ensureFfmpeg()
+    const { fetchFile } = FFmpegUtil
+    $('status').textContent = '转码中…'
+    const inputName = 'input' + (file.name.match(/\.[^.]+$/)?.[0] || '')
+    const target = $('target').value
+    await ff.writeFile(inputName, await fetchFile(file))
+    await ff.exec(buildArgs(inputName, target))
+    const data = await ff.readFile('output.' + target)
+    if (!data?.length) throw new Error('转码输出为空（编码器可能不支持该输入，详见日志）')
+    const blob = new Blob([data.buffer], { type: target === 'gif' ? 'image/gif' : (currentKind === 'audio' ? 'audio/' : 'video/') + target })
+    result = { blob, name: file.name.replace(/\.[^.]+$/, '') + '.' + target }
+    $('resultMeta').textContent = `完成：${fmtBytes(file.size)} → ${fmtBytes(blob.size)}`
+    $('resultCard').hidden = false
+    $('status').textContent = ''
+    await ff.deleteFile(inputName)
+  } catch (error) {
+    $('status').textContent = '✗ ' + error.message
+    appendLog('✗ ' + error.message)
+  } finally {
+    $('runBtn').disabled = false
+  }
+})
+
+$('dlBtn').addEventListener('click', () => {
+  if (!result) return
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(result.blob)
+  a.download = result.name
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000)
+})
+</script>
+</body>
+</html>

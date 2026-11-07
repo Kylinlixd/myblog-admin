@@ -158,6 +158,19 @@
             </router-link>
             <span v-else class="article-adjacent__item article-adjacent__item--spacer" aria-hidden="true"></span>
           </nav>
+          <!-- 相关推荐：按第一个标签取同标签文章（纯前端，复用标签流接口） -->
+          <section v-if="related.length" class="article-related" :aria-label="t('detail.related')">
+            <h3 class="article-related__title">{{ t('detail.related') }}</h3>
+            <router-link
+              v-for="item in related"
+              :key="item.id"
+              :to="{ path: `/blog/dynamics/${item.id}`, query: contextQuery }"
+              class="article-related__item"
+            >
+              <strong>{{ item.title }}</strong>
+              <small>{{ item.views || 0 }} {{ t('categoryDetail.reading') }}</small>
+            </router-link>
+          </section>
           <!-- 正文、标签、相邻文章和评论共用同一张内容卡片。 -->
           <div class="comment-section">
             <div class="comment-header">
@@ -228,7 +241,7 @@
 <script setup>
 import { computed, reactive, ref, nextTick, onMounted, onBeforeUnmount, onUpdated, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { getBlogDynamicDetail, getBlogCollectionDetail, getDynamicTranslation, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics } from '@/api/blog'
+import { getBlogDynamicDetail, getBlogCollectionDetail, getDynamicTranslation, increaseDynamicView, commentDynamic, getDynamicComments, getAdjacentDynamics, getTagDynamics } from '@/api/blog'
 import { currentLocale, t } from '@/i18n'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
@@ -329,6 +342,7 @@ const translationBanner = computed(() => {
 })
 const unavailableMediaUrls = ref(new Set())
 const adjacent = ref({ prev: null, next: null })
+const related = ref([])
 const seriesNav = ref(null)
 
 // 从拾光（分类/合集）进来的文章带 ?from=light：导航继续停在拾光，
@@ -664,6 +678,24 @@ const fetchSeriesContext = async (requestedId) => {
   }
 }
 
+// 相关推荐：按文章第一个标签取同标签流，过滤自身，最多 4 篇。
+// 无标签或接口失败时静默隐藏——它是加分项，不能拖累正文。
+const fetchRelated = async (requestedId, tags) => {
+  related.value = []
+  const tagId = tags?.[0]?.id
+  if (!tagId) return
+  try {
+    const response = await getTagDynamics(tagId, { page: 1, pageSize: 9 })
+    if (String(route.params.id) !== String(requestedId)) return
+    const items = response?.data?.items ?? response?.data?.dynamics ?? []
+    related.value = items
+      .filter((item) => String(item.id) !== String(requestedId))
+      .slice(0, 4)
+  } catch {
+    /* 静默 */
+  }
+}
+
 const fetchAdjacent = async (requestedId) => {
   try {
     const result = await getAdjacentDynamics(requestedId)
@@ -802,6 +834,7 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
   commentTotal.value = 0
   commentPage.value = 1
   adjacent.value = { prev: null, next: null }
+  related.value = []
   seriesNav.value = null
 
   try {
@@ -842,7 +875,8 @@ const fetchDynamicDetail = async (requestedId = route.params.id) => {
     void Promise.allSettled([
       increaseDynamicView(dynamicId),
       fetchComments(dynamicId),
-      fetchAdjacent(dynamicId)
+      fetchAdjacent(dynamicId),
+      fetchRelated(dynamicId, dynamic.value?.tags)
     ])
   } catch (error) {
     if (requestSequence !== detailRequestSequence) return
@@ -2059,6 +2093,48 @@ onBeforeUnmount(() => {
       font-size: 12px;
     }
 
+    .article-related {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px dashed var(--article-line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .article-related__title {
+      margin: 0;
+      color: var(--blog-accent);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .article-related__item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--article-line);
+      border-radius: 12px;
+      background: rgb(255 253 248 / 60%);
+      color: var(--article-ink);
+      text-decoration: none;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+
+    .article-related__item:hover { border-color: #d98b38; transform: translateY(-2px); }
+    .article-related__item strong {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .article-related__item small { flex: none; color: var(--article-muted); font-size: 12px; }
+
     .article-side-column {
       position: fixed;
       /* 固定的目录导轨：在正文之上但在导航之下（--z-sticky 20 < --z-header 100）；
@@ -2080,7 +2156,49 @@ onBeforeUnmount(() => {
 
       .article-series { margin-inline: auto; }
 
-      .article-side-column {
+      .article-related {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px dashed var(--article-line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .article-related__title {
+      margin: 0;
+      color: var(--blog-accent);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .article-related__item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--article-line);
+      border-radius: 12px;
+      background: rgb(255 253 248 / 60%);
+      color: var(--article-ink);
+      text-decoration: none;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+
+    .article-related__item:hover { border-color: #d98b38; transform: translateY(-2px); }
+    .article-related__item strong {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .article-related__item small { flex: none; color: var(--article-muted); font-size: 12px; }
+
+    .article-side-column {
         display: none;
       }
     }
@@ -2254,7 +2372,49 @@ onBeforeUnmount(() => {
       .article-layout { width: 100%; grid-template-columns: minmax(0, 1fr); }
       .article-content-card { width: 100%; padding: 22px 18px; }
       .article-header { width: 100%; }
-      .article-side-column { display: none; }
+      .article-related {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px dashed var(--article-line);
+      display: grid;
+      gap: 10px;
+    }
+
+    .article-related__title {
+      margin: 0;
+      color: var(--blog-accent);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .article-related__item {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 14px;
+      border: 1px solid var(--article-line);
+      border-radius: 12px;
+      background: rgb(255 253 248 / 60%);
+      color: var(--article-ink);
+      text-decoration: none;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+
+    .article-related__item:hover { border-color: #d98b38; transform: translateY(-2px); }
+    .article-related__item strong {
+      min-width: 0;
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .article-related__item small { flex: none; color: var(--article-muted); font-size: 12px; }
+
+    .article-side-column { display: none; }
       .mobile-toc-panel {
         display: block;
         margin: 0 auto 20px;

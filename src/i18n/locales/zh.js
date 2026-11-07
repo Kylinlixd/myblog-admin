@@ -613,6 +613,8 @@ export default {
   'tools.md-convert.desc': '实时预览并导出 HTML、Word 或打印为 PDF，与博客正文同源渲染器。',
   'tools.xlsx-convert.name': '表格转换器',
   'tools.xlsx-convert.desc': 'Excel/CSV/JSON 互转，支持拖入文件或直接粘贴表格文本，SheetJS 本地解析。',
+  'tools.media-convert.name': '音视频转换器',
+  'tools.media-convert.desc': '视频/音频格式转换（MP4/WebM/GIF/MP3…），ffmpeg.wasm 在你的设备本地转码，首次使用需下载约 25 MB 核心。',
   'login.ariaIntro': '产品介绍',
   'login.heroTitle1': '让创作保持专注，',
   'login.heroTitle2': '让管理回归简单。',

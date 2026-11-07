@@ -1016,5 +1016,7 @@
   "tools.md-convert.name": "Markdown 변환기",
   "tools.md-convert.desc": "실시간 미리보기로 HTML·Word·PDF 내보내기, 블로그 본문과 같은 렌더러.",
   "tools.xlsx-convert.name": "표 변환기",
-  "tools.xlsx-convert.desc": "Excel/CSV/JSON 상호 변환, 파일 드래그나 붙여넣기 지원."
+  "tools.xlsx-convert.desc": "Excel/CSV/JSON 상호 변환, 파일 드래그나 붙여넣기 지원.",
+  "tools.media-convert.name": "미디어 변환기",
+  "tools.media-convert.desc": "ffmpeg.wasm으로 기기에서 직접 변환합니다. 최초 1회 약 25MB 코어를 받습니다."
 }
