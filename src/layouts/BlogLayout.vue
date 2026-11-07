@@ -122,6 +122,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { BulbOutlined, DashboardOutlined, GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { resolveBlogNav } from '@/utils/blogNav'
 import { LOCALES, currentLocale, setLocale, t, prefetchLocale } from '@/i18n'
+import { resetBlogLocaleState } from '@/router'
 import { currentTheme, toggleTheme } from '@/utils/blogTheme'
 
 const router = useRouter()
@@ -149,10 +150,38 @@ const navigation = [
 const activeNav = computed(() => resolveBlogNav(route))
 const isSearchPage = computed(() => route.name === 'BlogSearch')
 
+// 博客内切语言 = 切换 URL 前缀（SEO：每种语言独立 URL）。
+// setLocale 先行给出即时反馈（字典懒加载），URL 由守卫收敛为唯一事实源。
 function onLocalePick({ key }) {
   setLocale(key)
+  resetBlogLocaleState()
+  const prefix = key === 'zh' ? '' : `/${key}`
+  const stripped = route.path.replace(/^\/(?:en|ja|ko|es|fr)(?=\/|$)/, '')
+  router.push({ path: (prefix + stripped) || '/blog', query: route.query, hash: route.hash })
   mobileOpen.value = false
 }
+
+// hreflang 互指 + x-default（zh 为默认）：Googlebot 执行 JS，读取运行时注入的 alternate
+const PREFIX_RE = /^\/(?:en|ja|ko|es|fr)(?=\/|$)/
+function upsertAlternate(hreflang, href) {
+  let link = document.head.querySelector(`link[rel="alternate"][hreflang="${hreflang}"]`)
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'alternate'
+    link.setAttribute('hreflang', hreflang)
+    document.head.appendChild(link)
+  }
+  link.href = href
+}
+function refreshAlternates() {
+  if (!route.meta.blog) return
+  const stripped = route.path.replace(PREFIX_RE, '')
+  for (const { code, htmlLang } of LOCALES) {
+    upsertAlternate(htmlLang, window.location.origin + (code === 'zh' ? '' : `/${code}`) + stripped + window.location.search)
+  }
+  upsertAlternate('x-default', window.location.origin + stripped + window.location.search)
+}
+watch([() => route.fullPath, currentLocale], refreshAlternates, { immediate: true })
 
 function search() {
   if (!query.value) return

@@ -70,7 +70,7 @@ window.addEventListener('auth:expired', () => {
   }
 })
 
-if (!window.location.pathname.startsWith('/blog')) {
+if (!/^\/(?:en|ja|ko|es|fr)?\/?(?:blog|$)/.test(window.location.pathname) || window.location.pathname === '/') {
   useUserStore().initialize().catch((error) => {
     console.warn('[Auth] 用户会话初始化失败', error)
   })

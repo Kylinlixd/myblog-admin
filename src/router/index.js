@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, createMemoryHistory } from 'vue-router'
 import { useAppStore } from '../stores/app'
 import { useUserStore } from '../stores/user'
-import { t } from '../i18n'
+import { t, setLocale, currentLocale } from '../i18n'
 import { message } from 'ant-design-vue'
 
 const routes = [
@@ -27,15 +27,18 @@ const routes = [
     }
   },
   {
-    path: '/blog',
+    // 可选 locale 前缀：/blog = 中文（SEO 默认），/en/blog = English……
+    // 单一路由树：keep-alive 按 fullPath 分实例、命名路由全部保留。
+    // 语言切换 = 切换 URL 前缀（BlogLayout onLocalePick → router.push）。
+    path: '/:locale(en|ja|ko|es|fr)?',
     component: () => import(/* webpackPrefetch: true */ '../layouts/BlogLayout.vue'),
-    meta: { 
-      requiresAuth: false,
-      title: 'nav.home'
+    meta: {
+      blog: true,
+      requiresAuth: false
     },
     children: [
       {
-        path: '',
+        path: 'blog',
         name: 'BlogHome',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogHome.vue'),
         meta: { 
@@ -45,7 +48,7 @@ const routes = [
         }
       },
       {
-        path: 'blogdynamic',
+        path: 'blog/blogdynamic',
         name: 'BlogDynamic',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamic.vue'),
         meta: { 
@@ -55,7 +58,7 @@ const routes = [
         }
       },
       {
-        path: 'categories',
+        path: 'blog/categories',
         name: 'BlogCategories',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategories.vue'),
         meta: { 
@@ -65,7 +68,7 @@ const routes = [
         }
       },
       {
-        path: 'collections/:id',
+        path: 'blog/collections/:id',
         name: 'BlogCollectionDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCollectionDetail.vue'),
         meta: {
@@ -75,7 +78,7 @@ const routes = [
         }
       },
       {
-        path: 'categories/:id/',
+        path: 'blog/categories/:id/',
         name: 'BlogCategoryDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogCategoryDetail.vue'),
         meta: { 
@@ -85,7 +88,7 @@ const routes = [
         }
       },
       {
-        path: 'dynamics/:id',
+        path: 'blog/dynamics/:id',
         name: 'BlogDynamicDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogDynamicDetail.vue'),
         meta: { 
@@ -95,7 +98,7 @@ const routes = [
         }
       },
       {
-        path: 'about',
+        path: 'blog/about',
         name: 'BlogAbout',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogAbout.vue'),
         meta: { 
@@ -105,7 +108,7 @@ const routes = [
         }
       },
       {
-        path: 'tools',
+        path: 'blog/tools',
         name: 'BlogTools',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogTools.vue'),
         meta: {
@@ -115,7 +118,7 @@ const routes = [
         }
       },
       {
-        path: 'search',
+        path: 'blog/search',
         name: 'BlogSearch',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogSearch.vue'),
         meta: { 
@@ -125,7 +128,7 @@ const routes = [
         }
       },
       {
-        path: 'tags/:id',
+        path: 'blog/tags/:id',
         name: 'BlogTagDetail',
         component: () => import(/* webpackPrefetch: true */ '../views/blog/BlogTagDetail.vue'),
         meta: { 
@@ -309,7 +312,19 @@ const router = createRouter({
   }
 })
 
-router.beforeEach(async (to) => {
+// 应用内当前博客语言：null = zh（无前缀）。应用内点击任何未带前缀的
+// /blog 链接时守卫自动补前缀，链接代码无需感知 locale。
+let activeBlogLocale = null
+
+/**
+ * 语言切换器专用：切到 zh 时把守卫的「应用内语言记忆」清空，
+ * 否则 push('/blog') 会被「保持当前语言」改写回带前缀路径。
+ */
+export function resetBlogLocaleState() {
+  activeBlogLocale = null
+}
+
+router.beforeEach(async (to, from) => {
   const appStore = useAppStore()
   const userStore = useUserStore()
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth === true)
@@ -317,6 +332,36 @@ router.beforeEach(async (to) => {
 
   appStore.hasError = false
   appStore.startNavigation()
+
+  /* ---- URL 语言解析（SEO：URL 是博客语言的唯一事实源） ----
+   * - /en/blog 直达 → en；/blog 直达（首次导航）→ zh（无前缀即默认语言）
+   * - 应用内点未带前缀的博客链接 → 自动补当前语言前缀（保持语言）
+   * - /en、/ja 等空父级匹配 → 重定向到对应语言的博客首页
+   * - 非博客路由（/dashboard、/login）不参与，仍走 localStorage */
+  if (to.matched.some((record) => record.meta.blog)) {
+    const prefix = typeof to.params.locale === 'string' && to.params.locale ? to.params.locale : null
+    // 空父级（/en）：仅父级匹配，先于 prefix 分支重定向，否则会渲染空布局
+    if (to.matched.length === 1) {
+      return { path: `/${prefix}/blog` }
+    }
+    if (prefix) {
+      activeBlogLocale = prefix
+      if (currentLocale.value !== prefix) setLocale(prefix)
+      return true
+    }
+    const isInitialNavigation = from.matched.length === 0
+    if (isInitialNavigation) {
+      // 直接访问无前缀博客路由 = 默认语言（爬虫看到的 /blog 恒为中文）
+      activeBlogLocale = 'zh'
+      if (currentLocale.value !== 'zh') setLocale('zh')
+      return true
+    }
+    if (activeBlogLocale && activeBlogLocale !== 'zh') {
+      return { path: `/${activeBlogLocale}${to.fullPath}` }
+    }
+    activeBlogLocale = 'zh'
+    return true
+  }
 
   if ((requiresAuth || isAuthPage) && !to.path.startsWith('/blog') && !userStore.initialized) {
     await userStore.initialize()
