@@ -1002,5 +1002,19 @@
   "logMgr.localDbHit": "로컬 DB 일치",
   "update.title": "새 버전이 있습니다",
   "update.desc": "사이트가 업데이트되었습니다. 새로고침해 최신 버전을 사용하세요.",
-  "update.action": "지금 새로고침"
+  "update.action": "지금 새로고침",
+  "tools.img-press.name": "이미지 압축 변환",
+  "tools.img-press.desc": "이미지를 일괄 압축하고 WebP/AVIF로 변환합니다. 전부 브라우저에서 처리되며 업로드되지 않습니다.",
+  "tools.codec-box.name": "코덱 박스",
+  "tools.codec-box.desc": "Base64·URL·Unicode·JWT 디코딩과 타임스탬프 변환, 오프라인 사용 가능.",
+  "tools.regex-lab.name": "정규식 랩",
+  "tools.regex-lab.desc": "실시간 매치 하이라이트, 캡처 그룹 표, 치환 미리보기와 자주 쓰는 패턴 모음.",
+  "tools.hash-kit.name": "해시·비밀번호 도구",
+  "tools.hash-kit.desc": "SHA 해시, 파일 체크섬, CSPRNG 비밀번호 생성기(엔트로피 추정 포함).",
+  "tools.json-kit.name": "JSON 키트",
+  "tools.json-kit.desc": "JSON 포맷/압축, YAML 변환, TypeScript 인터페이스 생성.",
+  "tools.md-convert.name": "Markdown 변환기",
+  "tools.md-convert.desc": "실시간 미리보기로 HTML·Word·PDF 내보내기, 블로그 본문과 같은 렌더러.",
+  "tools.xlsx-convert.name": "표 변환기",
+  "tools.xlsx-convert.desc": "Excel/CSV/JSON 상호 변환, 파일 드래그나 붙여넣기 지원."
 }

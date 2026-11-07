@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>hash-kit · 哈希与密码工具</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233f6970'/%3E%3Ctext x='50' y='64' font-size='38' text-anchor='middle' fill='%23fffaf2' font-family='monospace'&gt;%23%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;--accent:#c86f37;--accent-strong:#a64e23;--ok:#3f7a52;--radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#171410;--paper:#211d17;--line:#3a332a;--ink:#ece4d6;--muted:#9a9184;--accent:#d98b4f;--accent-strong:#e0a06a;--ok:#6fae86}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:16px}
+textarea,input[type=text]{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:13px/1.6 var(--mono);box-sizing:border-box}
+textarea{min-height:90px;resize:vertical}
+input[type=text]:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 16px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.hashline{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px dashed var(--line);font:13px var(--mono)}
+.hashline:first-of-type{border-top:0}
+.alg{font-weight:750;color:var(--accent-strong)}
+.hex{word-break:break-all;min-width:0}
+label.opt{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer}
+input[type=checkbox],input[type=range]{accent-color:var(--accent)}
+.pw{font:16px var(--mono);letter-spacing:.5px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;word-break:break-all}
+.meter{display:flex;gap:4px;margin:10px 0}
+.meter i{height:6px;flex:1;border-radius:999px;background:var(--line)}
+.meter i.on1{background:#c0563f}.meter i.on2{background:#cf8a3d}.meter i.on3{background:#c2a53c}.meter i.on4{background:var(--ok)}
+.strength-label{font-size:12px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);margin:8px 0 0}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:16px;text-align:center;color:var(--muted);cursor:pointer;font-size:13px}
+.drop.over{border-color:var(--accent);background:rgba(200,111,55,.06)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">hash-kit<small>哈希摘要 · 密码生成 · 纯本地 WebCrypto</small></div>
+  </header>
+
+  <div class="card">
+    <h2>文本哈希</h2>
+    <textarea id="input" placeholder="输入要计算摘要的文本…" spellcheck="false"></textarea>
+    <div class="row">
+      <button class="primary" id="hashBtn">计算</button>
+      <button id="hashCopy">复制全部</button>
+      <span class="strength-label" id="hashMeta"></span>
+    </div>
+    <div id="hashOut"></div>
+    <div class="drop" id="fileDrop">或拖入文件计算文件哈希（完整性校验用）</div>
+    <input type="file" id="fileInput" hidden>
+    <p class="note">SHA-1 仅用于兼容校验，已不具密码学安全性；需要防碰撞请用 SHA-256 及以上。浏览器 SubtleCrypto 不提供 MD5——正因它已不安全。</p>
+  </div>
+
+  <div class="card">
+    <h2>密码生成器</h2>
+    <div class="pw" id="pwOut">点击生成</div>
+    <div class="meter" id="meter"><i></i><i></i><i></i><i></i></div>
+    <div class="row">
+      <label class="opt">长度 <span id="lenVal" class="num">20</span>
+        <input type="range" id="pwLen" min="8" max="64" value="20">
+      </label>
+      <label class="opt"><input type="checkbox" id="optUpper" checked>A-Z</label>
+      <label class="opt"><input type="checkbox" id="optLower" checked>a-z</label>
+      <label class="opt"><input type="checkbox" id="optDigits" checked>0-9</label>
+      <label class="opt"><input type="checkbox" id="optSymbols" checked>!@#$</label>
+      <label class="opt"><input type="checkbox" id="optAmbig">排除易混淆（0O1lI）</label>
+      <button class="primary" id="pwBtn">生成</button>
+      <button id="pwCopy">复制</button>
+    </div>
+    <div class="kv" id="pwMeta" style="margin-top:10px"></div>
+    <p class="note">使用 window.crypto.getRandomValues（CSPRNG）生成，无网络请求。熵值按字符集与长度估算：每 1 bit 熵 = 2 次猜测空间翻倍，60 bit 以上适合高价值账户。</p>
+  </div>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB'
+
+/* ---------- 哈希 ---------- */
+const ALGS = ['SHA-256', 'SHA-384', 'SHA-512', 'SHA-1']
+const toHex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('')
+
+async function hashText() {
+  const text = $('input').value
+  $('hashMeta').textContent = text ? `${text.length} 字符 · ${new Blob([text]).size} 字节` : ''
+  if (!text) { $('hashOut').innerHTML = ''; return }
+  const data = new TextEncoder().encode(text)
+  await renderHashes(data)
+}
+
+async function renderHashes(data) {
+  const lines = await Promise.all(ALGS.map(async alg => {
+    const digest = await crypto.subtle.digest(alg, data)
+    return { alg, hex: toHex(digest) }
+  }))
+  const out = $('hashOut')
+  out.innerHTML = ''
+  lines.forEach(({ alg, hex }) => {
+    const row = document.createElement('div')
+    row.className = 'hashline'
+    row.innerHTML = `<span class="alg">${alg.replace('SHA-', 'SHA')}</span><span class="hex">${hex}</span>`
+    const copy = document.createElement('button')
+    copy.textContent = '复制'
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(hex)
+      copy.textContent = '已复制'
+      setTimeout(() => copy.textContent = '复制', 1000)
+    })
+    row.append(copy)
+    out.append(row)
+  })
+}
+
+$('hashBtn').addEventListener('click', hashText)
+$('input').addEventListener('input', hashText)
+$('hashCopy').addEventListener('click', async () => {
+  const text = [...document.querySelectorAll('#hashOut .hex')].map(el => `${el.previousElementSibling.textContent}: ${el.textContent}`).join('\n')
+  await navigator.clipboard.writeText(text)
+  $('hashCopy').textContent = '已复制'
+  setTimeout(() => $('hashCopy').textContent = '复制全部', 1200)
+})
+
+/* 文件哈希 */
+$('fileDrop').addEventListener('click', () => $('fileInput').click())
+;['dragover', 'dragenter'].forEach(ev => $('fileDrop').addEventListener(ev, e => { e.preventDefault(); $('fileDrop').classList.add('over') }))
+;['dragleave', 'drop'].forEach(ev => $('fileDrop').addEventListener(ev, e => { e.preventDefault(); $('fileDrop').classList.remove('over') }))
+$('fileDrop').addEventListener('drop', e => hashFile(e.dataTransfer.files[0]))
+$('fileInput').addEventListener('change', e => hashFile(e.target.files[0]))
+
+async function hashFile(file) {
+  if (!file) return
+  $('hashMeta').textContent = `${file.name} · ${fmtBytes(file.size)} · 计算中…`
+  const data = await file.arrayBuffer()
+  await renderHashes(new Uint8Array(data))
+  $('hashMeta').textContent = `${file.name} · ${fmtBytes(file.size)}`
+}
+
+/* ---------- 密码生成 ---------- */
+const CHARSETS = {
+  upper: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+  lower: 'abcdefghijkmnopqrstuvwxyz',
+  digits: '23456789',
+  symbols: '!@#$%^&*()-_=+[]{};:,.?'
+}
+const AMBIGUOUS = /[0O1lI]/g
+
+function generate() {
+  const length = Number($('pwLen').value)
+  let pool = ''
+  const required = []
+  if ($('optUpper').checked) { pool += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; required.push('ABCDEFGHIJKLMNOPQRSTUVWXYZ') }
+  if ($('optLower').checked) { pool += 'abcdefghijklmnopqrstuvwxyz'; required.push('abcdefghijklmnopqrstuvwxyz') }
+  if ($('optDigits').checked) { pool += '0123456789'; required.push('0123456789') }
+  if ($('optSymbols').checked) { pool += CHARSETS.symbols; required.push(CHARSETS.symbols) }
+  if (!pool) { $('pwOut').textContent = '至少选择一个字符集'; return }
+
+  // CSPRNG：拒绝采样避免模偏差
+  const rand = max => {
+    const limit = Math.floor(256 / max) * max
+    const buf = new Uint8Array(1)
+    let value
+    do { crypto.getRandomValues(buf); value = buf[0] } while (value >= limit)
+    return value % max
+  }
+
+  let chars
+  do {
+    chars = required.map(set => set[rand(set.length)])
+    while (chars.length < length) chars.push(pool[rand(pool.length)])
+    // Fisher-Yates 洗牌，保证每个位置等概率
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = rand(i + 1)
+      ;[chars[i], chars[j]] = [chars[j], chars[i]]
+    }
+    chars = chars.slice(0, length)
+    // 排除易混淆字符时重新生成，保证长度足额
+    if (!$('optAmbig').checked) break
+  } while (chars.join('').match(AMBIGUOUS))
+
+  const password = chars.join('')
+  $('pwOut').textContent = password
+
+  // 熵 = length × log2(poolSize)（排除混淆字符时池已过滤，估算按可用池计）
+  const effectivePool = $('optAmbig').checked ? pool.replace(AMBIGUOUS, '').length : pool.length
+  const entropy = (length * Math.log2(effectivePool)).toFixed(1)
+  const guesses = Math.pow(2, entropy)
+  const seconds = guesses / 1e10 // 假设 100 亿次/秒 的离线攻击
+  const years = seconds / 31536000
+  const level = entropy >= 100 ? 4 : entropy >= 70 ? 3 : entropy >= 45 ? 2 : 1
+  const labels = ['很弱', '弱', '中等', '强', '非常强']
+  const bars = $('meter').children
+  for (let i = 0; i < 4; i++) bars[i].className = i < level ? `on${level}` : ''
+  $('pwMeta').innerHTML =
+    `熵 <b>${entropy} bit</b>（${labels[level]}）· 字符池 <b>${effectivePool}</b> · ` +
+    `100 亿次/秒 离线暴力破解需约 <b>${years > 1e12 ? '远超宇宙年龄' : years >= 1 ? Math.round(years).toLocaleString() + ' 年' : Math.round(seconds) + ' 秒'}</b>`
+}
+
+$('pwBtn').addEventListener('click', generate)
+$('pwLen').addEventListener('input', e => { $('lenVal').textContent = e.target.value; generate() })
+;['optUpper', 'optLower', 'optDigits', 'optSymbols', 'optAmbig'].forEach(id => $(id).addEventListener('change', generate))
+$('pwCopy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('pwOut').textContent)
+  $('pwCopy').textContent = '已复制'
+  setTimeout(() => $('pwCopy').textContent = '复制', 1200)
+})
+
+// 初始各算一次
+hashText()
+generate()
+</script>
+</body>
+</html>

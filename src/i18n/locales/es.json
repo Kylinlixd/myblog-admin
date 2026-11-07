@@ -1010,5 +1010,19 @@
   "logMgr.localDbHit": "Coincidencia local",
   "update.title": "Nueva versión disponible",
   "update.desc": "El sitio se actualizó; actualice la página para usar la última versión.",
-  "update.action": "Actualizar ahora"
+  "update.action": "Actualizar ahora",
+  "tools.img-press.name": "Compresor de imágenes",
+  "tools.img-press.desc": "Comprime y convierte imágenes a WebP/AVIF por lotes, todo en tu navegador.",
+  "tools.codec-box.name": "Caja de códecs",
+  "tools.codec-box.desc": "Base64, URL, Unicode, decodificación JWT y marcas de tiempo, sin conexión.",
+  "tools.regex-lab.name": "Laboratorio de regex",
+  "tools.regex-lab.desc": "Resaltado en vivo, grupos de captura y vista previa de reemplazo.",
+  "tools.hash-kit.name": "Kit de hash y contraseñas",
+  "tools.hash-kit.desc": "Digests SHA, checksums y generador de contraseñas CSPRNG.",
+  "tools.json-kit.name": "Kit JSON",
+  "tools.json-kit.desc": "Formatea JSON, convierte YAML y genera interfaces TypeScript.",
+  "tools.md-convert.name": "Conversor Markdown",
+  "tools.md-convert.desc": "Vista previa y exportación a HTML, Word o PDF.",
+  "tools.xlsx-convert.name": "Conversor de tablas",
+  "tools.xlsx-convert.desc": "Convierte Excel/CSV/JSON arrastrando archivos o pegando texto."
 }

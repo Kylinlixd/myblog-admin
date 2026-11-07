@@ -308,3 +308,135 @@
   .blog-atmosphere__noise { display: none; }
   .cinematic-card { transition: none !important; }
 }
+
+/* ============================== 暗色模式 ==============================
+ * data-theme='dark' 挂在 <html> 上（utils/blogTheme.js）。
+ * 变量覆盖解决一切引用 --blog-* 的样式；下面的定向规则修正各页面硬编码的
+ * 高可见表面（卡片、输入、分隔线）。强调色不变——暖橙在暗底上对比度更好。
+ * ============================== */
+[data-theme='dark'] .blog-shell {
+  --blog-bg: #14110c;
+  --blog-paper: #1e1a13;
+  --blog-surface: rgb(38 32 23 / 88%);
+  --blog-surface-strong: #241f17;
+  --blog-surface-soft: rgb(52 44 32 / 68%);
+  --blog-line: rgb(233 216 190 / 13%);
+  --blog-line-strong: rgb(216 150 90 / 40%);
+  --blog-text: #ece4d6;
+  --blog-text-soft: #c9bda9;
+  --blog-text-muted: #9a9184;
+  --blog-reading-text: #d8cfbf;
+  --blog-comment-text: #cfc5b3;
+  --blog-accent: #d98b4f;
+  --blog-accent-strong: #e0a06a;
+}
+
+[data-theme='dark'] .blog-shell {
+  /* 大气背景：暖橙余晖压暗 */
+  .blog-atmosphere {
+    background:
+      radial-gradient(circle at 14% 5%, rgb(180 110 45 / 14%), transparent 32%),
+      radial-gradient(circle at 88% 28%, rgb(70 100 92 / 12%), transparent 31%),
+      linear-gradient(180deg, #1a150f 0%, #161209 58%, #120e08 100%);
+  }
+
+  /* 悬浮导航面板 */
+  .site-header-panel {
+    background: rgb(30 25 18 / 78%);
+    border-color: rgb(255 255 255 / 10%);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 6%) inset, 0 0 0 1px rgb(255 255 255 / 4%), 0 16px 36px rgb(0 0 0 / 40%);
+  }
+  .site-header::before { background: rgb(20 16 11 / 55%); }
+  .desktop-nav a:hover, .mobile-nav a:hover { background: rgb(217 139 79 / 14%); }
+  .quick-search { background: rgb(41 34 25 / 84%); }
+  .quick-search input { color: var(--blog-text); }
+  .quick-search input::placeholder { color: #857d70; }
+  .lang-button { background: rgb(41 34 25 / 84%); }
+  .mobile-nav { background: rgb(38 31 22 / 96%); }
+  .site-footer { background: rgb(28 23 16 / 78%) !important; border-top-color: var(--blog-line); }
+  /* BlogLayout scoped 的 .blog-shell--home .site-footer 与此处同为 (0,3,0)，靠 !important 破平局 */
+}
+
+/* ---------- 首页 ---------- */
+[data-theme='dark'] .home-page {
+  --home-ink: #ece4d6;
+  --home-muted: #9a9184;
+  --home-line: #3a332a;
+  --home-accent: #d98b4f;
+
+  .home-hero { background: #1b1712; }
+  .hero-fluid-wash {
+    background:
+      radial-gradient(ellipse 78% 86% at 74% 48%, rgb(160 100 45 / 18%), transparent 68%),
+      radial-gradient(ellipse 72% 72% at 25% 62%, rgb(255 240 210 / 5%), transparent 74%),
+      linear-gradient(118deg, #1b1712 0%, #1a140e 48%, #15100b 100%);
+  }
+  .hero-fluid-wash::after { filter: blur(54px) brightness(.5); }
+  .article-row { background: #221d15; }
+  .article-row:hover { background: #2a2318; border-color: #4a3f2e; }
+  .category-row, .category-skeleton span { background: #262016; }
+  .category-row:nth-child(4n + 2) { background: #241f14; }
+  .category-row:nth-child(4n + 3) { background: #282016; }
+  .category-row:nth-child(4n + 4) { background: #241e15; }
+  .category-error button { background: #221d15; color: var(--home-ink); }
+}
+
+/* ---------- 书遇列表 ---------- */
+[data-theme='dark'] .blog-dynamic-container { background: linear-gradient(135deg, #14110c 0%, #16120d 100%); }
+[data-theme='dark'] .blog-dynamic {
+  .dynamic-item { background: rgb(34 29 21 / 92%); border-color: rgb(233 216 190 / 12%); }
+  .dynamic-title { color: var(--blog-text); background: linear-gradient(135deg, rgb(217 139 79 / 10%) 0%, rgb(90 120 115 / 10%) 100%); -webkit-text-fill-color: currentColor; }
+  .comment-section { background: rgb(34 29 21 / 90%); border-color: rgb(233 216 190 / 12%); }
+  .comment-header { border-bottom-color: rgb(233 216 190 / 14%); }
+  .comment-header h3 { color: var(--blog-text); }
+  .comment-user .nickname { color: var(--blog-text); }
+  .dynamic-footer { border-top-color: rgb(233 216 190 / 14%); }
+}
+
+/* ---------- 文章详情 ---------- */
+[data-theme='dark'] .dynamic-detail-container { background: linear-gradient(135deg, #14110c 0%, #131008 100%); }
+[data-theme='dark'] .article-reading-shell {
+  --article-ink: #ece4d6;
+  --article-muted: #9a9184;
+  --article-paper: #221d15;
+  --article-line: rgb(233 216 190 / 13%);
+
+  .article-header { background: linear-gradient(135deg, #262015, #1f1a11); border-color: var(--article-line); }
+  .article-content-card { background: var(--article-paper); }
+  .dynamic-media { background: rgb(255 255 255 / 4%); }
+  .dynamic-media__image { background: #17130d; }
+  .mobile-toc-panel, .article-toc button:hover { background: transparent; }
+  .mobile-toc-trigger { color: var(--article-ink); }
+  .comment-header { border-bottom-color: rgb(233 216 190 / 14%); }
+  .comment-header h3 { color: var(--article-ink); }
+  .reply-editor { background: #282214; border-color: rgb(233 216 190 / 14%); }
+  .reply-editor__cancel { background: #2c2517; border-color: rgb(217 139 79 / 40%); color: #d9a06a; }
+  .dynamic-tags .tag-item { background: rgb(233 216 190 / 10%); color: var(--article-muted); }
+  .mt-banner { background: rgb(60 42 20 / 55%); border-color: rgb(217 139 79 / 35%); }
+  .mt-banner__text { color: #c9b18f; }
+  /* 正文常规色 */
+  :deep(.markdown-body p), :deep(.markdown-body li) { color: var(--blog-reading-text); }
+}
+
+/* ---------- 评论输入器 ---------- */
+[data-theme='dark'] .comment-composer {
+  background: #241f17; border-color: rgb(233 216 190 / 14%);
+  .comment-composer__fields { border-bottom-color: rgb(233 216 190 / 14%); }
+  .comment-composer__field { color: #b3a893; }
+  input, textarea { color: #ece4d6; }
+  input:focus, textarea:focus { background: #2a2419; }
+  input::placeholder, textarea::placeholder { color: #857d70; }
+}
+
+/* ---------- 搜索 / 归档 / 合集 ---------- */
+[data-theme='dark'] .blog-shell {
+  .search-results, .search-box .advanced-search-options, .category-card, .collection-card, .result-card, .catalog-row {
+    background: rgb(34 29 21 / 88%);
+  }
+  .search-input :deep(.ant-input-affix-wrapper) { background: #241f15; border-color: #3a332a; }
+  .search-input :deep(.ant-input) { color: var(--blog-text); }
+  .filter-grid .filter-label, .catalog-label, .archive-kicker, .detail-kicker { color: var(--blog-accent-strong); }
+  .search-results, .advanced-search-options { box-shadow: 0 20px 48px rgb(0 0 0 / 30%); }
+  .result-meta, .card-meta, .row-meta { border-color: rgb(233 216 190 / 12%); }
+  .no-results, .catalog-empty { color: var(--blog-text-muted); }
+}

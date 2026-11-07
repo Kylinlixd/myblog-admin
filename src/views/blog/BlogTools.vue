@@ -29,14 +29,31 @@
 </template>
 
 <script setup>
-import { ArrowRightOutlined, ThunderboltOutlined } from '@ant-design/icons-vue'
+import {
+  ArrowRightOutlined,
+  CodeOutlined,
+  FileExcelOutlined,
+  FileMarkdownOutlined,
+  PictureOutlined,
+  SafetyOutlined,
+  SearchOutlined,
+  SnippetsOutlined,
+  ThunderboltOutlined
+} from '@ant-design/icons-vue'
 import { t } from '@/i18n'
 
 defineOptions({ name: 'BlogTools' })
 
 // 工具注册表：后续追加文档转换、媒体转换等只需在此加一项
 const tools = [
-  { id: 'random-lex', url: '/tools/random-lex/index.html', icon: ThunderboltOutlined }
+  { id: 'random-lex', url: '/tools/random-lex/index.html', icon: ThunderboltOutlined },
+  { id: 'img-press', url: '/tools/img-press/index.html', icon: PictureOutlined },
+  { id: 'codec-box', url: '/tools/codec-box/index.html', icon: CodeOutlined },
+  { id: 'regex-lab', url: '/tools/regex-lab/index.html', icon: SearchOutlined },
+  { id: 'hash-kit', url: '/tools/hash-kit/index.html', icon: SafetyOutlined },
+  { id: 'json-kit', url: '/tools/json-kit/index.html', icon: SnippetsOutlined },
+  { id: 'md-convert', url: '/tools/md-convert/index.html', icon: FileMarkdownOutlined },
+  { id: 'xlsx-convert', url: '/tools/xlsx-convert/index.html', icon: FileExcelOutlined }
 ]
 </script>
 

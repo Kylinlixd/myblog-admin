@@ -1002,5 +1002,19 @@
   "logMgr.localDbHit": "ローカル DB でヒット",
   "update.title": "新バージョンがあります",
   "update.desc": "サイトが更新されました。更新して最新版をご利用ください。",
-  "update.action": "今すぐ更新"
+  "update.action": "今すぐ更新",
+  "tools.img-press.name": "画像圧縮・変換",
+  "tools.img-press.desc": "画像を一括圧縮し WebP/AVIF に変換。すべてブラウザ内で完結し、アップロードはありません。",
+  "tools.codec-box.name": "エンコード箱",
+  "tools.codec-box.desc": "Base64・URL・Unicode・JWT デコードとタイムスタンプ変換。オフライン対応。",
+  "tools.regex-lab.name": "正则デバッガー",
+  "tools.regex-lab.desc": "マッチのハイライト、キャプチャ表、置換プレビュー、よく使う正則チートシート付き。",
+  "tools.hash-kit.name": "ハッシュ・パスワード",
+  "tools.hash-kit.desc": "SHA ハッシュ、ファイル検査和、CSPRNG パスワード生成（エントロピー推定付き）。",
+  "tools.json-kit.name": "JSONキット",
+  "tools.json-kit.desc": "JSON 整形・圧縮、YAML 変換、TypeScript インターフェース生成。",
+  "tools.md-convert.name": "Markdown 変換器",
+  "tools.md-convert.desc": "プレビューしながら HTML・Word・PDF へ出力。ブログ本文と同系レンダラー。",
+  "tools.xlsx-convert.name": "表変換器",
+  "tools.xlsx-convert.desc": "Excel/CSV/JSON を相互変換。ファイルドラッグや貼り付けに対応。"
 }

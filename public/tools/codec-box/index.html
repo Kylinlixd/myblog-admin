@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>codec-box · 编解码工具箱</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23a64e23'/%3E%3Ctext x='50' y='62' font-size='42' text-anchor='middle' fill='%23fffaf2' font-family='monospace'&gt;&lt;/&gt;%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;--accent:#c86f37;--accent-strong:#a64e23;--ok:#3f7a52;--radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#171410;--paper:#211d17;--line:#3a332a;--ink:#ece4d6;--muted:#9a9184;--accent:#d98b4f;--accent-strong:#e0a06a;--ok:#6fae86}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:7px 16px;font-weight:650;cursor:pointer}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+textarea{width:100%;min-height:130px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono);resize:vertical;box-sizing:border-box}
+textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 16px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.out{width:100%;min-height:100px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono);white-space:pre-wrap;word-break:break-all;box-sizing:border-box;max-height:280px;overflow:auto}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.warn{font-size:12px;color:var(--accent-strong);margin:8px 0 0;font-weight:650}
+.ok{color:var(--ok);font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid2{grid-template-columns:1fr}}
+.kv{font:13px/1.8 var(--mono);background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--line);word-break:break-all}
+.kv b{color:var(--accent-strong)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">codec-box<small>编解码工具箱 · 纯本地处理</small></div>
+  </header>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="panels"></div>
+</div>
+
+<script>
+'use strict'
+const $ = sel => document.querySelector(sel)
+
+/* ---------- Base64（UTF-8 安全） ---------- */
+function b64encode(str) {
+  const bytes = new TextEncoder().encode(str)
+  return btoa(String.fromCharCode(...bytes))
+}
+function b64decode(str) {
+  // 去 URL-safe 变体与空白，补齐 padding
+  const norm = str.replace(/-/g, '+').replace(/_/g, '/').replace(/\s+/g, '')
+  const padded = norm + '='.repeat((4 - norm.length % 4) % 4)
+  const bytes = Uint8Array.from(atob(padded), ch => ch.charCodeAt(0))
+  return new TextDecoder().decode(bytes)
+}
+
+/* ---------- JWT 解码（仅解码，不验证签名） ---------- */
+function decodeJWT(token) {
+  const parts = token.trim().split('.')
+  if (parts.length < 2) throw new Error('JWT 需至少 header.payload 两段（以 . 分隔）')
+  const header = JSON.parse(b64decode(parts[0]))
+  const payload = JSON.parse(b64decode(parts[1]))
+  let lines = [
+    `header  : ${JSON.stringify(header)}`,
+    `payload : ${JSON.stringify(payload)}`,
+    `alg     : ${header.alg || '未声明'}`
+  ]
+  const claims = []
+  if (payload.exp) claims.push(['exp 过期时间', new Date(payload.exp * 1000).toLocaleString(), payload.exp * 1000 < Date.now() ? '已过期' : '有效期内'])
+  if (payload.iat) claims.push(['iat 签发时间', new Date(payload.iat * 1000).toLocaleString(), ''])
+  if (payload.nbf) claims.push(['nbf 生效时间', new Date(payload.nbf * 1000).toLocaleString(), ''])
+  for (const [k, v, note] of claims) lines.push(`${k} : ${v}${note ? `（${note}）` : ''}`)
+  lines.push(`signature : ${parts[2] || '无'}（${parts[2] ? '未验证，仅解码' : 'unsigned'}）`)
+  return lines.join('\n')
+}
+
+/* ---------- 时间戳 ---------- */
+function tsConvert(input) {
+  const raw = input.trim()
+  if (!raw) throw new Error('输入时间戳或日期')
+  const n = Number(raw)
+  let date
+  if (!Number.isNaN(n) && /^\d+$/.test(raw)) {
+    // 10 位秒 / 13 位毫秒自动识别
+    date = new Date(raw.length >= 13 ? n : n * 1000)
+  } else {
+    date = new Date(raw)
+  }
+  if (Number.isNaN(date.getTime())) throw new Error('无法解析为时间')
+  const sec = Math.floor(date.getTime() / 1000)
+  return [
+    `日期时间 : ${date.toLocaleString()}`,
+    `ISO 8601 : ${date.toISOString()}`,
+    `秒级时间戳 : ${sec}`,
+    `毫秒时间戳 : ${date.getTime()}`,
+    `相对 now : ${Math.round((date.getTime() - Date.now()) / 1000)} 秒（负数为过去）`
+  ].join('\n')
+}
+
+/* ---------- 面板定义 ---------- */
+const PANELS = {
+  'Base64': {
+    placeholder: '输入要编码/解码的文本（解码支持标准与 URL-safe 变体）',
+    actions: [
+      ['编码 →', () => b64encode(input())],
+      ['← 解码', () => b64decode(input())]
+    ]
+  },
+  'URL': {
+    placeholder: '输入要编码/解码的 URL 或文本',
+    actions: [
+      ['encodeURIComponent', () => encodeURIComponent(input())],
+      ['decodeURIComponent', () => decodeURIComponent(input())]
+    ]
+  },
+  'Unicode': {
+    placeholder: '输入文本或 \\uXXXX 转义序列',
+    actions: [
+      ['→ \\u 转义', () => input().split('').map(ch => ch.codePointAt(0) > 255 || /[\u4e00-\u9fff\u3000-\u303f]/.test(ch) ? '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0') : ch).join('')],
+      ['\\u → 文本', () => input().replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))]
+    ]
+  },
+  'JWT': {
+    placeholder: '粘贴 JWT（header.payload.signature），仅解码不验证签名',
+    actions: [['解码', () => decodeJWT(input())]],
+    warn: '⚠ JWT 仅做 Base64 解码展示。签名未验证——任何知道你 payload 的人都能构造 token，鉴权必须在服务端完成。'
+  },
+  '时间戳': {
+    placeholder: '输入秒/毫秒时间戳，或 "2025-01-01 08:00" 这样的日期',
+    actions: [['转换', () => tsConvert(input())]]
+  }
+}
+
+let current = 'Base64'
+const input = () => $('#input').value
+
+function render() {
+  const panel = PANELS[current]
+  $('#tabs').innerHTML = ''
+  $('#panels').innerHTML = ''
+  Object.keys(PANELS).forEach(key => {
+    const btn = document.createElement('button')
+    btn.className = 'tab' + (key === current ? ' active' : '')
+    btn.textContent = key
+    btn.addEventListener('click', () => { current = key; render() })
+    $('#tabs').append(btn)
+  })
+  const card = document.createElement('div')
+  card.className = 'card'
+  const ta = document.createElement('textarea')
+  ta.id = 'input'
+  ta.placeholder = panel.placeholder
+  card.append(ta)
+  if (panel.warn) {
+    const warn = document.createElement('p')
+    warn.className = 'warn'
+    warn.textContent = panel.warn
+    card.append(warn)
+  }
+  const row = document.createElement('div')
+  row.className = 'row'
+  panel.actions.forEach(([label, fn]) => {
+    const btn = document.createElement('button')
+    btn.className = 'primary'
+    btn.textContent = label
+    btn.addEventListener('click', () => {
+      try {
+        $('#output').textContent = fn()
+        mark(true)
+      } catch (error) {
+        $('#output').textContent = '✗ ' + error.message
+        mark(false)
+      }
+    })
+    row.append(btn)
+  })
+  const copy = document.createElement('button')
+  copy.textContent = '复制结果'
+  copy.addEventListener('click', async () => {
+    await navigator.clipboard.writeText($('#output').textContent)
+    copy.textContent = '已复制'
+    setTimeout(() => copy.textContent = '复制结果', 1200)
+  })
+  row.append(copy)
+  const out = document.createElement('div')
+  out.id = 'output'
+  out.className = 'out'
+  out.textContent = '结果'
+  card.append(row, out)
+  if (current === 'JWT') {
+    const note = document.createElement('p')
+    note.className = 'hint'
+    note.textContent = 'payload 会自动解析 exp / iat / nbf 时间声明并标注是否过期。'
+    card.append(note)
+  }
+  $('#panels').append(card)
+}
+
+function mark(ok) {
+  const out = $('#output')
+  out.style.borderColor = ok ? 'var(--ok)' : 'var(--accent-strong)'
+}
+
+render()
+</script>
+</body>
+</html>

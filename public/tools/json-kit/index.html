@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>json-kit · JSON 工具集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%235a6d3b'/%3E%3Ctext x='50' y='64' font-size='40' text-anchor='middle' fill='%23fffaf2' font-family='monospace'&gt;{}%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<style>
+:root{--bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;--accent:#c86f37;--accent-strong:#a64e23;--ok:#3f7a52;--radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#171410;--paper:#211d17;--line:#3a332a;--ink:#ece4d6;--muted:#9a9184;--accent:#d98b4f;--accent-strong:#e0a06a;--ok:#6fae86}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:7px 16px;font-weight:650;cursor:pointer}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.card h3{margin:0 0 10px;font-size:14px;color:var(--muted)}
+textarea{width:100%;min-height:300px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.7 var(--mono);resize:vertical;box-sizing:border-box}
+textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+textarea.bad{border-color:#b14f3f}
+textarea.good{border-color:var(--ok)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.err{color:#b14f3f;font-size:12px;margin:6px 0 0;font-family:var(--mono);white-space:pre-wrap}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.ts{font:12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">json-kit<small>JSON 格式化 · YAML 互转 · TypeScript 类型生成</small></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="json">JSON / YAML</button>
+    <button class="tab" data-tab="ts">JSON → TypeScript</button>
+  </div>
+
+  <div id="panel-json">
+    <div class="grid">
+      <div class="card">
+        <h3>输入（自动识别 JSON / YAML）</h3>
+        <textarea id="input" spellcheck="false">{
+  "name": "时不语之间",
+  "since": 2023,
+  "stack": ["Vue", "Django", "Java"],
+  "author": { "nickname": "小东", "role": "admin" }
+}</textarea>
+        <div class="row">
+          <button class="primary" data-cmd="fmt">格式化</button>
+          <button data-cmd="minify">压缩</button>
+          <button data-cmd="toYaml">→ YAML</button>
+          <button data-cmd="fromYaml">← YAML 转为 JSON</button>
+          <button data-cmd="copy">复制输出</button>
+          <button data-cmd="swap">输出 → 输入</button>
+        </div>
+        <p class="err" id="err" hidden></p>
+        <p class="hint">左侧输入会自动识别格式：以 { 或 [ 开头按 JSON 解析，否则按 YAML 解析。</p>
+      </div>
+      <div class="card">
+        <h3>输出</h3>
+        <textarea id="output" spellcheck="false" readonly>结果</textarea>
+        <p class="hint">YAML 转换由 js-yaml（CDN 按需加载）完成；TS 类型为本地纯前端生成。</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-ts" hidden>
+    <div class="grid">
+      <div class="card">
+        <h3>JSON 输入</h3>
+        <textarea id="tsInput" spellcheck="false">[
+  { "id": 1, "nickname": "小东", "role": "admin", "active": true, "bio": null }
+]</textarea>
+        <div class="row">
+          <label class="ts">根类型名 <input id="tsRoot" value="Root" style="width:100px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--bg);color:var(--ink);font:13px var(--mono)"></label>
+          <button class="primary" id="tsBtn">生成 TypeScript</button>
+          <button id="tsCopy">复制</button>
+        </div>
+        <p class="err" id="tsErr" hidden></p>
+        <p class="hint">数组取元素并集推断；null → 可选字段；同字段多类型 → 联合类型；接口名由 key PascalCase 生成，递归嵌套。</p>
+      </div>
+      <div class="card">
+        <h3>TypeScript 输出</h3>
+        <textarea id="tsOutput" spellcheck="false" readonly>interface</textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+
+/* ---------- JSON / YAML 面板 ---------- */
+function parseAuto(text) {
+  const trimmed = text.trim()
+  if (!trimmed) throw new Error('输入为空')
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) return JSON.parse(trimmed)
+  if (typeof jsyaml === 'undefined') throw new Error('js-yaml（CDN）尚未加载完成，请重试')
+  return jsyaml.load(trimmed)
+}
+
+function showOutput(text, ok) {
+  const out = $('output')
+  out.value = text
+  out.classList.toggle('good', ok)
+  out.classList.toggle('bad', !ok)
+}
+
+function markInput(ok, errText) {
+  const input = $('input')
+  input.classList.toggle('bad', !ok)
+  input.classList.toggle('good', ok)
+  const err = $('err')
+  err.hidden = ok
+  err.textContent = ok ? '' : errText
+}
+
+const commands = {
+  fmt() {
+    const data = parseAuto($('input').value)
+    markInput(true, '')
+    showOutput(JSON.stringify(data, null, 2), true)
+  },
+  minify() {
+    const data = parseAuto($('input').value)
+    markInput(true, '')
+    showOutput(JSON.stringify(data), true)
+  },
+  toYaml() {
+    if (typeof jsyaml === 'undefined') throw new Error('js-yaml（CDN）尚未加载完成')
+    const data = parseAuto($('input').value)
+    markInput(true, '')
+    showOutput(jsyaml.dump(data, { indent: 2, lineWidth: 100 }), true)
+  },
+  fromYaml() {
+    // YAML → JSON：强制按 YAML 解析（JSON 是 YAML 子集，所以粘贴 JSON 也能转）
+    if (typeof jsyaml === 'undefined') throw new Error('js-yaml（CDN）尚未加载完成')
+    const data = jsyaml.load($('input').value)
+    markInput(true, '')
+    showOutput(JSON.stringify(data, null, 2), true)
+  },
+  copy() {
+    navigator.clipboard.writeText($('output').value)
+  },
+  swap() {
+    $('input').value = $('output').value
+    markInput(true, '')
+    showOutput('已交换到输入区', true)
+  }
+}
+
+document.querySelectorAll('[data-cmd]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    try {
+      commands[btn.dataset.cmd]()
+      if (btn.dataset.cmd !== 'copy') $('err').hidden = true
+    } catch (error) {
+      markInput(false, '✗ ' + error.message)
+    }
+  })
+})
+
+/* ---------- JSON → TypeScript ---------- */
+const pascal = key => key.replace(/[-_](\w)/g, (_, ch) => ch.toUpperCase())
+  .replace(/^(\w)/, ch => ch.toUpperCase())
+
+function typeOf(value, interfaceName, defs, depth) {
+  if (value === null) return 'null'
+  if (Array.isArray(value)) {
+    if (!value.length) return 'unknown[]'
+    const types = [...new Set(value.map(item => typeOf(item, interfaceName, defs, depth)))]
+    return types.length === 1 ? `${types[0]}[]` : `(${types.join(' | ')})[]`
+  }
+  switch (typeof value) {
+    case 'string': return 'string'
+    case 'number': return 'number'
+    case 'boolean': return 'boolean'
+    case 'object': {
+      const name = interfaceName
+      if (depth > 8) return 'unknown // 嵌套过深'
+      defs.set(name, value)
+      return name
+    }
+    default: return 'unknown'
+  }
+}
+
+function emitInterface(name, object, defs, emitted) {
+  emitted.add(name)
+  const lines = [`interface ${name} {`]
+  const subTypes = []
+  for (const [key, value] of Object.entries(object)) {
+    const isNull = value === null
+    const target = isNull ? undefined : value
+    let childName = null
+    let rendered
+    if (target !== undefined && typeof target === 'object' && !Array.isArray(target)) {
+      childName = pascal(key) + 'T'
+      rendered = childName
+    } else if (Array.isArray(target)) {
+      const objects = target.filter(item => item && typeof item === 'object' && !Array.isArray(item))
+      if (objects.length) {
+        childName = pascal(key).replace(/s$/, '') + 'T'
+        const elemTypes = objects.map(obj => childName)
+        rendered = `${childName}[]`
+        // 合并数组对象键的并集
+        const merged = {}
+        objects.forEach(obj => Object.keys(obj).forEach(k => { if (!(k in merged)) merged[k] = obj[k] }))
+        defs.set(childName, merged)
+      } else {
+        rendered = typeOf(target, name + pascal(key), defs, 0)
+      }
+    } else {
+      rendered = typeOf(value, name, defs, 0)
+    }
+    const optional = isNull || value === undefined
+    lines.push(`  ${/^[A-Za-z_$][\w$]*$/.test(key) ? key : JSON.stringify(key)}${optional ? '?' : ''}: ${rendered}`)
+    if (childName && !emitted.has(childName)) subTypes.push(childName)
+  }
+  lines.push('}')
+  let result = lines.join('\n')
+  for (const child of subTypes) {
+    if (defs.has(child) && !emitted.has(child)) {
+      result = emitInterface(child, defs.get(child), defs, emitted) + '\n\n' + result
+    }
+  }
+  return result
+}
+
+$('tsBtn').addEventListener('click', () => {
+  const err = $('tsErr')
+  try {
+    const data = JSON.parse($('tsInput').value)
+    const rootName = pascal($('tsRoot').value || 'Root')
+    const defs = new Map()
+    const isRootArray = Array.isArray(data)
+    const objects = isRootArray
+      ? data.filter(item => item && typeof item === 'object' && !Array.isArray(item))
+      : [data]
+    if (!objects.length) throw new Error('根级必须是对象，或包含对象的数组')
+    const merged = {}
+    objects.forEach(obj => Object.keys(obj).forEach(k => { if (!(k in merged)) merged[k] = obj[k] }))
+    defs.set(rootName, merged)
+    const emitted = new Set()
+    let output = emitInterface(rootName, merged, defs, emitted)
+    if (isRootArray) output += `\n\ntype ${rootName}List = ${rootName}[]`
+    $('tsOutput').value = output
+    err.hidden = true
+  } catch (error) {
+    err.hidden = false
+    err.textContent = '✗ ' + error.message
+  }
+})
+$('tsCopy').addEventListener('click', () => navigator.clipboard.writeText($('tsOutput').value))
+
+/* ---------- Tab 切换 ---------- */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el === btn))
+    $('panel-json').hidden = btn.dataset.tab !== 'json'
+    $('panel-ts').hidden = btn.dataset.tab !== 'ts'
+  })
+})
+
+// 初始执行一次格式化
+commands.fmt()
+</script>
+</body>
+</html>

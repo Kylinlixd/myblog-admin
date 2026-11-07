@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>img-press · 图片压缩与格式转换</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23172063d'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;
+  --accent:#c86f37;--accent-strong:#a64e23;--ok:#3f7a52;--radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#171410;--paper:#211d17;--line:#3a332a;--ink:#ece4d6;--muted:#9a9184;--accent:#d98b4f;--accent-strong:#e0a06a;--ok:#6fae86}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800;letter-spacing:.02em}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:36px 16px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .2s,background .2s}
+.drop.over{border-color:var(--accent);background:rgba(200,111,55,.06)}
+.drop strong{color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+label.f{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+select,input[type=range]{accent-color:var(--accent)}
+select{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:7px 16px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+button.primary:disabled{opacity:.5;cursor:not-allowed}
+button:disabled{opacity:.5;cursor:not-allowed}
+.item{display:grid;grid-template-columns:72px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-top:1px dashed var(--line)}
+.item:first-of-type{border-top:0}
+.thumb{width:72px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--bg)}
+.meta{min-width:0}
+.name{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.saving{color:var(--ok);font-weight:700}
+.size-worse{color:var(--accent-strong)}
+.note{font-size:12px;color:var(--muted);margin:8px 0 0}
+.fmt{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(200,111,55,.12);color:var(--accent-strong)}
+.support{font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">img-press<small>图片压缩 · 格式转换 · 纯本地处理</small></div>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop">
+      <strong>拖拽图片到这里</strong>，或点击选择<br>
+      <span class="support" id="supportInfo">检测编码能力中…</span>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+    <div class="row" style="margin-top:14px">
+      <label class="f">输出格式
+        <select id="format"></select>
+      </label>
+      <label class="f">质量 <span class="num" id="qVal">0.8</span>
+        <input type="range" id="quality" min="0.1" max="1" step="0.05" value="0.8">
+      </label>
+      <label class="f">最长边 <span class="num" id="maxVal">不限制</span>
+        <input type="range" id="maxDim" min="0" max="4096" step="128" value="0">
+      </label>
+      <button class="primary" id="runBtn" disabled>开始压缩</button>
+      <button id="dlAllBtn" disabled>全部下载</button>
+    </div>
+    <p class="note">所有处理都在你的浏览器内完成（Canvas 原生编码），图片不会上传到任何服务器。EXIF 方向会自动修正；输出会移除全部元信息（含 GPS）。</p>
+  </div>
+
+  <div class="card" id="listCard" hidden>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB'
+
+/* ---- 编码能力检测：浏览器支持哪些输出格式就提供哪些 ---- */
+const CANDIDATES = [
+  ['image/webp', 'WebP'],
+  ['image/avif', 'AVIF'],
+  ['image/jpeg', 'JPEG'],
+  ['image/png', 'PNG']
+]
+const supported = []
+function detectSupport() {
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = 2
+  let pending = CANDIDATES.length
+  CANDIDATES.forEach(([mime, label]) => {
+    canvas.toBlob(blob => {
+      // Safari 会静默回退成 png：blob.type 才是真实能力
+      if (blob && blob.type === mime) supported.push([mime, label])
+      if (--pending === 0) {
+        supported.push(['original', '保留原格式'])
+        supported.forEach(([mime, label]) => {
+          const opt = document.createElement('option')
+          opt.value = mime
+          opt.textContent = label
+          $('format').appendChild(opt)
+        })
+        $('supportInfo').textContent = '本浏览器可编码：' + supported.filter(s => s[0] !== 'original').map(s => s[1]).join(' / ')
+      }
+    }, mime, 0.8)
+  })
+}
+detectSupport()
+
+/* ---- 选择与拖拽 ---- */
+const files = []
+$('drop').addEventListener('click', () => $('file').click())
+$('file').addEventListener('change', e => addFiles([...e.target.files]))
+;['dragover', 'dragenter'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over') }))
+;['dragleave', 'drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over') }))
+$('drop').addEventListener('drop', e => addFiles([...e.dataTransfer.files]))
+
+function addFiles(incoming) {
+  for (const file of incoming) {
+    if (!file.type.startsWith('image/')) continue
+    files.push({ file, result: null })
+  }
+  renderList()
+}
+
+/* ---- 设置 ---- */
+$('quality').addEventListener('input', e => { $('qVal').textContent = Number(e.target.value).toFixed(2) })
+$('maxDim').addEventListener('input', e => { $('maxVal').textContent = Number(e.target.value) === 0 ? '不限制' : e.target.value + ' px' })
+
+/* ---- 压缩核心：createImageBitmap 修正 EXIF 方向，Canvas 重编码 ---- */
+async function compress(entry, mime, quality, maxDim) {
+  const bitmap = await createImageBitmap(entry.file, { imageOrientation: 'from-image' })
+  let { width, height } = bitmap
+  if (maxDim > 0 && Math.max(width, height) > maxDim) {
+    const ratio = maxDim / Math.max(width, height)
+    width = Math.round(width * ratio)
+    height = Math.round(height * ratio)
+  }
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height)
+  bitmap.close()
+  const outMime = mime === 'original' ? (entry.file.type === 'image/png' ? 'image/png' : 'image/jpeg') : mime
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, outMime, quality))
+  if (!blob) throw new Error('浏览器编码失败（可能不支持该格式）')
+  return blob
+}
+
+/* ---- 渲染与执行 ---- */
+function renderList() {
+  $('listCard').hidden = files.length === 0
+  $('runBtn').disabled = files.length === 0
+  $('list').innerHTML = ''
+  files.forEach((entry, index) => {
+    const row = document.createElement('div')
+    row.className = 'item'
+    const thumb = document.createElement('img')
+    thumb.className = 'thumb'
+    thumb.src = entry.result?.url || URL.createObjectURL(entry.file)
+    thumb.onload = () => { if (!entry.result) URL.revokeObjectURL(thumb.src) }
+    const meta = document.createElement('div')
+    meta.className = 'meta'
+    const name = document.createElement('div')
+    name.className = 'name'
+    name.textContent = entry.file.name
+    const sub = document.createElement('div')
+    sub.className = 'sub'
+    sub.innerHTML = `<span class="num">原图 ${fmtBytes(entry.file.size)}</span>` +
+      (entry.result
+        ? `<span class="num">→ ${entry.result.mime.split('/')[1].toUpperCase()} ${fmtBytes(entry.result.blob.size)}</span>
+           <span class="${entry.result.blob.size < entry.file.size ? 'saving' : 'size-worse'}">${entry.result.blob.size < entry.file.size ? '−' : '+'}${Math.abs(Math.round((1 - entry.result.blob.size / entry.file.size) * 100))}%</span>`
+        : `<span class="fmt">${entry.file.type.split('/')[1]?.toUpperCase() || '?'}</span>`)
+    meta.append(name, sub)
+    const actions = document.createElement('div')
+    if (entry.result) {
+      const dl = document.createElement('button')
+      dl.textContent = '下载'
+      dl.addEventListener('click', () => download(entry))
+      actions.append(dl)
+    }
+    row.append(thumb, meta, actions)
+    $('list').append(row)
+  })
+}
+
+function extOf(mime) {
+  return mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1]
+}
+
+function download(entry) {
+  const a = document.createElement('a')
+  a.href = entry.result.url
+  const base = entry.file.name.replace(/\.[^.]+$/, '')
+  a.download = `${base}.${extOf(entry.result.mime)}`
+  a.click()
+}
+
+$('runBtn').addEventListener('click', async () => {
+  $('runBtn').disabled = true
+  $('runBtn').textContent = '压缩中…'
+  const mime = $('format').value
+  const quality = Number($('quality').value)
+  const maxDim = Number($('maxDim').value)
+  for (const entry of files) {
+    try {
+      const blob = await compress(entry, mime, quality, maxDim)
+      if (entry.result?.url) URL.revokeObjectURL(entry.result.url)
+      entry.result = { blob, mime: blob.type || outMimeFallback(mime), url: URL.createObjectURL(blob) }
+    } catch (error) {
+      alert(`${entry.file.name}：${error.message}`)
+    }
+    renderList()
+  }
+  $('runBtn').disabled = false
+  $('runBtn').textContent = '开始压缩'
+  $('dlAllBtn').disabled = files.every(entry => !entry.result)
+})
+
+function outMimeFallback(mime) {
+  return mime === 'original' ? 'image/jpeg' : mime
+}
+
+$('dlAllBtn').addEventListener('click', () => {
+  // 逐个触发下载：浏览器会合并为多文件保存
+  files.filter(entry => entry.result).forEach((entry, index) => {
+    setTimeout(() => download(entry), index * 300)
+  })
+})
+</script>
+</body>
+</html>

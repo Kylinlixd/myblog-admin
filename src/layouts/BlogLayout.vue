@@ -33,6 +33,10 @@
             </button>
             <input v-model.trim="query" type="search" autocomplete="off" :aria-label="t('nav.searchAria')" :placeholder="t('nav.searchPlaceholder')" />
           </form>
+          <button class="lang-button" type="button" :aria-label="theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'" :title="theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'" @click="theme = toggleTheme()">
+            <bulb-outlined v-if="theme === 'dark'" />
+            <bulb-outlined v-else />
+          </button>
           <a-dropdown :trigger="['click']" placement="bottomRight">
             <button class="lang-button" type="button" :aria-label="t('nav.language')" :title="t('nav.language')">
               <global-outlined />
@@ -70,6 +74,11 @@
         >
           {{ t(`nav.${item.key}`) }}
         </router-link>
+        <button class="lang-button lang-button--mobile" type="button" @click="theme = toggleTheme()">
+          <bulb-outlined v-if="theme === 'dark'" />
+          <bulb-outlined v-else />
+          {{ theme === 'dark' ? '亮色模式' : '暗色模式' }}
+        </button>
         <a-dropdown :trigger="['click']" placement="bottomRight">
           <button class="lang-button lang-button--mobile" type="button" :aria-label="t('nav.language')" @click="mobileOpen = false">
             <global-outlined />
@@ -110,13 +119,15 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { resolveBlogNav } from '@/utils/blogNav'
 import { LOCALES, currentLocale, setLocale, t, prefetchLocale } from '@/i18n'
+import { currentTheme, toggleTheme } from '@/utils/blogTheme'
 
 const router = useRouter()
 const route = useRoute()
 const query = ref('')
+const theme = ref(currentTheme())
 const mobileOpen = ref(false)
 const year = new Date().getFullYear()
 

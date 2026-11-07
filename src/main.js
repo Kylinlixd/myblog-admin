@@ -7,7 +7,12 @@ import App from './App.vue'
 import router from './router'
 import { pinia, useUserStore } from './stores'
 import { t, applyInitialLocale } from './i18n'
+import { applyInitialTheme, watchSystemTheme } from './utils/blogTheme'
 import './styles/main.scss'
+
+// 主题必须在样式渲染前应用，否则暗色用户首帧闪白
+applyInitialTheme()
+watchSystemTheme()
 
 const app = createApp(App)
 

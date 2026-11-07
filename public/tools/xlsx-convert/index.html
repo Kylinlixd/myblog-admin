@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>xlsx-convert · 表格转换器</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%233f6970'/%3E%3Ctext x='50' y='62' font-size='30' text-anchor='middle' fill='%23fffaf2' font-family='monospace'&gt;XLS%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;--accent:#c86f37;--accent-strong:#a64e23;--ok:#3f7a52;--radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#171410;--paper:#211d17;--line:#3a332a;--ink:#ece4d6;--muted:#9a9184;--accent:#d98b4f;--accent-strong:#e0a06a;--ok:#6fae86}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:28px;text-align:center;color:var(--muted);cursor:pointer}
+.drop.over{border-color:var(--accent);background:rgba(200,111,55,.06)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+button:disabled{opacity:.5;cursor:not-allowed}
+select{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+textarea{width:100%;min-height:220px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono);resize:vertical;box-sizing:border-box}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:380px}
+table{border-collapse:collapse;font-size:13px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 12px;text-align:left;font-family:var(--mono);white-space:nowrap}
+th{background:var(--bg);position:sticky;top:0}
+.err{color:#b14f3f;font-size:12px;font-family:var(--mono)}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.meta{font-size:12px;color:var(--muted);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">xlsx-convert<small>Excel ↔ CSV / JSON · 纯本地解析</small></div>
+  </header>
+
+  <div class="card">
+    <div class="drop" id="drop">拖入 <strong>.xlsx / .xls / .csv</strong> 文件，或点击选择</div>
+    <input type="file" id="file" accept=".xlsx,.xls,.csv" hidden>
+    <div class="row">
+      <span class="meta" id="meta">未载入文件</span>
+    </div>
+  </div>
+
+  <div class="card" id="dataCard" hidden>
+    <h3>数据预览（首 100 行）</h3>
+    <div class="tablewrap"><table id="grid"></table></div>
+    <div class="row">
+      <button class="primary" id="toCsvBtn">导出 CSV</button>
+      <button class="primary" id="toJsonBtn">导出 JSON</button>
+      <button class="primary" id="toMdBtn">导出 Markdown 表格</button>
+      <button class="primary" id="toXlsxBtn">导出 Excel (.xlsx)</button>
+      <label class="meta">工作表 <select id="sheetSel"></select></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>粘贴文本 → 导出</h3>
+    <textarea id="paste" placeholder="直接粘贴 CSV / TSV（从 Excel 复制出来就是 TSV），或 JSON 数组，然后选择导出格式" spellcheck="false"></textarea>
+    <div class="row">
+      <span class="meta">导出为</span>
+      <button id="pasteXlsx">Excel (.xlsx)</button>
+      <button id="pasteCsv">CSV</button>
+      <button id="pasteJson">JSON</button>
+      <span class="err" id="err" hidden></span>
+    </div>
+    <p class="hint">JSON 数组（对象数组或数组的数组）会自动识别表头；SheetJS 在页面加载时按需从 CDN 引入，数据不经过任何服务器。</p>
+  </div>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+let workbook = null
+let currentRows = null // [{header:[], rows:[[]]}]
+
+function showErr(msg) {
+  const err = $('err')
+  err.hidden = !msg
+  err.textContent = msg ? '✗ ' + msg : ''
+}
+
+/* ---------- 读文件 ---------- */
+$('drop').addEventListener('click', () => $('file').click())
+$('file').addEventListener('change', e => readFile(e.target.files[0]))
+;['dragover', 'dragenter'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over') }))
+;['dragleave', 'drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over') }))
+$('drop').addEventListener('drop', e => readFile(e.dataTransfer.files[0]))
+
+function readFile(file) {
+  if (!file) return
+  showErr('')
+  const reader = new FileReader()
+  reader.onload = e => {
+    try {
+      workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true })
+      const select = $('sheetSel')
+      select.innerHTML = ''
+      workbook.SheetNames.forEach(name => {
+        const opt = document.createElement('option')
+        opt.value = name
+        opt.textContent = name
+        select.append(opt)
+      })
+      select.onchange = () => renderSheet(select.value)
+      if (workbook.SheetNames.length) renderSheet(workbook.SheetNames[0])
+      $('dataCard').hidden = false
+      $('meta').textContent = `${file.name} · ${fmtBytes(file.size)} · ${workbook.SheetNames.length} 个工作表`
+    } catch (error) {
+      showErr(error.message)
+    }
+  }
+  reader.readAsArrayBuffer(file)
+}
+
+const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB'
+
+/* ---------- 渲染与导出 ---------- */
+function renderSheet(name) {
+  const sheet = workbook.Sheets[name]
+  currentRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false })
+  const grid = $('grid')
+  grid.innerHTML = ''
+  currentRows.slice(0, 100).forEach((row, rIndex) => {
+    const tr = document.createElement('tr')
+    row.forEach(cell => {
+      const el = document.createElement(rIndex === 0 ? 'th' : 'td')
+      el.textContent = String(cell ?? '')
+      tr.append(el)
+    })
+    grid.append(tr)
+  })
+}
+
+function download(blob, filename) {
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = filename
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000)
+}
+
+function headerRow(header, body, start = 0) {
+  return header.map((_, col) => body.slice(start).map(row => row[col] ?? ''))
+}
+
+$('toCsvBtn').addEventListener('click', () => {
+  if (!workbook) return
+  const csv = XLSX.utils.sheet_to_csv(workbook.Sheets[$('sheetSel').value])
+  download(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }), `${$('sheetSel').value}.csv`)
+})
+
+$('toJsonBtn').addEventListener('click', () => {
+  if (!workbook) return
+  const json = XLSX.utils.sheet_to_json(workbook.Sheets[$('sheetSel').value])
+  download(new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }), `${$('sheetSel').value}.json`)
+})
+
+$('toMdBtn').addEventListener('click', () => {
+  if (!workbook || !currentRows.length) return
+  const [header = [], ...body] = currentRows
+  const lines = [
+    `| ${header.join(' | ')} |`,
+    `| ${header.map(() => '---').join(' | ')} |`,
+    ...body.map(row => `| ${row.map(c => String(c ?? '').replace(/\|/g, '\\|')).join(' | ')} |`)
+  ]
+  download(new Blob([lines.join('\n')], { type: 'text/markdown' }), `${$('sheetSel').value}.md`)
+})
+
+$('toXlsxBtn').addEventListener('click', () => {
+  if (!workbook) return
+  download(XLSX.write(workbook, { bookType: 'xlsx', type: 'array' }), `${$('sheetSel').value}.xlsx`)
+})
+
+/* ---------- 粘贴文本 → 导出 ---------- */
+function parsePaste(text) {
+  const trimmed = text.trim()
+  if (!trimmed) throw new Error('没有输入内容')
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+    const data = JSON.parse(trimmed)
+    if (!Array.isArray(data) || !data.length) throw new Error('JSON 需为非空数组')
+    if (typeof data[0] === 'object' && !Array.isArray(data[0])) {
+      const header = [...data.reduce((keys, row) => { Object.keys(row).forEach(k => keys.add(k)); return keys }, new Set())]
+      const body = data.map(row => header.map(k => row[k] ?? ''))
+      return { header, body: [header, ...body] }
+    }
+    const header = data[0].map((_, i) => `列${i + 1}`)
+    return { header, body: [header, ...data] }
+  }
+  // CSV / TSV 自动识别
+  const delimiter = trimmed.includes('\t') ? '\t' : ','
+  const rows = []
+  let field = '', row = [], inQuotes = false
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i]
+    if (inQuotes) {
+      if (ch === '"' && trimmed[i + 1] === '"') { field += '"'; i++ }
+      else if (ch === '"') inQuotes = false
+      else field += ch
+    } else if (ch === '"') {
+      inQuotes = true
+    } else if (ch === delimiter) {
+      row.push(field); field = ''
+    } else if (ch === '\n' || (ch === '\r' && trimmed[i + 1] === '\n')) {
+      row.push(field); rows.push(row); field = ''; row = []
+      if (ch === '\r') i++
+    } else {
+      field += ch
+    }
+  }
+  row.push(field); rows.push(row)
+  return { header: rows[0], body: rows }
+}
+
+$('pasteXlsx').addEventListener('click', () => {
+  try {
+    const { body } = parsePaste($('paste').value)
+    const sheet = XLSX.utils.aoa_to_sheet(body)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, sheet, 'Sheet1')
+    download(XLSX.write(wb, { bookType: 'xlsx', type: 'array' }), 'converted.xlsx')
+    showErr('')
+  } catch (error) { showErr(error.message) }
+})
+
+$('pasteCsv').addEventListener('click', () => {
+  try {
+    const { body } = parsePaste($('paste').value)
+    const csv = body.map(row => row.map(cell => {
+      const value = String(cell ?? '')
+      return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+    }).join(',')).join('\n')
+    download(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }), 'converted.csv')
+    showErr('')
+  } catch (error) { showErr(error.message) }
+})
+
+$('pasteJson').addEventListener('click', () => {
+  try {
+    const { header, body } = parsePaste($('paste').value)
+    const data = body.slice(1).map(row => Object.fromEntries(header.map((key, i) => [key, row[i] ?? ''])))
+    download(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }), 'converted.json')
+    showErr('')
+  } catch (error) { showErr(error.message) }
+})
+</script>
+</body>
+</html>

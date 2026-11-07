@@ -1010,5 +1010,19 @@
   "logMgr.localDbHit": "Matched in local DB",
   "update.title": "New version available",
   "update.desc": "The site has been updated. Refresh to get the latest version.",
-  "update.action": "Refresh now"
+  "update.action": "Refresh now",
+  "tools.img-press.name": "Image Compressor",
+  "tools.img-press.desc": "Batch-compress images and convert to WebP/AVIF entirely in your browser. EXIF orientation fixed automatically — nothing is uploaded.",
+  "tools.codec-box.name": "Codec Box",
+  "tools.codec-box.desc": "Base64, URL, Unicode, JWT decoding and timestamp conversion — works offline.",
+  "tools.regex-lab.name": "Regex Lab",
+  "tools.regex-lab.desc": "Live match highlighting, capture-group tables, and replace preview with common-pattern cheatsheet.",
+  "tools.hash-kit.name": "Hash & Password Kit",
+  "tools.hash-kit.desc": "SHA digests, file checksums, and a CSPRNG password generator with entropy estimation.",
+  "tools.json-kit.name": "JSON Kit",
+  "tools.json-kit.desc": "Format/minify JSON, convert YAML, and generate TypeScript interfaces from JSON.",
+  "tools.md-convert.name": "Markdown Converter",
+  "tools.md-convert.desc": "Live preview with export to HTML, Word, or print-to-PDF — same renderer family as the blog.",
+  "tools.xlsx-convert.name": "Table Converter",
+  "tools.xlsx-convert.desc": "Convert Excel/CSV/JSON by dropping files or pasting text; parsed locally with SheetJS."
 }
