@@ -718,7 +718,7 @@ onActivated(() => {
 .dynamic-timeline__nav .timeline-month::before {
   position: absolute;
   top: 4px;
-  left: -14px;
+  left: -8px;
   width: 9px;
   height: 9px;
   border: 2px solid var(--blog-line-strong);
