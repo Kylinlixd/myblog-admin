@@ -668,7 +668,7 @@ onActivated(() => {
   grid-template-columns: 56px minmax(0, 1fr);
   column-gap: 20px;
   align-items: center;
-  padding: 2px 0;
+  padding: 6px 0;
   font-weight: 800;
 }
 .timeline-year-toggle .year {
@@ -683,8 +683,8 @@ onActivated(() => {
 .timeline-year-toggle .caret {
   grid-column: 2;
   grid-row: 1;
-  justify-self: start;
-  margin-left: 24px;
+  justify-self: end;
+  margin-right: calc(11px + 3em);
   font-size: 10px;
   transition: transform .2s ease;
 }
