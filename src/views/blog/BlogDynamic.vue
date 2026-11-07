@@ -673,6 +673,7 @@ onActivated(() => {
 }
 .timeline-year-toggle .year {
   grid-column: 1;
+  grid-row: 1;
   justify-self: end;
   font-size: 16px;
   font-weight: 800;
@@ -681,6 +682,7 @@ onActivated(() => {
 }
 .timeline-year-toggle .caret {
   grid-column: 2;
+  grid-row: 1;
   justify-self: start;
   margin-left: 24px;
   font-size: 10px;
@@ -689,6 +691,7 @@ onActivated(() => {
 .timeline-year-toggle .caret.is-collapsed { transform: rotate(-90deg); }
 .timeline-year-toggle .year-total {
   grid-column: 2;
+  grid-row: 1;
   justify-self: end;
   font-size: 11px;
   font-weight: 500;

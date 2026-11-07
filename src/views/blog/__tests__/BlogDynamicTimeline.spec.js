@@ -70,14 +70,15 @@ describe('书遇时间轴：年份分组 + 月份本地化', () => {
     expect(wrapper.findAll('.timeline-year-toggle')[0].attributes('aria-expanded')).toBe('true')
     expect(wrapper.findAll('.timeline-month').map(el => el.text())).toEqual(['11月6 篇', '10月27 篇', '9月34 篇', '12月8 篇'])
 
-    // 点击 2026 年头 → 该年月份折叠，2025 不受影响
+    // 点击 2026 年头 → 该年月份折叠（v-show 隐藏，DOM 仍在——断言可见性而非存在性），2025 不受影响
     await wrapper.findAll('.timeline-year-toggle')[0].trigger('click')
-    expect(wrapper.findAll('.timeline-month').map(el => el.text())).toEqual(['12月8 篇'])
+    const visibleMonths = () => wrapper.findAll('.timeline-month').filter(el => el.isVisible()).map(el => el.text())
+    expect(visibleMonths()).toEqual(['12月8 篇'])
     expect(wrapper.findAll('.timeline-year-toggle')[0].attributes('aria-expanded')).toBe('false')
 
     // 再点 → 展开
     await wrapper.findAll('.timeline-year-toggle')[0].trigger('click')
-    expect(wrapper.findAll('.timeline-month')).toHaveLength(4)
+    expect(visibleMonths()).toEqual(['11月6 篇', '10月27 篇', '9月34 篇', '12月8 篇'])
   })
 
   it('当前筛选的年份在折叠头上高亮（is-filtered）', async () => {
