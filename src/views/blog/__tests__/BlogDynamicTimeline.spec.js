@@ -52,29 +52,43 @@ describe('书遇时间轴：年份分组 + 月份本地化', () => {
   it('月份按当前语言本地化（后端 monthLabel 恒为中文，前端以 key 重新推导）', async () => {
     await mountPage()
     // zh 默认：Intl 'short' 月份 = 11月/10月/9月/12月（首个 strong 是「全部」按钮）
-    expect(texts('.dynamic-timeline__nav strong')).toEqual(['动态', '11月', '10月', '9月', '12月'])
+    expect(texts('.dynamic-timeline__nav .timeline-month strong')).toEqual(['11月', '10月', '9月', '12月'])
 
     await ensureLocaleLoaded('en')
     setLocale('en')
     await flushPromises()
-    expect(texts('.dynamic-timeline__nav strong')).toEqual(['Articles', 'Nov', 'Oct', 'Sep', 'Dec'])
+    expect(texts('.dynamic-timeline__nav .timeline-month strong')).toEqual(['Nov', 'Oct', 'Sep', 'Dec'])
     expect(currentLocale.value).toBe('en')
   })
 
-  it('年份只在每年第一个月显示，后续月份隐藏占位形成分组', async () => {
+  it('年份分组行：显示年合计 + 折叠箭头，点击折叠/展开该年月份', async () => {
     await mountPage()
-    const yearEls = wrapper.findAll('.dynamic-timeline__nav .timeline-year')
-    expect(yearEls.map(el => el.text())).toEqual(['全部', '2026', '2026', '2026', '2025'])
-    // 2026 的后两个月重复 → 隐藏占位；2025 是新年份 → 显示
-    expect(yearEls[1].classes()).not.toContain('is-dup')
-    expect(yearEls[2].classes()).toContain('is-dup')
-    expect(yearEls[3].classes()).toContain('is-dup')
-    expect(yearEls[4].classes()).not.toContain('is-dup')
-    // 每年首月的按钮带 has-year 分组标记（供桌面端加组间距）
-    const buttons = wrapper.findAll('.dynamic-timeline__nav button')
-    expect(buttons[1].classes()).toContain('has-year')
-    expect(buttons[2].classes()).not.toContain('has-year')
-    expect(buttons[4].classes()).toContain('has-year')
+    // 年合计 = 该年全部月份之和（6+27+34=67）
+    const toggleTexts = () => wrapper.findAll('.timeline-year-toggle').map(el => el.text())
+    expect(toggleTexts()).toEqual(['202667 篇', '20258 篇'])
+    // 默认全部展开（aria-expanded true），月份可见
+    expect(wrapper.findAll('.timeline-year-toggle')[0].attributes('aria-expanded')).toBe('true')
+    expect(wrapper.findAll('.timeline-month').map(el => el.text())).toEqual(['11月6 篇', '10月27 篇', '9月34 篇', '12月8 篇'])
+
+    // 点击 2026 年头 → 该年月份折叠，2025 不受影响
+    await wrapper.findAll('.timeline-year-toggle')[0].trigger('click')
+    expect(wrapper.findAll('.timeline-month').map(el => el.text())).toEqual(['12月8 篇'])
+    expect(wrapper.findAll('.timeline-year-toggle')[0].attributes('aria-expanded')).toBe('false')
+
+    // 再点 → 展开
+    await wrapper.findAll('.timeline-year-toggle')[0].trigger('click')
+    expect(wrapper.findAll('.timeline-month')).toHaveLength(4)
+  })
+
+  it('当前筛选的年份在折叠头上高亮（is-filtered）', async () => {
+    await mountPage()
+    // 未筛选：无高亮
+    expect(wrapper.findAll('.timeline-year-toggle')[0].classes()).not.toContain('is-filtered')
+    // 选 2026-09 → 2026 年头高亮（点击后重渲染，需重新查找元素）
+    await wrapper.findAll('.timeline-month')[2].trigger('click')
+    const toggles = wrapper.findAll('.timeline-year-toggle')
+    expect(toggles[0].classes()).toContain('is-filtered')
+    expect(toggles[1].classes()).not.toContain('is-filtered')
   })
 
   it('key 缺失或非法时回退后端 monthLabel，不抛错', async () => {
@@ -84,7 +98,7 @@ describe('书遇时间轴：年份分组 + 月份本地化', () => {
       { key: '', year: 2026, monthLabel: '十一月（脏数据）', count: 1 }
     ]}))
     await mountPage()
-    expect(texts('.dynamic-timeline__nav strong')).toEqual(['动态', '十一月（脏数据）'])
-    expect(texts('.dynamic-timeline__nav .timeline-year')).toEqual(['全部', '2026'])
+    expect(texts('.dynamic-timeline__nav .timeline-month strong')).toEqual(['十一月（脏数据）'])
+    expect(wrapper.findAll('.timeline-year-toggle')[0].text()).toContain('2026')
   })
 })

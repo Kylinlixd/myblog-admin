@@ -25,17 +25,36 @@
               <span class="timeline-year">{{ t("dynamic.timelineAll") }}</span>
               <strong>{{ t("dynamic.timelineLabel") }}</strong>
             </button>
-            <button
-              v-for="group in timelineDisplay"
-              :key="group.key"
-              type="button"
-              :class="{ 'is-active': activeTimeline === group.key, 'has-year': group.showYear }"
-              @click="selectTimelinePeriod(group.key)"
+            <div
+              v-for="yearGroup in timelineYears"
+              :key="yearGroup.year"
+              class="timeline-group"
             >
-              <span class="timeline-year" :class="{ 'is-dup': !group.showYear }">{{ group.year }}</span>
-              <strong>{{ group.monthText }}</strong>
-              <small>{{ t("dynamic.articles", { n: group.count }) }}</small>
-            </button>
+              <button
+                type="button"
+                class="timeline-year-toggle"
+                :class="{ 'is-filtered': activeTimeline.startsWith(String(yearGroup.year)) }"
+                :aria-expanded="!collapsedYears.has(yearGroup.year)"
+                @click="toggleYear(yearGroup.year)"
+              >
+                <caret-down-outlined class="caret" :class="{ 'is-collapsed': collapsedYears.has(yearGroup.year) }" />
+                <span>{{ yearGroup.year }}</span>
+                <small class="year-total">{{ t("dynamic.articles", { n: yearGroup.total }) }}</small>
+              </button>
+              <template v-if="!collapsedYears.has(yearGroup.year)">
+                <button
+                  v-for="group in yearGroup.months"
+                  :key="group.key"
+                  type="button"
+                  class="timeline-month"
+                  :class="{ 'is-active': activeTimeline === group.key }"
+                  @click="selectTimelinePeriod(group.key)"
+                >
+                  <strong>{{ group.monthText }}</strong>
+                  <small>{{ t("dynamic.articles", { n: group.count }) }}</small>
+                </button>
+              </template>
+            </div>
           </nav>
         </aside>
 
@@ -174,6 +193,7 @@ import {
   getDynamicComments
 } from '../../api/blog'
 import {
+  CaretDownOutlined,
   LikeOutlined,
   MessageOutlined,
   EyeOutlined
@@ -194,6 +214,30 @@ const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
 // 时间轴展示层：月份文本按当前语言从 key（YYYY-MM）本地化（后端 monthLabel 恒为中文）；
 // 年份只在每年第一个月显示，形成 2026 / 2025 式分组
+// 按年分组：年份行可点击折叠/展开该年全部月份
+const timelineYears = computed(() => {
+  const years = []
+  const byYear = new Map()
+  for (const group of timelineDisplay.value) {
+    const year = group.year
+    if (!byYear.has(year)) {
+      const entry = { year, months: [], total: 0 }
+      byYear.set(year, entry)
+      years.push(entry)
+    }
+    byYear.get(year).months.push(group)
+    byYear.get(year).total += group.count
+  }
+  return years
+})
+
+const collapsedYears = ref(new Set())
+function toggleYear(year) {
+  const next = new Set(collapsedYears.value)
+  next.has(year) ? next.delete(year) : next.add(year)
+  collapsedYears.value = next
+}
+
 const timelineDisplay = computed(() => timelineGroups.value.map((group, index) => {
   const match = String(group.key || '').match(/^(\d{4})-(\d{1,2})/)
   let monthText = group.monthLabel
@@ -598,19 +642,56 @@ onActivated(() => {
   box-shadow: 0 0 0 4px rgb(99 102 241 / 12%);
 }
 
-.timeline-year {
+/* 年份分组：年份行可点击折叠，月份缩进在年份之下 */
+.timeline-group { display: grid; gap: 2px; }
+.dynamic-timeline__nav .timeline-group + .timeline-group { margin-top: 12px; }
+
+.timeline-year-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 0 5px 22px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: left;
+  transition: color .2s ease;
+}
+.timeline-year-toggle:hover { color: #4f46e5; }
+.timeline-year-toggle.is-filtered { color: #4338ca; }
+.timeline-year-toggle .caret { font-size: 10px; transition: transform .2s ease; }
+.timeline-year-toggle .caret.is-collapsed { transform: rotate(-90deg); }
+.timeline-year-toggle::before { display: none; }
+.timeline-year-toggle .year-total { margin-left: auto; font-size: 11px; font-weight: 500; color: #94a3b8; }
+
+.dynamic-timeline__nav .timeline-month {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  padding: 0 0 0 22px;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  text-align: left;
+  transition: color .2s ease, transform .2s ease;
+}
+.dynamic-timeline__nav .timeline-month strong {
   grid-column: 1;
+  color: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.3;
+}
+.dynamic-timeline__nav .timeline-month small {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
   color: #94a3b8;
   font-size: 11px;
-  line-height: 1;
-}
-
-/* 年份只在每年第一个月显示：重复年份隐藏占位（保持网格对齐），
-   有年份的组加上间距形成 2026 / 2025 视觉分组 */
-.dynamic-timeline__nav .timeline-year.is-dup { visibility: hidden; }
-@media (min-width: 901px) {
-  .dynamic-timeline__nav button.has-year { margin-top: 14px; }
-  .dynamic-timeline__nav button.has-year:first-of-type { margin-top: 0; }
 }
 
 .dynamic-timeline__nav strong {
@@ -925,6 +1006,12 @@ onActivated(() => {
   .dynamic-timeline__nav button::before {
     display: none;
   }
+
+  /* 折叠分组在 pill 流里摊平：年份 pill + 该年月份 pill 依次排列 */
+  .timeline-group { display: contents; }
+  .timeline-year-toggle { padding: 8px 11px; }
+  .timeline-year-toggle .year-total { display: none; }
+  .timeline-month { padding: 8px 11px; }
 
   .dynamic-timeline__nav button {
     flex: 0 0 auto;
