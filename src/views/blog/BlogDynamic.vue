@@ -654,7 +654,7 @@ onActivated(() => {
 .timeline-group {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
-  column-gap: 20px;
+  column-gap: 14px;
   align-items: start;
 }
 
@@ -666,7 +666,7 @@ onActivated(() => {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
-  column-gap: 20px;
+  column-gap: 14px;
   align-items: center;
   padding: 6px 0;
   font-weight: 800;
@@ -683,8 +683,8 @@ onActivated(() => {
 .timeline-year-toggle .caret {
   grid-column: 2;
   grid-row: 1;
-  justify-self: end;
-  margin-right: calc(11px + 3em);
+  justify-self: start;
+  margin-left: 12px;
   font-size: 10px;
   transition: transform .2s ease;
 }
@@ -713,7 +713,7 @@ onActivated(() => {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 2px 10px;
-  padding: 0 0 0 24px;
+  padding: 0 0 0 12px;
 }
 .dynamic-timeline__nav .timeline-month::before {
   position: absolute;
