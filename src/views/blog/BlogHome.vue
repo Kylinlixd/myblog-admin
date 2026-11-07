@@ -43,8 +43,8 @@
 </template>
 
 <script setup>
-import { defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue'
-import { t, formatDate as formatLocaleDate } from '@/i18n'
+import { defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { currentLocale, t, formatDate as formatLocaleDate } from '@/i18n'
 import { getBlogCategoryList, getRecentDynamics } from '@/api/blog'
 import { normalizeCollectionResponse } from '@/api/collections'
 import AsyncState from '@/components/common/AsyncState.vue'
@@ -171,6 +171,19 @@ function startTitleTyping() {
   }
   typeNext()
 }
+// 打字机文案在 startTitleTyping 时取词：切语言后清掉未完成的定时器并重打
+watch(currentLocale, () => {
+  window.clearTimeout(typewriterTimer)
+  window.clearTimeout(titleSettleTimer)
+  window.clearTimeout(trailTimer)
+  typedLead.value = ''
+  typedAccent.value = ''
+  typedTrail.value = ''
+  titlePhase.value = 'typing'
+  trailPhase.value = 'typing'
+  startTitleTyping()
+})
+
 onMounted(() => {
   if ('IntersectionObserver' in window) {
     latestObserver = new IntersectionObserver((entries) => { if (entries.some((entry) => entry.isIntersecting)) { latestObserver.disconnect(); loadLatest() } }, { rootMargin: '240px 0px' }); latestObserver.observe(latestSection.value)

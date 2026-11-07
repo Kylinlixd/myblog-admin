@@ -352,6 +352,9 @@
   .quick-search input { color: var(--blog-text); }
   .quick-search input::placeholder { color: #857d70; }
   .lang-button { background: rgb(41 34 25 / 84%); }
+  /* 管理后台按钮：亮色用 --blog-text 当底，暗色下它是奶白会淹没文字，改用强调色 */
+  .admin-link { background: var(--blog-accent); color: #14110c; }
+  .admin-link:hover { background: var(--blog-accent-strong); }
   .mobile-nav { background: rgb(38 31 22 / 96%); }
   .site-footer { background: rgb(28 23 16 / 78%) !important; border-top-color: var(--blog-line); }
   /* BlogLayout scoped 的 .blog-shell--home .site-footer 与此处同为 (0,3,0)，靠 !important 破平局 */

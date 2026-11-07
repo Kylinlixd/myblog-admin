@@ -48,7 +48,7 @@
               </a-menu>
             </template>
           </a-dropdown>
-          <router-link class="admin-link" to="/login">{{ t('nav.admin') }}</router-link>
+          <router-link class="admin-link" to="/login" :aria-label="t('nav.admin')" :title="t('nav.admin')"><dashboard-outlined /></router-link>
           <button
             class="menu-button"
             type="button"
@@ -119,7 +119,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { BulbOutlined, GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
+import { BulbOutlined, DashboardOutlined, GlobalOutlined, MenuOutlined, SearchOutlined } from '@ant-design/icons-vue'
 import { resolveBlogNav } from '@/utils/blogNav'
 import { LOCALES, currentLocale, setLocale, t, prefetchLocale } from '@/i18n'
 import { currentTheme, toggleTheme } from '@/utils/blogTheme'
@@ -218,7 +218,7 @@ watch(currentLocale, () => {
 .quick-search input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--blog-text); }
 .quick-search input::-webkit-search-cancel-button { cursor: pointer; }
 .quick-search input::placeholder { color: #8d857a; }
-.admin-link { min-height: 40px; padding: 0 14px; border-radius: 999px; background: var(--blog-text); color: #fffaf2; font-size: 12px; font-weight: 750; line-height: 40px; transition: background-color .28s ease; }
+.admin-link { display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 999px; background: var(--blog-text); color: var(--blog-bg); font-size: 16px; transition: background-color .28s ease; }
 .admin-link:hover { background: #10202f; }
 .lang-button { display: flex; height: 40px; align-items: center; gap: 5px; padding: 0 11px; border: 1px solid var(--blog-line); border-radius: 999px; background: rgb(255 253 248 / 84%); color: var(--blog-text-soft); font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .28s ease, color .28s ease; }
 .lang-button:hover { border-color: var(--blog-accent); color: var(--blog-accent-strong); }
