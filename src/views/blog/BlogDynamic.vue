@@ -26,14 +26,14 @@
               <strong>{{ t("dynamic.timelineLabel") }}</strong>
             </button>
             <button
-              v-for="group in timelineGroups"
+              v-for="group in timelineDisplay"
               :key="group.key"
               type="button"
-              :class="{ 'is-active': activeTimeline === group.key }"
+              :class="{ 'is-active': activeTimeline === group.key, 'has-year': group.showYear }"
               @click="selectTimelinePeriod(group.key)"
             >
-              <span class="timeline-year">{{ group.year }}</span>
-              <strong>{{ group.monthLabel }}</strong>
+              <span class="timeline-year" :class="{ 'is-dup': !group.showYear }">{{ group.year }}</span>
+              <strong>{{ group.monthText }}</strong>
               <small>{{ t("dynamic.articles", { n: group.count }) }}</small>
             </button>
           </nav>
@@ -163,8 +163,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated, onUpdated } from 'vue'
-import { t } from '@/i18n'
+import { computed, ref, onMounted, onActivated, onUpdated } from 'vue'
+import { currentLocale, t } from '@/i18n'
 import { message } from 'ant-design-vue'
 import { previewMediaItem } from '@/utils/blogMedia'
 import {
@@ -192,6 +192,23 @@ const hasMore = ref(true)
 const fetchedPages = ref(new Set()) // 用于跟踪已请求的页码
 const unavailableMediaUrls = ref(new Set())
 const timelineGroups = ref([])
+// 时间轴展示层：月份文本按当前语言从 key（YYYY-MM）本地化（后端 monthLabel 恒为中文）；
+// 年份只在每年第一个月显示，形成 2026 / 2025 式分组
+const timelineDisplay = computed(() => timelineGroups.value.map((group, index) => {
+  const match = String(group.key || '').match(/^(\d{4})-(\d{1,2})/)
+  let monthText = group.monthLabel
+  if (match) {
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, 1)
+    if (!Number.isNaN(date.getTime())) {
+      monthText = new Intl.DateTimeFormat(currentLocale.value, { month: 'short' }).format(date)
+    }
+  }
+  return {
+    ...group,
+    monthText,
+    showYear: index === 0 || timelineGroups.value[index - 1]?.year !== group.year
+  }
+}))
 const activeTimeline = ref('')
 const dynamicListRef = ref(null)
 const selectedDynamic = ref(null)
@@ -586,6 +603,14 @@ onActivated(() => {
   color: #94a3b8;
   font-size: 11px;
   line-height: 1;
+}
+
+/* 年份只在每年第一个月显示：重复年份隐藏占位（保持网格对齐），
+   有年份的组加上间距形成 2026 / 2025 视觉分组 */
+.dynamic-timeline__nav .timeline-year.is-dup { visibility: hidden; }
+@media (min-width: 901px) {
+  .dynamic-timeline__nav button.has-year { margin-top: 14px; }
+  .dynamic-timeline__nav button.has-year:first-of-type { margin-top: 0; }
 }
 
 .dynamic-timeline__nav strong {
