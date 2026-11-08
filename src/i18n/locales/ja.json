@@ -1015,8 +1015,8 @@
   "tools.json-kit.desc": "JSON 整形・圧縮、YAML 変換、TypeScript インターフェース生成。",
   "tools.md-convert.name": "Markdown 変換器",
   "tools.md-convert.desc": "プレビューしながら HTML・Word・PDF へ出力。ブログ本文と同系レンダラー。",
-  "tools.xlsx-convert.name": "表変換器",
-  "tools.xlsx-convert.desc": "Excel/CSV/JSON を相互変換。ファイルドラッグや貼り付けに対応。",
+  "tools.convert-box.name": "フォーマット変換ボックス",
+  "tools.convert-box.desc": "PDF を Word に変換（ローカルでテキスト再構築、スキャン画像は除く）。表は Excel/CSV/TSV/JSON/Markdown/HTML 相互変換。ドロップや貼り付けに対応し、すべてブラウザ内で処理。",
   "tools.media-convert.name": "メディア変換",
   "tools.media-convert.desc": "動画・音声を ffmpeg.wasm でローカル変換。初回のみ約 25MB のコアを取得。"
 }

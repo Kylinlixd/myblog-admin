@@ -32,8 +32,8 @@
 import {
   ArrowRightOutlined,
   CodeOutlined,
-  FileExcelOutlined,
   FileMarkdownOutlined,
+  FileSyncOutlined,
   PictureOutlined,
   SafetyOutlined,
   SearchOutlined,
@@ -54,7 +54,7 @@ const tools = [
   { id: 'hash-kit', url: '/tools/hash-kit/index.html', icon: SafetyOutlined },
   { id: 'json-kit', url: '/tools/json-kit/index.html', icon: SnippetsOutlined },
   { id: 'md-convert', url: '/tools/md-convert/index.html', icon: FileMarkdownOutlined },
-  { id: 'xlsx-convert', url: '/tools/xlsx-convert/index.html', icon: FileExcelOutlined },
+  { id: 'convert-box', url: '/tools/convert-box/index.html', icon: FileSyncOutlined },
   { id: 'media-convert', url: '/tools/media-convert/index.html', icon: PlayCircleOutlined }
 ]
 </script>

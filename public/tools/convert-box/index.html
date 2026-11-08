@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>convert-box · 格式转换盒</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23a64e23'/%3E%3Ctext x='50' y='64' font-size='42' text-anchor='middle' fill='%23fffaf2' font-family='monospace'%3E%E2%87%84%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.0/dist/html-docx.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5efe5;--paper:#fffdf8;--line:#e9e3d8;--ink:#17263d;--muted:#7a746a;--accent:#c86f37;--accent-strong:#a64e23;--ok:#3f7a52;--radius:14px;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media (prefers-color-scheme:dark){:root{--bg:#171410;--paper:#211d17;--line:#3a332a;--ink:#ece4d6;--muted:#9a9184;--accent:#d98b4f;--accent-strong:#e0a06a;--ok:#6fae86}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.back-link{color:var(--muted);text-decoration:none;font-size:13px}
+.back-link:hover{color:var(--accent)}
+.brand{font-weight:800}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:2px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:999px;padding:7px 18px;font-weight:650;cursor:pointer;font-size:14px}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.card h3{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.drop{border:2px dashed var(--line);border-radius:var(--radius);padding:28px;text-align:center;color:var(--muted);cursor:pointer}
+.drop.over{border-color:var(--accent);background:rgba(200,111,55,.06)}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:6px 14px;font-weight:650}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2}
+button:disabled{opacity:.5;cursor:not-allowed}
+select{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+textarea{width:100%;min-height:220px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.6 var(--mono);resize:vertical;box-sizing:border-box}
+label.chk{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer}
+.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px;max-height:380px}
+table{border-collapse:collapse;font-size:13px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 12px;text-align:left;font-family:var(--mono);white-space:nowrap}
+th{background:var(--bg);position:sticky;top:0}
+.preview{min-height:200px;max-height:460px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:18px 20px;font-size:13.5px;line-height:1.8}
+.preview p{margin:0}
+.preview strong{letter-spacing:.02em}
+.err{color:#b14f3f;font-size:12px;font-family:var(--mono)}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0}
+.meta{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.status{font-size:12px;color:var(--accent-strong);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="back-link" href="/blog/tools" target="_top">← 返回御器</a>
+    <div class="brand">convert-box<small>PDF → Word · 表格多格式互转 · 纯本地</small></div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="pdf">PDF → Word</button>
+    <button class="tab" data-tab="table">表格多格式转换</button>
+  </div>
+
+  <!-- ==================== Tab 1: PDF → Word ==================== -->
+  <section id="panePdf">
+    <div class="card">
+      <div class="drop" id="pdfDrop">拖入 <strong>.pdf</strong> 文件，或点击选择（自动提取文本并预览）</div>
+      <input type="file" id="pdfFile" accept=".pdf,application/pdf" hidden>
+      <div class="row">
+        <span class="meta" id="pdfMeta">未载入文件</span>
+        <span class="status" id="pdfStatus" hidden></span>
+      </div>
+      <div class="row">
+        <label class="chk"><input type="checkbox" id="optPageBreak" checked> 每页 Word 分页</label>
+        <label class="chk"><input type="checkbox" id="optHeading" checked> 按字号加粗标题行</label>
+      </div>
+    </div>
+
+    <div class="card" id="pdfCard" hidden>
+      <h3>内容预览（即将写入 Word 的内容）</h3>
+      <div class="preview" id="pdfPreview"></div>
+      <div class="row">
+        <button class="primary" id="pdfDownBtn">下载 Word (.docx)</button>
+      </div>
+      <p class="hint">文本型 PDF 效果最佳：按坐标重建行与段落，依据字号加粗标题，页与页之间插入分页符。扫描件（图片型 PDF）没有文字层无法提取；图片与复杂版式不会保留。全程本地处理，不经过任何服务器。</p>
+    </div>
+  </section>
+
+  <!-- ==================== Tab 2: 表格多格式转换 ==================== -->
+  <section id="paneTable" hidden>
+    <div class="card">
+      <div class="drop" id="tblDrop">拖入 <strong>.xlsx / .xls / .csv / .tsv / .json / .md / .html</strong> 表格文件，或点击选择</div>
+      <input type="file" id="tblFile" accept=".xlsx,.xls,.csv,.tsv,.json,.md,.markdown,.html,.htm" hidden>
+      <div class="row">
+        <span class="meta" id="tblMeta">未载入文件</span>
+        <label class="meta" id="sheetWrap" hidden>工作表 <select id="sheetSel"></select></label>
+      </div>
+    </div>
+
+    <div class="card" id="tblCard" hidden>
+      <h3>数据预览（首 100 行）</h3>
+      <div class="tablewrap"><table id="grid"></table></div>
+      <div class="row">
+        <span class="meta">导出为</span>
+        <button class="primary" id="expXlsx">Excel (.xlsx)</button>
+        <button class="primary" id="expCsv">CSV</button>
+        <button class="primary" id="expTsv">TSV</button>
+        <button class="primary" id="expJson">JSON</button>
+        <button class="primary" id="expMd">Markdown</button>
+        <button class="primary" id="expHtml">HTML</button>
+      </div>
+      <p class="hint">首行按表头处理；导出 JSON 为「对象数组」，Markdown / HTML 可直接贴进博客正文。</p>
+    </div>
+
+    <div class="card">
+      <h3>粘贴表格文本 → 任意格式</h3>
+      <textarea id="paste" placeholder="自动识别：CSV / TSV（从 Excel 复制出来就是 TSV）/ JSON 数组 / Markdown 表格 / HTML 表格" spellcheck="false"></textarea>
+      <div class="row">
+        <span class="meta">导出为</span>
+        <button id="pasteXlsx">Excel (.xlsx)</button>
+        <button id="pasteCsv">CSV</button>
+        <button id="pasteTsv">TSV</button>
+        <button id="pasteJson">JSON</button>
+        <button id="pasteMd">Markdown</button>
+        <button id="pasteHtml">HTML</button>
+        <span class="err" id="pasteErr" hidden></span>
+      </div>
+      <p class="hint">Markdown 表格分隔行（---）自动剔除，HTML 只取第一个 &lt;table&gt;。SheetJS / pdf.js 在页面加载时按需从 CDN 引入，数据不经过任何服务器。</p>
+    </div>
+  </section>
+</div>
+
+<script>
+'use strict'
+const $ = id => document.getElementById(id)
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB'
+const baseName = name => name.replace(/\.[^.]+$/, '')
+
+/* ---------- 标签页切换 ---------- */
+document.querySelectorAll('.tab').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn))
+  $('panePdf').hidden = btn.dataset.tab !== 'pdf'
+  $('paneTable').hidden = btn.dataset.tab !== 'table'
+}))
+
+function download(blob, filename) {
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = filename
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000)
+}
+
+function bindDrop(dropId, inputId, handler) {
+  $(dropId).addEventListener('click', () => $(inputId).click())
+  $(inputId).addEventListener('change', e => handler(e.target.files[0]))
+  ;['dragover', 'dragenter'].forEach(ev => $(dropId).addEventListener(ev, e => { e.preventDefault(); $(dropId).classList.add('over') }))
+  ;['dragleave', 'drop'].forEach(ev => $(dropId).addEventListener(ev, e => { e.preventDefault(); $(dropId).classList.remove('over') }))
+  $(dropId).addEventListener('drop', e => handler(e.dataTransfer.files[0]))
+}
+
+/* ==================== Tab 1: PDF → Word ==================== */
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+let pdfDoc = { numPages: 0, pages: [], median: 10, name: '' } // pages: 每页 line 数组 [{text,y,h}]
+
+bindDrop('pdfDrop', 'pdfFile', readPdf)
+
+async function readPdf(file) {
+  if (!file) return
+  const status = $('pdfStatus')
+  const show = msg => { status.hidden = !msg; status.textContent = msg || '' }
+  try {
+    show('读取中…')
+    const data = new Uint8Array(await file.arrayBuffer())
+    const pdf = await pdfjsLib.getDocument({
+      data,
+      cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/cmaps/',
+      cMapPacked: true,
+      standardFontDataUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/standard_fonts/'
+    }).promise
+    const pages = []
+    for (let i = 1; i <= pdf.numPages; i++) {
+      show(`提取中 ${i}/${pdf.numPages} 页…`)
+      const page = await pdf.getPage(i)
+      const content = await page.getTextContent()
+      pages.push(itemsToLines(content.items))
+    }
+    const heights = pages.flat().map(l => l.h).sort((a, b) => a - b)
+    pdfDoc = { numPages: pdf.numPages, pages, median: heights[Math.floor(heights.length / 2)] || 10, name: baseName(file.name) }
+    $('pdfMeta').textContent = `${file.name} · ${fmtBytes(file.size)} · ${pdf.numPages} 页`
+    $('pdfPreview').innerHTML = buildBodyHtml(true)
+    $('pdfCard').hidden = false
+    show('')
+  } catch (error) {
+    show('')
+    $('pdfMeta').textContent = '✗ ' + (error.name === 'PasswordException' ? 'PDF 已加密，无法提取' : error.message)
+  }
+}
+
+/* 文本项按 y 坐标聚合成行，行内按 x 排序拼接 */
+function itemsToLines(items) {
+  const pts = items
+    .filter(it => it.str && it.str.trim())
+    .map(it => ({ x: it.transform[4], y: it.transform[5], w: it.width || 0, h: it.height || 10, str: it.str }))
+  if (!pts.length) return []
+  pts.sort((a, b) => b.y - a.y || a.x - b.x)
+  const lines = []
+  for (const p of pts) {
+    const last = lines[lines.length - 1]
+    const tol = Math.max(2.5, (last ? last.h : p.h) * 0.55)
+    if (last && Math.abs(p.y - last.y) <= tol) {
+      last.items.push(p)
+      last.y = Math.max(last.y, p.y)
+      last.h = Math.max(last.h, p.h)
+    } else {
+      lines.push({ y: p.y, h: p.h, items: [p] })
+    }
+  }
+  return lines.map(line => {
+    line.items.sort((a, b) => a.x - b.x)
+    let text = '', prevEnd = -Infinity
+    for (const it of line.items) {
+      if (text && it.x - prevEnd > 1.2 && !/\s$/.test(text)) text += ' '
+      text += it.str
+      prevEnd = Math.max(prevEnd, it.x + it.w)
+    }
+    return { text: text.trim(), y: line.y, h: line.h }
+  }).filter(l => l.text)
+}
+
+/* 行数组 → Word/预览共用 HTML：垂直间距大的行视为段落间隔，字号明显大于正文的行加粗 */
+function linesToHtml(lines, median, withHeading) {
+  if (!lines.length) return '<p style="margin:0;color:#999">（本页无可提取文本，可能是扫描件）</p>'
+  let html = '', prev = null
+  for (const line of lines) {
+    const gap = prev ? prev.y - line.y : Infinity
+    const paraEnd = prev && gap > Math.max(prev.h, line.h) * 1.55
+    const heading = withHeading && line.h >= median * 1.32 && line.text.length <= 80
+    const margin = !prev ? '0' : paraEnd || heading ? '0 0 10pt' : '0'
+    const text = esc(line.text)
+    html += heading ? `<p style="margin:${margin};line-height:1.65"><strong>${text}</strong></p>` : `<p style="margin:${margin};line-height:1.65">${text}</p>`
+    prev = line
+  }
+  return html
+}
+
+function buildBodyHtml(withPageBreak) {
+  const pageBreak = '<br clear="all" style="page-break-before:always"/>'
+  return pdfDoc.pages
+    .map(lines => linesToHtml(lines, pdfDoc.median, $('optHeading').checked))
+    .join(withPageBreak && $('optPageBreak').checked ? pageBreak : '')
+}
+
+function styledDocHtml(body) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{font:11pt/1.7 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#17263d}
+    p{margin:0}
+  </style></head><body>${body}</body></html>`
+}
+
+$('optHeading').addEventListener('change', () => { if (pdfDoc.numPages) $('pdfPreview').innerHTML = buildBodyHtml(true) })
+$('optPageBreak').addEventListener('change', () => { if (pdfDoc.numPages) $('pdfPreview').innerHTML = buildBodyHtml(true) })
+
+$('pdfDownBtn').addEventListener('click', () => {
+  if (!pdfDoc.numPages) return
+  const converted = window.htmlDocx.asBlob(styledDocHtml(buildBodyHtml(true)), {
+    orientation: 'portrait',
+    margins: { top: 1134, bottom: 1134, left: 1134, right: 1134 }
+  })
+  download(converted, `${pdfDoc.name || 'document'}.docx`)
+})
+
+/* ==================== Tab 2: 表格多格式转换 ==================== */
+let workbook = null
+let currentRows = null // { header:[], body:[[]], name }
+
+bindDrop('tblDrop', 'tblFile', readTableFile)
+
+/* 所有解析器与 sheet_to_json 都返回「含表头」的完整行数组，统一在此拆分 */
+const toRows = (rows, name) => {
+  const [header = [], ...body] = rows
+  return { header, body, name }
+}
+
+function loadRows(rows, name) {
+  currentRows = toRows(rows, name)
+  const { header, body } = currentRows
+  const grid = $('grid')
+  grid.innerHTML = ''
+  const addRow = (cells, isHead) => {
+    const tr = document.createElement('tr')
+    cells.forEach(cell => {
+      const el = document.createElement(isHead ? 'th' : 'td')
+      el.textContent = String(cell ?? '')
+      tr.append(el)
+    })
+    grid.append(tr)
+  }
+  if (header.length) addRow(header, true)
+  body.slice(0, 100).forEach(row => addRow(row, false))
+  $('tblMeta').textContent = `${name} · ${body.length} 行 × ${header.length} 列`
+  $('tblCard').hidden = false
+}
+
+async function readTableFile(file) {
+  if (!file) return
+  try {
+    if (/\.(xlsx|xls)$/i.test(file.name)) {
+      workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true })
+      const select = $('sheetSel')
+      select.innerHTML = ''
+      workbook.SheetNames.forEach(name => {
+        const opt = document.createElement('option')
+        opt.value = name
+        opt.textContent = name
+        select.append(opt)
+      })
+      select.onchange = () => sheetToRows(select.value)
+      $('sheetWrap').hidden = false
+      $('tblMeta').textContent = `${file.name} · ${fmtBytes(file.size)} · ${workbook.SheetNames.length} 个工作表`
+      if (workbook.SheetNames.length) sheetToRows(workbook.SheetNames[0])
+    } else {
+      workbook = null
+      $('sheetWrap').hidden = true
+      const text = await file.text()
+      loadRows(parseTableText(text).body, baseName(file.name))
+    }
+  } catch (error) {
+    $('tblMeta').textContent = '✗ ' + error.message
+  }
+}
+
+function sheetToRows(name) {
+  loadRows(XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: '', raw: false }), name)
+}
+
+/* ---------- 统一导出（文件载入与粘贴共用） ---------- */
+const toAoa = r => [r.header, ...r.body]
+
+function exportCsv(rows) {
+  return toAoa(rows).map(row => row.map(cell => {
+    const value = String(cell ?? '')
+    return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+  }).join(',')).join('\n')
+}
+
+function exportTsv(rows) {
+  return toAoa(rows).map(row => row.map(cell => String(cell ?? '').replace(/\t/g, ' ').replace(/\n/g, ' ')).join('\t')).join('\n')
+}
+
+function exportJson(rows) {
+  return JSON.stringify(rows.body.map(row => Object.fromEntries(rows.header.map((key, i) => [key, row[i] ?? '']))), null, 2)
+}
+
+function exportMd(rows) {
+  const [header = [], ...body] = toAoa(rows)
+  return [
+    `| ${header.join(' | ')} |`,
+    `| ${header.map(() => '---').join(' | ')} |`,
+    ...body.map(row => `| ${row.map(c => String(c ?? '').replace(/\|/g, '\\|')).join(' | ')} |`)
+  ].join('\n')
+}
+
+function exportHtml(rows) {
+  const trs = toAoa(rows).map((row, i) => `  <tr>${row.map(c => `<${i ? 'td' : 'th'}>${esc(String(c ?? ''))}</${i ? 'td' : 'th'}>`).join('')}</tr>`).join('\n')
+  return `<table>\n${trs}\n</table>`
+}
+
+const EXPORTS = {
+  xlsx: rows => {
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(rows)), 'Sheet1')
+    return { parts: [XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], type: 'application/octet-stream', ext: 'xlsx' }
+  },
+  csv: rows => ({ parts: ['\uFEFF' + exportCsv(rows)], type: 'text/csv;charset=utf-8', ext: 'csv' }),
+  tsv: rows => ({ parts: ['\uFEFF' + exportTsv(rows)], type: 'text/tab-separated-values;charset=utf-8', ext: 'tsv' }),
+  json: rows => ({ parts: [exportJson(rows)], type: 'application/json', ext: 'json' }),
+  md: rows => ({ parts: [exportMd(rows)], type: 'text/markdown', ext: 'md' }),
+  html: rows => ({ parts: [exportHtml(rows)], type: 'text/html', ext: 'html' })
+}
+
+function exportAs(format, rows) {
+  const { parts, type, ext } = EXPORTS[format](rows)
+  download(new Blob(parts, { type }), `${rows.name || 'converted'}.${ext}`)
+}
+
+;[['expXlsx', 'xlsx'], ['expCsv', 'csv'], ['expTsv', 'tsv'], ['expJson', 'json'], ['expMd', 'md'], ['expHtml', 'html']]
+  .forEach(([id, format]) => $(id).addEventListener('click', () => currentRows && exportAs(format, currentRows)))
+
+/* ---------- 粘贴文本：自动识别 JSON / Markdown / HTML / CSV / TSV ---------- */
+function parseTableText(text) {
+  const trimmed = text.trim()
+  if (!trimmed) throw new Error('没有输入内容')
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) return parseJsonText(trimmed)
+  if (/^<(!doctype|html|table)/i.test(trimmed)) return parseHtmlText(trimmed)
+  const pipeLines = trimmed.split(/\r?\n/).filter(line => line.trim().startsWith('|'))
+  if (pipeLines.length >= 2 && pipeLines.length >= trimmed.split(/\r?\n/).filter(Boolean).length * 0.6) return parseMdText(pipeLines)
+  return parseDelimitedText(trimmed)
+}
+
+function normalize(data) {
+  if (!Array.isArray(data) || !data.length) throw new Error('JSON 需为非空数组')
+  if (typeof data[0] === 'object' && !Array.isArray(data[0])) {
+    const header = [...data.reduce((keys, row) => { Object.keys(row).forEach(k => keys.add(k)); return keys }, new Set())]
+    return { header, body: [header, ...data.map(row => header.map(k => row[k] ?? ''))] }
+  }
+  const header = data[0].map((_, i) => `列${i + 1}`)
+  return { header, body: [header, ...data] }
+}
+
+function parseJsonText(text) {
+  return normalize(JSON.parse(text))
+}
+
+function parseMdText(lines) {
+  const rows = lines
+    .map(line => line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()))
+    .filter(row => !row.every(c => /^:?-{2,}:?$/.test(c) || c === ''))
+  if (!rows.length) throw new Error('Markdown 表格为空')
+  return { header: rows[0], body: rows }
+}
+
+function parseHtmlText(html) {
+  const table = new DOMParser().parseFromString(html, 'text/html').querySelector('table')
+  if (!table) throw new Error('未找到 <table> 元素')
+  const rows = [...table.querySelectorAll('tr')].map(tr => [...tr.querySelectorAll('th,td')].map(td => td.textContent.trim()))
+  if (!rows.length) throw new Error('表格为空')
+  return { header: rows[0], body: rows }
+}
+
+function parseDelimitedText(text) {
+  const firstLine = text.split(/\r?\n/).find(line => line.trim()) || ''
+  const candidates = [['\t', (firstLine.match(/\t/g) || []).length], [';', (firstLine.match(/;/g) || []).length], [',', (firstLine.match(/,/g) || []).length]]
+    .sort((a, b) => b[1] - a[1])
+  const delimiter = candidates[0][1] > 0 ? candidates[0][0] : ','
+  const rows = []
+  let field = '', row = [], inQuotes = false
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (inQuotes) {
+      if (ch === '"' && text[i + 1] === '"') { field += '"'; i++ }
+      else if (ch === '"') inQuotes = false
+      else field += ch
+    } else if (ch === '"') {
+      inQuotes = true
+    } else if (ch === delimiter) {
+      row.push(field); field = ''
+    } else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
+      row.push(field); rows.push(row); field = ''; row = []
+      if (ch === '\r') i++
+    } else {
+      field += ch
+    }
+  }
+  row.push(field); rows.push(row)
+  if (rows.length === 1 && rows[0].length === 1) throw new Error('未识别到表格结构：缺少分隔符或多行数据')
+  return { header: rows[0], body: rows }
+}
+
+const PASTE_EXPORTS = [['pasteXlsx', 'xlsx'], ['pasteCsv', 'csv'], ['pasteTsv', 'tsv'], ['pasteJson', 'json'], ['pasteMd', 'md'], ['pasteHtml', 'html']]
+PASTE_EXPORTS.forEach(([id, format]) => $(id).addEventListener('click', () => {
+  const err = $('pasteErr')
+  try {
+    exportAs(format, toRows(parseTableText($('paste').value).body, 'converted'))
+    err.hidden = true
+    err.textContent = ''
+  } catch (error) {
+    err.hidden = false
+    err.textContent = '✗ ' + error.message
+  }
+}))
+</script>
+</body>
+</html>

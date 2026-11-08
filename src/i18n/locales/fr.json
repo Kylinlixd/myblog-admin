@@ -1023,8 +1023,8 @@
   "tools.json-kit.desc": "Formatez le JSON, convertissez le YAML et générez des interfaces TypeScript.",
   "tools.md-convert.name": "Convertisseur Markdown",
   "tools.md-convert.desc": "Aperçu en direct et export HTML, Word ou PDF.",
-  "tools.xlsx-convert.name": "Convertisseur de tableaux",
-  "tools.xlsx-convert.desc": "Convertissez Excel/CSV/JSON en glissant des fichiers ou en collant du texte.",
+  "tools.convert-box.name": "Boîte de conversion",
+  "tools.convert-box.desc": "PDF vers Word (reconstruction locale du texte, hors scans) et tableaux entre Excel/CSV/TSV/JSON/Markdown/HTML — glissez un fichier ou collez du texte, tout se passe dans le navigateur.",
   "tools.media-convert.name": "Convertisseur multimédia",
   "tools.media-convert.desc": "Convertissez vidéo/audio avec ffmpeg.wasm en local; cœur de ~25 Mo au premier usage."
 }

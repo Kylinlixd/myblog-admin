@@ -1023,8 +1023,8 @@
   "tools.json-kit.desc": "Format/minify JSON, convert YAML, and generate TypeScript interfaces from JSON.",
   "tools.md-convert.name": "Markdown Converter",
   "tools.md-convert.desc": "Live preview with export to HTML, Word, or print-to-PDF — same renderer family as the blog.",
-  "tools.xlsx-convert.name": "Table Converter",
-  "tools.xlsx-convert.desc": "Convert Excel/CSV/JSON by dropping files or pasting text; parsed locally with SheetJS.",
+  "tools.convert-box.name": "Convert Box",
+  "tools.convert-box.desc": "PDF to Word via local text rebuild, and tables across Excel/CSV/TSV/JSON/Markdown/HTML — drop a file or paste text, all in your browser.",
   "tools.media-convert.name": "Media Converter",
   "tools.media-convert.desc": "Convert video/audio formats (MP4/WebM/GIF/MP3…) with ffmpeg.wasm running locally; the ~25 MB core downloads on first use."
 }

@@ -1015,8 +1015,8 @@
   "tools.json-kit.desc": "JSON 포맷/압축, YAML 변환, TypeScript 인터페이스 생성.",
   "tools.md-convert.name": "Markdown 변환기",
   "tools.md-convert.desc": "실시간 미리보기로 HTML·Word·PDF 내보내기, 블로그 본문과 같은 렌더러.",
-  "tools.xlsx-convert.name": "표 변환기",
-  "tools.xlsx-convert.desc": "Excel/CSV/JSON 상호 변환, 파일 드래그나 붙여넣기 지원.",
+  "tools.convert-box.name": "포맷 변환 박스",
+  "tools.convert-box.desc": "PDF를 Word로 변환(로컬 텍스트 재구성, 스캔본 제외), 표는 Excel/CSV/TSV/JSON/Markdown/HTML 상호 변환. 드래그와 붙여넣기를 지원하며 모두 브라우저에서 처리.",
   "tools.media-convert.name": "미디어 변환기",
   "tools.media-convert.desc": "ffmpeg.wasm으로 기기에서 직접 변환합니다. 최초 1회 약 25MB 코어를 받습니다."
 }
