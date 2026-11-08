@@ -314,7 +314,7 @@
  * 变量覆盖解决一切引用 --blog-* 的样式；下面的定向规则修正各页面硬编码的
  * 高可见表面（卡片、输入、分隔线）。强调色不变——暖橙在暗底上对比度更好。
  * ============================== */
-[data-theme='dark'] .blog-shell {
+html[data-theme='dark'] .blog-shell {
   --blog-bg: #14110c;
   --blog-paper: #1e1a13;
   --blog-surface: rgb(38 32 23 / 88%);
@@ -331,7 +331,7 @@
   --blog-accent-strong: #e0a06a;
 }
 
-[data-theme='dark'] .blog-shell {
+html[data-theme='dark'] .blog-shell {
   /* 大气背景：暖橙余晖压暗 */
   .blog-atmosphere {
     background:
@@ -361,7 +361,7 @@
 }
 
 /* ---------- 首页 ---------- */
-[data-theme='dark'] .home-page {
+html[data-theme='dark'] .home-page {
   --home-ink: #ece4d6;
   --home-muted: #9a9184;
   --home-line: #3a332a;
@@ -385,8 +385,8 @@
 }
 
 /* ---------- 书遇列表 ---------- */
-[data-theme='dark'] .blog-dynamic-container { background: linear-gradient(135deg, #14110c 0%, #16120d 100%); }
-[data-theme='dark'] .blog-dynamic {
+html[data-theme='dark'] .blog-dynamic-container { background: linear-gradient(135deg, #14110c 0%, #16120d 100%); }
+html[data-theme='dark'] .blog-dynamic {
   .dynamic-item { background: rgb(34 29 21 / 92%); border-color: rgb(233 216 190 / 12%); }
   .dynamic-title { color: var(--blog-text); background: linear-gradient(135deg, rgb(217 139 79 / 10%) 0%, rgb(90 120 115 / 10%) 100%); -webkit-text-fill-color: currentColor; }
   .comment-section { background: rgb(34 29 21 / 90%); border-color: rgb(233 216 190 / 12%); }
@@ -397,8 +397,8 @@
 }
 
 /* ---------- 文章详情 ---------- */
-[data-theme='dark'] .dynamic-detail-container { background: linear-gradient(135deg, #14110c 0%, #131008 100%); }
-[data-theme='dark'] .article-reading-shell {
+html[data-theme='dark'] .dynamic-detail-container { background: linear-gradient(135deg, #14110c 0%, #131008 100%); }
+html[data-theme='dark'] .article-reading-shell {
   --article-ink: #ece4d6;
   --article-muted: #9a9184;
   --article-paper: #221d15;
@@ -422,7 +422,7 @@
 }
 
 /* ---------- 评论输入器 ---------- */
-[data-theme='dark'] .comment-composer {
+html[data-theme='dark'] .comment-composer {
   background: #241f17; border-color: rgb(233 216 190 / 14%);
   .comment-composer__fields { border-bottom-color: rgb(233 216 190 / 14%); }
   .comment-composer__field { color: #b3a893; }
@@ -432,7 +432,7 @@
 }
 
 /* ---------- 搜索 / 归档 / 合集 ---------- */
-[data-theme='dark'] .blog-shell {
+html[data-theme='dark'] .blog-shell {
   .search-results, .search-box .advanced-search-options, .category-card, .collection-card, .result-card, .catalog-row {
     background: rgb(34 29 21 / 88%);
   }
