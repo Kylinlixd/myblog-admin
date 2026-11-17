@@ -1018,5 +1018,14 @@
   "tools.convert-box.name": "フォーマット変換ボックス",
   "tools.convert-box.desc": "PDF を Word に変換（ローカルでテキスト再構築、スキャン画像は除く）。表は Excel/CSV/TSV/JSON/Markdown/HTML 相互変換。ドロップや貼り付けに対応し、すべてブラウザ内で処理。",
   "tools.media-convert.name": "メディア変換",
-  "tools.media-convert.desc": "動画・音声を ffmpeg.wasm でローカル変換。初回のみ約 25MB のコアを取得。"
+  "tools.media-convert.desc": "動画・音声を ffmpeg.wasm でローカル変換。初回のみ約 25MB のコアを取得。",
+  "tools.searchPlaceholder": "ツールを検索…",
+  "tools.group.learning": "学習・記憶",
+  "tools.group.text": "テキスト・コード",
+  "tools.group.doc": "ドキュメント・画像",
+  "tools.group.media": "音声・動画",
+  "tools.tag.sync": "ブログ連携",
+  "tools.tag.new": "新着",
+  "tools.tag.beta": "Beta",
+  "tools.empty": "一致するツールはありません"
 }

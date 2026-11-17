@@ -87,6 +87,7 @@ console.log('hello md-convert')
   </div>
 </div>
 
+<script src="/tools/_i18n.js"></script>
 <script>
 'use strict'
 const $ = id => document.getElementById(id)
@@ -106,16 +107,25 @@ async function copyText(text) {
   }
 }
 
-const md = window.markdownit({ html: true, linkify: true, typographer: true })
+// CDN 加载失败时降级：预览区给出可读提示，导出按钮禁用，工具本身不崩
+const md = window.markdownit
+  ? window.markdownit({ html: true, linkify: true, typographer: true })
+  : null
 let lastHtml = ''
 
 function render() {
   try {
+    if (!md) {
+      throw new Error('markdown-it（CDN）加载失败，请检查网络后刷新页面；本地编辑内容不会丢失')
+    }
     lastHtml = md.render($('input').value)
     $('preview').innerHTML = lastHtml
     ;['htmlBtn', 'docxBtn', 'pdfBtn', 'copyBtn'].forEach(id => $(id).disabled = !lastHtml)
     $('err').hidden = true
   } catch (error) {
+    lastHtml = ''
+    $('preview').innerHTML = ''
+    ;['htmlBtn', 'docxBtn', 'pdfBtn', 'copyBtn'].forEach(id => $(id).disabled = true)
     $('err').hidden = false
     $('err').textContent = '✗ ' + error.message
   }
@@ -165,6 +175,7 @@ $('htmlBtn').addEventListener('click', () => {
   download(new Blob([styledHtml()], { type: 'text/html' }), `${baseName()}.html`)
 })
 $('docxBtn').addEventListener('click', () => {
+  if (!window.htmlDocx) { $('err').hidden = false; $('err').textContent = '✗ html-docx-js（CDN）加载失败，请检查网络后重试'; return }
   // html-docx-js 把带样式的 HTML 包装为 Word 可打开的 doc 容器
   const converted = window.htmlDocx.asBlob(styledHtml(), { orientation: 'portrait', margins: { top: 1134, bottom: 1134, left: 1134, right: 1134 } })
   download(converted, `${baseName()}.docx`)

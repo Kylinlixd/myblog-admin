@@ -8,6 +8,7 @@
   var LS_SLIDERS_V2 = 'randomlex.sliders.v2'; // 番茄钟个数制，迁移源
   var LS_SLIDERS_V1 = 'randomlex.sliders.v1'; // 旧版分钟制，迁移源
   var LS_COUNT = 'randomlex.count.v1';
+  var LS_RATE = 'randomlex.rate.v1';
 
   var SPIN_MS = 2700; // 抽取动画总时长（2~3 秒）
 
@@ -66,6 +67,24 @@
   // 失败（file:// 离线 / 网络错误 / API 不可用）时静默忽略，工具照常独立运行。
   var blogMergeDone = false;
 
+  // 单篇文章 → 词条（去重后追加），返回是否新增
+  function pushBlogTerm(article) {
+    if (!article || !article.id) return false;
+    var term = String(article.title || '').trim();
+    if (!term) return false;
+    var exists = terms.some(function (t) {
+      return t.term.toLowerCase() === term.toLowerCase();
+    });
+    if (exists) return false;
+    terms.push({
+      term: term,
+      def: String(article.summary || article.excerpt || '').trim(),
+      cat: '博客',
+      source: '/blog/dynamics/' + article.id
+    });
+    return true;
+  }
+
   function mergeBlogTerms() {
     if (blogMergeDone) return;
 
@@ -82,72 +101,27 @@
     }
 
     try {
-      // 分页拉取博客文章列表，每页 200 条
-      fetch('/api/blog/dynamics/?page=1&page_size=200', { cache: 'no-cache' })
-        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-        .then(function (resp) {
-          var data = resp && resp.data ? resp.data : resp;
-          var items = data && data.items ? data.items : [];
-          var total = data && data.total ? data.total : 0;
-          var pageSize = 200;
-          var totalPages = Math.ceil(total / pageSize);
+      var PAGE_SIZE_API = 200;
+      var MAX_PAGES = 20; // 兜底：最多 4000 条，防止异常 total 造成死循环
 
-          // 收集所有页面的文章
-          function fetchPage(page) {
-            if (page > totalPages || page <= 0) {
-              // 所有页面拉取完毕，合并词条
-              return Promise.resolve();
-            }
-            return fetch('/api/blog/dynamics/?page=' + page + '&page_size=' + pageSize, { cache: 'no-cache' })
-              .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-              .then(function (resp2) {
-                var d2 = resp2 && resp2.data ? resp2.data : resp2;
-                var its = d2 && d2.items ? d2.items : [];
-                its.forEach(function (article) {
-                  if (!article || !article.id) return;
-                  var term = String(article.title || '').trim();
-                  if (!term) return;
-                  var exists = terms.some(function (t) {
-                    return t.term.toLowerCase() === term.toLowerCase();
-                  });
-                  if (!exists) {
-                    terms.push({
-                      term: term,
-                      def: String(article.summary || article.excerpt || '').trim(),
-                      cat: '博客',
-                      source: '/blog/dynamics/' + article.id
-                    });
-                  }
-                });
-                return fetchPage(page + 1);
-              });
-          }
-
-          // 第一页已经拿到，先处理再拉后续页
-          items.forEach(function (article) {
-            if (!article || !article.id) return;
-            var term = String(article.title || '').trim();
-            if (!term) return;
-            var exists = terms.some(function (t) {
-              return t.term.toLowerCase() === term.toLowerCase();
-            });
-            if (!exists) {
-              terms.push({
-                term: term,
-                def: String(article.summary || article.excerpt || '').trim(),
-                cat: '博客',
-                source: '/blog/dynamics/' + article.id
-              });
-            }
+      function fetchPage(page) {
+        return fetch('/api/blog/dynamics/?page=' + page + '&page_size=' + PAGE_SIZE_API, { cache: 'no-cache' })
+          .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+          .then(function (resp) {
+            var data = resp && resp.data ? resp.data : resp;
+            var items = data && data.items ? data.items : [];
+            var total = data && data.total ? data.total : 0;
+            items.forEach(pushBlogTerm);
+            var totalPages = Math.min(Math.ceil(total / PAGE_SIZE_API), MAX_PAGES);
+            return page < totalPages ? fetchPage(page + 1) : null;
           });
+      }
 
-          return fetchPage(2).then(function () {
-            if (terms.length > 0) {
-              saveTerms();
-              renderList(listSearch.value);
-            }
-            blogMergeDone = true;
-          });
+      fetchPage(1)
+        .then(function () {
+          saveTerms();
+          renderList(listSearch.value);
+          blogMergeDone = true;
         })
         .catch(function () {
           blogMergeDone = true;
@@ -370,6 +344,13 @@
   var speaking = false;
   function setSpeakUI() { ttsBtn.textContent = speaking ? '停止' : '朗读'; }
 
+  /* 语速可选：0.8x / 1x / 1.25x 循环，持久化到 localStorage */
+  var RATES = [0.8, 1, 1.25];
+  var rateIdx = parseInt(localStorage.getItem(LS_RATE) || '1', 10);
+  if (!(rateIdx >= 0 && rateIdx < RATES.length)) rateIdx = 1;
+  var rateBtn = $('rateBtn');
+  function applyRateLabel() { rateBtn.textContent = RATES[rateIdx] + 'x'; }
+
   function isZh(s) { return /[\u4e00-\u9fff]/.test(s); }
   function pickVoice(lang) {
     var vs = speechSynthesis.getVoices().filter(function (v) {
@@ -382,7 +363,7 @@
     u.lang = isZh(text) ? 'zh-CN' : 'en-US';
     var v = pickVoice(u.lang);
     if (v) u.voice = v;
-    u.rate = 0.95;
+    u.rate = RATES[rateIdx];
     return u;
   }
 
@@ -620,6 +601,25 @@
   var PAGE_SIZE = 50;
   var listPage = 1;
 
+  /* ---------- 批量管理模式 ---------- */
+  var selectMode = false;
+  var selectedIdx = new Set();
+  var selectModeBtn = $('selectModeBtn'), delSelectedBtn = $('delSelectedBtn');
+
+  function updateDelLabel() {
+    delSelectedBtn.textContent = selectedIdx.size ? '删除所选（' + selectedIdx.size + '）' : '删除所选';
+  }
+
+  function setSelectMode(on) {
+    selectMode = on;
+    selectedIdx.clear();
+    selectModeBtn.textContent = on ? '退出批量' : '批量管理';
+    selectModeBtn.classList.toggle('arming', on);
+    delSelectedBtn.classList.toggle('hidden', !on);
+    updateDelLabel();
+    renderList(listSearch.value);
+  }
+
   function renderList(query) {
     var q = (query || '').trim().toLowerCase();
     var items = [];
@@ -634,13 +634,20 @@
 
     termListBox.innerHTML = pageItems.length
       ? pageItems.map(function (o) {
-          return '<div class="row">' +
+          var check = selectMode
+            ? '<label class="row-check"><input type="checkbox" data-i="' + o.i + '"' + (selectedIdx.has(o.i) ? ' checked' : '') + ' aria-label="选择该词条"></label>'
+            : '';
+          var del = selectMode
+            ? ''
+            : '<button class="row-del" data-i="' + o.i + '" title="删除">×</button>';
+          return '<div class="row' + (selectMode ? ' selectable' : '') + (selectedIdx.has(o.i) ? ' checked' : '') + '" data-i="' + o.i + '">' +
+            check +
             '<div class="row-main"><b>' + esc(o.t.term) + '</b>' +
             (o.t.cat ? '<span class="row-cat">' + esc(o.t.cat) + '</span>' : '') +
             '<span class="row-def">' + esc(o.t.def || '') + '</span>' +
             (o.t.source ? '<a class="row-source" href="' + esc(o.t.source) + '">阅读原文 →</a>' : '') +
             '</div>' +
-            '<button class="row-del" data-i="' + o.i + '" title="删除">×</button>' +
+            del +
           '</div>';
         }).join('')
       : '<p class="empty">' + (q ? '没有匹配的词条' : '词库为空') + '</p>';
@@ -964,15 +971,59 @@
   pageNextBtn.addEventListener('click', function () { listPage++; renderList(listSearch.value); });
 
   termListBox.addEventListener('click', function (e) {
-    var btn = e.target.closest('.row-del');
-    if (!btn) return;
-    var i = parseInt(btn.dataset.i, 10);
-    var name = terms[i] && terms[i].term;
-    terms.splice(i, 1);
-    saveTerms();
-    renderList(listSearch.value);
-    toast('已删除「' + name + '」');
+    if (!selectMode) {
+      var btn = e.target.closest('.row-del');
+      if (!btn) return;
+      var i = parseInt(btn.dataset.i, 10);
+      var name = terms[i] && terms[i].term;
+      terms.splice(i, 1);
+      selectedIdx.delete(i);
+      saveTerms();
+      renderList(listSearch.value);
+      toast('已删除「' + name + '」');
+      return;
+    }
+    // 批量模式：点复选框或行任意处（跳过「阅读原文」链接）切换勾选
+    if (e.target.closest('.row-source')) return;
+    var box = e.target.closest('.row');
+    if (!box) return;
+    var idx = parseInt(box.dataset.i, 10);
+    if (selectedIdx.has(idx)) selectedIdx.delete(idx);
+    else selectedIdx.add(idx);
+    updateDelLabel();
+    box.classList.toggle('checked', selectedIdx.has(idx));
+    var cb = box.querySelector('.row-check input');
+    if (cb) cb.checked = selectedIdx.has(idx);
   });
+
+  /* 批量删除：按原始索引从大到小移除，避免位移 */
+  selectModeBtn.addEventListener('click', function () { setSelectMode(!selectMode); });
+  delSelectedBtn.addEventListener('click', function () {
+    if (!selectedIdx.size) { toast('先勾选要删除的词条'); return; }
+    var count = selectedIdx.size;
+    var idxs = Array.from(selectedIdx).sort(function (a, b) { return b - a; });
+    idxs.forEach(function (i) { terms.splice(i, 1); });
+    selectedIdx.clear();
+    saveTerms();
+    updateDelLabel();
+    renderList(listSearch.value);
+    toast('已删除 ' + count + ' 条词条');
+  });
+
+  /* 朗读语速切换 */
+  applyRateLabel();
+  rateBtn.addEventListener('click', function () {
+    rateIdx = (rateIdx + 1) % RATES.length;
+    localStorage.setItem(LS_RATE, String(rateIdx));
+    applyRateLabel();
+    toast('朗读语速 ' + RATES[rateIdx] + 'x');
+  });
+
+  /* 快捷键说明面板 */
+  var helpModal = $('helpModal');
+  $('helpBtn').addEventListener('click', function () { helpModal.classList.remove('hidden'); });
+  $('closeHelpBtn').addEventListener('click', function () { helpModal.classList.add('hidden'); });
+  helpModal.addEventListener('click', function (e) { if (e.target === helpModal) helpModal.classList.add('hidden'); });
 
   /* 重置按钮内联二次确认：第一次点击进入待确认态（3 秒后自动还原），再点才执行 */
   var resetArmTimer = null;
@@ -990,6 +1041,8 @@
     terms = BUILTIN_TERMS.map(function (t) {
       return { term: t.term, def: t.def, cat: t.cat || '' };
     });
+    selectedIdx.clear();
+    updateDelLabel();
     saveTerms();
     listPage = 1;
     renderList(listSearch.value);
@@ -1003,8 +1056,13 @@
 
   document.addEventListener('keydown', function (e) {
     if (e.target.matches('input, textarea, select')) return;
-    if (e.key === 'Escape') { closeModal(); return; }
-    if (e.code === 'Space' && modal.classList.contains('hidden')) {
+    if (e.key === 'Escape') {
+      if (!helpModal.classList.contains('hidden')) helpModal.classList.add('hidden');
+      else closeModal();
+      return;
+    }
+    var anyModalOpen = !modal.classList.contains('hidden') || !helpModal.classList.contains('hidden');
+    if (e.code === 'Space' && !anyModalOpen) {
       e.preventDefault();
       draw();
     }

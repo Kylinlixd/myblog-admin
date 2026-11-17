@@ -1018,5 +1018,14 @@
   "tools.convert-box.name": "포맷 변환 박스",
   "tools.convert-box.desc": "PDF를 Word로 변환(로컬 텍스트 재구성, 스캔본 제외), 표는 Excel/CSV/TSV/JSON/Markdown/HTML 상호 변환. 드래그와 붙여넣기를 지원하며 모두 브라우저에서 처리.",
   "tools.media-convert.name": "미디어 변환기",
-  "tools.media-convert.desc": "ffmpeg.wasm으로 기기에서 직접 변환합니다. 최초 1회 약 25MB 코어를 받습니다."
+  "tools.media-convert.desc": "ffmpeg.wasm으로 기기에서 직접 변환합니다. 최초 1회 약 25MB 코어를 받습니다.",
+  "tools.searchPlaceholder": "도구 검색…",
+  "tools.group.learning": "학습·암기",
+  "tools.group.text": "텍스트·코드",
+  "tools.group.doc": "문서·이미지",
+  "tools.group.media": "오디오·비디오",
+  "tools.tag.sync": "블로그 연동",
+  "tools.tag.new": "신규",
+  "tools.tag.beta": "Beta",
+  "tools.empty": "일치하는 도구가 없습니다"
 }

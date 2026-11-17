@@ -6,14 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>random-lex · 随机词条抽取</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23111111'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23F7F6F3'/%3E%3Ccircle cx='68' cy='68' r='9' fill='%239F2F2D'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
   <div class="wrap">
     <header>
       <a class="back-link" href="/blog/tools">← 返回御器</a>
       <div class="brand">random-lex<small>随机词条 · 专注学习</small></div>
-      <button id="manageBtn" class="ghost-btn">词库管理</button>
+      <div class="header-actions">
+        <button id="helpBtn" class="ghost-btn" title="快捷键说明">?</button>
+        <button id="manageBtn" class="ghost-btn">词库管理</button>
+      </div>
     </header>
 
     <main>
@@ -26,7 +29,10 @@
           <div id="termSource" class="term-source"></div>
           <div class="card-foot">
             <span id="metaInfo" class="mono">词库 0 条 · 已抽 0 次</span>
-            <button id="ttsBtn" class="ghost-btn" title="用浏览器语音朗读词条和释义">朗读</button>
+            <div class="foot-actions">
+              <button id="rateBtn" class="ghost-btn" title="切换朗读语速">1x</button>
+              <button id="ttsBtn" class="ghost-btn" title="用浏览器语音朗读词条和释义">朗读</button>
+            </div>
           </div>
         </div>
         <div class="card-actions">
@@ -126,15 +132,33 @@
           <button id="pageNext" class="ghost-btn" type="button">下一页</button>
         </div>
         <div class="btn-row">
+          <button id="selectModeBtn" class="ghost-btn" type="button">批量管理</button>
+          <button id="delSelectedBtn" class="ghost-btn danger hidden" type="button">删除所选</button>
           <button id="resetBuiltinBtn" class="ghost-btn danger">重置为内置词库</button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- 快捷键说明 -->
+  <div class="modal hidden" id="helpModal">
+    <div class="modal-box help-box">
+      <div class="modal-head">
+        <h2>快捷键</h2>
+        <button id="closeHelpBtn" class="ghost-btn">关闭</button>
+      </div>
+      <ul class="shortcut-list">
+        <li><kbd>空格</kbd><span>抽取词条（弹窗关闭时生效）</span></li>
+        <li><kbd>Esc</kbd><span>关闭当前弹窗</span></li>
+        <li><kbd>Enter</kbd><span>维基输入框内：抓取释义</span></li>
+      </ul>
+      <p class="muted small">批量管理模式下，点击词条行即可勾选，支持跨页选择后一次删除。</p>
+    </div>
+  </div>
+
   <div id="toast"></div>
 
   <script src="data.js?v=2"></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 </html>

@@ -127,6 +127,7 @@ th{background:var(--bg);position:sticky;top:0}
   </section>
 </div>
 
+<script src="/tools/_i18n.js"></script>
 <script>
 'use strict'
 const $ = id => document.getElementById(id)
@@ -158,7 +159,15 @@ function bindDrop(dropId, inputId, handler) {
 }
 
 /* ==================== Tab 1: PDF → Word ==================== */
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+// CDN 依赖守卫：库未加载成功时给出可读错误而不是抛 ReferenceError 白屏
+function requireLib(name) {
+  const lib = { pdfjs: window.pdfjsLib, docx: window.htmlDocx, xlsx: window.XLSX }[name]
+  if (!lib) throw new Error(`${name} 解析库（CDN）加载失败，请检查网络后刷新页面重试`)
+  return lib
+}
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js'
+}
 let pdfDoc = { numPages: 0, pages: [], median: 10, name: '' } // pages: 每页 line 数组 [{text,y,h}]
 
 bindDrop('pdfDrop', 'pdfFile', readPdf)
@@ -168,6 +177,7 @@ async function readPdf(file) {
   const status = $('pdfStatus')
   const show = msg => { status.hidden = !msg; status.textContent = msg || '' }
   try {
+    const pdfjsLib = requireLib('pdfjs')
     show('读取中…')
     const data = new Uint8Array(await file.arrayBuffer())
     const pdf = await pdfjsLib.getDocument({
@@ -261,10 +271,16 @@ $('optPageBreak').addEventListener('change', () => { if (pdfDoc.numPages) $('pdf
 
 $('pdfDownBtn').addEventListener('click', () => {
   if (!pdfDoc.numPages) return
-  const converted = window.htmlDocx.asBlob(styledDocHtml(buildBodyHtml(true)), {
-    orientation: 'portrait',
-    margins: { top: 1134, bottom: 1134, left: 1134, right: 1134 }
-  })
+  let converted
+  try {
+    converted = requireLib('docx').asBlob(styledDocHtml(buildBodyHtml(true)), {
+      orientation: 'portrait',
+      margins: { top: 1134, bottom: 1134, left: 1134, right: 1134 }
+    })
+  } catch (error) {
+    $('pdfMeta').textContent = '✗ ' + error.message
+    return
+  }
   download(converted, `${pdfDoc.name || 'document'}.docx`)
 })
 
@@ -304,6 +320,7 @@ async function readTableFile(file) {
   if (!file) return
   try {
     if (/\.(xlsx|xls)$/i.test(file.name)) {
+      const XLSX = requireLib('xlsx')
       workbook = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true })
       const select = $('sheetSel')
       select.innerHTML = ''
@@ -329,7 +346,7 @@ async function readTableFile(file) {
 }
 
 function sheetToRows(name) {
-  loadRows(XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: '', raw: false }), name)
+  loadRows(requireLib('xlsx').utils.sheet_to_json(workbook.Sheets[name], { header: 1, defval: '', raw: false }), name)
 }
 
 /* ---------- 统一导出（文件载入与粘贴共用） ---------- */
@@ -366,6 +383,7 @@ function exportHtml(rows) {
 
 const EXPORTS = {
   xlsx: rows => {
+    const XLSX = requireLib('xlsx')
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(toAoa(rows)), 'Sheet1')
     return { parts: [XLSX.write(wb, { bookType: 'xlsx', type: 'array' })], type: 'application/octet-stream', ext: 'xlsx' }
@@ -378,8 +396,12 @@ const EXPORTS = {
 }
 
 function exportAs(format, rows) {
-  const { parts, type, ext } = EXPORTS[format](rows)
-  download(new Blob(parts, { type }), `${rows.name || 'converted'}.${ext}`)
+  try {
+    const { parts, type, ext } = EXPORTS[format](rows)
+    download(new Blob(parts, { type }), `${rows.name || 'converted'}.${ext}`)
+  } catch (error) {
+    $('tblMeta').textContent = '✗ ' + error.message
+  }
 }
 
 ;[['expXlsx', 'xlsx'], ['expCsv', 'csv'], ['expTsv', 'tsv'], ['expJson', 'json'], ['expMd', 'md'], ['expHtml', 'html']]

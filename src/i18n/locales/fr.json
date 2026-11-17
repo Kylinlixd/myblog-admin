@@ -1026,5 +1026,14 @@
   "tools.convert-box.name": "Boîte de conversion",
   "tools.convert-box.desc": "PDF vers Word (reconstruction locale du texte, hors scans) et tableaux entre Excel/CSV/TSV/JSON/Markdown/HTML — glissez un fichier ou collez du texte, tout se passe dans le navigateur.",
   "tools.media-convert.name": "Convertisseur multimédia",
-  "tools.media-convert.desc": "Convertissez vidéo/audio avec ffmpeg.wasm en local; cœur de ~25 Mo au premier usage."
+  "tools.media-convert.desc": "Convertissez vidéo/audio avec ffmpeg.wasm en local; cœur de ~25 Mo au premier usage.",
+  "tools.searchPlaceholder": "Rechercher un outil…",
+  "tools.group.learning": "Apprentissage",
+  "tools.group.text": "Texte et code",
+  "tools.group.doc": "Documents et images",
+  "tools.group.media": "Audio et vidéo",
+  "tools.tag.sync": "Lié au blog",
+  "tools.tag.new": "Nouveau",
+  "tools.tag.beta": "Beta",
+  "tools.empty": "Aucun outil correspondant"
 }
