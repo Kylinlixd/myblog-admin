@@ -272,23 +272,36 @@
     <section v-if="fileList.length" class="file-mobile-grid" :aria-label="t('fileMgr.mobileList')">
       <article v-for="record in fileList" :key="record.id" class="file-mobile-row">
         <div class="file-mobile-row__identity">
-          <span class="file-kind"><FileTextOutlined /></span>
+          <img
+            v-if="record.type === 'image' && !isImageUnavailable(record)"
+            class="file-kind file-kind--thumb"
+            :src="buildApiUrl(record.url)"
+            :alt="record.name"
+            loading="lazy"
+            @error="markImageUnavailable(record)"
+          />
+          <span v-else class="file-kind">
+            <!-- 托底图标按类型区分：图片失败退化为图片占位（与桌面 is-unavailable 一致），pdf 用文档图标 -->
+            <PictureOutlined v-if="record.type === 'image'" />
+            <FilePdfOutlined v-else-if="record.type === 'pdf'" />
+            <FileTextOutlined v-else />
+          </span>
           <div>
             <strong>{{ record.name }}</strong>
-            <span>{{ getTypeName(record.type) }} · {{ formatFileSize(record.size) }}</span>
+            <span class="file-mobile-row__meta">{{ getTypeName(record.type) }} · {{ formatFileSize(record.size) }} · {{ formatDate(record.createdAt) }}</span>
           </div>
         </div>
         <div class="file-mobile-row__actions">
-          <a-button v-if="isPdfFile(record)" type="text" size="small" @click="previewPdfFile(record)">{{ t('fileMgr.previewMask') }}</a-button>
-          <a-button type="text" size="small" @click="handleDownload(record)">{{ t('attachment.download') }}</a-button>
-          <a-button type="text" size="small" @click="copyFileUrl(record.url)">{{ t('fileMgr.copyLink') }}</a-button>
+          <a-button v-if="isPdfFile(record)" type="text" size="small" class="row-action" @click="previewPdfFile(record)">{{ t('fileMgr.previewMask') }}</a-button>
+          <a-button type="text" size="small" class="row-action row-action--primary" @click="handleDownload(record)">{{ t('attachment.download') }}</a-button>
+          <a-button type="text" size="small" class="row-action" @click="copyFileUrl(record.url)">{{ t('fileMgr.copyLink') }}</a-button>
           <a-popconfirm
             :title="t('fileMgr.deleteConfirm')"
             :ok-text="t('adminShared.confirm')"
             :cancel-text="t('adminShared.cancel')"
             @confirm="handleDelete(record.id)"
           >
-            <a-button type="text" danger size="small">{{ t('adminShared.delete') }}</a-button>
+            <a-button type="text" danger size="small" class="row-action row-action--danger">{{ t('adminShared.delete') }}</a-button>
           </a-popconfirm>
         </div>
       </article>
@@ -360,6 +373,7 @@ import {
   QuestionCircleOutlined,
   CloudServerOutlined,
   FileTextOutlined,
+  FilePdfOutlined,
   PictureOutlined
 } from '@ant-design/icons-vue'
 import { uploadFile, getFileList, getFileSummary, searchFiles, deleteFile, downloadFile } from '@/api/file'
@@ -1285,8 +1299,9 @@ onMounted(() => {
     gap: 12px;
     align-items: center;
 
+    /* 只命名类、不用裸 span：否则会泄漏进 .file-kind / .anticon，覆盖掉托底图标的 grid 居中 */
     strong,
-    span {
+    .file-mobile-row__meta {
       display: block;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1294,7 +1309,7 @@ onMounted(() => {
     }
 
     strong { color: var(--color-text); font-weight: 680; }
-    span { margin-top: 3px; color: var(--color-text-secondary); font-size: 12px; }
+    .file-mobile-row__meta { margin-top: 3px; color: var(--color-text-secondary); font-size: 12px; }
   }
 
   .file-kind {
@@ -1305,14 +1320,26 @@ onMounted(() => {
     border-radius: 10px;
     background: color-mix(in srgb, var(--color-primary) 9%, white);
     color: var(--color-primary);
+    font-size: 16px;
   }
 
   .file-mobile-row__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    padding-top: 10px;
+    gap: 8px;
+    padding-top: 12px;
     border-top: 1px solid var(--color-border);
+  }
+
+  // 危险动作靠右，与常规操作拉开层级
+  .file-mobile-row__actions .row-action--danger {
+    margin-left: auto;
+  }
+
+  .file-kind--thumb {
+    object-fit: cover;
+    border: 1px solid var(--color-border);
+    background: var(--color-fill-1, #f5f2ec);
   }
 }
 </style>

@@ -514,7 +514,16 @@
     overflow-x: auto;
   }
 
+  /* min-width 必须落在内层 <table>：挂在 .ant-table 根节点会把滚动视口本身撑到
+     760px，再被卡片 body 的 overflow:hidden 裁掉，移动端横滚永远差一截、
+     固定右列（操作列）钉在视口外拉不到。内层表格变宽、content 视口保持 100%，
+     antd 自己的滚动 + sticky 固定列才能都落在可见区域内。 */
   .admin-page .ant-table {
+    min-width: 0;
+  }
+
+  .admin-page .ant-table-content > table,
+  .admin-page .ant-table-body > table {
     min-width: var(--admin-table-min-width, 760px);
   }
 
