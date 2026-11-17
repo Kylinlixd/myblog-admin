@@ -85,6 +85,22 @@ input[type=checkbox],input[type=range]{accent-color:var(--accent)}
 <script>
 'use strict'
 const $ = id => document.getElementById(id)
+
+/* 复制到剪贴板：优先 Clipboard API，非 HTTPS / 旧浏览器降级 execCommand */
+async function copyText(text) {
+  try {
+    await copyText(text)
+  } catch (e) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.cssText = 'position:fixed;left:-999px;opacity:0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch (_) {}
+    ta.remove()
+  }
+}
+
 const fmtBytes = n => n < 1024 ? n + ' B' : n < 1048576 ? (n / 1024).toFixed(1) + ' KB' : (n / 1048576).toFixed(2) + ' MB'
 
 /* ---------- 哈希 ---------- */
@@ -113,7 +129,7 @@ async function renderHashes(data) {
     const copy = document.createElement('button')
     copy.textContent = '复制'
     copy.addEventListener('click', async () => {
-      await navigator.clipboard.writeText(hex)
+      await copyText(hex)
       copy.textContent = '已复制'
       setTimeout(() => copy.textContent = '复制', 1000)
     })
@@ -126,7 +142,7 @@ $('hashBtn').addEventListener('click', hashText)
 $('input').addEventListener('input', hashText)
 $('hashCopy').addEventListener('click', async () => {
   const text = [...document.querySelectorAll('#hashOut .hex')].map(el => `${el.previousElementSibling.textContent}: ${el.textContent}`).join('\n')
-  await navigator.clipboard.writeText(text)
+  await copyText(text)
   $('hashCopy').textContent = '已复制'
   setTimeout(() => $('hashCopy').textContent = '复制全部', 1200)
 })
@@ -210,7 +226,7 @@ $('pwBtn').addEventListener('click', generate)
 $('pwLen').addEventListener('input', e => { $('lenVal').textContent = e.target.value; generate() })
 ;['optUpper', 'optLower', 'optDigits', 'optSymbols', 'optAmbig'].forEach(id => $(id).addEventListener('change', generate))
 $('pwCopy').addEventListener('click', async () => {
-  await navigator.clipboard.writeText($('pwOut').textContent)
+  await copyText($('pwOut').textContent)
   $('pwCopy').textContent = '已复制'
   setTimeout(() => $('pwCopy').textContent = '复制', 1200)
 })

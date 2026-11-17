@@ -104,6 +104,22 @@ button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2
 'use strict'
 const $ = id => document.getElementById(id)
 
+/* 复制到剪贴板：优先 Clipboard API，非 HTTPS / 旧浏览器降级 execCommand */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (e) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.cssText = 'position:fixed;left:-999px;opacity:0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch (_) {}
+    ta.remove()
+  }
+}
+
+
 /* ---------- JSON / YAML 面板 ---------- */
 function parseAuto(text) {
   const trimmed = text.trim()
@@ -154,7 +170,7 @@ const commands = {
     showOutput(JSON.stringify(data, null, 2), true)
   },
   copy() {
-    navigator.clipboard.writeText($('output').value)
+    copyText($('output').value)
   },
   swap() {
     $('input').value = $('output').value
@@ -265,7 +281,7 @@ $('tsBtn').addEventListener('click', () => {
     err.textContent = '✗ ' + error.message
   }
 })
-$('tsCopy').addEventListener('click', () => navigator.clipboard.writeText($('tsOutput').value))
+$('tsCopy').addEventListener('click', () => copyText($('tsOutput').value))
 
 /* ---------- Tab 切换 ---------- */
 document.querySelectorAll('.tab').forEach(btn => {

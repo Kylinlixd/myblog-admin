@@ -4,6 +4,7 @@
   --bg: #F7F6F3;
   --card: #FFFFFF;
   --ink: #111111;
+  --text: #2F3437;
   --sub: #787774;
   --faint: #A6A29A;
   --line: #EAEAEA;
@@ -14,12 +15,25 @@
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171410;
+    --card: #211d17;
+    --ink: #ece4d6;
+    --text: #d6cfc2;
+    --sub: #9a9184;
+    --faint: #6e675c;
+    --line: #3a332a;
+    --accent: #d98b4f;
+  }
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 
 body {
   background: var(--bg);
-  color: #2F3437;
+  color: var(--text);
   font: 16px/1.7 var(--sans);
   -webkit-font-smoothing: antialiased;
 }
@@ -30,7 +44,7 @@ body {
 kbd {
   font-family: var(--mono); font-size: 11px; color: var(--sub);
   border: 1px solid var(--line); border-radius: 4px;
-  background: #FFFFFF; padding: 1px 6px 2px;
+  background: var(--card); padding: 1px 6px 2px;
 }
 
 .wrap { max-width: 700px; margin: 0 auto; padding: 30px 20px 72px; }
@@ -55,12 +69,12 @@ header { display: flex; align-items: baseline; justify-content: space-between; m
 /* ---------- buttons ---------- */
 button { font: inherit; cursor: pointer; }
 .primary-btn {
-  background: var(--ink); color: #FFFFFF;
+  background: var(--ink); color: var(--bg);
   border: none; border-radius: 6px;
   padding: 14px 46px; font-size: 16px; letter-spacing: 0.14em;
   transition: background 0.15s ease, transform 0.12s ease, opacity 0.15s;
 }
-.primary-btn:hover { background: #333333; }
+.primary-btn:hover { background: var(--accent); }
 .primary-btn:active { transform: scale(0.98); }
 .primary-btn:disabled { opacity: 0.45; cursor: default; }
 .primary-btn.small { padding: 9px 24px; font-size: 14px; letter-spacing: 0.1em; }
@@ -73,6 +87,10 @@ button { font: inherit; cursor: pointer; }
 }
 .ghost-btn:hover { border-color: var(--ink); color: var(--ink); }
 .ghost-btn.danger:hover { border-color: var(--accent); color: var(--accent); }
+.ghost-btn.arming {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(159, 47, 45, 0.08);
+}
 
 /* ---------- term card ---------- */
 .term-card {
@@ -118,7 +136,6 @@ button { font: inherit; cursor: pointer; }
   -webkit-box-orient: vertical;
   overflow: hidden;
   min-height: 4.5em;
-}
 }
 .def.dim { opacity: 0.28; filter: blur(1.5px); }
 
@@ -195,7 +212,7 @@ button { font: inherit; cursor: pointer; }
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 .slider-tab:hover { border-color: var(--ink); color: var(--ink); }
-.slider-tab.active { background: var(--ink); color: #F7F6F3; border-color: var(--ink); }
+.slider-tab.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 
 .slider-caption { margin: 28px 0 14px; text-align: center; font-size: 12px; letter-spacing: 0.2em; color: var(--faint); }
 
@@ -265,7 +282,7 @@ input[type="range"]:disabled::-webkit-slider-thumb { background: var(--faint); c
 
 input[type="text"], textarea {
   font: inherit; font-size: 14px; color: var(--ink);
-  background: #FFFFFF; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
   padding: 8px 12px; outline: none;
   transition: border-color 0.15s;
 }
@@ -279,6 +296,12 @@ input[type="text"] { width: 100%; }
 .btn-row input[type="text"] { flex: 1; width: auto; min-width: 0; }
 
 #listSearch { margin-bottom: 10px; }
+.list-pager {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-top: 10px;
+}
+.list-pager .ghost-btn { padding: 5px 14px; }
+.list-pager button:disabled { opacity: 0.4; cursor: default; }
 .term-list {
   max-height: 260px; overflow-y: auto;
   border: 1px solid var(--line); border-radius: 8px;
@@ -319,7 +342,7 @@ input[type="text"] { width: 100%; }
 #toast {
   position: fixed; left: 50%; bottom: 30px; z-index: 99;
   transform: translateX(-50%) translateY(8px);
-  background: var(--ink); color: #FFFFFF;
+  background: var(--ink); color: var(--bg);
   padding: 9px 20px; border-radius: 6px;
   font-size: 13.5px; opacity: 0; pointer-events: none;
   transition: opacity 0.25s, transform 0.25s;

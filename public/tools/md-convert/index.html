@@ -90,6 +90,22 @@ console.log('hello md-convert')
 <script>
 'use strict'
 const $ = id => document.getElementById(id)
+
+/* 复制到剪贴板：优先 Clipboard API，非 HTTPS / 旧浏览器降级 execCommand */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (e) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.cssText = 'position:fixed;left:-999px;opacity:0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch (_) {}
+    ta.remove()
+  }
+}
+
 const md = window.markdownit({ html: true, linkify: true, typographer: true })
 let lastHtml = ''
 
@@ -162,7 +178,7 @@ $('pdfBtn').addEventListener('click', () => {
   win.addEventListener('load', () => win.print())
 })
 $('copyBtn').addEventListener('click', async () => {
-  await navigator.clipboard.writeText(lastHtml)
+  await copyText(lastHtml)
   $('copyBtn').textContent = '已复制'
   setTimeout(() => $('copyBtn').textContent = '复制 HTML', 1200)
 })

@@ -13,8 +13,8 @@
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
-    return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
   function shuffle(a) {
@@ -65,13 +65,9 @@
   // 使用文章的数字 id 构造 source URL，确保「阅读原文」链接可用。
   // 失败（file:// 离线 / 网络错误 / API 不可用）时静默忽略，工具照常独立运行。
   var blogMergeDone = false;
-  var pendingFocusSlug = null;
 
   function mergeBlogTerms() {
-    if (blogMergeDone) {
-      if (pendingFocusSlug) focusTermBySlug(pendingFocusSlug);
-      return;
-    }
+    if (blogMergeDone) return;
 
     // 清除旧版 blog-terms.json 生成的 slug URL 词条（source 中 id 非纯数字）
     // 这些词条的「阅读原文」链接指向 /blog/dynamics/<slug>，部署站 API 不识别，会 404
@@ -151,7 +147,6 @@
               renderList(listSearch.value);
             }
             blogMergeDone = true;
-            if (pendingFocusSlug) focusTermBySlug(pendingFocusSlug);
           });
         })
         .catch(function () {
@@ -161,47 +156,6 @@
       blogMergeDone = true;
     }
   }
-
-  // 根据 slug 定位词条：打开词库管理弹窗，滚动到对应行并高亮
-  function focusTermBySlug(slug) {
-    var target = terms.find(function (t) {
-      return t.source && t.source.indexOf('/blog/dynamics/' + slug) !== -1;
-    });
-    if (!target) {
-      toast('未在词库中找到该文章对应的词条');
-      return;
-    }
-    openModal();
-    // 滚动定位：渲染列表后找到匹配行
-    setTimeout(function () {
-      var rows = termListBox.querySelectorAll('.row');
-      for (var i = 0; i < rows.length; i++) {
-        var a = rows[i].querySelector('.row-source');
-        if (a && a.getAttribute('href').indexOf('/blog/dynamics/' + slug) !== -1) {
-          rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-          rows[i].style.transition = 'background-color .3s';
-          rows[i].style.backgroundColor = 'rgba(200, 111, 55, 0.12)';
-          setTimeout(function () { rows[i].style.backgroundColor = ''; }, 2000);
-          return;
-        }
-      }
-    }, 50);
-  }
-
-  // 监听父页面（御器页）发来的 focus-term 消息
-  window.addEventListener('message', function (event) {
-    var data = event.data;
-    if (!data || typeof data !== 'object') return;
-    if (data.source !== 'yuqi-tools') return;
-    if (data.type === 'focus-term' && data.slug) {
-      // 博客词条可能尚未合并完成，先排队
-      if (blogMergeDone) {
-        focusTermBySlug(data.slug);
-      } else {
-        pendingFocusSlug = data.slug;
-      }
-    }
-  });
 
   function loadBag() {
     try {
@@ -347,7 +301,7 @@
       // 博客词条（有 source）和内置词条（无 source）交替出现时
       // 卡片高度频繁变化导致页面上下抖动
       if (!dim && t.source) {
-        termSourceEl.innerHTML = '<a class="term-source-link" target="_top" href="' + esc(t.source) + '">阅读原文 →</a>';
+        termSourceEl.innerHTML = '<a class="term-source-link" href="' + esc(t.source) + '">阅读原文 →</a>';
       } else {
         termSourceEl.innerHTML = '';
       }
@@ -605,6 +559,8 @@
       if (!advance()) { finishTimer(); return; }
       phaseSound();
       toast('进入「' + PHASE_META[tState.phase].label + '」阶段');
+      // 记忆/复述阶段隐藏释义（与抽取动画同款模糊），促进主动回忆
+      if (tState.phase >= 1 && current) defEl.classList.add('dim');
     }
     renderTimer();
   }
@@ -621,6 +577,8 @@
     if (tState.remain <= 0 && !advance()) return;
 
     startSound(); // 点击开始的音效
+    // 专注开始：还没有落定词条时自动抽一个，作为本轮学习对象
+    if (!current && terms.length && !spinning) draw();
     tState.running = true;
     tState.endAt = Date.now() + tState.remain * 1000;
     tState.tick = setInterval(timerTick, 200);
@@ -633,6 +591,7 @@
     tState.finished = true;
     tState.remain = 0;
     doneSound();
+    defEl.classList.remove('dim'); // 完成后恢复释义，便于回顾
     toast('三段专注全部完成，干得漂亮');
     setRunningUI(); renderTimer();
   }
@@ -644,6 +603,7 @@
     tState.phase = 0;
     tState.remain = phaseSecs(0);
     if (tState.remain === 0 && totalSecs() > 0) advance();
+    defEl.classList.remove('dim');
     setRunningUI(); renderTimer();
   }
 
@@ -654,6 +614,11 @@
   var addTermInput = $('addTermInput'), addCatInput = $('addCatInput'), addDefInput = $('addDefInput');
   var importText = $('importText'), importFile = $('importFile');
   var wikiInput = $('wikiInput'), wikiBtn = $('wikiBtn');
+  var pagePrevBtn = $('pagePrev'), pageNextBtn = $('pageNext'), pageInfoEl = $('pageInfo');
+
+  /* ---------- 词库列表分页 ---------- */
+  var PAGE_SIZE = 50;
+  var listPage = 1;
 
   function renderList(query) {
     var q = (query || '').trim().toLowerCase();
@@ -661,18 +626,30 @@
     terms.forEach(function (t, i) {
       if (!q || (t.term + ' ' + (t.def || '')).toLowerCase().indexOf(q) >= 0) items.push({ t: t, i: i });
     });
-    termListBox.innerHTML = items.length
-      ? items.map(function (o) {
+    var totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    if (listPage > totalPages) listPage = totalPages;
+    if (listPage < 1) listPage = 1;
+    var start = (listPage - 1) * PAGE_SIZE;
+    var pageItems = items.slice(start, start + PAGE_SIZE);
+
+    termListBox.innerHTML = pageItems.length
+      ? pageItems.map(function (o) {
           return '<div class="row">' +
             '<div class="row-main"><b>' + esc(o.t.term) + '</b>' +
             (o.t.cat ? '<span class="row-cat">' + esc(o.t.cat) + '</span>' : '') +
             '<span class="row-def">' + esc(o.t.def || '') + '</span>' +
-            (o.t.source ? '<a class="row-source" target="_top" href="' + esc(o.t.source) + '">阅读原文 →</a>' : '') +
+            (o.t.source ? '<a class="row-source" href="' + esc(o.t.source) + '">阅读原文 →</a>' : '') +
             '</div>' +
             '<button class="row-del" data-i="' + o.i + '" title="删除">×</button>' +
           '</div>';
         }).join('')
-      : '<p class="empty">没有匹配的词条</p>';
+      : '<p class="empty">' + (q ? '没有匹配的词条' : '词库为空') + '</p>';
+
+    // 分页条状态
+    pageInfoEl.textContent = '第 ' + listPage + ' / ' + totalPages + ' 页 · 共 ' + items.length + ' 条';
+    pagePrevBtn.disabled = listPage <= 1;
+    pageNextBtn.disabled = listPage >= totalPages;
+    termListBox.scrollTop = 0;
   }
 
   /* 返回 true=新增，false=更新已有词条 */
@@ -982,7 +959,9 @@
   });
   $('wikiBtn').addEventListener('click', fetchWiki);
   wikiInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') fetchWiki(); });
-  listSearch.addEventListener('input', function () { renderList(listSearch.value); });
+  listSearch.addEventListener('input', function () { listPage = 1; renderList(listSearch.value); });
+  pagePrevBtn.addEventListener('click', function () { listPage--; renderList(listSearch.value); });
+  pageNextBtn.addEventListener('click', function () { listPage++; renderList(listSearch.value); });
 
   termListBox.addEventListener('click', function (e) {
     var btn = e.target.closest('.row-del');
@@ -995,15 +974,32 @@
     toast('已删除「' + name + '」');
   });
 
-  $('resetBuiltinBtn').addEventListener('click', function () {
-    if (!confirm('将词库重置为内置词条（自定义词条会被清除），继续？')) return;
+  /* 重置按钮内联二次确认：第一次点击进入待确认态（3 秒后自动还原），再点才执行 */
+  var resetArmTimer = null;
+  var resetBtnEl = $('resetBuiltinBtn');
+  resetBtnEl.addEventListener('click', function () {
+    if (resetBtnEl.dataset.armed !== '1') {
+      resetBtnEl.dataset.armed = '1';
+      resetBtnEl.textContent = '确认重置？自定义词条将被清除';
+      resetBtnEl.classList.add('arming');
+      resetArmTimer = setTimeout(disarmReset, 3000);
+      return;
+    }
+    clearTimeout(resetArmTimer);
+    disarmReset();
     terms = BUILTIN_TERMS.map(function (t) {
       return { term: t.term, def: t.def, cat: t.cat || '' };
     });
     saveTerms();
+    listPage = 1;
     renderList(listSearch.value);
     toast('已重置为内置词库');
   });
+  function disarmReset() {
+    resetBtnEl.dataset.armed = '';
+    resetBtnEl.textContent = '重置为内置词库';
+    resetBtnEl.classList.remove('arming');
+  }
 
   document.addEventListener('keydown', function (e) {
     if (e.target.matches('input, textarea, select')) return;

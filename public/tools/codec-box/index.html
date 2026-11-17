@@ -50,6 +50,22 @@ button.primary{background:var(--accent);border-color:var(--accent);color:#fffaf2
 'use strict'
 const $ = sel => document.querySelector(sel)
 
+/* 复制到剪贴板：优先 Clipboard API，非 HTTPS / 旧浏览器降级 execCommand */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch (e) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.cssText = 'position:fixed;left:-999px;opacity:0'
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch (_) {}
+    ta.remove()
+  }
+}
+
+
 /* ---------- Base64（UTF-8 安全） ---------- */
 function b64encode(str) {
   const bytes = new TextEncoder().encode(str)
@@ -186,7 +202,7 @@ function render() {
   const copy = document.createElement('button')
   copy.textContent = '复制结果'
   copy.addEventListener('click', async () => {
-    await navigator.clipboard.writeText($('#output').textContent)
+    await copyText($('#output').textContent)
     copy.textContent = '已复制'
     setTimeout(() => copy.textContent = '复制结果', 1200)
   })
