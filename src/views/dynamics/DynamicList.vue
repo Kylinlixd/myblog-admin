@@ -174,7 +174,7 @@
               </a-button>
               <a-button type="text" size="small" class="row-action" @click="viewDetail(record)">
                 <EyeOutlined />
-                {{ t('component.viewMoreReplies') }}
+                {{ t('dynamic.viewDetail') }}
               </a-button>
               <a-popconfirm
                 :title="t('dynamicMgr.deleteConfirm')"

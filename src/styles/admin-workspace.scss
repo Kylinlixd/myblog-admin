@@ -298,6 +298,8 @@
 
 .admin-page .ant-pagination {
   margin: 16px 0 0;
+  // 卡片 body 无内边距，分页行自带右/下留白，避免贴死卡片边框
+  padding: 0 16px 16px;
 }
 
 .admin-page .ant-btn {

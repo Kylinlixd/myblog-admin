@@ -173,15 +173,45 @@ function upsertAlternate(hreflang, href) {
   }
   link.href = href
 }
-function refreshAlternates() {
+function upsertOgMeta(propKey, content) {
+  let tag = document.head.querySelector(`meta[property="${propKey}"]`)
+  if (!tag) {
+    tag = document.createElement('meta')
+    tag.setAttribute('property', propKey)
+    document.head.appendChild(tag)
+  }
+  tag.setAttribute('content', content)
+}
+const OG_LOCALES = { zh: 'zh_CN', en: 'en_US', ja: 'ja_JP', ko: 'ko_KR', es: 'es_ES', fr: 'fr_FR' }
+function refreshLocaleMeta() {
   if (!route.meta.blog) return
   const stripped = route.path.replace(PREFIX_RE, '')
+  const origin = window.location.origin
+  const search = window.location.search
+
+  // hreflang 互指 + x-default（zh 为默认）
   for (const { code, htmlLang } of LOCALES) {
-    upsertAlternate(htmlLang, window.location.origin + (code === 'zh' ? '' : `/${code}`) + stripped + window.location.search)
+    upsertAlternate(htmlLang, origin + (code === 'zh' ? '' : `/${code}`) + stripped + search)
   }
-  upsertAlternate('x-default', window.location.origin + stripped + window.location.search)
+  upsertAlternate('x-default', origin + stripped + search)
+
+  // og:locale / og:locale:alternate：分享卡片的语言标记
+  const current = currentLocale.value
+  upsertOgMeta('og:locale', OG_LOCALES[current] || 'zh_CN')
+  // alternate 有多个：先清后建，避免 upsert 永远命中第一个同名标签
+  document.head.querySelectorAll('meta[property="og:locale:alternate"]').forEach(tag => tag.remove())
+  for (const { code } of LOCALES) {
+    if (code === current) continue
+    const tag = document.createElement('meta')
+    tag.setAttribute('property', 'og:locale:alternate')
+    tag.setAttribute('content', OG_LOCALES[code])
+    document.head.appendChild(tag)
+  }
+
+  // og:title 随语言输出（文章详情页由 applyArticleSeoMeta 覆盖，这里管列表/聚合页）
+  upsertOgMeta('og:title', `${t(route.meta.title || 'nav.home')}｜${t('common.siteName')}`)
 }
-watch([() => route.fullPath, currentLocale], refreshAlternates, { immediate: true })
+watch([() => route.fullPath, currentLocale], refreshLocaleMeta, { immediate: true })
 
 function search() {
   if (!query.value) return
