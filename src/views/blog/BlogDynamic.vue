@@ -1046,21 +1046,32 @@ onActivated(() => {
   .timeline-year-toggle {
     flex-direction: row;
     align-items: center;
-    padding: 8px 11px;
+    padding: 8px 12px;
   }
   .timeline-year-toggle .year { font-size: 13px; }
   .timeline-year-toggle .year-total { display: none; }
-  .timeline-month { padding: 8px 11px; }
+  .timeline-month { padding: 8px 12px; }
 
   .dynamic-timeline__nav button {
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 11px;
+    gap: 6px;
+    padding: 8px 12px;
     border: 1px solid rgb(148 163 184 / 24%);
     border-radius: 999px;
     background: rgb(255 255 255 / 76%);
+  }
+
+  /* timeline-all / timeline-month 基类是「1fr + auto」双列 grid，还带着导轨布局的
+     80px/12px 左内边距，特异性也压过上面的 button 规则——摊平成 pill 后会把
+     文字撑散、左右失衡。这里统一成 flex 行 + 与年份 pill 同规格的内边距。 */
+  .dynamic-timeline__nav .timeline-all,
+  .dynamic-timeline__nav .timeline-month {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
   }
 
   .dynamic-timeline__nav button:hover {
@@ -1068,16 +1079,21 @@ onActivated(() => {
   }
 
   .timeline-year {
-    font-size: 10px;
+    font-size: 11px;
+    letter-spacing: .02em;
   }
 
   .dynamic-timeline__nav strong {
     font-size: 13px;
   }
 
+  /* 月份 strong 的基类是 15px 双类选择器，需同特异性才能对齐到 13px */
+  .dynamic-timeline__nav .timeline-month strong { font-size: 13px; }
+  .dynamic-timeline__nav .timeline-all strong { font-size: 13px; }
+
   .dynamic-timeline__nav small {
     color: #94a3b8;
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 

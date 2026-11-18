@@ -394,6 +394,12 @@ html[data-theme='dark'] .blog-dynamic {
   .comment-header h3 { color: var(--blog-text); }
   .comment-user .nickname { color: var(--blog-text); }
   .dynamic-footer { border-top-color: rgb(233 216 190 / 14%); }
+  /* 移动端时间线 pill：白 76% 底在夜览下是一片浅灰块 */
+  .dynamic-timeline__nav button {
+    background: rgb(233 216 190 / 9%);
+    border-color: rgb(233 216 190 / 16%);
+  }
+  .dynamic-timeline__nav small { color: var(--blog-text-muted); }
 }
 
 /* ---------- 文章详情 ---------- */
@@ -417,6 +423,59 @@ html[data-theme='dark'] .article-reading-shell {
   .dynamic-tags .tag-item { background: rgb(233 216 190 / 10%); color: var(--article-muted); }
   .mt-banner { background: rgb(60 42 20 / 55%); border-color: rgb(217 139 79 / 35%); }
   .mt-banner__text { color: #c9b18f; }
+
+  /* 头部元信息胶囊：白 62% 底在暗色下是一片刺眼的浅灰块 */
+  .article-header .dynamic-meta span {
+    background: rgb(233 216 190 / 9%);
+    border-color: rgb(233 216 190 / 16%);
+  }
+  .article-summary { color: var(--article-muted); }
+
+  /* 系列导航卡：白 66% 底同样发白，压成暗色纸面 */
+  .article-series {
+    background: rgb(34 29 21 / 72%);
+    border-color: var(--article-line);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 25%);
+  }
+  .article-series__position {
+    background: rgb(217 139 79 / 14%);
+    color: #d9a06a;
+  }
+
+  /* 金句摘录（blockquote）：奶油底灰字在暗色下不可读，改暖色墨纸 */
+  .article-main-column .markdown-body blockquote {
+    border-left-color: rgb(217 139 79 / 80%);
+    background: rgb(217 139 79 / 8%);
+    color: var(--blog-reading-text);
+  }
+
+  /* 表头底色引用了 --article-ink，暗色下翻成浅色会让白字看不见 */
+  .article-main-column .markdown-body table th {
+    background: #2c2517;
+    color: #ece4d6;
+  }
+
+  /* 表格本体：白底 + 浅斑马纹在暗色下是一整块白，文字又是夜览浅色，完全不可读 */
+  .article-main-column .markdown-body table {
+    background: #221d15;
+    border-color: rgb(233 216 190 / 16%);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 25%), 0 8px 22px rgb(0 0 0 / 30%);
+  }
+  .article-main-column .markdown-body table th,
+  .article-main-column .markdown-body table td {
+    border-bottom-color: rgb(233 216 190 / 12%);
+  }
+  .article-main-column .markdown-body table th:not(:first-child),
+  .article-main-column .markdown-body table td:not(:first-child) {
+    border-left-color: rgb(233 216 190 / 12%);
+  }
+  .article-main-column .markdown-body table tbody tr:nth-child(even) {
+    background-color: rgb(233 216 190 / 4%);
+  }
+  .article-main-column .markdown-body table tbody tr:hover {
+    background-color: rgb(233 216 190 / 8%);
+  }
+
   /* 正文常规色 */
   :deep(.markdown-body p), :deep(.markdown-body li) { color: var(--blog-reading-text); }
 }
