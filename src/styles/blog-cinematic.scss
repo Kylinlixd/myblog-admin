@@ -394,12 +394,37 @@ html[data-theme='dark'] .blog-dynamic {
   .comment-header h3 { color: var(--blog-text); }
   .comment-user .nickname { color: var(--blog-text); }
   .dynamic-footer { border-top-color: rgb(233 216 190 / 14%); }
-  /* 移动端时间线 pill：白 76% 底在夜览下是一片浅灰块 */
-  .dynamic-timeline__nav button {
-    background: rgb(233 216 190 / 9%);
-    border-color: rgb(233 216 190 / 16%);
+  /* 移动端时间线 pill：白 76% 底在夜览下是一片浅灰块。
+     必须限定在 ≤900px 的 pill 形态——桌面端时间线是导轨上的纯文本按钮，
+     这条底色会漏到每一行月份上变成浅灰块 */
+  @media (max-width: 900px) {
+    .dynamic-timeline__nav button {
+      background: rgb(233 216 190 / 9%);
+      border-color: rgb(233 216 190 / 16%);
+    }
+    .dynamic-timeline__nav small { color: var(--blog-text-muted); }
   }
-  .dynamic-timeline__nav small { color: var(--blog-text-muted); }
+}
+
+/* ---------- 全局 antd 输入控件（夜览） ----------
+ * 亮色区有条 .cinematic-page .ant-input-affix-wrapper { background: 白 !important }
+ * 的全局白刷规则（让输入控件融入暖纸底），夜览下它会把所有输入框刷白。
+ * 这里以同级别的 important + 更高特异性整体翻转。 */
+html[data-theme='dark'] .cinematic-page .ant-input,
+html[data-theme='dark'] .cinematic-page .ant-input-affix-wrapper,
+html[data-theme='dark'] .cinematic-page .ant-select-selector {
+  background: #241f15 !important;
+  border-color: rgb(233 216 190 / 18%) !important;
+  color: var(--blog-text) !important;
+}
+html[data-theme='dark'] .cinematic-page .ant-input-affix-wrapper:hover,
+html[data-theme='dark'] .cinematic-page .ant-input-affix-wrapper-focused,
+html[data-theme='dark'] .cinematic-page .ant-select-focused .ant-select-selector {
+  border-color: rgb(217 139 79 / 55%) !important;
+}
+html[data-theme='dark'] .cinematic-page .ant-input::placeholder {
+  color: #857d70 !important;
+  opacity: 1;
 }
 
 /* ---------- 文章详情 ---------- */
@@ -423,6 +448,12 @@ html[data-theme='dark'] .article-reading-shell {
   .dynamic-tags .tag-item { background: rgb(233 216 190 / 10%); color: var(--article-muted); }
   .mt-banner { background: rgb(60 42 20 / 55%); border-color: rgb(217 139 79 / 35%); }
   .mt-banner__text { color: #c9b18f; }
+
+  /* 相关推荐：白 60% 底的行在暗色下是一片浅灰块 */
+  .article-related__item {
+    background: rgb(233 216 190 / 8%);
+    border-color: var(--article-line);
+  }
 
   /* 头部元信息胶囊：白 62% 底在暗色下是一片刺眼的浅灰块 */
   .article-header .dynamic-meta span {
@@ -501,4 +532,191 @@ html[data-theme='dark'] .blog-shell {
   .search-results, .advanced-search-options { box-shadow: 0 20px 48px rgb(0 0 0 / 30%); }
   .result-meta, .card-meta, .row-meta { border-color: rgb(233 216 190 / 12%); }
   .no-results, .catalog-empty { color: var(--blog-text-muted); }
+}
+
+/* ---------- 自叙 ---------- */
+/* profile-facts 的值文本硬编码 #243041，夜览下与暗纸几乎同色 */
+html[data-theme='dark'] .about-page {
+  .profile-card dd { color: var(--blog-text); }
+  .secondary-action {
+    background: rgb(34 29 21 / 88%);
+    border-color: rgb(233 216 190 / 16%);
+  }
+}
+
+/* ---------- 搜索页 ----------
+ * editorial 改版整套是亮色硬编码；旧暗色块里的 :deep() 在全局样式表里
+ * 编译不出有效选择器（浏览器整条丢弃），这就是搜索框在夜览下一直是白底的原因。
+ * 这里用普通后代选择器（特异性压过 scoped 亮色规则）整套翻暗。 */
+html[data-theme='dark'] .blog-search-container {
+  .search-hero h1 { color: var(--blog-text); }
+  .search-hero p { color: var(--blog-text-muted); }
+
+  /* 搜索胶囊：白底输入在暗色下是一块亮斑 */
+  .search-input .ant-input-affix-wrapper {
+    background: #241f15;
+    border-color: #3a332a;
+    box-shadow: none;
+  }
+  .search-input .ant-input-affix-wrapper:hover,
+  .search-input .ant-input-affix-wrapper-focused { border-color: rgb(217 139 79 / 45%); }
+  .search-input .ant-input { color: var(--blog-text); }
+  .search-input .ant-input::placeholder { color: #857d70; }
+  .search-input .search-icon { color: #a4886a; }
+
+  .search-options .ant-btn {
+    background: #241f15;
+    border-color: #3a332a;
+    color: #d9a06a;
+  }
+  .search-options .ant-btn:hover,
+  .search-options .ant-btn[aria-expanded='true'] {
+    background: #2c2517;
+    border-color: rgb(217 139 79 / 45%);
+    color: #e0a878;
+  }
+
+  .advanced-search-options { border-top-color: rgb(233 216 190 / 14%); }
+  .filter-footer { border-top-color: rgb(233 216 190 / 14%); }
+  .filter-dirty { color: #d9a06a; }
+  .filter-actions .ant-btn { background: #241f15; border-color: #3a332a; color: var(--blog-text); }
+  .filter-actions .ant-btn-primary {
+    background: linear-gradient(180deg, #c26a37, #b0572a);
+    border-color: #b85e2d;
+    color: #fff;
+  }
+
+  /* 搜索历史 / 热门 */
+  .search-history, .popular-searches { border-bottom-color: rgb(233 216 190 / 12%); }
+  .history-header h3, .popular-header h3 { color: var(--blog-text-soft); }
+  .history-item.ant-tag, .popular-item.ant-tag {
+    background: rgb(233 216 190 / 8%);
+    border-color: rgb(233 216 190 / 20%);
+    color: var(--blog-text-soft);
+  }
+  .history-item.ant-tag:hover, .popular-item.ant-tag:hover {
+    border-color: rgb(217 139 79 / 45%);
+    color: #e0a878;
+  }
+
+  /* 结果区容器 */
+  .search-results { border: 1px solid rgb(233 216 190 / 12%); }
+  .search-result-kicker { color: #d9a06a; }
+  .search-result-heading { border-bottom-color: rgb(233 216 190 / 14%); }
+  .search-result-heading h2 { color: var(--blog-text); }
+  .result-count { color: var(--blog-text-muted); }
+
+  /* 列表/卡片切换：antd 默认蓝在暖色夜览里非常扎眼 */
+  .view-mode-toggle .ant-radio-button-wrapper {
+    background: transparent;
+    border-color: rgb(233 216 190 / 20%);
+    color: var(--blog-text-muted);
+  }
+  .view-mode-toggle .ant-radio-button-wrapper::before { background: rgb(233 216 190 / 20%); }
+  .view-mode-toggle .ant-radio-button-wrapper-checked {
+    background: rgb(217 139 79 / 16%);
+    border-color: rgb(217 139 79 / 60%);
+    color: #e0a878;
+  }
+
+  /* 列表行卡片 / 文本 */
+  .list-view .ant-list-item {
+    background: rgb(255 253 248 / 4%);
+    border-color: rgb(233 216 190 / 14%);
+  }
+  .list-view .ant-list-item:hover {
+    background: rgb(233 216 190 / 7%);
+    border-color: rgb(217 139 79 / 40%);
+  }
+  .result-title, .card-title { color: var(--blog-text); }
+  .result-title:hover, .card-title:hover { color: #e0a878; }
+  .result-excerpt, .card-excerpt { color: var(--blog-text-muted); }
+  .result-meta, .card-meta { color: var(--blog-text-muted); }
+  .result-type, .card-type {
+    background: rgb(217 139 79 / 14%);
+    border-color: rgb(217 139 79 / 30%);
+    color: #e0a878;
+  }
+  .result-tags .ant-tag, .card-tags .ant-tag {
+    background: rgb(233 216 190 / 8%);
+    border-color: rgb(233 216 190 / 20%);
+    color: var(--blog-text-soft);
+  }
+  .highlight { color: #e0a878; background: rgb(217 139 79 / 18%); }
+
+  /* 卡片视图 */
+  .result-card { border-color: rgb(233 216 190 / 12%); }
+  .result-card:hover { border-color: rgb(217 139 79 / 40%); }
+
+  /* 分页：antd 默认蓝同样翻暖 */
+  .pagination .ant-pagination-item a { color: var(--blog-text-soft); }
+  .pagination .ant-pagination-item-active { border-color: rgb(217 139 79 / 60%); }
+  .pagination .ant-pagination-item-active a { color: #e0a878; }
+  .pagination .ant-pagination-prev .ant-pagination-item-link,
+  .pagination .ant-pagination-next .ant-pagination-item-link { color: var(--blog-text-soft); }
+}
+
+/* ---------- 拾光：分类卡片 / 归档元信息 ---------- */
+html[data-theme='dark'] .categories-container {
+  .archive-meta span {
+    background: rgb(233 216 190 / 9%);
+    border-color: rgb(233 216 190 / 16%);
+    color: var(--blog-text-muted);
+  }
+  .category-card, .collection-card {
+    background: rgb(34 29 21 / 88%);
+    border: 1px solid rgb(233 216 190 / 12%);
+  }
+  .category-name, .collections-title, .collection-title { color: var(--blog-text); }
+  .category-count { background: rgb(217 139 79 / 16%); color: #e0a878; }
+}
+
+/* ---------- 分类详情：加载/空态白底盒与摘要灰字 ---------- */
+html[data-theme='dark'] .category-detail-container {
+  .loading-state, .empty-state {
+    background: rgb(34 29 21 / 88%);
+    color: var(--blog-text-soft);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+  }
+  .load-more-btn {
+    background: rgb(34 29 21 / 88%);
+    color: var(--blog-text-soft);
+    border-color: rgb(233 216 190 / 18%);
+  }
+  .dynamic-summary { color: var(--blog-text-soft); }
+}
+
+/* ---------- 标签详情：白底头卡与加载盒 ---------- */
+html[data-theme='dark'] .tag-detail-container {
+  .tag-header {
+    background: rgb(34 29 21 / 88%);
+    border: 1px solid rgb(233 216 190 / 12%);
+    box-shadow: 0 2px 8px rgb(0 0 0 / 25%);
+  }
+  .loading-container, .empty-container { background: rgb(34 29 21 / 88%); }
+  .loading-container p, .tag-meta, .tag-description { color: var(--blog-text-muted); }
+  .dynamic-title { color: var(--blog-text); }
+}
+
+/* ---------- 合集详情：元信息胶囊 / 排序 pill / 错误卡 ---------- */
+html[data-theme='dark'] .collection-detail {
+  .detail-meta span, .sort-option {
+    background: rgb(233 216 190 / 9%);
+    border-color: rgb(233 216 190 / 16%);
+    color: var(--blog-text-muted);
+  }
+  .detail-title, .row-title, .detail-error__title { color: var(--blog-text); }
+  .detail-error {
+    background: rgb(34 29 21 / 88%);
+    border-color: rgb(233 216 190 / 16%);
+  }
+}
+
+/* ---------- 御器：搜索框白底硬编码 ---------- */
+html[data-theme='dark'] .tools-page {
+  .tools-search {
+    background: rgb(34 29 21 / 85%);
+    border-color: rgb(233 216 190 / 16%);
+  }
+  .tools-search input::placeholder { color: #857d70; }
 }

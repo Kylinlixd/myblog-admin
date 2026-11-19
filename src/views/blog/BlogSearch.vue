@@ -118,7 +118,6 @@
           <a-tag
             v-for="(item, index) in searchHistory"
             :key="index"
-            :color="tagColor({ id: index })"
             @click="useHistoryItem(item)"
             class="history-item"
             closable
@@ -135,10 +134,9 @@
           <h3>{{ t('search.hot') }}</h3>
         </div>
         <div class="popular-items">
-          <a-tag 
-            v-for="(item, index) in popularSearches" 
+          <a-tag
+            v-for="(item, index) in popularSearches"
             :key="index"
-            color="blue"
             @click="useHistoryItem(item)"
             class="popular-item"
           >
@@ -189,13 +187,8 @@
       <div v-else class="results-content">
         <!-- 列表视图 -->
         <div v-if="viewMode === 'list'" class="list-view">
-          <a-list
-            :data-source="searchResults"
-            :pagination="false"
-            :virtual="true"
-            :item-height="100"
-            :height="500"
-          >
+          <!-- 每页最多 100 条且结构轻量，不需要虚拟滚动：分离卡片反而需要普通文档流 -->
+          <a-list :data-source="searchResults" :pagination="false">
             <template #renderItem="{ item }">
               <a-list-item>
                 <div class="result-content">
@@ -213,8 +206,8 @@
                       <folder-outlined /> {{ item.category.name }}
                     </span>
                     <span v-if="item.tags && item.tags.length" class="result-tags">
-                      <tag-outlined /> 
-                      <a-tag v-for="tag in item.tags" :key="tag.id" :color="tagColor(tag)">
+                      <tag-outlined />
+                      <a-tag v-for="tag in item.tags" :key="tag.id">
                         {{ tag.name }}
                       </a-tag>
                     </span>
@@ -243,8 +236,8 @@
                     <folder-outlined /> {{ item.category.name }}
                   </span>
                   <span v-if="item.tags && item.tags.length" class="card-tags">
-                    <tag-outlined /> 
-                    <a-tag v-for="tag in item.tags" :key="tag.id" :color="tagColor(tag)">
+                    <tag-outlined />
+                    <a-tag v-for="tag in item.tags" :key="tag.id">
                       {{ tag.name }}
                     </a-tag>
                   </span>
@@ -582,13 +575,6 @@ const resetAdvancedOptions = () => {
   // 有关键词就按关键词重搜；纯条件筛选被清空后回到初始状态，不再硬发一次请求
   if (keyword.value.trim()) handleSearch()
   else resetSearch()
-}
-
-// 标签颜色：按 id 稳定取色，重渲染不换色（随机色在每次 patch 都会闪变）
-const tagColor = (tag) => {
-  const colors = ['blue', 'green', 'red', 'orange', 'purple', 'cyan']
-  const seed = Number(tag?.id ?? 0)
-  return colors[Math.abs(Number.isFinite(seed) ? seed : 0) % colors.length]
 }
 
 // 高亮关键词
@@ -999,11 +985,12 @@ watch(advancedOptions, () => {
   border-radius: 50%;
 }
 
-.result-category {
+.result-category,
+.card-category {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #52c41a;
+  color: #b85e2d;
 }
 
 .result-category::before {
@@ -1370,7 +1357,7 @@ watch(advancedOptions, () => {
 .filter-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #ead8c7; }
 .filter-dirty { color: #a44e25; font-size: 12px; font-weight: 700; }
 .filter-actions { display: flex; gap: 8px; margin-left: auto; }
-.search-results { max-width: 980px; margin: 24px auto 0; padding: clamp(20px, 4vw, 38px); border-radius: 5px 24px 5px 24px; background: rgb(255 250 242 / 78%); box-shadow: 0 20px 48px rgb(92 59 35 / 10%); }
+.search-results { max-width: 980px; margin: 24px auto 0; padding: clamp(20px, 4vw, 38px); border-radius: 24px; background: rgb(255 250 242 / 78%); box-shadow: 0 20px 48px rgb(92 59 35 / 10%); }
 .search-result-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; padding-bottom: 20px; border-bottom: 1px solid #ead8c7; }
 .search-result-kicker { color: #b85e2d; font-size: 10px; font-weight: 800; letter-spacing: .16em; }
 .search-result-heading h2 { margin: 8px 0 0; color: #253142; font-size: clamp(20px, 3vw, 30px); letter-spacing: -.04em; line-height: 1.1; }
@@ -1381,23 +1368,48 @@ watch(advancedOptions, () => {
 .history-header h3, .popular-header h3 { margin: 0; color: #536174; font-size: 12px; font-weight: 800; letter-spacing: .05em; }
 .history-items, .popular-items { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .history-item, .popular-item { cursor: pointer; }
+/* 历史 / 热门标签：antd 预设色与暖色主题打架，统一成暖色墨滴 pill */
+.history-item.ant-tag, .popular-item.ant-tag {
+  margin: 0;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgb(200 111 55 / 8%);
+  border-color: rgb(200 111 55 / 28%);
+  color: #a44e25;
+}
+.history-item.ant-tag:hover, .popular-item.ant-tag:hover { border-color: #c47747; color: #8f3f18; }
 .view-mode-toggle { display: inline-flex; margin: 0; }
-.view-mode-toggle :deep(.ant-radio-button-wrapper) { display: inline-flex; align-items: center; gap: 6px; height: 32px; font-size: 12px; line-height: 30px; }
+.view-mode-toggle :deep(.ant-radio-button-wrapper) { display: inline-flex; align-items: center; gap: 6px; height: 32px; font-size: 12px; line-height: 30px; background: transparent; border-color: #ead8c7; color: #7d695c; }
+.view-mode-toggle :deep(.ant-radio-button-wrapper::before) { background: #ead8c7; }
+.view-mode-toggle :deep(.ant-radio-button-wrapper-checked) { background: #f7e2cf; border-color: #b85e2d; color: #a44e25; }
+.view-mode-toggle :deep(.ant-radio-button-wrapper-checked:hover) { color: #8f3f18; }
 .no-results { min-height: 260px; padding: 48px 20px; color: #7d695c; }
 .no-results > svg { color: #c47747; font-size: 38px; }
 .no-results__title { color: #253142; font-size: 20px; }
 .no-results p { margin: 0; color: #697586; font-size: 13px; }
-.list-view :deep(.ant-list-item) { padding: 22px 8px; border-color: #ead8c7; border-radius: 0; background: transparent; box-shadow: none; }
-.list-view :deep(.ant-list-item:hover) { transform: none; border-color: #ead8c7; background: rgb(247 226 207 / 30%); }
+/* 列表视图：每条结果一张独立圆角卡片，行与行之间留白，不再共用连排边框 */
+.list-view { display: grid; gap: 14px; }
+.list-view :deep(.ant-list-item) { padding: 20px 24px; border: 1px solid #ead8c7; border-radius: 16px; background: rgb(255 253 248 / 85%); box-shadow: 0 10px 26px rgb(92 59 35 / 7%); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+.list-view :deep(.ant-list-item:hover) { border-color: #d8ad8b; background: #fdf6ee; transform: translateY(-2px); box-shadow: 0 16px 32px rgb(92 59 35 / 12%); }
 .result-title, .card-title { color: #253142; letter-spacing: -.025em; }
 .result-title:hover, .card-title:hover { color: #b85e2d; }
 .result-excerpt, .card-excerpt { color: #5b6672; line-height: 1.75; }
-.result-type, .card-type { border: 1px solid #ead8c7; border-radius: 4px; background: #f7e2cf; color: #a44e25; font-weight: 700; }
+.result-type, .card-type { border: 1px solid #ead8c7; border-radius: 999px; padding: 3px 12px; background: #f7e2cf; color: #a44e25; font-weight: 700; }
 .result-meta, .card-meta { border-color: #ead8c7; color: #7d695c; }
 .card-view { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-.result-card { border: 1px solid #ead8c7; border-radius: 4px 20px 4px 20px; background: rgb(255 250 242 / 88%); box-shadow: 0 12px 26px rgb(92 59 35 / 8%); }
+.result-card { border: 1px solid #ead8c7; border-radius: 20px; background: rgb(255 250 242 / 88%); box-shadow: 0 12px 26px rgb(92 59 35 / 8%); }
 .result-card:hover { border-color: #d8ad8b; box-shadow: 0 20px 38px rgb(92 59 35 / 14%); transform: translateY(-5px); }
 .card-content { padding: 22px; }
+/* 结果标签：antd 预设色（蓝/紫/青）与暖色主题打架，统一成暖色描边 pill */
+.result-tags :deep(.ant-tag), .card-tags :deep(.ant-tag) {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: rgb(200 111 55 / 8%);
+  border-color: rgb(200 111 55 / 28%);
+  color: #a44e25;
+}
 .highlight { color: #a44e25; background: #f7e2cf; }
 @media (max-width: 768px) { .search-hero h1 { font-size: clamp(42px, 13vw, 64px); } .search-input :deep(.ant-input-affix-wrapper), .search-input :deep(.ant-btn), .search-input :deep(.ant-input-search-button) { height: 48px; } .search-result-heading { align-items: flex-start; flex-direction: column; gap: 10px; } .search-results { margin-top: 16px; padding: 20px 16px; } }
 @media (prefers-reduced-motion: reduce) { .result-card, .list-view :deep(.ant-list-item), .search-input :deep(*) { transition: none !important; } }

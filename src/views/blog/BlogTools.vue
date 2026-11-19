@@ -203,7 +203,9 @@ function byGroup(group) {
 /* ---------- 分组 ---------- */
 .tool-group { margin-bottom: 28px; }
 .group-title {
-  margin: 0 0 14px;
+  /* 只写 block 方向：inline 方向必须保留 app-container 的 margin-inline:auto，
+     否则标题会被钉在视口左缘而不是对齐卡片列 */
+  margin-block: 0 14px;
   font-size: 13px;
   font-weight: 650;
   letter-spacing: 0.18em;
